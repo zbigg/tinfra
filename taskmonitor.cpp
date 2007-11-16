@@ -331,7 +331,7 @@ void initialize_xml_out_mapping(xml::symbol_mapping& xml_out_mapping)
     xml_out_mapping[tinfra::TypeTraits<ProjectPhase>::symbol()] = Symbol("project-phase");
 }
 
-void initialize_xml_in_mapping(xml::symbol_mapping& xml_in_mapping)
+void initialize_xml_in_mapping(xml::symbol_mapping& mapping)
 {
     xml::symbol_mapping tmp;
     initialize_xml_out_mapping(tmp);
@@ -365,11 +365,224 @@ void test2()
     TaskMonitor tm;
     
 }
+class XMLStream {
+    enum event_type {
+        START_TAG,
+        END_TAG,
+        CHAR_DATA
+    };
+    struct Event {
+        const char* tag_name() const { return tag_name.c_str(); }
+        const char* content() const { return content.c_str(); }
+        
+        const char** args() const { return args; }
+        
+        ~Event() {
+            const char** ia = args;
+            while( *ia ) {
+                delete[] ia[0]; // name
+                delete[] ia[1]; // value
+                ia += 2;
+            }
+            delete[] args;
+        }
+        event_type type;
+        string tag_name;
+        string content;
+        const char** args;
+    }
+    vector<Event*> events;
+    
+    void add_tag_start(const char* name, const char** args)
+    {
+        Event* e = new Event()
+        e->type = START_TAG;
+        e->tag_name = name;
+        int n = 0;
+        {
+            const char** ia = args;
+            while( *ia ) {
+                ia += 2;
+                n++;
+            }
+        }
+        {
+            e->args = new char*[n*2+1];
+            const char** idest = e->args;
+            const char** isrc  = args;
+            while( *isrc ) {
+                idest[0] = strdup(isrc[0]);
+                idest[1] = strdup(isrc[1]);
+                idest += 2;
+                isrc  += 2;
+            }
+        }
+        events.push_back(e);
+    }
+    void add_tag_end(const char* name)
+    {
+        Event* e = new Event()
+        e->type = END_TAG;
+        e->tag_name = name;
+        events.push_back(e);
+    }
+    void add_chardata(const char* data, int len)
+    {
+        cerr << "ignored char data ..." << endl;
+    }
+    Event* peek() {
+        return events[cursor];
+    }
+    Event* read() {
+        if( cursor < events.size() )
+            return events[cursor++];
+        else
+            return NULL; // EOF
+    }
+    
+    ~XMLStream()
+    {
+        for( vector<Event*>::iterator i = events.begin(); i != events.end(); ++i ) delete *i;
+        events.erase(events.begin(), events.end());
+    }
+};
 
+template <typename T>
+class XMLStreamReader {
+    
+    XML_Parser parser;
+    XMLStream& target;
+public:
+    XMLReader(XMLStream& target): target(target) 
+    {
+        initParser();
+    }
+
+private:    
+    void initParser()
+    {
+        parser = XML_ParserCreate("US-ASCII");        
+        XML_SetStartElementHandler(parser, &XMLReader<T>::startElementHandler);
+        XML_SetEndElementHandler(parser, &XMLReader<T>::endElementHandler);
+        XML_SetCharacterDataHandler(parser, &XMLReader<T>::characterDataHandler);
+    }
+    ~XMLReader()
+    {
+        XML_ParserFree(parser);
+    }    
+    void startElement(const char* name, const char** attributes)
+    {
+        target.add_tag_start(name, attributes);
+    }
+    void endElement(const char* name)
+    {
+        target.add_tag_end(name);
+    }
+    void characterData(const char* data, int len)
+    {
+        target.add_chardata(data, len);
+    }
+    void XMLCALL startElementHandler(void *userData,
+                                   const XML_Char *name,
+                                   const XML_Char **atts)
+    {
+        ((XMLReader<T>*)userData)->startElement(name, atts);
+    }
+    
+    static void XMLCALL endElementHandler(void *userData, const XML_Char *name)
+    {
+        ((XMLReader<T>*)userData)->endElement(name);
+    }
+    
+    static void XMLCALL characterDataHandler(void *userData, const XML_Char *s, int len)
+    {
+        ((XMLReader<T>*)userData)->characterData(s,len);
+    }
+};
+
+class XMLStreamMutator {
+    XMLStream xmlStream;
+    Symbol target_tag;
+    
+public:
+    XMLStreamMutator(XMLStream xmlStream, Symbol target): xmlStream(xmlStream), target(target) {}
+    
+    void begin_composite(const tinfra::Symbol& s, tinfra::CompositeType)
+    {
+        
+    }
+    template<typename T>
+    void operator()(tinfra::Symbol const& a, T& target) {
+        if( a != target_tag ) return;                
+        {
+            const char* current_tag_name = a.c_str();
+            XMLStream::Event* e = seek_to_start(current_tag_name);
+            if( e == 0 ) return; // XXX: or throw ?
+            apply_args<T>(target, e->args);
+        }
+        while(true) 
+        {
+            XMLStream::Event* e = xmlStream.peek();
+            if( e->type == XMLStream::START_TAG) {
+                Symbol subtag_symbol = e->tag_name;
+                XMLStreamMutator subtag_processor(xmlStream, subtag_symbol);
+                TypeTraits<T>::mutate(target, subtag_symbol, subtag_processor);
+            } else if( e->type == XMLStream::END_TAG) {
+                xmlStream.read();
+                return;
+            } else if( e->type == XMLStream::CHAR_DATA) {
+                // TODO: don't know how to deal with them so
+                xmlStream.read(); // ignore
+            } else {
+                xmlStream.read(); // ignore all the rest
+            }
+        }            
+    }
+private:
+    void XMLStream::Event* seek_to_start(const char* name)
+    {
+        while(true) {
+            XMLStream::Event* e = xmlStream.read();
+            if( e == 0 ) {
+                return; // FIXME: it's an error
+            } else if( e->type == XMLStream::START_TAG) {
+                if( strcmp(current_tag_name, e->tag_name) == 0) {
+                    return e;
+                }
+            } else if( e->type == XMLStream::END_TAG) {
+                // XXX: WTF, END BEFORE START?
+                return;
+            }
+        }
+        return 0; // XXX: or throw
+    }
+    
+    template<typename T>
+    void apply_args(T& target, const char** args)
+    {
+        const char** ia = args;
+        while( *ia ) {
+            const char* name = ia[0];
+            const char* value = ia[1];
+            tinfra::lexical_set<T>(target, tinfra::Symbol(name), value);
+            ia += 2;
+        }
+    }
+
+};
+
+static XMLReader {
+};
+
+template <typename T>
+void xml_read(XMLStream& xmlStream, Symbol& root, T& target)
+{
+    XMLStreamMutator subtag_processor(xmlStream,  root);
+    subtag_processor(root, target);
+
+}
 int main2()
 {
-    
-
     return 0;
 }
 

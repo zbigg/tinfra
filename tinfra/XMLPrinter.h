@@ -47,13 +47,9 @@ public:
 
 	template <typename T>
 	void operator () (const tinfra::Symbol& s, const T& t) {
-            if( in_arg_list && tinfra::TypeTraits<T>::is_fundametal() ) {
-                out << " " << map(s).c_str() << "=\"";
-                out << t;
-                out << "\"";
-            } else {
-                std::cout << "??";                
-            }
+            out << " " << map(s).c_str() << "=\"";
+            out << t;
+            out << "\"";            
 	}
 private:
 	std::ostream& out;

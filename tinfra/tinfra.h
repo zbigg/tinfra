@@ -144,65 +144,81 @@ enum CompositeType {
 template <typename T>
 struct TypeTraitsGeneric
 {
-        static const char* name() {
-            const type_info& ti = typeid(T);
-            return ti.name();
-        }
-        
-        static Symbol symbol() {
-            static Symbol theSymbol(name());
-            return theSymbol;
-        }
+    static const char* name() {
+        const type_info& ti = typeid(T);
+        return ti.name();
+    }
+    
+    static Symbol symbol() {
+        static Symbol theSymbol(name());
+        return theSymbol;
+    }
 };
 
 template <typename T>
 struct TypeTraits: public TypeTraitsGeneric<T> {
-	template <typename F>
-	static void process(const T& t, const Symbol& s, F& f) { f(s,t); }
-        
-        static bool is_fundametal() { return true; }
+    template <typename F>
+    static void process(const T& t, const Symbol& s, F& f) { f(s,t); }
+    static void mutate(T& t, const Symbol& s, F& f) { f(s,t); }
+    
+    static bool is_fundametal() { return true; }
 };
 
 template <typename T>
 struct Fundamental: public TypeTraitsGeneric<T> {
-	template <typename F>
-	static void process(const T& t, const Symbol& s, F& f) { f(s,t); }
-        
-        static bool is_fundametal() { return true; }
+    template <typename F>
+    static void process(const T& t, const Symbol& s, F& f) { f(s,t); }
+    static void mutate(T& t, const Symbol& s, F& f) { f(s,t); }
+    
+    static bool is_fundametal() { return true; }
 };
 
 template <typename F>
 struct TypeTraitsProcessCaller {
-	F& f;
-	TypeTraitsProcessCaller(F& _f) : f(_f) {}
-		
-	template <typename T1>
-	void operator() (const Symbol& s, const T1& t)  { TypeTraits<T1>::process(t,s,f); }
+    F& f;
+    TypeTraitsProcessCaller(F& _f) : f(_f) {}
+            
+    template <typename T1>
+    void operator() (const Symbol& s, const T1& t)  { TypeTraits<T1>::process(t,s,f); }
+    
+    template <typename T1>
+    void operator() (const Symbol& s, T1& t)  { TypeTraits<T1>::mutate(t,s,f); }
 };
 
 template <typename T>
 struct ManagedStruct: public TypeTraitsGeneric<T>  {
-	template <typename F>
-	static void process(const T& t, const Symbol& s, F& f) {
-		f.begin_composite(s, STRUCT);
-		TypeTraitsProcessCaller<F> f1(f);
-		tinfra::process(t, f1);
-		f.end_composite(s, STRUCT);
-	}
-        static bool is_fundametal() { return false; }
+    template <typename F>
+    static void process(const T& t, const Symbol& s, F& f) {
+        f.begin_composite(s, STRUCT);
+        TypeTraitsProcessCaller<F> f1(f);
+        tinfra::process(t, f1);
+        f.end_composite(s, STRUCT);
+    }
+    template <typename F>
+    static void mutate(T& t, const Symbol& s, F& f) {
+        f.begin_composite(s, STRUCT);
+        TypeTraitsProcessCaller<F> f1(f);
+        tinfra::mutate(t, f1);
+        f.end_composite(s, STRUCT);
+    }
+    static bool is_fundametal() { return false; }
 };
 template <typename T>
 struct STLContainer: public TypeTraitsGeneric<T>  {
-	template <typename F>
-	static void process(const T& t, const Symbol& s, F& f) {
-		static const Symbol itemSymbol = TypeTraits<typename T::value_type>::symbol();
-		f.begin_composite(s, LIST);
-		for( typename T::const_iterator i = t.begin(); i != t.end(); ++i ) {
-			TypeTraits<typename T::value_type>::process(*i,itemSymbol, f);
-		}
-		f.end_composite(s, LIST );
-	}
-        static bool is_fundametal() { return false; }
+    template <typename F>
+    static void process(const T& t, const Symbol& s, F& f) {
+        static const Symbol itemSymbol = TypeTraits<typename T::value_type>::symbol();
+        f.begin_composite(s, LIST);
+        for( typename T::const_iterator i = t.begin(); i != t.end(); ++i ) {
+                TypeTraits<typename T::value_type>::process(*i,itemSymbol, f);
+        }
+        f.end_composite(s, LIST );
+    }
+    template <typename F>
+    static void mutate(T& t, const Symbol& s, F& f) {
+        std::cerr << "STLContainer<T>::mutate(...) not implemented" << std::endl;
+    }
+    static bool is_fundametal() { return false; }
 };
 
 ///
