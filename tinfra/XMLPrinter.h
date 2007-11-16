@@ -22,7 +22,24 @@ public:
             in_arg_list(false),
             mapping(mapping) {}
 	
-	void begin_composite(const tinfra::Symbol& s, tinfra::CompositeType) 
+        template <typename T>
+        void managed_struct(T const& object, const tinfra::Symbol& object_symbol)
+        {
+            begin_composite(object_symbol);
+            tinfra::tt_process<T>(object, *this);
+            end_composite(object_symbol);
+        }
+        template <typename T>
+        void list_container(T const& container, tinfra::Symbol const& container_symbol, tinfra::Symbol const& item_symbol)
+        {
+            begin_composite(container_symbol);
+            for( typename T::const_iterator i = container.begin(); i != container.end(); ++i ) {
+                tinfra::TypeTraits<typename T::value_type>::process(*i,item_symbol, *this);
+            }
+            end_composite(container_symbol);
+        }
+        
+	void begin_composite(const tinfra::Symbol& s) 
         { 
             if( in_arg_list ) {
                 out << ">" << endl;
@@ -32,7 +49,7 @@ public:
             in_arg_list = true;
             indent += 1;
         }	
-	void end_composite(const tinfra::Symbol& s, tinfra::CompositeType) 
+	void end_composite(const tinfra::Symbol& s) 
         {
             indent -=1;
             if( in_arg_list ) {
@@ -47,9 +64,9 @@ public:
 
 	template <typename T>
 	void operator () (const tinfra::Symbol& s, const T& t) {
-            out << " " << map(s).c_str() << "=\"";
-            out << t;
-            out << "\"";            
+                out << " " << map(s).c_str() << "=\"";
+                out << t;
+                out << "\"";            
 	}
 private:
 	std::ostream& out;
