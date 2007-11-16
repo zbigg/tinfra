@@ -1,11 +1,11 @@
 
 
-CXXFLAGS=-I.
-
+CXXFLAGS=-I. -g
+LIBS=-lexpat
 all: taskmonitor
 
 taskmonitor: tinfra/Symbol.o taskmonitor.o
-	$(CXX) -g -o $@ $^
+	$(CXX) -g -o $@ $^ $(LIBS)
 
 clean:
 	rm -rf taskmonitor.exe *.o
