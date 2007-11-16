@@ -203,6 +203,8 @@ struct Task {
         f(S::hide, hide);
         f(S::measure_id, measure_id);
         f(S::projectphase_id, projectphase_id);
+        f(S::time_load, time_load);
+        f(S::description, description);
     }
 };
 
@@ -324,11 +326,16 @@ void initialize_xml_out_mapping(xml::symbol_mapping& xml_out_mapping)
 {
     xml_out_mapping[tinfra::TypeTraits<ProcessMeasure>::symbol()] = Symbol("process-measure");
     xml_out_mapping[tinfra::TypeTraits<ProjectPhase>::symbol()] = Symbol("project-phase");
+    xml_out_mapping[tinfra::TypeTraits<TimeLoadEntry>::symbol()] = Symbol("time-load-entry");    
+    xml_out_mapping[tinfra::TypeTraits<MemberData>::symbol()] = Symbol("member-data");
+    xml_out_mapping[tinfra::TypeTraits<Project>::symbol()] = Symbol("project");
+    xml_out_mapping[tinfra::TypeTraits<Member>::symbol()] = Symbol("member");
     
     xml_out_mapping[S::process_measures] = Symbol("process-measures");
     xml_out_mapping[S::project_phases] = Symbol("project-phases");
     xml_out_mapping[S::master_tasks] = Symbol("master-tasks");
     xml_out_mapping[S::members_data] = Symbol("members-data");
+    xml_out_mapping[S::time_load] = Symbol("time-load");    
     xml_out_mapping[tinfra::TypeTraits<ProjectPhase>::symbol()] = Symbol("project-phase");
 }
 
@@ -362,9 +369,9 @@ void test1()
 class XMLStream {
 public:
     enum event_type {
-        START_TAG,
-        END_TAG,
-        CHAR_DATA
+        START_TAG = 0,
+        END_TAG = 1,
+        CHAR_DATA = 2
     };
     struct Event {
         const char* tag_name() const { return _tag_name.c_str(); }
@@ -390,6 +397,11 @@ public:
         string _tag_name;
         string _content;
         char** _args;
+        
+        void report()
+        {
+            cerr << "XMLEvent " << type << " name " << _tag_name.c_str() << endl;
+        }
     };
     int cursor;
     XMLStream(): cursor(0)
@@ -422,6 +434,7 @@ public:
                 idest += 2;
                 isrc  += 2;
             }
+            idest[0] = 0;
         }
         //cout << ")" << endl;
         events.push_back(e);
@@ -438,13 +451,18 @@ public:
         //cerr << "ignored char data ..." << endl;
     }
     Event* peek() {
-        return events[cursor];
+        if( cursor < events.size() ) {
+            cerr << "PEEK: "; events[cursor]->report();
+            return events[cursor];
+        } else return NULL;
     }
     Event* read() {
-        if( cursor < events.size() )
+        if( cursor < events.size() ) {
+            cerr << "READ: "; events[cursor]->report();
             return events[cursor++];
-        else
+        } else {
             return NULL; // EOF
+        }
     }
     
     ~XMLStream()
@@ -547,100 +565,185 @@ public:
 };
 
 class XMLStreamMutator {
-    XMLStream xmlStream;
+    XMLStream& xml_stream;
     Symbol target_tag;
-    
+    const xml::symbol_mapping& mapping;
 public:
-    XMLStreamMutator(XMLStream xmlStream, Symbol target): xmlStream(xmlStream), target_tag(target) {}
+    XMLStreamMutator(XMLStream& xml_stream, Symbol target,xml::symbol_mapping const& mapping): xml_stream(xml_stream), target_tag(target),mapping(mapping) {}
     
-    void begin_composite(const tinfra::Symbol& s, tinfra::CompositeType)
+    template <typename T>
+    void managed_struct(T& object, const tinfra::Symbol& object_symbol)
     {
+        cerr << "XMLStreamMutator::managed_struct( symbol=" << object_symbol.c_str() << " type=" << tinfra::TypeTraits<T>::name() << ")" << endl;
+        {
+            XMLStream::Event* e = seek_to_start(object_symbol);
+            if( !e ) return;
+            apply_args<T>(object, e->args());
+        }        
         
-    }
-    template<typename T>
-    void operator()(tinfra::Symbol const& a, T& target) {
-        if( !(a == target_tag) ) return;
-        {
-            const char* current_tag_name = a.c_str();
-            XMLStream::Event* e = seek_to_start(current_tag_name);
-            if( e == 0 ) return; // XXX: or throw ?
-            apply_args<T>(target, e->args);
-        }
-        while(true) 
-        {
-            XMLStream::Event* e = xmlStream.peek();
+        XMLStream::Event* e = xml_stream.peek();
+        while(e) {
+            if( e == 0 ) return;
             if( e->type == XMLStream::START_TAG) {
-                Symbol subtag_symbol = e->tag_name;
-                XMLStreamMutator subtag_processor(xmlStream, subtag_symbol);
-                tinfra::tt_mutate(target, subtag_symbol, subtag_processor);
+                Symbol subtag_symbol = map(e->tag_name());
+                XMLStreamMutator subtag_processor(xml_stream, subtag_symbol, mapping);
+                tinfra::tt_mutate<T>(object, subtag_processor);
+                e = xml_stream.peek();
             } else if( e->type == XMLStream::END_TAG) {
-                xmlStream.read();
+                e = xml_stream.read();
+                break;
+            } else if( e->type == XMLStream::CHAR_DATA) {
+                // TODO: don't know how to deal with them so
+                e = xml_stream.read(); // ignore
+            } else {
+                e = xml_stream.read(); // ignore all the rest
+            }
+        }
+        cerr << " __exit XMLStreamMutator::managed_struct( symbol=" << object_symbol.c_str() << ")" << endl;
+    }
+    template <typename T>
+    void list_container(T& container, tinfra::Symbol const& container_symbol, tinfra::Symbol const& item_symbol)
+    {        
+        cerr << "XMLStreamMutator::list_container( list ... symbol=" << container_symbol.c_str() << " type=" << tinfra::TypeTraits<T>::name() << ")" << endl;        
+        {
+            XMLStream::Event* e = seek_to_start(container_symbol);
+            if( !e ) return;
+            //apply_args<T>(object, e->args());
+        }
+        
+        XMLStream::Event* e = xml_stream.peek();
+        while(e) {
+            if( e->type == XMLStream::START_TAG) {
+                Symbol subtag_symbol = map(e->tag_name());
+                XMLStreamMutator subtag_processor(xml_stream, subtag_symbol, mapping);
+                typename T::value_type element;
+                tinfra::TypeTraits<typename T::value_type>::mutate(element, subtag_symbol, subtag_processor);
+                container.push_back(element);
+                e = xml_stream.peek();
+            } else if( e->type == XMLStream::END_TAG) {
+                e = xml_stream.read();
                 return;
             } else if( e->type == XMLStream::CHAR_DATA) {
                 // TODO: don't know how to deal with them so
-                xmlStream.read(); // ignore
+                e = xml_stream.read(); // ignore
             } else {
-                xmlStream.read(); // ignore all the rest
+                e = xml_stream.read(); // ignore all the rest
             }
-        }            
+        }
+           cerr << "XMLStreamMutator::list_container( list ... symbol=" << container_symbol.c_str() << ")" << endl;        
+     
+    }
+    
+    template<typename T>
+    void operator()(tinfra::Symbol const& a, T& target) {
+        if( !(a == target_tag) ) return;
+        cerr << "WTF ! XMLStreamMutator::()( symbol=" << a.c_str() << " type=" << tinfra::TypeTraits<T>::name() << ")" << endl;
+        if( seek_to_start(a.c_str()) )
+            seek_to_end(a.c_str());
     }
     
 private:
-    XMLStream::Event* seek_to_start(const char* name)
+    XMLStream::Event* seek_to_start(Symbol name)
     {
+        cerr << "XMLStreamMutator::seek_to_start(" << name << ")" << endl;
         while(true) {
-            XMLStream::Event* e = xmlStream.read();
+            XMLStream::Event* e = xml_stream.read();
             if( e == 0 ) {
                 return 0; // FIXME: it's an error
-            } else if( e->type == XMLStream::START_TAG) {
-                if( strcmp(name, e->tag_name()) == 0) {
+            }            
+            if( e->type == XMLStream::START_TAG) {
+                Symbol b = map(e->tag_name());
+                if( b == name) {
                     return e;
-                }
+                }                
             } else if( e->type == XMLStream::END_TAG) {
-                // XXX: WTF, END BEFORE START?
+                cerr << "XMLStreamMutator::seek_to_start(" << name << ") FAILED END" << endl;
                 return 0;
             }
         }
+        cerr << "XMLStreamMutator::seek_to_start(" << name << ") FAILED ???" << endl;
+        return 0; // XXX: or throw
+    }
+    XMLStream::Event* seek_to_end(const char* tag_name)
+    {
+        cerr << "XMLStreamMutator::seek_to_end(" << tag_name << ")" << endl;
+        while(true) {
+            XMLStream::Event* e = xml_stream.read();
+            if( e == 0 ) {
+                return 0; // FIXME: it's an error
+            }            
+            if( e->type == XMLStream::END_TAG) {                
+                if( strcmp(e->tag_name(),tag_name) == 0 ) {
+                    cerr << "XMLStreamMutator::seek_to_end(" << tag_name << ") OK!" << endl;
+                    return e;
+                }                
+            } else if( e->type == XMLStream::START_TAG) {
+                seek_to_end(e->tag_name());
+            }
+        }
+        cerr << "XMLStreamMutator::seek_to_end(" << tag_name << ") FAILED ???" << endl;
         return 0; // XXX: or throw
     }
     
     template<typename T>
     void apply_args(T& target, const char** args)
     {
-        const char** ia = args;
+        const char** ia = args;        
+        if( !ia ) return;        
         while( *ia ) {
-            const char* name = ia[0];
+            const char* name = map(ia[0]);
             const char* value = ia[1];
+            cerr << tinfra::TypeTraits<T>::name() << ":" << name << " <= " << value << endl;
             tinfra::lexical_set<T>(target, tinfra::Symbol(name), value);
             ia += 2;
         }
     }
-
+    
+    tinfra::Symbol map(tinfra::Symbol const& other) {
+        if( mapping.size() == 0 ) return other;
+        xml::symbol_mapping::const_iterator r = mapping.find(other);
+        if( r == mapping.end() ) return other;
+        return r->second;
+    }
 };
 
 
 template <typename T>
-void xml_read(XMLStream& xmlStream, Symbol& root, T& target)
+void xml_read(XMLStream& xmlStream, const Symbol& root, T& target, xml::symbol_mapping const mapping)
 {
-    XMLStreamMutator subtag_processor(xmlStream,  root);
-    subtag_processor(root, target);
+    XMLStreamMutator subtag_processor(xmlStream,  root, mapping);
+    tinfra::TypeTraits<T>::mutate(target, root, subtag_processor);
 
 }
 
 void test2()
 {
-    xml::symbol_mapping xml_symbol_mapping;
-    initialize_xml_in_mapping(xml_symbol_mapping);
     TaskMonitor tm;
-    XMLStream s;
-    XMLStreamReader sr(s);
-    sr.parse("taskmonitor.xml");
+    {
+        xml::symbol_mapping xml_symbol_mapping;
+        initialize_xml_in_mapping(xml_symbol_mapping);
+        
+        XMLStream s;
+        XMLStreamReader sr(s);
+        sr.parse("taskmonitor2.xml");
+        
+        xml_read<TaskMonitor>(s, Symbol("taskmonitor"), tm, xml_symbol_mapping);
+        cout << "readed!" << endl;
+    }
+    {
+        xml::symbol_mapping xml_symbol_mapping;
+        initialize_xml_out_mapping(xml_symbol_mapping);
+        
+        xml::XMLPrinter::write(cout, Symbol("taskmonitor"), tm, xml_symbol_mapping);
+        cout << "written!" << endl;
+    }
+    cout << "bye!" << endl;
 }
 
 
 int main2()
 {
-    test1();
+    //test1();
     test2();
     return 0;
 }
