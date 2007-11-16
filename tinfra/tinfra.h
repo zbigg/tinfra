@@ -159,6 +159,7 @@ template <typename T>
 struct TypeTraits: public TypeTraitsGeneric<T> {
     template <typename F>
     static void process(const T& t, const Symbol& s, F& f) { f(s,t); }
+    template <typename F>
     static void mutate(T& t, const Symbol& s, F& f) { f(s,t); }
     
     static bool is_fundametal() { return true; }
@@ -168,6 +169,8 @@ template <typename T>
 struct Fundamental: public TypeTraitsGeneric<T> {
     template <typename F>
     static void process(const T& t, const Symbol& s, F& f) { f(s,t); }
+    
+    template <typename F>
     static void mutate(T& t, const Symbol& s, F& f) { f(s,t); }
     
     static bool is_fundametal() { return true; }

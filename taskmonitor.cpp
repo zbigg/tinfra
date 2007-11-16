@@ -363,41 +363,45 @@ void test2()
     xml::symbol_mapping xml_symbol_mapping;
     initialize_xml_in_mapping(xml_symbol_mapping);
     TaskMonitor tm;
-    
 }
 class XMLStream {
+public:
     enum event_type {
         START_TAG,
         END_TAG,
         CHAR_DATA
     };
     struct Event {
-        const char* tag_name() const { return tag_name.c_str(); }
-        const char* content() const { return content.c_str(); }
+        const char* tag_name() const { return _tag_name.c_str(); }
+        const char* content() const { return _content.c_str(); }
         
-        const char** args() const { return args; }
+        const char** args() const { return _args; }
         
         ~Event() {
-            const char** ia = args;
+            const char** ia = _args;
             while( *ia ) {
                 delete[] ia[0]; // name
                 delete[] ia[1]; // value
                 ia += 2;
             }
-            delete[] args;
+            delete[] _args;
         }
         event_type type;
-        string tag_name;
-        string content;
-        const char** args;
+        string _tag_name;
+        string _content;
+        const char** _args;
+    };
+    int cursor;
+    XMLStream(): cursor(0)
+    {
     }
     vector<Event*> events;
     
     void add_tag_start(const char* name, const char** args)
     {
-        Event* e = new Event()
+        Event* e = new Event();
         e->type = START_TAG;
-        e->tag_name = name;
+        e->_tag_name = name;
         int n = 0;
         {
             const char** ia = args;
@@ -407,8 +411,8 @@ class XMLStream {
             }
         }
         {
-            e->args = new char*[n*2+1];
-            const char** idest = e->args;
+            e->_args = new const char*[n*2+1];
+            const char** idest = e->_args;
             const char** isrc  = args;
             while( *isrc ) {
                 idest[0] = strdup(isrc[0]);
@@ -421,9 +425,9 @@ class XMLStream {
     }
     void add_tag_end(const char* name)
     {
-        Event* e = new Event()
+        Event* e = new Event();
         e->type = END_TAG;
-        e->tag_name = name;
+        e->_tag_name = name;
         events.push_back(e);
     }
     void add_chardata(const char* data, int len)
@@ -452,8 +456,9 @@ class XMLStreamReader {
     
     XML_Parser parser;
     XMLStream& target;
+    
 public:
-    XMLReader(XMLStream& target): target(target) 
+    XMLStreamReader(XMLStream& target): target(target) 
     {
         initParser();
     }
@@ -462,11 +467,11 @@ private:
     void initParser()
     {
         parser = XML_ParserCreate("US-ASCII");        
-        XML_SetStartElementHandler(parser, &XMLReader<T>::startElementHandler);
-        XML_SetEndElementHandler(parser, &XMLReader<T>::endElementHandler);
-        XML_SetCharacterDataHandler(parser, &XMLReader<T>::characterDataHandler);
+        XML_SetStartElementHandler(parser, &XMLStreamReader<T>::startElementHandler);
+        XML_SetEndElementHandler(parser, &XMLStreamReader<T>::endElementHandler);
+        XML_SetCharacterDataHandler(parser, &XMLStreamReader<T>::characterDataHandler);
     }
-    ~XMLReader()
+    ~XMLStreamReader()
     {
         XML_ParserFree(parser);
     }    
@@ -486,17 +491,17 @@ private:
                                    const XML_Char *name,
                                    const XML_Char **atts)
     {
-        ((XMLReader<T>*)userData)->startElement(name, atts);
+        ((XMLStreamReader<T>*)userData)->startElement(name, atts);
     }
     
     static void XMLCALL endElementHandler(void *userData, const XML_Char *name)
     {
-        ((XMLReader<T>*)userData)->endElement(name);
+        ((XMLStreamReader<T>*)userData)->endElement(name);
     }
     
     static void XMLCALL characterDataHandler(void *userData, const XML_Char *s, int len)
     {
-        ((XMLReader<T>*)userData)->characterData(s,len);
+        ((XMLStreamReader<T>*)userData)->characterData(s,len);
     }
 };
 
@@ -505,7 +510,7 @@ class XMLStreamMutator {
     Symbol target_tag;
     
 public:
-    XMLStreamMutator(XMLStream xmlStream, Symbol target): xmlStream(xmlStream), target(target) {}
+    XMLStreamMutator(XMLStream xmlStream, Symbol target): xmlStream(xmlStream), target_tag(target) {}
     
     void begin_composite(const tinfra::Symbol& s, tinfra::CompositeType)
     {
@@ -513,7 +518,7 @@ public:
     }
     template<typename T>
     void operator()(tinfra::Symbol const& a, T& target) {
-        if( a != target_tag ) return;                
+        if( !(a == target_tag) ) return;
         {
             const char* current_tag_name = a.c_str();
             XMLStream::Event* e = seek_to_start(current_tag_name);
@@ -526,7 +531,7 @@ public:
             if( e->type == XMLStream::START_TAG) {
                 Symbol subtag_symbol = e->tag_name;
                 XMLStreamMutator subtag_processor(xmlStream, subtag_symbol);
-                TypeTraits<T>::mutate(target, subtag_symbol, subtag_processor);
+                tinfra::TypeTraits<T>::mutate(target, subtag_symbol, subtag_processor);
             } else if( e->type == XMLStream::END_TAG) {
                 xmlStream.read();
                 return;
@@ -538,20 +543,21 @@ public:
             }
         }            
     }
+    
 private:
-    void XMLStream::Event* seek_to_start(const char* name)
+    XMLStream::Event* seek_to_start(const char* name)
     {
         while(true) {
             XMLStream::Event* e = xmlStream.read();
             if( e == 0 ) {
-                return; // FIXME: it's an error
+                return 0; // FIXME: it's an error
             } else if( e->type == XMLStream::START_TAG) {
-                if( strcmp(current_tag_name, e->tag_name) == 0) {
+                if( strcmp(name, e->tag_name()) == 0) {
                     return e;
                 }
             } else if( e->type == XMLStream::END_TAG) {
                 // XXX: WTF, END BEFORE START?
-                return;
+                return 0;
             }
         }
         return 0; // XXX: or throw
@@ -571,8 +577,6 @@ private:
 
 };
 
-static XMLReader {
-};
 
 template <typename T>
 void xml_read(XMLStream& xmlStream, Symbol& root, T& target)
@@ -583,6 +587,7 @@ void xml_read(XMLStream& xmlStream, Symbol& root, T& target)
 }
 int main2()
 {
+    test1();
     return 0;
 }
 
