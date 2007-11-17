@@ -22,13 +22,14 @@ public:
 	
 	// comparision
 	bool operator == (const Symbol& other) const { return symbolId == other.symbolId; } 
+	bool operator != (const Symbol& other) const { return symbolId != other.symbolId; } 
 	bool operator < (const Symbol& other)  const { return symbolId < other.symbolId; }
 	
 	// getters and cast operators
 	
 	id_type            getId() const   { return symbolId; }
 	const std::string& getName() const { return symbolNames->at(symbolId); } 
-        const char*        c_str() const { return symbolNames->at(symbolId).c_str(); }
+        const char*        c_str() const   { return symbolNames->at(symbolId).c_str(); }
 	
 	operator const string& () const    { return symbolNames->at(symbolId); }
 	operator const char* () const      { return c_str(); }
@@ -59,6 +60,7 @@ private:
 
 	static int             nextFreeSymbolId;
 };
+
 
 };
 

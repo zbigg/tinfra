@@ -25,10 +25,13 @@ namespace detail {
 			std::ostringstream fmt;
 			fmt << v; // TODO: catch IO failures
 			dest = fmt.str();
+			//std::cerr << "to_string<" << TypeTraits<T>::name() << ">(" << v << ") -> " << dest.c_str() << std::endl;
 		}
 		static void from_string(const char* v, T& dest) { 
 			std::istringstream in(v);
 			in >> dest; // TODO: catch IO, format failures
+			
+			//std::cerr << "from_string<" << TypeTraits<T>::name() << ">(" << v << ") -> " << dest << std::endl;
 		}
 	};
 };
@@ -36,8 +39,14 @@ namespace detail {
 // default implementation to catch all default casts
 template <typename T>
 struct LexicalInterpreter {
-	static void to_string(T const&, std::string&) {}
-	static void from_string(const char*, T&) {}
+	static void to_string(T const& v, std::string& r) {
+	    //std::cerr << "WARNING! to_string<" << TypeTraits<T>::name() << ">(" << v << ") -> \"\"" << std::endl;
+	    r = "<no conversion>";
+	}
+	static void from_string(const char* v, T& t) {
+	    std::cerr << "WARNING! from_string<" << TypeTraits<T>::name() << ">(" << v << ") -> NO OOP" << std::endl;
+	    t = T();
+	}
 };
 
 // default implementation provided by default stream bases string IO
@@ -82,6 +91,19 @@ struct LexicalInterpreter<T[N]> {
 	}
 };
 
+template<> 
+struct LexicalInterpreter<Symbol> {
+	static void to_string(Symbol const& v, std::string& dest) {		
+	    std::stringstream a;
+	    a << v.c_str() << "(" << v.getId() << ")";
+	    dest = a.str();
+	    //dest = v.getName();
+	}
+	static void from_string(const char* v, Symbol& dest) {	    
+	    dest = Symbol::get(v);
+	    std::cerr << "IN(" << v << ") -> symbol " << dest.c_str() << "(" << dest.getId() << ")" << std::endl;
+	}
+};
 //
 //
 //

@@ -65,7 +65,9 @@ public:
 	template <typename T>
 	void operator () (const tinfra::Symbol& s, const T& t) {
                 out << " " << map(s).c_str() << "=\"";
-                out << t;
+                std::string a;
+                tinfra::to_string(t, a);
+                out << a.c_str();
                 out << "\"";            
 	}
 private:
