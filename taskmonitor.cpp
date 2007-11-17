@@ -580,15 +580,15 @@ public:
 
 class XMLStreamMutator {
     XMLStream& xml_stream;
-    Symbol target_tag;
-    const xml::symbol_mapping& mapping;
+    Symbol target_symbol;
+    const xml::XMLSymbolMapping& mapping;
 public:
-    XMLStreamMutator(XMLStream& xml_stream, Symbol target,xml::symbol_mapping const& mapping): xml_stream(xml_stream), target_tag(target),mapping(mapping) {}
+    XMLStreamMutator(XMLStream& xml_stream, Symbol target,xml::XMLSymbolMapping const& mapping): xml_stream(xml_stream), target_symbol(target),mapping(mapping) {}
     
     template <typename T>
     void managed_struct(T& object, const tinfra::Symbol& object_symbol)
     {
-        if( object_symbol != target_tag ) return;
+        if( tag_symbol != target_symbol ) return;
         //cerr << "XMLStreamMutator::managed_struct( symbol=" << object_symbol.c_str() << " type=" << tinfra::TypeTraits<T>::name() << ")" << endl;
         {
             XMLStream::Event* e = seek_to_start(object_symbol);

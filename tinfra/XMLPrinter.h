@@ -9,14 +9,40 @@
 
 namespace xml {
 
-typedef std::map<tinfra::Symbol, tinfra::Symbol> symbol_mapping;
+class XMLSymbolMapping {
+    typedef tinfra::Symbol Symbol;
+    typedef std::map<Symbol, Symbol> translation_table_t;
+    
+    void map_class_name(Symbol const& src, tinfra,Symbol const& xml) { 
+        class_name_mapping[src] = xml; 
+    }
+    void map_field(Symbol const& src, Symbol const& xml) {
+        field_mapping[src] = xml;
+    }
+    Symbol map_class_name(Symbol const s) {
+        return find_symbol(s, class_name_mapping);
+    }
+    Symbol map_field(Symbol const s) {
+        return find_symbol(s, field_mapping);
+    }
+    
+private:
+    static Symbol find_symbol(Symbol const& s, translation_table_t const& t) {
+        if( t.size() == 0 ) return s;
+        translation_table_t::const_iterator r = t.find(other);
+        if( r == t.end() ) return s;
+        return r->second;
+    }
+    translation_table_t class_name_mapping;
+    translation_table_t field_mapping;    
+};
     
 namespace detail {
     
 class XMLPrinterFunctor
 {
 public:	
-	XMLPrinterFunctor(std::ostream& _out, symbol_mapping const& mapping): 
+	XMLPrinterFunctor(std::ostream& _out, XMLSymbolMapping const& mapping): 
             out(_out), 
             indent(0), 
             in_arg_list(false),
@@ -25,18 +51,20 @@ public:
         template <typename T>
         void managed_struct(T const& object, const tinfra::Symbol& object_symbol)
         {
-            begin_composite(object_symbol);
+            Symbol xml_class_symbol = symbol_mapping.map_class_name(object_symbol);
+            begin_composite(xml_class_symbol);
             tinfra::tt_process<T>(object, *this);
-            end_composite(object_symbol);
+            end_composite(xml_class_symbol);
         }
         template <typename T>
         void list_container(T const& container, tinfra::Symbol const& container_symbol, tinfra::Symbol const& item_symbol)
         {
-            begin_composite(container_symbol);
+            Symbol xml_class_symbol = symbol_mapping.map_class_name(container_symbol);
+            begin_composite(xml_class_symbol);
             for( typename T::const_iterator i = container.begin(); i != container.end(); ++i ) {
                 tinfra::TypeTraits<typename T::value_type>::process(*i,item_symbol, *this);
             }
-            end_composite(container_symbol);
+            end_composite(xml_class_symbol);
         }
         
 	void begin_composite(const tinfra::Symbol& s) 
@@ -64,7 +92,7 @@ public:
 
 	template <typename T>
 	void operator () (const tinfra::Symbol& s, const T& t) {
-                out << " " << map(s).c_str() << "=\"";
+                out << " " << symbol_mapping.map_field(s).c_str() << "=\"";
                 std::string a;
                 tinfra::to_string(t, a);
                 out << a.c_str();
@@ -74,13 +102,7 @@ private:
 	std::ostream& out;
 	int           indent;
         bool          in_arg_list;
-        symbol_mapping const& mapping;
-        tinfra::Symbol map(tinfra::Symbol const& other) {
-            if( mapping.size() == 0 ) return other;
-            symbol_mapping::const_iterator r = mapping.find(other);
-            if( r == mapping.end() ) return other;
-            return r->second;
-        }
+        XMLSymbolMappingconst& symbol_mapping;        
         
 	void doindent(int indent) {
 		for(int i = 0; i < indent; ++i) out << "    ";
@@ -100,7 +122,7 @@ struct XMLPrinter {
     }
 
     template <typename T>
-    static void write(ostream& o, const tinfra::Symbol& s, const T& x, symbol_mapping const& mapping)
+    static void write(ostream& o, const tinfra::Symbol& s, const T& x, XMLSymbolMapping const& mapping)
     {
         detail::XMLPrinterFunctor f(o,mapping);
         
