@@ -214,14 +214,12 @@ struct ManagedStruct: public TypeTraitsGeneric<T>  {
 template <typename T>
 struct STLContainer: public TypeTraitsGeneric<T>  {
     template <typename F>
-    static void process(const T& t, const Symbol& s, F& f) {
-        static const Symbol item_symbol = TypeTraits<typename T::value_type>::symbol();
-        f.list_container(t, s, item_symbol);
+    static void process(const T& t, const Symbol& s, F& f) {        
+        f.list_container(t, s);
     }
     template <typename F>
     static void mutate(T& t, const Symbol& s, F& f) {
-        static const Symbol item_symbol = TypeTraits<typename T::value_type>::symbol();
-        f.list_container(t, s, item_symbol);
+        f.list_container(t, s);
     }
 };
 

@@ -23,9 +23,11 @@ namespace detail {
 	struct DefaultLexicalInterpreter {
 		static void to_string(T const& v, std::string& dest) { 
 			std::ostringstream fmt;
-			fmt << v; // TODO: catch IO failures
+			to_string(v, fmt);
 			dest = fmt.str();
-			//std::cerr << "to_string<" << TypeTraits<T>::name() << ">(" << v << ") -> " << dest.c_str() << std::endl;
+		}
+		static void to_string(T const& v, std::ostream& dest) { 
+			dest << v;
 		}
 		static void from_string(const char* v, T& dest) { 
 			std::istringstream in(v);
@@ -40,8 +42,13 @@ namespace detail {
 template <typename T>
 struct LexicalInterpreter {
 	static void to_string(T const& v, std::string& r) {
+	    std::ostringstream fmt;
+	    to_string(v, fmt);
+	    r = fmt.str();
+	}
+	static void to_string(T const& v, std::ostream& r) {
 	    //std::cerr << "WARNING! to_string<" << TypeTraits<T>::name() << ">(" << v << ") -> \"\"" << std::endl;
-	    r = "<no conversion>";
+	    r << "<no conversion>";
 	}
 	static void from_string(const char* v, T& t) {
 	    std::cerr << "WARNING! from_string<" << TypeTraits<T>::name() << ">(" << v << ") -> NO OOP" << std::endl;
@@ -72,6 +79,9 @@ struct LexicalInterpreter<std::string> {
 	static void to_string(std::string const& v, std::string& dest) {
 		dest = v;
 	}
+	static void to_string(std::string const& v, std::ostream& dest) {
+		dest << v;
+	}
 	static void from_string(const char* v, std::string& dest) {
 		dest = v;
 	}
@@ -81,6 +91,9 @@ template<typename T, int N>
 struct LexicalInterpreter<T[N]> {
 	static void to_string(T v[N], std::string& dest) {
 		dest = v;
+	}
+	static void to_string(T v[N], std::ostream& dest) {
+		dest << dest;
 	}
 	static void from_string(const char* v, char dest[N]) {
 		if( ::strlen(v) <= N-1 ) {
@@ -93,16 +106,15 @@ struct LexicalInterpreter<T[N]> {
 
 template<> 
 struct LexicalInterpreter<Symbol> {
-	static void to_string(Symbol const& v, std::string& dest) {		
-	    std::stringstream a;
-	    a << v.c_str() << "(" << v.getId() << ")";
-	    dest = a.str();
-	    //dest = v.getName();
+	static void to_string(Symbol const& v, std::string& dest) {	    
+	    dest = v.getName();
+	}
+	static void to_string(Symbol const& v, std::ostream& dest) {
+	    dest << v.c_str();
 	}
 	static void from_string(const char* v, Symbol& dest) {	    
-	    dest = Symbol::get(v);
-	    std::cerr << "IN(" << v << ") -> symbol " << dest.c_str() << "(" << dest.getId() << ")" << std::endl;
-	}
+	    dest = Symbol(v);
+	}	
 };
 //
 //
@@ -177,6 +189,11 @@ void from_string(char const* str, F& dest) {
 
 template <typename F>
 void to_string(F const& value, std::string& dest) {
+	LexicalInterpreter<F>::to_string(value, dest);
+}
+
+template <typename F>
+void to_string(F const& value, std::ostream& dest) {
 	LexicalInterpreter<F>::to_string(value, dest);
 }
 
