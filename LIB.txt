@@ -1,0 +1,47 @@
+tinfra/main.h
+    - tinfra::Symbol
+    - tinfra::TypeTraits
+    - tinfra::process/mutate
+    - tinfra::get/set
+    
+tinfra/string.h
+    tinfra::to/from_string
+    
+tinfra/xml.h
+    - tinfra::xml
+    
+tifnra/sql.h
+    - tinfra::sql
+
+tinfra/csv.h
+    - tinfra::csv
+    
+=============
+Naming and some Manifesto
+
+    Naming belongs to owning entity, so anywwhere in tinfra you'll find
+    places that name separate entity from data itself.
+    
+    Why, because this is data infra not object infra. Objects are other
+    kind of entities thay are a whole.
+    
+    Data is as anonymous as it can be and should be. Data should be free. Free in sense of implementation
+    and ways you manage it.
+    
+    Consistency is not immanent feature of data. Dat may be incosistent and you as designer must be aware of that.
+    That's why you're not forced to this or that philosophy of ensuring data corrctness or availability.
+    
+    Regarding encapsulation and getters, setters. Again we care about data not model. Again data are physical
+    and they existence is plain fact (you do have it or you don't) it's mutaibility is other fact. Your struct
+    is const or is not. Plain fact.
+        
+    So after this bunch of simple thruths (and falses) i say. Tinfra is about plain data management.
+    
+    Validity, consistency, atomicity is program responsibility.
+    
+    Tinfra cares only about:
+        - const correctnes - you can't modify anything without ugly hacks
+        - aggregation - let's you do same on structs
+        
+    Tinfra provides some tools for validity and atomicity.
+    
