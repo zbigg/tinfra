@@ -22,13 +22,23 @@ Naming and some Manifesto
     Naming belongs to owning entity, so anywwhere in tinfra you'll find
     places that name separate entity from data itself.
     
-    Why, because this is data infra not object infra. Objects are other
-    kind of entities thay are a whole.
+    Why? Because this is data infra not object or model infra. Objects are other
+    kind of entities. Object's aim is to model something.
+    
+    Why? Because i'm revisiting non-OOP because i'm sick of it (persolal bias).
+    
+    Data is like plain int, tuple(int,string) etc. no meaning. Just structure&some data in.
     
     Data is as anonymous as it can be and should be. Data should be free. Free in sense of implementation
     and ways you manage it.
+    The only thing bounding you is C++. C++ gives us ways to define data structures, why not use them.
+    Tinfra supports C++ struct (non-recursive), STL vector and list.
+    No pointers support yet. Sitting and thinking.
     
-    Consistency is not immanent feature of data. Dat may be incosistent and you as designer must be aware of that.
+    Consistency is not immanent feature of data. 
+    Consistenct is feature of a model.
+    Data may be incosistent and you as designer must be aware of that.
+    You also know it's sometimes good to hold insonsistent or invalid data in program.
     That's why you're not forced to this or that philosophy of ensuring data corrctness or availability.
     
     Regarding encapsulation and getters, setters. Again we care about data not model. Again data are physical
@@ -39,9 +49,12 @@ Naming and some Manifesto
     
     Validity, consistency, atomicity is program responsibility.
     
+    We'll try to provide some tools for these, but that's another story.
+    
     Tinfra cares only about:
         - const correctnes - you can't modify anything without ugly hacks
-        - aggregation - let's you do same on structs
+        - aggregation - let's you do same things on structs and trees of structs without explicitly
+                        repeating structure of data in each routine (there is only one duplication)
         
-    Tinfra provides some tools for validity and atomicity.
+    
     
