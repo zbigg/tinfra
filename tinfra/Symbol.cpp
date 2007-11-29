@@ -33,7 +33,7 @@ Symbol::id_type Symbol::getIdForName(const char* name)
 	if( i == symbolMapString->end() ) 
 	{		
 		id_type resultId = nextFreeSymbolId++;
-		cerr << "Symbol::register(" << name << ") = " << resultId << endl;
+		//cerr << "Symbol::register(" << name << ") = " << resultId << endl;
 		symbolNames->push_back(name);
 		const string& nameInstance = symbolNames->at(resultId);
 		(*symbolMapString)[nameInstance.c_str()] = resultId;

@@ -53,14 +53,14 @@ struct DummyType {};
     
 typedef std::map<Symbol::id_type, int> OffsetMap;
 
-template<typename T,typename V>
+template<typename MSType,typename FieldType>
 struct OffsetAnalyzer {
 	OffsetMap& offsetMap;
-	const T& parent;
-	OffsetAnalyzer(const T& parent, OffsetMap& offsetMap) : parent(parent), offsetMap(offsetMap) {}
+	const MSType& parent;
+	OffsetAnalyzer(const MSType& parent, OffsetMap& offsetMap) : parent(parent), offsetMap(offsetMap) {}
 		
         // register only fields of type V
-	void operator() (const Symbol& s, const V& a)
+	void operator() (const Symbol& s, const FieldType& a)
         {
             offsetMap[s] = (const char*)&a - (const char*)&parent;
         }
@@ -73,14 +73,14 @@ struct OffsetAnalyzer {
 };
 
 
-template <typename T,typename V>
+template <typename MSType,typename FieldType>
 const OffsetMap& getOffsetMap()
 {
 	static StaticCacheObject<OffsetMap> offsetMap;	
 	
 	if( !offsetMap.isInitialized() ) {
-		T dummy;
-		OffsetAnalyzer<T,V> analyzer(dummy, offsetMap);
+		MSType dummy;
+		OffsetAnalyzer<MSType,FieldType> analyzer(dummy, offsetMap);
 		process(dummy, analyzer);
 		offsetMap.setInitialized();
 	}
@@ -89,9 +89,9 @@ const OffsetMap& getOffsetMap()
 
 template<typename T>
 struct SymbolsGetter {
-	vector<Symbol>& dest;
+	std::vector<Symbol>& dest;
 	
-	SymbolsGetter(vector<Symbol>& _dest) : dest(_dest) {}
+	SymbolsGetter(std::vector<Symbol>& _dest) : dest(_dest) {}
 		
         // register only fields of type V
         template <typename ANY>
@@ -146,7 +146,7 @@ template <typename T>
 struct TypeTraitsGeneric
 {
     static const char* name() {
-        const type_info& ti = typeid(T);
+        const std::type_info& ti = typeid(T);
         return ti.name();
     }
     
@@ -232,7 +232,7 @@ class field_error: public std::exception {
     std::string _what;
 public:
     field_error(const char* c, const char* f) {
-        _what = string("field_error: ") + string(c) + string("::") + string(f) + " not found or incompatible type";
+        _what = std::string("field_error: ") + std::string(c) + std::string("::") + std::string(f) + " not found or incompatible type";
     }
     virtual ~field_error() throw() {}
         
@@ -240,27 +240,29 @@ public:
         return _what.c_str();
     }
 };
-
-template<typename T, typename X>
-void set(X& x, const Symbol& key, const T& value)
+namespace detail {
+    template<typename FieldType, typename MSType>
+    int get_symbol_offset(Symbol const& key)
+    {
+        const detail::OffsetMap& om = detail::getOffsetMap<MSType,FieldType>();    
+        detail::OffsetMap::const_iterator i = om.find(key);
+        if( i == om.end() ) throw field_error(TypeTraits<MSType>::name(), key.c_str());
+        return i->second;
+    }
+};
+template<typename FieldType, typename MSType>
+void set(MSType& x, const Symbol& key, const FieldType& value)
 {
-    const detail::OffsetMap& om = detail::getOffsetMap<X,T>();
-    
-    detail::OffsetMap::const_iterator i = om.find(key);
-    if( i == om.end() ) throw field_error(TypeTraits<X>::name(), (const char*)key);
-    T* target = (T*)((char*)&x + i->second);
+    int offset = detail::get_symbol_offset<FieldType,MSType>(key);
+    FieldType* target = (FieldType*)((char*)&x + offset);
     *target = value;
 }
 
-template<typename T, typename X>
-const T& get(const X& x, const Symbol& key)
-{
-    const detail::OffsetMap& om = detail::getOffsetMap<X,T>();    
-    detail::OffsetMap::const_iterator i = om.find(key);
-    
-    if( i == om.end() ) throw field_error(TypeTraits<X>::name(), (const char*)key);
-    
-    const T* target = (const T*)( (const char*)&x + i->second );
+template<typename FieldType, typename MSType>
+const FieldType& get(const MSType& x, const Symbol& key)
+{    
+    int offset = detail::get_symbol_offset<FieldType,MSType>(key);
+    const FieldType* target = (const FieldType*)( (const char*)&x + offset );
     return *target;
 }
 

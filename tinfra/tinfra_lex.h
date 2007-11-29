@@ -10,7 +10,7 @@ class bad_lexical_cast: public std::bad_cast {
     std::string _what;
 public:
     bad_lexical_cast(const char* src, const char* dest) {
-        _what = string("cannot cast from '") + string(src) + string("' to '") + string(dest) + "'";
+        _what = std::string("cannot cast from '") + std::string(src) + std::string("' to '") + std::string(dest) + "'";
     }
     virtual ~bad_lexical_cast() throw() {}
         
@@ -51,7 +51,7 @@ struct LexicalInterpreter {
 	    r << "<no conversion>";
 	}
 	static void from_string(const char* v, T& t) {
-	    std::cerr << "WARNING! from_string<" << TypeTraits<T>::name() << ">(" << v << ") -> NO OOP" << std::endl;
+	    //std::cerr << "WARNING! from_string<" << TypeTraits<T>::name() << ">(" << v << ") -> NO OOP" << std::endl;
 	    t = T();
 	}
 };
@@ -87,19 +87,21 @@ struct LexicalInterpreter<std::string> {
 	}
 };
 
-template<typename T, int N> 
-struct LexicalInterpreter<T[N]> {
-	static void to_string(T v[N], std::string& dest) {
+template<int N> 
+struct LexicalInterpreter<char[N]> {
+	static void to_string(char v[N], std::string& dest) {
 		dest = v;
 	}
-	static void to_string(T v[N], std::ostream& dest) {
+	static void to_string(char v[N], std::ostream& dest) {
 		dest << dest;
 	}
 	static void from_string(const char* v, char dest[N]) {
 		if( ::strlen(v) <= N-1 ) {
 		    ::strcpy(dest,v);
 		} else {
-		    throw bad_lexical_cast(TypeTraits<const char*>::name(), TypeTraits<char[N]>::name());
+                    std::ostringstream t2;
+                    t2 << "char[" << N << "]";
+		    throw bad_lexical_cast("const char*", t2.str().c_str());
 		}
 	}
 };
