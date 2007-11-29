@@ -13,3 +13,6 @@ clean:
 
 taskmonitor.o: taskmonitor.cpp tinfra/tinfra.h tinfra/tinfra_lex.h tinfra/Symbol.h tinfra/XMLPrinter.h
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+test_multitype_map: test_multitype_map.o
+	$(CXX) -g $(PFLAGS) -o $@ $^ $(LIBS)
