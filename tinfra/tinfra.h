@@ -190,7 +190,7 @@ template <typename T, typename F>
 void tt_process(T const& obj, F& f)
 {
     TypeTraitsProcessCaller<F> f1(f);
-    process<T>(obj, f1);
+    process(obj, f1);
 }
 
 template <typename T, typename F>
