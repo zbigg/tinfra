@@ -9,6 +9,11 @@
 
 namespace tinfra {
 
+template <typename T, typename A>
+void process(const T& t, A& processor)
+{
+	t.apply(processor);
+}
 namespace detail {
 	template <typename A>
 	struct MutatorWrapper {
@@ -25,14 +30,10 @@ template <typename T, typename A>
 void mutate(T& t, A& mutator)
 {
 	detail::MutatorWrapper<A> mutator_wrapper(mutator);
-	const_cast<const T&>(t).apply(mutator_wrapper);
+	process(const_cast<const T&>(t),mutator_wrapper);
 }
 	
-template <typename T, typename A>
-void process(const T& t, A& processor)
-{
-	t.apply(processor);
-}
+
 
 namespace detail {
 
