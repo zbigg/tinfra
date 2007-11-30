@@ -142,12 +142,14 @@ enum CompositeType {
 	STRUCT, LIST, MAP
 };
 
+std::string demangle_typeinfo_name(const std::type_info& t);
+
 template <typename T>
 struct TypeTraitsGeneric
 {
     static const char* name() {
-        const std::type_info& ti = typeid(T);
-        return ti.name();
+        static const std::string name = demangle_typeinfo_name(typeid(T));
+        return name.c_str();
     }
     
     static Symbol symbol() {

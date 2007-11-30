@@ -99,9 +99,7 @@ struct LexicalInterpreter<char[N]> {
 		if( ::strlen(v) <= N-1 ) {
 		    ::strcpy(dest,v);
 		} else {
-                    std::ostringstream t2;
-                    t2 << "char[" << N << "]";
-		    throw bad_lexical_cast("const char*", t2.str().c_str());
+                    throw bad_lexical_cast(TypeTraits<const char*>::name(), TypeTraits<char[N]>::name());
 		}
 	}
 };
