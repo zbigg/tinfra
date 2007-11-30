@@ -3,20 +3,16 @@
 #include <sstream>
 
 #include "tinfra.h"
+#include "exception.h"
 
 namespace tinfra {
 
-class bad_lexical_cast: public std::bad_cast {
-    std::string _what;
+class bad_lexical_cast: public generic_exception {
 public:
-    bad_lexical_cast(const char* src, const char* dest) {
-        _what = std::string("cannot cast from '") + std::string(src) + std::string("' to '") + std::string(dest) + "'";
-    }
+    bad_lexical_cast(const char* src, const char* dest): 
+	generic_exception(std::string("cannot cast from '") + std::string(src) + std::string("' to '") + std::string(dest) + "'")
+    {}
     virtual ~bad_lexical_cast() throw() {}
-        
-    const char* what() const throw() {
-        return _what.c_str();
-    }
 };
 namespace detail {
 	template <typename T>

@@ -5,7 +5,7 @@
 
 #include "Symbol.h"
 #include "StaticCacheObject.h"
-#include <exception>
+#include "exception.h"
 
 namespace tinfra {
 
@@ -230,17 +230,12 @@ struct STLContainer: public TypeTraitsGeneric<T>  {
 /// setters & getters
 ///
 
-class field_error: public std::exception {
-    std::string _what;
+class field_error: public generic_exception {
 public:
-    field_error(const char* c, const char* f) {
-        _what = std::string("field_error: ") + std::string(c) + std::string("::") + std::string(f) + " not found or incompatible type";
-    }
+    field_error(const char* c, const char* f):
+	generic_exception(std::string("field_error: ") + std::string(c) + std::string("::") + std::string(f) + " not found or incompatible type")
+    {}
     virtual ~field_error() throw() {}
-        
-    const char* what() const throw() {
-        return _what.c_str();
-    }
 };
 namespace detail {
     template<typename FieldType, typename MSType>

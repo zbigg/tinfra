@@ -1,13 +1,13 @@
 
 
 #PFLAGS=-pg -ftest-coverage -fprofile-arcs
-CXXFLAGS=-I. -g $(PFLAGS) -I`pg_config --includedir`
-LIBS=-lexpat -L`pg_config --libdir` -lpq
+CXXFLAGS=-I. -g $(PFLAGS)
+LIBS=-lexpat -rdynamic
 
 
 all: taskmonitor test_multitype_map
 
-TINFRA_OBJECTS=tinfra/tinfra.o tinfra/Symbol.o
+TINFRA_OBJECTS=tinfra/tinfra.o tinfra/Symbol.o tinfra/exception.o
 
 taskmonitor: taskmonitor.o $(TINFRA_OBJECTS)
 	$(CXX) -g $(PFLAGS) -o $@ $^ $(LIBS)

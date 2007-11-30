@@ -1,4 +1,5 @@
 #include "multitype_map.h"
+#include "tinfra/tinfra_lex.h"
 
 #include <iostream>
 #include <string>
@@ -13,5 +14,8 @@ int main()
     cout << "m<int>(b)" << m.get<int>("b") << endl;
     cout << "m<float>(a)" << m.get<float>("a") << endl;
     cout << "m<string>(a)" << m.get<string>("a") << endl;
+    
+    char abc[3];
+    tinfra::from_string("abc", abc);
     return 0;
 }

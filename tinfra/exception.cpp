@@ -1,5 +1,6 @@
 #include <exception>
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 
@@ -28,6 +29,19 @@ void populate_stacktrace(stacktrace_t& dest,int ignore_stacks)
 	dest.push_back(a);
     }
     ::free(symbols);
+}
+
+//
+// generic_exception implementation
+//
+
+generic_exception::generic_exception(std::string const& message): _message(message) {
+    populate_stacktrace(_stacktrace, 1);
+    std::cerr << "exception: " << message << std::endl;
+    for( stacktrace_t::const_iterator i = _stacktrace.begin(); i != _stacktrace.end(); ++i ) {
+	std::cerr << "    at 0x" << std::setfill('0') << std::setw(8) << std::hex << (long)i->address 
+	          << "(" << i->symbol << ")" << std::endl;
+    }
 }
 
 } // end of namespace tinfra
