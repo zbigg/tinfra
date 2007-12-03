@@ -12,8 +12,8 @@ TINFRA_OBJECTS=tinfra/tinfra.o tinfra/Symbol.o
 taskmonitor: taskmonitor.o $(TINFRA_OBJECTS)
 	$(CXX) -g $(PFLAGS) -o $@ $^ $(LIBS)
 
-test_multitype_map: test_multitype_map.o $(TINFRA_OBJECTS)
-	$(CXX) -g $(PFLAGS) -o $@ $^ $(LIBS)
+unittests: test_multitype_map.o unittests.o $(TINFRA_OBJECTS) 
+	$(CXX) -g $(PFLAGS) -o $@ $^ $(LIBS) -lunittest++
 
 clean:
 	rm -rf taskmonitor.exe test_multitype_map.exe

@@ -25,6 +25,16 @@ class multitype_map {
 public:
     ~multitype_map() { cleanup(); }
     
+    /** Returns true if this map contains a mapping for the specified key (and typename). */
+    template<typename T>
+    bool contains(K const& k) const {
+        type_key mkey = get_type_key<T>();
+        std::map<K, T> const* m = get_type_map<T>(mkey);
+        if( !m ) return false;
+        typename std::map<K, T>::const_iterator i = m->find(k);
+        return i != m->end();
+    }
+    
     /**
     * Get value
     *
@@ -33,7 +43,7 @@ public:
     */
     template<typename T>
     T const& get(K const& k) const {
-        static T const dummy;
+        static T dummy;
         type_key mkey = get_type_key<T>();
         std::map<K, T> const* m = get_type_map<T>(mkey);
         if( !m ) return dummy;
@@ -58,6 +68,14 @@ public:
         return (*m)[k];
     }
     
+    /***
+    * Associates value with key.
+    *
+    * Value may be modified.
+    *
+    * If specified value is missing, then reference to newly created value instance
+    * is returned 
+    */
     template <typename T>
     void     put(K const& k, T const& v) {
         type_key mkey = get_type_key<T>();
@@ -65,6 +83,13 @@ public:
         typename std::map<K, T>::value_type p(k,v);
         m->insert(p);
     }
+    
+    /// XXX: should we put it here ?
+    // i think no
+    //void put(K const& k, const char* str)
+    //{
+    //    put(k,std::string(str));
+    //}
 private:
     typedef std::type_info const* type_key;
     template <typename T>
@@ -99,7 +124,7 @@ private:
          if( mapi == wrapper_map.end() ) return 0;
          detail::dynamic_wrapper_base* b = mapi->second;
          detail::dynamic_wrapper<std::map<K,T> >* tb = dynamic_cast<detail::dynamic_wrapper<std::map<K,T> > *>(b);
-         return &tb.value;
+         return &tb->value;
     }
     void cleanup()
     {
