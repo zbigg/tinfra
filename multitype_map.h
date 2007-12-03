@@ -23,7 +23,7 @@ class multitype_map {
     typedef K key_type;
     
 public:
-    ~multitype_map() { cleanup(); }
+    ~multitype_map() { clear(); }
     
     /** Returns true if this map contains a mapping for the specified key (and typename). */
     template<typename T>
@@ -90,6 +90,16 @@ public:
     //{
     //    put(k,std::string(str));
     //}
+    
+    void clear()
+    {
+        for( wrapper_map_t::iterator i = wrapper_map.begin(); i != wrapper_map.end(); ++i ) {
+            detail::dynamic_wrapper_base* x = i->second;
+            i->second = 0;
+            delete x;
+        }
+        wrapper_map.clear();
+    }
 private:
     typedef std::type_info const* type_key;
     template <typename T>
@@ -125,16 +135,7 @@ private:
          detail::dynamic_wrapper_base* b = mapi->second;
          detail::dynamic_wrapper<std::map<K,T> >* tb = dynamic_cast<detail::dynamic_wrapper<std::map<K,T> > *>(b);
          return &tb->value;
-    }
-    void cleanup()
-    {
-        for( wrapper_map_t::iterator i = wrapper_map.begin(); i != wrapper_map.end(); ++i ) {
-            detail::dynamic_wrapper_base* x = i->second;
-            i->second = 0;
-            delete x;
-        }
-        wrapper_map.clear();
-    }
+    }    
 }; // end of template multitype_map<K>
 
 } // end of namespace tinfra

@@ -18,4 +18,9 @@ TEST(multitype_map)
     CHECK_VALUE(m, "a", int, 5);
     CHECK_VALUE(m, "b", double, 2.4);
     CHECK_VALUE(m, "c", string, "Z");
+    
+    m.clear();
+    CHECK( !m.contains<int>("a") );
+    CHECK( !m.contains<double>("a") );
+    CHECK( !m.contains<string>("Z") );
 }
