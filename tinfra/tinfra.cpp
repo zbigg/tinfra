@@ -27,8 +27,10 @@ std::string demangle_typeinfo_name(const std::type_info& t)
     case -1:
     case -2:
     case -3:
+    default:
         return t.name();
     }
+    
 #else
     return t.name();
 #endif

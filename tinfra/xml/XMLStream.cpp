@@ -1,7 +1,84 @@
+#include <iostream>
+
 #include "tinfra/xml/XMLStream.h"
 
 namespace tinfra { 
 namespace xml {
+    
+    
+///
+/// XMLEvent
+///
+
+static void args_array_delete(char** args)
+{
+    if( args ) {
+        char** ia = args;
+        while( *ia ) {
+            ::free(ia[0]); // name
+            ::free(ia[1]); // value
+            ia += 2;
+        }
+        delete[] args;
+    }
+}
+static char** args_array_copy(const char* const* src)
+{
+    if( src == 0 ) {
+        return 0;
+    }
+    int n = 0;
+    {
+        const char* const* ia = src;
+        while( *ia ) {
+            ia += 2;
+            n++;
+        }
+    }
+    {
+        char** result = new char*[n*2+1];
+        char** idest = result;
+        const char* const* isrc  = src;
+        while( *isrc ) {
+            idest[0] = strdup(isrc[0]);
+            idest[1] = strdup(isrc[1]);
+            //cout << idest[0] << "=" << idest[1] << " ";
+            idest += 2;
+            isrc  += 2;
+        }
+        idest[0] = 0;
+        return result;
+    }
+}
+
+XMLEvent::XMLEvent()
+{
+    _args = 0;
+}
+XMLEvent::XMLEvent(XMLEvent const& other)
+    : type(other.type), _tag_name(other._tag_name), _content(other._content), _args(0)
+{
+    // TODO: copy args!
+    _args = args_array_copy(other._args);
+}
+XMLEvent::~XMLEvent() {
+    args_array_delete(_args);
+}
+
+void event_report(const char* what, XMLEvent const& ev, std::ostream& o)
+{
+    //if( ev.type == XMLEvent::CHAR_DATA ) return;
+    o << what << ": XMLEvent " << ev.type;
+    if( ev.type == XMLEvent::CHAR_DATA ) {
+        o << " chardata";  
+    } if( ev.type == 0 ) {
+        o << " start tag: " << ev._tag_name.c_str();
+        if( ev._args )
+            o << " (with args)";
+    } else 
+        o << "   end tag: " << ev._tag_name.c_str();
+    o << std::endl;
+}
 ///
 /// XMLOutputStream::
 ///
@@ -77,6 +154,7 @@ void FileXMLOutputStream::char_data(const char* value)
     maybe_indent();
     dest_.sputn(value,strlen(value));
 }
+
 void FileXMLOutputStream::end_tag(const char* tag_name)
 {
     if( in_start_tag_ ) {
@@ -110,99 +188,96 @@ void    FileXMLOutputStream::maybe_newline()
 {
     if( human_readable_ ) dest_.sputc('\n');
 }
+
 void    FileXMLOutputStream::maybe_indent()
 {
     if( human_readable_ ) make_indentation(dest_, tag_nest_, 2);
 }
+
 ///
-/// XMLMemoryStream
+/// XMLEventBuffer
 ///
 
-XMLMemoryStream::XMLMemoryStream()
-: read_cursor(0), write_cursor(0)
+XMLEventBuffer::~XMLEventBuffer()
 {
-}
-
-XMLMemoryStream::~XMLMemoryStream()
-{
-    for( std::vector<XMLEvent*>::iterator i = events.begin(); i != events.end(); ++i ) {
+    for( std::vector<XMLEvent*>::iterator i = buffer.begin(); i != buffer.end(); ++i ) {
         delete *i;
     }
-    events.erase(events.begin(), events.end());
+    buffer.erase(buffer.begin(), buffer.end());
 }
 
-void XMLMemoryStream::write(XMLEvent const* ev)
+///
+/// XMLBufferOutputStream
+///
+
+XMLBufferOutputStream::XMLBufferOutputStream(XMLEventBuffer& pevents)
+: events(pevents)
+{
+}
+
+
+void XMLBufferOutputStream::write(XMLEvent const* ev)
 {
     XMLEvent* e = new XMLEvent(*ev);
-    events.push_back(e);
+    events.buffer.push_back(e);
 }
 
-void XMLMemoryStream::start_tag(const char* tag_name, const char* const* args)
+void XMLBufferOutputStream::start_tag(const char* tag_name, const char* const* args)
 {
     XMLEvent* e = new XMLEvent();
     e->type = XMLEvent::START_TAG;
     e->_tag_name = tag_name;
-    int n = 0;
-    {
-        const char* const* ia = args;
-        while( *ia ) {
-            ia += 2;
-            n++;
-        }
-    }
-    //cout << "TAG " << name << "(";
-    {
-        e->_args = new char*[n*2+1];
-        char** idest = e->_args;
-        const char* const* isrc  = args;
-        while( *isrc ) {
-            idest[0] = strdup(isrc[0]);
-            idest[1] = strdup(isrc[1]);
-            //cout << idest[0] << "=" << idest[1] << " ";
-            idest += 2;
-            isrc  += 2;
-        }
-        idest[0] = 0;
-    }
-    //cout << ")" << endl;
-    events.push_back(e);
+    e->_args = args_array_copy(args);    
+    events.buffer.push_back(e);
 }
 
-void XMLMemoryStream::arg(const char* name, const char* value)
+void XMLBufferOutputStream::arg(const char* name, const char* value)
 {
     // TODO:
     // throw tinfra::generic_exception("XMLMemoryStream::arg unimplemented");
 }
 
-void XMLMemoryStream::end_tag(const char* tag_name)
+void XMLBufferOutputStream::end_tag(const char* tag_name)
 {
     XMLEvent* e = new XMLEvent();
     e->type = XMLEvent::END_TAG;
     e->_tag_name = tag_name;
-    events.push_back(e);
+    events.buffer.push_back(e);
 }
 
-void XMLMemoryStream::char_data(const char* value)
+void XMLBufferOutputStream::char_data(const char* value)
 {
     XMLEvent* e = new XMLEvent();
     e->type = XMLEvent::CHAR_DATA;
     e->_content = value;
-    events.push_back(e);
+    events.buffer.push_back(e);
 }
 
-XMLEvent* XMLMemoryStream::peek() {
-    if( read_cursor < events.size() ) {
-        return events[read_cursor];
+///
+/// XMLBufferInputStream
+///
+
+XMLBufferInputStream::XMLBufferInputStream(XMLEventBuffer const& pevents)
+: cursor(0), events(pevents)
+{
+}
+
+XMLEvent* XMLBufferInputStream::peek() {
+    if( cursor < events.buffer.size() ) {
+        //event_report("PEEK", * events.buffer[cursor], std::cerr);
+        return events.buffer[cursor];
     } else {
+        //std::cerr << "PEEK: eof" << std::endl;
         return 0;
     }
 }
 
-XMLEvent* XMLMemoryStream::read() {
-    if( read_cursor < events.size() ) {
-        //cerr << "READ: "; events[cursor]->report();
-        return events[read_cursor++];
+XMLEvent* XMLBufferInputStream::read() {
+    if( cursor < events.buffer.size() ) {
+        //event_report("READ", * events.buffer[cursor], std::cerr);
+        return events.buffer[cursor++];
     } else {
+        //std::cerr << "READ: eof" << std::endl;
         return 0; // EOF
     }
 }

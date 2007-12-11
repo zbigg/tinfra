@@ -1,6 +1,7 @@
 #ifndef __tinfra_xml_XMLStream_h_h
 #define __tinfra_xml_XMLStream_h_h
 
+
 #include <string>
 #include <vector>
 #include <streambuf>
@@ -15,27 +16,9 @@ struct XMLEvent {
         CHAR_DATA = 2
     };
     
-    XMLEvent()
-    {
-        _args = 0;
-    }
-    XMLEvent(XMLEvent const& other)
-        : type(other.type), _tag_name(other._tag_name), _content(other._content), _args(0)
-    {
-        // TODO: copy args!
-        _args = 0;
-    }
-    ~XMLEvent() {
-        if( _args ) {
-            char** ia = _args;
-            while( *ia ) {
-                free(ia[0]); // name
-                free(ia[1]); // value
-                ia += 2;
-            }
-            delete[] _args;
-        }
-    }
+    XMLEvent();
+    XMLEvent(XMLEvent const& other);    
+    ~XMLEvent();
     
     const char* tag_name() const { 
         return _tag_name.c_str(); 
@@ -53,11 +36,6 @@ struct XMLEvent {
     std::string _tag_name;
     std::string _content;
     char** _args;
-    
-    void report()
-    {
-        //cerr << "XMLEvent " << type << " name " << _tag_name.c_str() << endl;
-    }
 };
 
 
@@ -106,17 +84,15 @@ private:
     bool             xml_document_started_;
 };
 
-class XMLMemoryStream: public XMLInputStream, public XMLOutputStream {
-public:
+struct XMLEventBuffer {
+    std::vector<XMLEvent*> buffer;
     
-    XMLMemoryStream();
-    virtual ~XMLMemoryStream();
-    ///
-    /// XMLInputStream implementation
-    ///
-    virtual XMLEvent* peek();
-    virtual XMLEvent* read();
-    
+    ~XMLEventBuffer();
+};
+
+class XMLBufferOutputStream: public XMLOutputStream {
+public:    
+    XMLBufferOutputStream(XMLEventBuffer& dest);    
     ///
     /// XMLOutputStream implementation
     ///    
@@ -128,9 +104,22 @@ public:
     virtual void end_tag(const char* tag_name);
     
 private:
-    std::vector<XMLEvent*> events;
-    int read_cursor;
-    int write_cursor;
+    
+    XMLEventBuffer& events;
+};
+
+class XMLBufferInputStream: public XMLInputStream {
+    
+public:
+    XMLBufferInputStream(XMLEventBuffer const& pevents);
+    ///
+    /// XMLInputStream implementation
+    ///    
+    virtual XMLEvent* read();
+    virtual XMLEvent* peek();
+private:
+    unsigned cursor;
+    XMLEventBuffer const& events;
 };
   
 /**

@@ -1,7 +1,7 @@
 
 
 #PFLAGS=-pg -ftest-coverage -fprofile-arcs
-CXXFLAGS=-I. -g $(PFLAGS)
+CXXFLAGS=-I. -g $(PFLAGS) -Wall
 LIBS=-lexpat 
 LDFLAGS=$(LIBS)
 
@@ -32,3 +32,4 @@ clean:
 
 -include .deps/*.d
 -include tinfra/.deps/*.d
+-include tinfra/xml/.deps/*.d

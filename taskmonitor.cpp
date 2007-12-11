@@ -381,14 +381,17 @@ void test2()
     initialize_xml_mapping(xml_symbol_mapping);
     {
         
-        
-        tinfra::xml::XMLMemoryStream xml_in;
-        tinfra::xml::read_xml("taskmonitor2.xml",xml_in);
-        tinfra::xml::load<TaskMonitor>(xml_in, Symbol("taskmonitor"), tm, xml_symbol_mapping);
+        tinfra::xml::XMLEventBuffer b;
+        tinfra::xml::XMLBufferOutputStream b1(b);
+        tinfra::xml::read_xml("taskmonitor2.xml",b1);
+        tinfra::xml::XMLBufferInputStream b2(b);
+        tinfra::xml::load<TaskMonitor>(b2, Symbol("taskmonitor"), tm, xml_symbol_mapping);
         cout << "readed!" << endl;
     }
     {
         tinfra::xml::FileXMLOutputStream xml_out(* cout.rdbuf());
+        xml_out.start_document();
+        xml_out.set_human_readable(true);
         tinfra::xml::dump(xml_out, Symbol("taskmonitor"), tm, xml_symbol_mapping);
         cout << "written!" << endl;
     }

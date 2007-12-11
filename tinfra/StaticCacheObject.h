@@ -12,7 +12,7 @@ template <typename T>
 		
 		StaticCacheObject() : initialized(false) {}
 		bool isInitialized() const { return initialized; }
-		bool setInitialized(bool i = true) { initialized = i; }
+		bool setInitialized(bool i = true) { initialized = i; return i;}
 				
 		operator T&() { return instance; }
 		operator const T&() const { return instance; }
