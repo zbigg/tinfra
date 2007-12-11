@@ -136,23 +136,12 @@ static void (*fatal_exception_handler) (void) = 0;
 static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
 {
     printf( "Fatal exception occurred.\n");
-    printf( "Stacktrace.\n");
+    printf( "Call stack:\n");
     show_stack( GetCurrentThread(), *(ep->ContextRecord) );    
-    printf( "Terminating application.\n");
     if( fatal_exception_handler ) {
 	fatal_exception_handler( /* ??? */);
-    }    
-    /*
-    HANDLE hThread;
-
-    DuplicateHandle( GetCurrentProcess(), GetCurrentThread(),
-	    GetCurrentProcess(), &hThread, 0, false, DUPLICATE_SAME_ACCESS );
-    
-    ShowStack( hThread, *(ep->ContextRecord) );
-    
-    CloseHandle( hThread );
-    */
-
+    }
+    printf( "Terminating application.\n");    
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
@@ -207,7 +196,7 @@ static bool initialize_sym(HANDLE hProcess)
     if ( symSearchPath.size() > 0 ) // if we added anything, we have a trailing semicolon
 	    symSearchPath = symSearchPath.substr( 0, symSearchPath.size() - 1 );
 
-    printf( "symbols path: %s\n", symSearchPath.c_str() );
+    //printf( "symbols path: %s\n", symSearchPath.c_str() );
 
     // why oh why does SymInitialize() want a writeable string?
     char* tmpSymSearchPath = new char[symSearchPath.size()+1];
@@ -243,7 +232,6 @@ static void show_stack(HANDLE hThread, CONTEXT& c )
     DWORD offsetFromSymbol; // tells us how far from the symbol we were
     
     IMAGEHLP_SYMBOL *pSym = (IMAGEHLP_SYMBOL *) malloc( IMGSYMLEN + MAXNAMELEN );
-    char undName[MAXNAMELEN]; // undecorated name
     char undFullName[MAXNAMELEN]; // undecorated name with all shenanigans
     
     IMAGEHLP_MODULE Module;
@@ -359,12 +347,12 @@ static void show_stack(HANDLE hThread, CONTEXT& c )
 	    module_base = Module.BaseOfImage;
 	}
 	
-	printf("0x%08x", (long)address);
+	printf("0x%08x", (unsigned int)address);
 	if( module_name ) {
 	    printf(" (%s)", module_name);	    
 	}
 	if( symbol_name ) {
-	    printf(" %s", symbol_name,symbol_offset);
+	    printf(" %s", symbol_name);
 	    if( symbol_offset != -1 ) {
 		printf(" (+%i bytes)", symbol_offset);
 	    }
@@ -405,8 +393,8 @@ static void enumAndLoadModuleSymbols( HANDLE hProcess, DWORD pid )
 	if ( pSymLoadModule( hProcess, 0, img, mod, (*it).baseAddress, (*it).size ) == 0 )
 		printf( "Error %lu loading symbols for \"%s\"\n",
 			gle, (*it).moduleName.c_str() );
-	else
-		printf( "Symbols loaded: \"%s\"\n", (*it).moduleName.c_str() );
+	//else
+	//	printf( "Symbols loaded: \"%s\"\n", (*it).moduleName.c_str() );
 
 	delete [] img;
 	delete [] mod;
@@ -496,7 +484,7 @@ static bool fillModuleListTH32( ModuleList& modules, DWORD pid )
     while ( keepGoing )
     {
 	// here, we have a filled-in MODULEENTRY32
-	printf( "%08lXh %6lu %-15.15s %s\n", (unsigned long)me.modBaseAddr, me.modBaseSize, me.szModule, me.szExePath );
+	//printf( "%08lXh %6lu %-15.15s %s\n", (unsigned long)me.modBaseAddr, me.modBaseSize, me.szModule, me.szExePath );
 	e.imageName = me.szExePath;
 	e.moduleName = me.szModule;
 	e.baseAddress = (DWORD) me.modBaseAddr;
@@ -598,8 +586,8 @@ static bool fillModuleListPSAPI( ModuleList& modules, DWORD pid, HANDLE hProcess
 	tt[0] = '\0';
 	pGMBN( hProcess, hMods[i], tt, TTBUFLEN );
 	e.moduleName = tt;
-	printf( "%08lXh %6lu %-15.15s %s\n", e.baseAddress,
-		e.size, e.moduleName.c_str(), e.imageName.c_str() );
+	//printf( "%08lXh %6lu %-15.15s %s\n", e.baseAddress,
+	//	e.size, e.moduleName.c_str(), e.imageName.c_str() );
 
 	modules.push_back( e );
     }

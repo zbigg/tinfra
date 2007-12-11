@@ -1,7 +1,7 @@
 #include "tinfra/exception.h"
 #include <iostream>
 
-static void unhandled_exception(void)
+static void fatal_exception(void)
 {
     std::cout << "catched fatal exception" << std::endl;
 }
@@ -24,7 +24,7 @@ void segv()
 
 int main()
 {
-    tinfra::initialize_fatal_exception_handler(unhandled_exception);
+    tinfra::initialize_fatal_exception_handler(fatal_exception);
     
     segv();
 }
