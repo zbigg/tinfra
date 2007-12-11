@@ -2,12 +2,15 @@
 
 #PFLAGS=-pg -ftest-coverage -fprofile-arcs
 CXXFLAGS=-I. -g $(PFLAGS)
-LIBS=-lexpat -rdynamic
+LIBS=-lexpat 
+LDFLAGS=$(LIBS)
 
+#-rdynamic
+LD=g++
 
-all: taskmonitor test_multitype_map
+all: taskmonitor unittests
 
-TINFRA_OBJECTS=tinfra/tinfra.o tinfra/Symbol.o tinfra/exception.o
+TINFRA_OBJECTS=tinfra/tinfra.o tinfra/Symbol.o tinfra/exception.o tinfra/xml/XMLStream.o tinfra/xml/XMLStreamReader.o
 
 taskmonitor: taskmonitor.o $(TINFRA_OBJECTS)
 	$(CXX) -g $(PFLAGS) -o $@ $^ $(LIBS)
@@ -17,7 +20,7 @@ unittests: test_multitype_map.o unittests.o $(TINFRA_OBJECTS)
 
 clean:
 	rm -rf taskmonitor.exe test_multitype_map.exe
-	find . -name "*.deps" | xargs rm -rf
+	find . -name ".deps" | xargs rm -rf
 	find . -name "*.o" | xargs rm -rf
 	find . -name "*.gcov" | xargs rm -rf
 	find . -name "*.gcda" | xargs rm -rf
