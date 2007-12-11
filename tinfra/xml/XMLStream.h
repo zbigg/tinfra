@@ -87,18 +87,23 @@ class FileXMLOutputStream: public XMLOutputStream {
 public:
     FileXMLOutputStream(std::streambuf& dest);
     ~FileXMLOutputStream();
-
+    
     virtual void start_tag(const char* tag_name, const char* const* args = 0);
     virtual void arg(const char* name, const char* value);
     virtual void char_data(const char* value);
     virtual void end_tag(const char* tag_name);
 
+    void set_human_readable(bool b) { human_readable_ = b; }
+    void start_document();
 private:
     void    ensure_tag_start_closed();
-
+    void    maybe_newline();
+    void    maybe_indent();
     std::streambuf&  dest_;
     unsigned         tag_nest_;
     bool             in_start_tag_;
+    bool             human_readable_;
+    bool             xml_document_started_;
 };
 
 class XMLMemoryStream: public XMLInputStream, public XMLOutputStream {

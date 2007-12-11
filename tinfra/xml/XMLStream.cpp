@@ -26,7 +26,7 @@ void XMLOutputStream::write(XMLEvent const* ev)
 ///
 
 FileXMLOutputStream::FileXMLOutputStream(std::streambuf& dest) 
-: dest_(dest), tag_nest_(0),in_start_tag_(false)
+: dest_(dest), tag_nest_(0),in_start_tag_(false),xml_document_started_(false)
 {
 }
 FileXMLOutputStream::~FileXMLOutputStream()
@@ -34,9 +34,18 @@ FileXMLOutputStream::~FileXMLOutputStream()
     // I(tag_nest_ == 0);
     dest_.pubsync();
 }
+
+static const std::string xml_head = "<?xml version=\"1.0\" ?>\n";
+
+void FileXMLOutputStream::start_document()
+{    
+    dest_.sputn(xml_head.c_str(), xml_head.size());
+    xml_document_started_ = true;
+}
 void FileXMLOutputStream::start_tag(const char* tag_name, const char* const* args)
 {
     ensure_tag_start_closed();
+    maybe_indent();
     dest_.sputc('<');
     dest_.sputn(tag_name,strlen(tag_name));
     in_start_tag_ = true;
@@ -47,7 +56,11 @@ void FileXMLOutputStream::start_tag(const char* tag_name, const char* const* arg
         }
     }
 }
-
+static void make_indentation(std::streambuf& dest, int level, int indent_size)
+{
+    for(int i = 0; i < indent_size*level; ++i )
+        dest.sputc(' ');
+}
 void FileXMLOutputStream::arg(const char* name, const char* value)
 {
     // I(in_start_tag_);
@@ -57,9 +70,11 @@ void FileXMLOutputStream::arg(const char* name, const char* value)
     dest_.sputn(value,strlen(value));
     dest_.sputc('"');
 }
+
 void FileXMLOutputStream::char_data(const char* value)
 {
     ensure_tag_start_closed();
+    maybe_indent();
     dest_.sputn(value,strlen(value));
 }
 void FileXMLOutputStream::end_tag(const char* tag_name)
@@ -68,23 +83,37 @@ void FileXMLOutputStream::end_tag(const char* tag_name)
         dest_.sputn("/>",2);
         in_start_tag_ = false;
     } else {
+        --tag_nest_;
+        maybe_indent();
         dest_.sputn("</",2);
         dest_.sputn(tag_name, strlen(tag_name));
         dest_.sputc('>');
-        --tag_nest_;
     }
+    maybe_newline();
 }
 
 void FileXMLOutputStream::ensure_tag_start_closed()
 {
+    if( !xml_document_started_ ) {
+        start_document();
+    }
     if( in_start_tag_ ) {
         dest_.sputc('>');
+        maybe_newline();        
         in_start_tag_ = false;
         ++tag_nest_;
     }
     //I(in_start_tag_ == false);
 }
 
+void    FileXMLOutputStream::maybe_newline()
+{
+    if( human_readable_ ) dest_.sputc('\n');
+}
+void    FileXMLOutputStream::maybe_indent()
+{
+    if( human_readable_ ) make_indentation(dest_, tag_nest_, 2);
+}
 ///
 /// XMLMemoryStream
 ///
