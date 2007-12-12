@@ -49,7 +49,7 @@ private:
 	static void    initRegistry();
 
 	struct LessString {
-		bool operator() (const char* a, const char* b)
+		bool operator() (const char* a, const char* b) const
 		{ return ::strcmp(a,b) < 0; }
 	};
 	typedef std::map<const char*, id_type, LessString> Name2IdMap;
