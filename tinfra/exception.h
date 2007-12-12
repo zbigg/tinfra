@@ -30,6 +30,15 @@ protected:
     std::string   _message;
     stacktrace_t  _stacktrace;
 };
+
+///
+/// Initialize handler for fatal exception (win32 structured, SIGSGV etc)
+///
+/// handler is invoked before terminating program.
+///
+
+void initialize_fatal_exception_handler(void (*handler) (void));
+
 } // end of namespace tinfra
 
 #endif

@@ -55,8 +55,9 @@ typedef std::map<Symbol::id_type, int> OffsetMap;
 
 template<typename MSType,typename FieldType>
 struct OffsetAnalyzer {
+        const MSType& parent;
 	OffsetMap& offsetMap;
-	const MSType& parent;
+	
 	OffsetAnalyzer(const MSType& parent, OffsetMap& offsetMap) : parent(parent), offsetMap(offsetMap) {}
 		
         // register only fields of type V

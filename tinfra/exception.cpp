@@ -7,6 +7,7 @@
 #ifdef linux
 #include <execinfo.h>
 #include <signal.h>
+#define HAVE_BACKTRACE
 #endif
 
 #include "exception.h"
@@ -15,7 +16,8 @@ namespace tinfra {
 
 void populate_stacktrace(stacktrace_t& dest,int ignore_stacks)
 {
-    // Reeference
+#ifdef HAVE_BACKTRACE
+    // Reference
     // http://www-128.ibm.com/developerworks/library/l-cppexcep.html?ca=dnt-68
     // http://www.delorie.com/gnu/docs/glibc/libc_665.html
     //
@@ -29,6 +31,7 @@ void populate_stacktrace(stacktrace_t& dest,int ignore_stacks)
 	dest.push_back(a);
     }
     ::free(symbols);
+#endif
 }
 
 //
