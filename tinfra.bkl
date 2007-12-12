@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+
+<makefile>
+    <include file="common.bkl"/>
+    <set var="PLATFORM">win32</set>
+    <set var="TINFRA_PLATFORM_SOURCES" hints="files">
+        tinfra/$(PLATFORM)/fatal_exception.cpp
+    </set>
+
+    <lib id="tinfra" template="default-workspace-settings">
+        <include>$(SRCDIR)</include>
+        <sources>
+            tinfra/tinfra.cpp
+            tinfra/Symbol.cpp
+            tinfra/exception.cpp
+            tinfra/cmd.cpp
+            $(TINFRA_PLATFORM_SOURCES)
+        </sources>
+    </lib>
+    <lib id="tinfra_xml" template="default-workspace-settings">
+        <include>$(SRCDIR)</include>
+        <sources>
+            tinfra/xml/XMLStream.cpp
+            tinfra/xml/XMLStreamReader.cpp
+        </sources>
+    </lib>
+    <exe id="unittests" template="default-workspace-settings">
+        <include>$(SRCDIR)</include>
+        <sources>
+            test_multitype_map.cpp
+            unittests.cpp
+        </sources>
+        <library>tinfra</library>
+        <library>tinfra_xml</library>
+        <sys-lib>unittest++</sys-lib>
+    </exe>
+    <exe id="test_fatal_exception" template="default-workspace-settings">
+        <include>$(SRCDIR)</include>
+        <sources>
+            tinfra/test_fatal_exception.cpp
+        </sources>
+        <library>tinfra</library>
+        
+    </exe>
+</makefile>
