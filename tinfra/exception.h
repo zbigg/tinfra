@@ -37,7 +37,8 @@ protected:
 /// handler is invoked before terminating program.
 ///
 
-void initialize_fatal_exception_handler(void (*handler) (void));
+void initialize_fatal_exception_handler();
+void set_fatal_exception_handler(void (*handler) (void));
 
 } // end of namespace tinfra
 

@@ -13,6 +13,8 @@
 
 #include <imagehlp.h>
 
+#include "tinfra/exception.h"
+
 #define gle (GetLastError())
 #define lenof(a) (sizeof(a) / sizeof((a)[0]))
 #define MAXNAMELEN 1024 // max name length for found symbols
@@ -131,6 +133,27 @@ bool initialize_imaghelp()
     return true;
 }
 
+BOOL WINAPI ConsoleHandler(DWORD event)
+{
+    /* TODO: should we differentiate anyhow ?
+    switch(event)
+    {
+    case CTRL_C_EVENT:
+        break;
+    case CTRL_BREAK_EVENT:
+        break;
+    case CTRL_CLOSE_EVENT:
+        break;
+    case CTRL_LOGOFF_EVENT:
+        break;
+    case CTRL_SHUTDOWN_EVENT:
+        break;
+    }
+    */
+    throw tinfra::generic_exception("interrupt");
+    return FALSE;
+}
+
 static void (*fatal_exception_handler) (void) = 0;
 
 static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
@@ -146,12 +169,29 @@ static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
 }
 
 namespace tinfra {
-void initialize_fatal_exception_handler(void (*handler) (void))
+    
+void initialize_fatal_exception_handler()
 {    
-    initialize_imaghelp();
-    fatal_exception_handler = handler;
+    static bool initialized = false;
+    if( initialized ) return;
+	
+    fatal_exception_handler = 0;
+    if( !initialize_imaghelp() ) {
+	// TODO: issue a warning
+    }
+    
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)unhandled_exception_filter);
+    
+    if( !SetConsoleCtrlHandler(ConsoleHandler, TRUE) ) {
+	// TODO: issue a warning
+    }
+    initialized = true;
 }
+void set_fatal_exception_handler(void (*handler) (void))
+{
+    fatal_exception_handler = handler;
+}
+
 }
 
 static bool initialize_sym(HANDLE hProcess)
