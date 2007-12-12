@@ -5,14 +5,14 @@ CXXFLAGS=-I. -g $(PFLAGS)
 LIBS=-lexpat -rdynamic
 
 
-all: taskmonitor test_multitype_map
+all: taskmonitor unittests
 
 TINFRA_OBJECTS=tinfra/tinfra.o tinfra/Symbol.o tinfra/exception.o
 
 taskmonitor: taskmonitor.o $(TINFRA_OBJECTS)
 	$(CXX) -g $(PFLAGS) -o $@ $^ $(LIBS)
 
-unittests: test_multitype_map.o unittests.o $(TINFRA_OBJECTS) 
+unittests: test_multitype_map.o test_exception.o unittests.o $(TINFRA_OBJECTS) 
 	$(CXX) -g $(PFLAGS) -o $@ $^ $(LIBS) -lunittest++
 
 clean:

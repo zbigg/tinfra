@@ -43,5 +43,43 @@ generic_exception::generic_exception(std::string const& message): _message(messa
 	          << "(" << i->symbol << ")" << std::endl;
     }
 }
+#ifdef linux
+
+template<int SIGNO>
+class AutoExceptionHandler {
+    public:
+    AutoExceptionHandler() {
+	std::cerr << "instantiating sig handler sig:" << SIGNO << " description: " << get_description() << std::endl;
+	signal(SIGNO, &AutoExceptionHandler<SIGNO>::handler);
+    }    
+    static void handler(int signo)
+    {
+	std::cerr << "signal: " << signo << std::endl;
+	signal(SIGNO, &AutoExceptionHandler<SIGNO>::handler);
+	throw generic_exception(get_description());
+    }
+    static std::string get_description();
+};
+
+AutoExceptionHandler<SIGSEGV> sigsegv_handler;
+AutoExceptionHandler<SIGINT>  sigint_handler;
+AutoExceptionHandler<SIGTERM>  sigterrm_handler;
+
+template<>
+std::string AutoExceptionHandler<SIGSEGV>::get_description() {
+    return "Segmentation fault Z";
+}
+
+template<>
+std::string AutoExceptionHandler<SIGINT>::get_description() {
+    return "Interrupt Z";
+}
+
+template<>
+std::string AutoExceptionHandler<SIGTERM>::get_description() {
+    return "Termination request Z";
+}
+
+#endif
 
 } // end of namespace tinfra
