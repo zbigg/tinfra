@@ -1,0 +1,13 @@
+^makefile.vc$
+^Makefile.in$
+^.bakefile_gen.state$
+^GNUmakefile$
+^out$
+^out/
+\.suo$
+\.sln$
+\.vcproj$
+\.dsw$
+\.dsp$
+\.ncb$
+autoconf_inc.m4
