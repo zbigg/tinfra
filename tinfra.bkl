@@ -27,8 +27,8 @@
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
-            test_multitype_map.cpp
-            unittests.cpp
+            tinfra/test_multitype_map.cpp
+            tinfra/test_main.cpp
         </sources>
         <library>tinfra</library>
         <library>tinfra_xml</library>

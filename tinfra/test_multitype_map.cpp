@@ -1,4 +1,4 @@
-#include "multitype_map.h"
+#include "tinfra/multitype_map.h"
 #include <string>
 
 #include <unittest++/UnitTest++.h>
