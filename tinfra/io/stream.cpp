@@ -1,4 +1,6 @@
 #include "tinfra/io/stream.h"
+#include <sstream>
+
 #include <zcompat/zpio.h>
 
 using namespace std;
@@ -20,12 +22,14 @@ zstreambuf::zstreambuf(ZSTREAM stream, bool own)
     : _stream(stream), _own(own) 
 {
 }
+
 zstreambuf::zstreambuf(char const* name, ios::openmode mode) 
     : _stream(0), _own(false)
 {
     _stream = zopen(name, ios_to_zcompat_openmode(mode));
     _own = true;
 }
+
 zstreambuf::~zstreambuf() { 
     close();
 }
@@ -40,6 +44,20 @@ zstreambuf& zstreambuf::open_file(char const* name, ios::openmode mode)
     _own = true;
     return *this;
 }
+
+zstreambuf& zstreambuf::open_socket(char const* target, int port)
+{
+    close();
+    _stream = zsopen(target, port);
+    if( _stream == 0 ) {
+        ostringstream msg;
+        msg << "unable to connect '" << target << ":" << port << ": " << zstrerror(errno);
+        throw io_exception(msg.str());
+    }
+    _own = true;
+    return *this;
+}
+
 void zstreambuf::close()
 {
     if(_own) 
@@ -47,6 +65,7 @@ void zstreambuf::close()
     _stream = 0;
     _own = false; 
 }
+
 int zstreambuf::sync() {
     return 0;
 }
