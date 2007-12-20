@@ -107,5 +107,21 @@ zstreambuf::pos_type zstreambuf::seekpos (pos_type pos, ios::openmode)
     return pos_type(pos);
 }
 
+int zstreambuf::read(void* dest, int size) {
+    int result = ::zread(_stream, dest, size);
+    if( result == -1 ) {
+        throw io_exception(zstrerror(errno));
+    }
+    return result;
+}
+
+int zstreambuf::write(const void* data, int size) {
+    int result = ::zwrite(_stream, data, size);
+    if( result == -1 ) {
+        throw io_exception(zstrerror(errno));
+    }
+    return result;
+}
+
 } //end namespace tinfra
 

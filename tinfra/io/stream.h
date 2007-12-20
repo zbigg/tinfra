@@ -46,6 +46,9 @@ public:
     
     virtual ~zstreambuf();
     
+    ///
+    /// std::streambuf<char> contract implementation
+    ///
     virtual void imbue (const std::locale &)
     {
     }
@@ -61,13 +64,20 @@ public:
     
     virtual std::streamsize xsgetn (char_type *__s, std::streamsize __n)
     {
-        return ::zread(_stream, __s, __n);
+        return read(__s, __n);
     }
     virtual std::streamsize xsputn (const char_type *__s, std::streamsize __n) 
     {
-        return ::zwrite(_stream, __s, __n);
+        return write(__s, __n);
     }
+    
+    ///
+    /// human readable Java like interface
+    ///
+    int read(void* dest, int size);
+    int write(const void* data, int size);
 };
+
 /*
 class zistream : public istream {
     zistream& open_file(char const* filename, ios_base::openmode mode = ios_base::in);
