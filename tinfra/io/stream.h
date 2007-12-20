@@ -1,20 +1,31 @@
-#ifdef __tinfra_io_stream_h_
+#ifndef __tinfra_io_stream_h_
 #define __tinfra_io_stream_h_
 
 #include <zcompat/zpio.h>
 
+#include <ios>
+#include <streambuf>
+
+#include "tinfra/exception.h"
+
 namespace tinfra { 
     
-class zstreambuf : public streambuf {
+class io_exception: public generic_exception {
+public:
+    io_exception(std::string const& message): generic_exception(message) {}
+};
+class zstreambuf : public std::streambuf {
+    //typedef std::streambuf::streamsize streamsize;
+    
 private:
-    ZSTREAM*    _stream;
+    ZSTREAM     _stream;
     bool        _own;
 public:
-    zstreambuf(ZSTREAM* stream = 0, bool own = false);
-    zstreambuf(char const* name, ios_base::openmode mode = ios_base::in);
+    zstreambuf(ZSTREAM stream = 0, bool own = false);
+    zstreambuf(char const* name, std::ios::openmode mode = std::ios::in);
 
     /** Open a file in native filesystem */
-    zstreambuf& open_file(char const* filename, ios_base::openmode mode = ios_base::in);
+    zstreambuf& open_file(char const* filename, std::ios::openmode mode = std::ios::in);
 
     /** Opens a client tcp connection. */
     zstreambuf& open_socket(char const* target, int port);
@@ -23,35 +34,38 @@ public:
 
         Spawns a 'command' with stdout and/or stdin hijacked by this streambuf.
     */
-    zstreambuf& open_pipe(char const* command, ios_base::openmode mode = ios_base::in);
+    zstreambuf& open_pipe(char const* command, std::ios::openmode mode = std::ios::in);
 
     /** Opens an anonymous pipe
 
         That pipe can be used in-process to communicate between threads.
     */
     zstreambuf& open_pipe();
+
+    void close();
+    
     virtual ~zstreambuf();
     
-    virtual void imbue (const locale &)
+    virtual void imbue (const std::locale &)
     {
     }
     virtual int_type overflow (int_type=traits_type::eof());
     virtual int_type pbackfail (int_type=traits_type::eof());
-    virtual pos_type seekoff (off_type, ios_base::seekdir, ios_base::openmode=ios_base::in|ios_base::out);
-    virtual pos_type seekpos (pos_type, ios_base::openmode=ios_base::in|ios_base::out);    
+    virtual pos_type seekoff (off_type, std::ios::seekdir, std::ios::openmode=std::ios::in | std::ios::out);
+    virtual pos_type seekpos (pos_type, std::ios::openmode=std::ios::in | std::ios::out);    
     //virtual basic_streambuf< char_type, _Traits >* setbuf (char_type *, streamsize)    
-    virtual streamsize showmanyc ();
+    virtual std::streamsize showmanyc ();
     virtual int sync ();
     virtual int_type uflow ();
     virtual int_type underflow ();
     
-    virtual streamsize xsgetn (char_type *__s, streamsize __n)
+    virtual std::streamsize xsgetn (char_type *__s, std::streamsize __n)
     {
         return ::zread(_stream, __s, __n);
     }
-    virtual streamsize xsputn (const char_type *__s, streamsize __n) 
+    virtual std::streamsize xsputn (const char_type *__s, std::streamsize __n) 
     {
-        return ::zwrite(_stream, __s, _n);
+        return ::zwrite(_stream, __s, __n);
     }
 };
 /*

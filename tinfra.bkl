@@ -14,6 +14,7 @@
             tinfra/Symbol.cpp
             tinfra/exception.cpp
             tinfra/cmd.cpp
+            tinfra/io/stream.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
     </lib>
@@ -28,11 +29,13 @@
         <include>$(SRCDIR)</include>
         <sources>
             tinfra/test_multitype_map.cpp
+            tinfra/io/test_stream.cpp
             tinfra/test_main.cpp
         </sources>
         <library>tinfra</library>
         <library>tinfra_xml</library>
         <sys-lib>unittest++</sys-lib>
+        <sys-lib>zcompat</sys-lib>
     </exe>
     <exe id="test_fatal_exception" template="default-workspace-settings">
         <include>$(SRCDIR)</include>

@@ -1,17 +1,21 @@
 #include "tinfra/io/stream.h"
 #include <string>
+#include <ostream>
 
 #include <unittest++/UnitTest++.h>
 
-
-using namespace std;
-
-#define CHECK_VALUE(m, k, T, v)       \
-        m.put<T>(k,v);                \
-        CHECK(m.contains<T>(k));      \
-        CHECK_EQUAL(v, m.get<T>(k) )  
-
-TEST(multitype_map)
+void write_file(const char* name, std::string const& data)
 {
-    CHECK_VALUE("4", int, int(t)
+    tinfra::zstreambuf buf;
+    buf.open_file(name, std::ios_base::out);
+    {
+        std::ostream o(&buf);
+        o << data;
+    }
+    buf.close();    
+}
+
+TEST(stream_basic)
+{
+    write_file("a","b");
 } 
