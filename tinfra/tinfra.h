@@ -105,7 +105,7 @@ struct SymbolsGetter {
 }
 
 template<typename C>
-int countFields()
+int countAllFields()
 {
 	detail::FieldCounter<detail::DummyType> counter;
 	process(C(), counter);
@@ -267,7 +267,7 @@ const FieldType& get(const MSType& x, const Symbol& key)
 
 template<class T>
 struct ManagedType {
-	static int countFields() { return tinfra::countFields<T>(); }
+	static int countAllFields() { return tinfra::countAllFields<T>(); }
 
 	template<class F>
 	static int countFields() { return tinfra::countFields<T,F>(); }
@@ -280,6 +280,7 @@ struct ManagedType {
 	
 	static const std::vector<Symbol>& getSymbols() { return ::tinfra::getSymbols<T>(); }
 };
+
 
 template <class T>
 struct constructor {
