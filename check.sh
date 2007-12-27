@@ -1,6 +1,10 @@
 #!/bin/sh
 
-dist="out/$1"
+dist="$1"
+if [ ! -d "$dist" ] ; then
+    echo "$0: output dir '$dist' doesn't exist, build the project" 1>&2  
+    exit 2
+fi
 test_log_dir=${dist}/test_result
 mkdir -p ${test_log_dir}
 

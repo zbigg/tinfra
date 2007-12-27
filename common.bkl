@@ -2,29 +2,25 @@
 
 <makefile>
     <option name="BUILD_TYPE">
-        <values>0,1</values>
+        <values>release,debug</values>
         <values-description>Release,Debug</values-description>
-        <default-value>1</default-value>
+        <default-value>debug</default-value>
         <description>
             Build type of tinfra
         </description>
     </option>
-    <!--
-    <set var="WX_DIR" overwrite="0">$(DOLLAR)(WXWIN)</set>
-    -->
     
-
     <set var="OPTIMIZE_FLAG">
-	<if cond="BUILD_TYPE=='0'">speed</if>
-	<if cond="BUILD_TYPE=='1'">off</if>
+	<if cond="BUILD_TYPE=='release'">speed</if>
+	<if cond="BUILD_TYPE=='debug'">off</if>
     </set>
     <set var="DEBUG_FLAG">
-	<if cond="BUILD_TYPE=='0'">off</if>
-	<if cond="BUILD_TYPE=='1'">on</if>
+	<if cond="BUILD_TYPE=='release'">off</if>
+	<if cond="BUILD_TYPE=='debug'">on</if>
     </set>
     <set var="WARNING_FLAG">
-	<if cond="BUILD_TYPE=='0'">default</if>
-	<if cond="BUILD_TYPE=='1'">max</if>
+	<if cond="BUILD_TYPE=='release'">default</if>
+	<if cond="BUILD_TYPE=='debug'">max</if>
     </set>
     
     <define-tag name="msvc-headers" rules="exe,dll,lib">
@@ -37,22 +33,24 @@
     </define-tag>
 
     <set var="LIB_DEBUG_SUFFIX">
-        <if cond="BUILD_TYPE=='1'">d</if>
+        <if cond="BUILD_TYPE=='debug'">d</if>
     </set>
 
     <set var="DEBUG_PREPFLAG">
-        <if cond="BUILD_TYPE=='1'">_DEBUG</if>
-        <if cond="BUILD_TYPE=='0'">NDEBUG</if>
+        <if cond="BUILD_TYPE=='debug'">_DEBUG</if>
+        <if cond="BUILD_TYPE=='release'">NDEBUG</if>
     </set>
 
     <if cond="FORMAT!='autoconf'">
         <set var="BUILDNAME">
-            <if cond="BUILD_TYPE=='1'">debug_$(COMPILER)</if>
-            <if cond="BUILD_TYPE=='0'">release_$(COMPILER)</if>
+            <if cond="BUILD_TYPE=='debug'">debug_$(COMPILER)</if>
+            <if cond="BUILD_TYPE=='release'">release_$(COMPILER)</if>
         </set>
 
         <set var="BUILDDIR">out$(DIRSEP)$(BUILDNAME)</set>
     </if>
+        
+    
     <!-- THESE SETTINGS are appended to all exe,lib,dll,module -->
     <template id="default-workspace-settings">
         <runtime-libs>dynamic</runtime-libs>

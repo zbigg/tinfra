@@ -2,9 +2,12 @@
 
 <makefile>
     <include file="common.bkl"/>
-    <set var="PLATFORM">win32</set>
+    <!-- <set var="PLATFORM">win32</set> -->
+    
     <set var="TINFRA_PLATFORM_SOURCES" hints="files">
-        tinfra/$(PLATFORM)/fatal_exception.cpp
+        <if cond="PLATFORM_WIN32=='1'">tinfra/win32/fatal_exception.cpp</if>
+        
+        <if cond="PLATFORM_UNIX=='1'">tinfra/posix/fatal_exception.cpp</if>
     </set>
 
     <lib id="tinfra" template="default-workspace-settings">
@@ -43,6 +46,10 @@
             tinfra/test_fatal_exception.cpp
         </sources>
         <library>tinfra</library>
-        
-    </exe>
+    </exe>    
+    <action id="check" depends="unittests">
+        <depends>unittests</depends>
+        <depends>test_fatal_exception</depends>
+        <command>sh check.sh $(BUILDDIR)</command>
+    </action>
 </makefile>

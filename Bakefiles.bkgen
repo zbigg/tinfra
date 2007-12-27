@@ -5,6 +5,6 @@
         tinfra.bkl
     </input>
     <add-formats>
-        gnu,msvc,msvc6prj,autoconf
+        msvc,msvc6prj,autoconf
     </add-formats>
 </bakefile-gen>
