@@ -85,11 +85,11 @@ struct LexicalInterpreter<std::string> {
 
 template<int N> 
 struct LexicalInterpreter<char[N]> {
-	static void to_string(char v[N], std::string& dest) {
+	static void to_string(const char v[N], std::string& dest) {
 		dest = v;
 	}
-	static void to_string(char v[N], std::ostream& dest) {
-		dest << dest;
+	static void to_string(const char v[N], std::ostream& dest) {
+		dest << v;
 	}
 	static void from_string(const char* v, char dest[N]) {
 		if( ::strlen(v) <= N-1 ) {
