@@ -10,10 +10,10 @@ namespace tinfra {
 static int ios_to_zcompat_openmode(ios::openmode mode)
 {
     int result;
-    if( mode & ios::in == ios::in)       result |= ZO_READ;
-    if( mode & ios::out == ios::out)     result |= ZO_WRITE;
-    if( mode & ios::app == ios::app)     result |= ZO_APPEND;
-    if( mode & ios::trunc == ios::trunc) result |= ZO_TRUNC;
+    if( (mode & ios::in) == ios::in)       result |= ZO_READ;
+    if( (mode & ios::out) == ios::out)     result |= ZO_WRITE;
+    if( (mode & ios::app) == ios::app)     result |= ZO_APPEND;
+    if( (mode & ios::trunc) == ios::trunc) result |= ZO_TRUNC;
     //if( mode & ios::bin == ios::bin)     result |= ZO_BINARY;  else result |= ZO_TEXT;
     return result;
 }
@@ -48,7 +48,7 @@ zstreambuf& zstreambuf::open_file(char const* name, ios::openmode mode)
 zstreambuf& zstreambuf::open_socket(char const* target, int port)
 {
     close();
-    _stream = zsopen(target, port);
+    _stream = zsopen(target, (unsigned short)port);
     if( _stream == 0 ) {
         ostringstream msg;
         msg << "unable to connect '" << target << ":" << port << ": " << zstrerror(errno);
