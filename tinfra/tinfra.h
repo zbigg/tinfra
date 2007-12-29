@@ -3,7 +3,7 @@
 #ifndef __tinfra_h__
 #define __tinfra_h__
 
-#include "Symbol.h"
+#include "tinfra/symbol.h"
 #include "StaticCacheObject.h"
 #include "exception.h"
 
@@ -21,7 +21,7 @@ namespace detail {
 		MutatorWrapper(A& mutator) : mutator(mutator) {}
 		
 		template <class T>
-			void operator () (const Symbol& s, const T& t) {
+			void operator () (const symbol& s, const T& t) {
 				mutator(s, const_cast<T&>(t));
 			}
 	};
@@ -44,14 +44,14 @@ struct FieldCounter {
 	FieldCounter(): hitCount(0), missCount(0) {}
 
 	// operations
-	void operator() (const Symbol& s, const T& a) { hitCount++; }
+	void operator() (const symbol& s, const T& a) { hitCount++; }
 	
 	template <typename Other>
-	void operator() (const Symbol& s, const Other& a) { missCount++; }
+	void operator() (const symbol& s, const Other& a) { missCount++; }
 };
 struct DummyType {};
     
-typedef std::map<Symbol::id_type, int> OffsetMap;
+typedef std::map<symbol::id_type, int> OffsetMap;
 
 template<typename MSType,typename FieldType>
 struct OffsetAnalyzer {
@@ -61,14 +61,14 @@ struct OffsetAnalyzer {
 	OffsetAnalyzer(const MSType& parent, OffsetMap& offsetMap) : parent(parent), offsetMap(offsetMap) {}
 		
         // register only fields of type V
-	void operator() (const Symbol& s, const FieldType& a)
+	void operator() (const symbol& s, const FieldType& a)
         {
             offsetMap[s] = (const char*)&a - (const char*)&parent;
         }
             
         // ignore rest
         template <typename boo>
-        void operator() (const Symbol& s, const boo& a)
+        void operator() (const symbol& s, const boo& a)
         {
         }
 };
@@ -90,13 +90,13 @@ const OffsetMap& getOffsetMap()
 
 template<typename T>
 struct SymbolsGetter {
-	std::vector<Symbol>& dest;
+	std::vector<symbol>& dest;
 	
-	SymbolsGetter(std::vector<Symbol>& _dest) : dest(_dest) {}
+	SymbolsGetter(std::vector<symbol>& _dest) : dest(_dest) {}
 		
         // register only fields of type V
         template <typename ANY>
-	void operator() (const Symbol& s, const ANY& a)
+	void operator() (const symbol& s, const ANY& a)
         {
             dest.push_back(s);
         }
@@ -121,9 +121,9 @@ int countFields()
 }
 
 template <typename T>
-const std::vector<Symbol>& getSymbols()
+const std::vector<symbol>& getSymbols()
 {
-	static StaticCacheObject<std::vector<Symbol> > symbols;
+	static StaticCacheObject<std::vector<symbol> > symbols;
 	if( !symbols.isInitialized() ) {
 		detail::SymbolsGetter<T> getter(symbols.get());
                 T dummy;
@@ -153,8 +153,8 @@ struct TypeTraitsGeneric
         return name.c_str();
     }
     
-    static Symbol symbol() {
-        static Symbol theSymbol(name());
+    static symbol type_symbol() {
+        static symbol theSymbol(name());
         return theSymbol;
     }
 };
@@ -162,19 +162,19 @@ struct TypeTraitsGeneric
 template <typename T>
 struct TypeTraits: public TypeTraitsGeneric<T> {
     template <typename F>
-    static void process(const T& t, const Symbol& s, F& f) { f(s,t); }
+    static void process(const T& t, const symbol& s, F& f) { f(s,t); }
     
     template <typename F>
-    static void mutate(T& t, const Symbol& s, F& f) { f(s,t); }
+    static void mutate(T& t, const symbol& s, F& f) { f(s,t); }
 };
 
 template <typename T>
 struct Fundamental: public TypeTraitsGeneric<T> {
     template <typename F>
-    static void process(const T& t, const Symbol& s, F& f) { f(s,t); }
+    static void process(const T& t, const symbol& s, F& f) { f(s,t); }
     
     template <typename F>
-    static void mutate(T& t, const Symbol& s, F& f) { f(s,t); }    
+    static void mutate(T& t, const symbol& s, F& f) { f(s,t); }    
 };
 
 template <typename F>
@@ -183,10 +183,10 @@ struct TypeTraitsProcessCaller {
     TypeTraitsProcessCaller(F& _f) : f(_f) {}
             
     template <typename T1>
-    void operator() (const Symbol& s, const T1& t)  { TypeTraits<T1>::process(t,s,f); }
+    void operator() (const symbol& s, const T1& t)  { TypeTraits<T1>::process(t,s,f); }
     
     template <typename T1>
-    void operator() (const Symbol& s, T1& t)  { TypeTraits<T1>::mutate(t,s,f); }
+    void operator() (const symbol& s, T1& t)  { TypeTraits<T1>::mutate(t,s,f); }
 };
 
 template <typename T, typename F>
@@ -207,22 +207,22 @@ void tt_mutate(T& obj, F& f)
 template <typename T>
 struct ManagedStruct: public TypeTraitsGeneric<T>  {
     template <typename F>
-    static void process(const T& t, const Symbol& s, F& f) {
+    static void process(const T& t, const symbol& s, F& f) {
         f.managed_struct(t, s);        
     }
     template <typename F>
-    static void mutate(T& t, const Symbol& s, F& f) {
+    static void mutate(T& t, const symbol& s, F& f) {
         f.managed_struct(t, s);
     }
 };
 template <typename T>
 struct STLContainer: public TypeTraitsGeneric<T>  {
     template <typename F>
-    static void process(const T& t, const Symbol& s, F& f) {        
+    static void process(const T& t, const symbol& s, F& f) {        
         f.list_container(t, s);
     }
     template <typename F>
-    static void mutate(T& t, const Symbol& s, F& f) {
+    static void mutate(T& t, const symbol& s, F& f) {
         f.list_container(t, s);
     }
 };
@@ -240,7 +240,7 @@ public:
 };
 namespace detail {
     template<typename FieldType, typename MSType>
-    int get_symbol_offset(Symbol const& key)
+    int get_symbol_offset(symbol const& key)
     {
         const detail::OffsetMap& om = detail::getOffsetMap<MSType,FieldType>();    
         detail::OffsetMap::const_iterator i = om.find(key);
@@ -249,7 +249,7 @@ namespace detail {
     }
 };
 template<typename FieldType, typename MSType>
-void set(MSType& x, const Symbol& key, const FieldType& value)
+void set(MSType& x, const symbol& key, const FieldType& value)
 {
     int offset = detail::get_symbol_offset<FieldType,MSType>(key);
     FieldType* target = (FieldType*)((char*)&x + offset);
@@ -257,7 +257,7 @@ void set(MSType& x, const Symbol& key, const FieldType& value)
 }
 
 template<typename FieldType, typename MSType>
-const FieldType& get(const MSType& x, const Symbol& key)
+const FieldType& get(const MSType& x, const symbol& key)
 {    
     int offset = detail::get_symbol_offset<FieldType,MSType>(key);
     const FieldType* target = (const FieldType*)( (const char*)&x + offset );
@@ -273,12 +273,12 @@ struct ManagedType {
 	static int countFields() { return tinfra::countFields<T,F>(); }
 	
 	template<class F>
-	void set(const Symbol& s, const F& value) { return tinfra::set<F, T>((T&)*this, s, value); }
+	void set(const symbol& s, const F& value) { return tinfra::set<F, T>((T&)*this, s, value); }
 	
 	template<class F>
-	const F& get(const Symbol& s) const { return tinfra::get<F, T>((const T&)*this, s); }
+	const F& get(const symbol& s) const { return tinfra::get<F, T>((const T&)*this, s); }
 	
-	static const std::vector<Symbol>& getSymbols() { return ::tinfra::getSymbols<T>(); }
+	static const std::vector<symbol>& getSymbols() { return ::tinfra::getSymbols<T>(); }
 };
 
 
@@ -289,20 +289,20 @@ struct constructor {
     constructor() {}
         
     template<typename V>
-    constructor(const Symbol& s, V const& x): value() { field(s,x); }
+    constructor(const symbol& s, V const& x): value() { field(s,x); }
     
     T& get() { return value; }
     
     operator T&() { return value; }
     
     template <typename V>
-    constructor<T>& field(const Symbol& s,  V const& x) { 
+    constructor<T>& field(const symbol& s,  V const& x) { 
         tinfra::set(value, s, x); 
         return *this; 
     }
     
     template <typename V>
-    constructor<T>& operator() (const Symbol& s,  V const& x) { return field(s, x); }
+    constructor<T>& operator() (const symbol& s,  V const& x) { return field(s, x); }
 };
     
 template <typename T>
@@ -311,7 +311,7 @@ constructor<T> construct() {
 }
     
 template <typename T, typename V>
-constructor<T> construct(const Symbol& s,  V const& x) {
+constructor<T> construct(const symbol& s,  V const& x) {
     return constructor<T>(s,x);
 } 
 

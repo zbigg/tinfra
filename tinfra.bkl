@@ -35,6 +35,7 @@
             tinfra/test_multitype_map.cpp
             <!--tinfra/io/test_stream.cpp-->
             tinfra/test_fmt.cpp
+            tinfra/test_symbol.cpp
             tinfra/test_main.cpp
         </sources>
         <library>tinfra</library>

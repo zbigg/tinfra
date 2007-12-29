@@ -101,15 +101,15 @@ struct LexicalInterpreter<char[N]> {
 };
 
 template<> 
-struct LexicalInterpreter<Symbol> {
-	static void to_string(Symbol const& v, std::string& dest) {	    
+struct LexicalInterpreter<symbol> {
+	static void to_string(symbol const& v, std::string& dest) {	    
 	    dest = v.getName();
 	}
-	static void to_string(Symbol const& v, std::ostream& dest) {
+	static void to_string(symbol const& v, std::ostream& dest) {
 	    dest << v.c_str();
 	}
-	static void from_string(const char* v, Symbol& dest) {	    
-	    dest = Symbol(v);
+	static void from_string(const char* v, symbol& dest) {	    
+	    dest = symbol(v);
 	}	
 };
 //
@@ -118,13 +118,13 @@ struct LexicalInterpreter<Symbol> {
 
 namespace detail {    
 	class LexicalSetter {
-		Symbol      _field;
+		symbol      _field;
 		char const* _value;
 	public:		
-		LexicalSetter(Symbol field,char const* value): _field(field), _value(value) {}
+		LexicalSetter(symbol field,char const* value): _field(field), _value(value) {}
 		
 		template <typename F>
-		void operator ()(Symbol const& symbol, F& v) {
+		void operator ()(symbol const& symbol, F& v) {
 			if( symbol == _field ) LexicalInterpreter<F>::from_string(_value, v);
 		}
 	    
@@ -132,13 +132,13 @@ namespace detail {
 
 	class LexicalGetter {
 	public:
-		Symbol       _field;
+		symbol       _field;
 		std::string& _dest;		
 	public:
-		LexicalGetter(Symbol field, std::string& dest): _field(field), _dest(dest) {}
+		LexicalGetter(symbol field, std::string& dest): _field(field), _dest(dest) {}
 		
 		template <class F>
-		void operator ()(Symbol const& symbol, F const& v) {
+		void operator ()(symbol const& symbol, F const& v) {
 			if( symbol == _field ) LexicalInterpreter<F>::to_string(v, _dest);
 		}    
 	};
@@ -149,27 +149,27 @@ namespace detail {
 ///
 
 template<typename T>
-void lexical_set(T& obj, Symbol field, char const* value)
+void lexical_set(T& obj, symbol field, char const* value)
 {
 	detail::LexicalSetter setter(field,value);
 	mutate(obj, setter);
 }
 template<typename T>
-void lexical_set(T& obj, Symbol field, std::string const& value)
+void lexical_set(T& obj, symbol field, std::string const& value)
 {
 	detail::LexicalSetter setter(field,value.c_str());
 	mutate(obj, setter);
 }
 
 template<typename T>
-void lexical_get(T const& obj, Symbol field, std::string& dest)
+void lexical_get(T const& obj, symbol field, std::string& dest)
 {
 	detail::LexicalGetter getter(field,dest);
 	process(obj, getter);
 }
 
 template<typename T>
-std::string lexical_get(T const& obj, Symbol field)
+std::string lexical_get(T const& obj, symbol field)
 {
 	std::string dest;
 	detail::LexicalGetter getter(field,dest);

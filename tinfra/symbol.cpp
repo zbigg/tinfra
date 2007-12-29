@@ -1,15 +1,15 @@
 #include <string>
 #include <iostream>
-#include "Symbol.h"
+#include "tinfra/symbol.h"
 
 using namespace std;
 namespace tinfra {
 
-Symbol::Name2IdMap*      Symbol::symbolMapString;
-Symbol::NamesContainer*  Symbol::symbolNames;
-int                      Symbol::nextFreeSymbolId;
+symbol::Name2IdMap*      symbol::symbolMapString;
+symbol::NamesContainer*  symbol::symbolNames;
+int                      symbol::nextFreeSymbolId;
 
-void Symbol::initRegistry()
+void symbol::initRegistry()
 {
 	static bool initialized = false;
 	if( initialized ) return;
@@ -23,7 +23,7 @@ void Symbol::initRegistry()
         getIdForName(null_symbol_name);
 }
 
-Symbol::id_type Symbol::getIdForName(const char* name)
+symbol::id_type symbol::getIdForName(const char* name)
 {	
 	initRegistry();
 	// TODO: it must be thread safe
@@ -33,7 +33,7 @@ Symbol::id_type Symbol::getIdForName(const char* name)
 	if( i == symbolMapString->end() ) 
 	{		
 		id_type resultId = nextFreeSymbolId++;
-		//cerr << "Symbol::register(" << name << ") = " << resultId << endl;
+		//cerr << "symbol::register(" << name << ") = " << resultId << endl;
 		symbolNames->push_back(name);
 		const string& nameInstance = symbolNames->at(resultId);
 		(*symbolMapString)[nameInstance.c_str()] = resultId;
@@ -46,19 +46,25 @@ Symbol::id_type Symbol::getIdForName(const char* name)
 	// UNLOCK
 }
 
-Symbol	Symbol::get(id_type id)
+symbol	symbol::get(id_type id)
 {
-	return Symbol(id);
+	return symbol(id);
 }
 
-Symbol	Symbol::get(const string& name)
+symbol	symbol::get(const string& name)
 {
-	return Symbol(getIdForName(name.c_str()));
+	return symbol(getIdForName(name.c_str()));
 }
 
-Symbol	Symbol::get(const char* name)
+symbol	symbol::get(const char* name)
 {
-	return Symbol(getIdForName(name));
+	return symbol(getIdForName(name));
 }
 
-};
+} // end namespace tinfra
+
+
+std::ostream& operator <<(std::ostream& dest, tinfra::symbol const& s)
+{
+    dest << s.c_str();
+}

@@ -4,7 +4,7 @@
 #define __XMLPrinter_h__
 
 #include <iostream>
-#include "tinfra/Symbol.h"
+#include "tinfra/symbol.h"
 #include "tinfra/tinfra_lex.h"
 #include "tinfra/xml/XMLStream.h"
 
@@ -13,37 +13,37 @@ namespace xml {
 
 class XMLSymbolMapping {
 public:
-    typedef tinfra::Symbol Symbol;
-    typedef std::map<Symbol, Symbol> translation_table_t;
+    typedef tinfra::symbol symbol;
+    typedef std::map<symbol, symbol> translation_table_t;
     
     template<typename T>
-    void map_class_by_traits(Symbol const& xml) { 
-        class_name_mapping[tinfra::TypeTraits<T>::symbol()] = xml; 
+    void map_class_by_traits(symbol const& xml) { 
+        class_name_mapping[tinfra::TypeTraits<T>::type_symbol()] = xml; 
     }
-    void map_class_name(Symbol const& src, Symbol const& xml) {        
+    void map_class_name(symbol const& src, symbol const& xml) {        
         class_name_mapping[src] = xml; 
         class_name_rev_mapping[xml] = src;
     }
-    void map_field(Symbol const& src, Symbol const& xml) {
+    void map_field(symbol const& src, symbol const& xml) {
         field_mapping[src] = xml;
         field_rev_mapping[xml] = src;
     }
-    Symbol map_class_name(Symbol const& s) const {
+    symbol map_class_name(symbol const& s) const {
         return find_symbol(s, class_name_mapping);
     }
-    Symbol map_field(Symbol const& s) const  {
+    symbol map_field(symbol const& s) const  {
         return find_symbol(s, field_mapping);
     }
     
-    Symbol unmap_class_name(Symbol const& s) const {
+    symbol unmap_class_name(symbol const& s) const {
         return find_symbol(s, class_name_rev_mapping);
     }
-    Symbol unmap_field(Symbol const& s) const  {
+    symbol unmap_field(symbol const& s) const  {
         return find_symbol(s, field_rev_mapping);
     }
     
 private:
-    static Symbol find_symbol(Symbol const& s, translation_table_t const& t) {
+    static symbol find_symbol(symbol const& s, translation_table_t const& t) {
         if( t.size() == 0 ) return s;
         translation_table_t::const_iterator r = t.find(s);
         if( r == t.end() ) return s;
@@ -72,18 +72,18 @@ public:
         {}
 	
         template <typename T>
-        void managed_struct(T const& object, const tinfra::Symbol& field_symbol)
+        void managed_struct(T const& object, const tinfra::symbol& field_symbol)
         {
-            tinfra::Symbol field_tag_symbol = mapping.map_field(field_symbol);            
+            tinfra::symbol field_tag_symbol = mapping.map_field(field_symbol);            
             begin_composite(field_tag_symbol);
             tinfra::tt_process<T>(object, *this);
             end_composite(field_tag_symbol);
         }
         template <typename T>
-        void list_container(T const& container, tinfra::Symbol const& field_symbol)
+        void list_container(T const& container, tinfra::symbol const& field_symbol)
         {
-            static const tinfra::Symbol item_tag_symbol = mapping.map_class_name(tinfra::TypeTraits<typename T::value_type>::symbol());
-            tinfra::Symbol field_tag_symbol = mapping.map_field(field_symbol);
+            static const tinfra::symbol item_tag_symbol = mapping.map_class_name(tinfra::TypeTraits<typename T::value_type>::type_symbol());
+            tinfra::symbol field_tag_symbol = mapping.map_field(field_symbol);
             begin_composite(field_tag_symbol);
             for( typename T::const_iterator i = container.begin(); i != container.end(); ++i ) {
                 tinfra::TypeTraits<typename T::value_type>::process(*i,item_tag_symbol, *this);
@@ -91,18 +91,18 @@ public:
             end_composite(field_tag_symbol);
         }
         
-	void begin_composite(const tinfra::Symbol& s) 
+	void begin_composite(const tinfra::symbol& s) 
         { 
             out.start_tag(s.c_str());
         }	
-	void end_composite(const tinfra::Symbol& s) 
+	void end_composite(const tinfra::symbol& s) 
         {
             out.end_tag(s);
         }
 	
 
 	template <typename T>
-	void operator () (const tinfra::Symbol& field_symbol, const T& t) {
+	void operator () (const tinfra::symbol& field_symbol, const T& t) {
             std::string tmp;
             tinfra::to_string(t, tmp);
             out.arg(mapping.map_field(field_symbol).c_str(), tmp.c_str());
@@ -115,7 +115,7 @@ private:
 } // end xml::detail
 
 template <typename T>
-static void dump(XMLOutputStream& o, const tinfra::Symbol& s, const T& x)
+static void dump(XMLOutputStream& o, const tinfra::symbol& s, const T& x)
 {
     XMLSymbolMapping dummy_map;
     detail::XMLPrinterFunctor f(o,dummy_map);
@@ -124,7 +124,7 @@ static void dump(XMLOutputStream& o, const tinfra::Symbol& s, const T& x)
 }
 
 template <typename T>
-static void dump(XMLOutputStream& o, const tinfra::Symbol& s, const T& x, XMLSymbolMapping const& mapping)
+static void dump(XMLOutputStream& o, const tinfra::symbol& s, const T& x, XMLSymbolMapping const& mapping)
 {
     detail::XMLPrinterFunctor f(o,mapping);
     
@@ -141,15 +141,15 @@ using std::cerr;
 using std::endl;
 class XMLStreamMutator {
     XMLInputStream& xml_stream;
-    Symbol target_tag;
+    symbol target_tag;
     const XMLSymbolMapping& mapping;
     bool processed;
 public:
-    XMLStreamMutator(XMLInputStream& xml_stream, Symbol target,xml::XMLSymbolMapping const& mapping): 
+    XMLStreamMutator(XMLInputStream& xml_stream, symbol target,xml::XMLSymbolMapping const& mapping): 
         xml_stream(xml_stream), target_tag(target),mapping(mapping),processed(false) {}
     
     template <typename T>
-    void managed_struct(T& object, const tinfra::Symbol& field_tag)
+    void managed_struct(T& object, const tinfra::symbol& field_tag)
     {
         
         if( field_tag != target_tag ) return;
@@ -168,7 +168,7 @@ public:
         while(e) {
             if( e == 0 ) return;
             if( e->type == XMLEvent::START_TAG) {
-                Symbol subtag_symbol(e->tag_name());
+                symbol subtag_symbol(e->tag_name());
                 subtag_symbol = mapping.unmap_field(subtag_symbol);
                 XMLStreamMutator subtag_processor(xml_stream, subtag_symbol, mapping);
                 tinfra::tt_mutate<T>(object, subtag_processor);
@@ -191,11 +191,11 @@ public:
         //cerr << " __exit XMLStreamMutator::managed_struct( symbol=" << field_tag.c_str() << ")" << endl;
     }
     template <typename T>
-    void list_container(T& container, tinfra::Symbol const& field_tag)
+    void list_container(T& container, tinfra::symbol const& field_tag)
     {   
         if( field_tag != target_tag ) return;
             
-        static const Symbol item_symbol = mapping.map_class_name(tinfra::TypeTraits<typename T::value_type>::symbol());
+        static const symbol item_symbol = mapping.map_class_name(tinfra::TypeTraits<typename T::value_type>::type_symbol());
         processed = true;
         //cerr << "XMLStreamMutator::list_container( list ... symbol=" << field_tag.c_str() << " type=" << tinfra::TypeTraits<T>::name() << ")" << endl;        
         {
@@ -208,7 +208,7 @@ public:
         XMLEvent* e = xml_stream.peek();
         while(e) {
             if( e->type == XMLEvent::START_TAG) {
-                Symbol subtag_symbol(e->tag_name());
+                symbol subtag_symbol(e->tag_name());
                 subtag_symbol = mapping.unmap_field(subtag_symbol);
                 XMLStreamMutator subtag_processor(xml_stream, subtag_symbol, mapping);
                 typename T::value_type element;
@@ -234,7 +234,7 @@ public:
     }
     
     template<typename T>
-    void operator()(tinfra::Symbol const& field_tag, T& target) {
+    void operator()(tinfra::symbol const& field_tag, T& target) {
         // XXX is 'a' a TAG or SYMBOL???
         if( field_tag != target_tag) return;
         processed = true;
@@ -296,7 +296,7 @@ private:
         while( *ia ) {
             const char* tag_name = ia[0];
             const char* value = ia[1];
-            tinfra::Symbol symbol_name = mapping.unmap_field(tag_name);
+            tinfra::symbol symbol_name = mapping.unmap_field(tag_name);
             //cerr << "AA:" << tinfra::TypeTraits<T>::name() << "::" << symbol_name.c_str() << "(" << tag_name << ") <= " << value << endl;
             tinfra::lexical_set<T>(target, symbol_name, value);
             ia += 2;
@@ -307,7 +307,7 @@ private:
 } // namespace detail
 
 template <typename T>
-void load(XMLInputStream& xml_input, const Symbol& root, T& target, xml::XMLSymbolMapping const& mapping)
+void load(XMLInputStream& xml_input, const symbol& root, T& target, xml::XMLSymbolMapping const& mapping)
 {
     detail::XMLStreamMutator subtag_processor(xml_input,  root, mapping);
     tinfra::TypeTraits<T>::mutate(target, root, subtag_processor);

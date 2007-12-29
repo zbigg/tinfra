@@ -4,26 +4,28 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <ostream>
 
 #include "string.h"
+
 namespace tinfra {
 	
-class Symbol {
+class symbol {
 public:
 	typedef int         id_type;
 	typedef std::string string;
 
-        Symbol(): symbolId(0) {}
-	Symbol(const char* s): symbolId(getIdForName(s)) {}
-	Symbol(const string& s): symbolId(getIdForName(s.c_str())) {}
+        symbol(): symbolId(0) {}
+	symbol(const char* s): symbolId(getIdForName(s)) {}
+	symbol(const string& s): symbolId(getIdForName(s.c_str())) {}
 	
-	Symbol(id_type id): symbolId(id) {}
-	Symbol(const Symbol& s): symbolId(s.symbolId) {}
+	symbol(id_type id): symbolId(id) {}
+	symbol(const symbol& s): symbolId(s.symbolId) {}
 	
 	// comparision
-	bool operator == (const Symbol& other) const { return symbolId == other.symbolId; } 
-	bool operator != (const Symbol& other) const { return symbolId != other.symbolId; } 
-	bool operator < (const Symbol& other)  const { return symbolId < other.symbolId; }
+	bool operator == (const symbol& other) const { return symbolId == other.symbolId; } 
+	bool operator != (const symbol& other) const { return symbolId != other.symbolId; } 
+	bool operator < (const symbol& other)  const { return symbolId < other.symbolId; }
 	
 	// getters and cast operators
 	
@@ -35,16 +37,16 @@ public:
 	operator const char* () const      { return c_str(); }
 	operator id_type  () const         { return symbolId; }
 
-	// Symbol registry
-	static Symbol	get(id_type id);
-	static Symbol	get(const string& name);
-	static Symbol	get(const char* name);
+	// symbol registry
+	static symbol	get(id_type id);
+	static symbol	get(const string& name);
+	static symbol	get(const char* name);
 	
 private:
 	// the only member
 	id_type        symbolId;
 
-	// Symbol registry
+	// symbol registry
 	static id_type getIdForName(const char* name);
 	static void    initRegistry();
 
@@ -63,5 +65,7 @@ private:
 
 
 };
+
+std::ostream& operator <<(std::ostream& dest, tinfra::symbol const& s);
 
 #endif
