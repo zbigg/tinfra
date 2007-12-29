@@ -66,5 +66,5 @@ symbol	symbol::get(const char* name)
 
 std::ostream& operator <<(std::ostream& dest, tinfra::symbol const& s)
 {
-    dest << s.c_str();
+    return dest << s.c_str();
 }

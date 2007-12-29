@@ -1,7 +1,7 @@
 #include "tinfra/fmt.h"
 #include "tinfra/exception.h"
 #include <string>
-
+#include <cctype>
 namespace tinfra {
 
 struct fmt_command {
@@ -80,5 +80,5 @@ void simple_fmt::realize()
 
 std::ostream& operator << (std::ostream& out, tinfra::simple_fmt& fmt)
 {
-    out << fmt.str();
+    return out << fmt.str();
 }
