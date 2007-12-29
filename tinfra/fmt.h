@@ -15,80 +15,39 @@ namespace tinfra {
 ///     fmt("Hello %s. Nice to %s you. Count %i") % "zbyszek" % "opryszek" % 2;
 ///
 
-namespace format {
-
-struct fmt_command {
-    char command;
+class format_exception: public generic_exception {
+public:
+    format_exception(const std::string& message): generic_exception("format exception: " + message) {}
 };
-    
-template <typename T>
-int process_fmt(std::string fmt, int start, fmt_command& result, T& output)
-{
-    std::string::const_iterator istart = fmt.begin() + start;
-    std::string::const_iterator c = istart;
-    
-    const std::string::const_iterator end = fmt.end();
-    
-    while( c != end ) 
-    {
-        if( *c == '%' ) {
-            if( c+1 == end ) throw generic_exception("simple_fmt: bad format: '%' at the end");
-            output.append(istart, c);            
-            ++c;
-            if( *c == '%' ) {
-                ++c;
-                istart = c;
-                output.append("%");
-                continue; // %% sequence is an escape
-            } else if( std::isalpha(*c) ) {
-                result.command = *c;
-                ++c;
-                return c - fmt.begin();
-            } else {
-                throw generic_exception("simple_fmt: bad format command");
-            }
-        } else {
-            ++c;
-        }
-    }
-    output.append(istart, end);
-    return -1;
-}
-
-} // end namespace tinfra::format
-
 class simple_fmt {
 public:
     simple_fmt(char const* format): fmt_(format), pos_(0) {}
     simple_fmt(std::string const& format): fmt_(format), pos_(0) {}
     
     template <typename T>
-    void push(T const& value) {
-        format::fmt_command cmd;
-        int cmd_pos = format::process_fmt(fmt_, pos_, cmd, output_);
-        if( cmd_pos == -1 ) throw generic_exception("simple_fmt: too many arguments");        
+    simple_fmt& push(T const& value) {
+        int cmd_pos = check_command();
         std::string tmp;
         to_string(value, tmp);
         output_.append(tmp);
+        pos_= cmd_pos;        
+        return *this;
     }
     
     template <typename T>
-    simple_fmt& operator <<(T const& value) { push(value); return *this; }
+    simple_fmt& operator <<(T const& value) { return push(value); }
     
     template <typename T>
-    simple_fmt& operator %(T const& value) { push(value); return *this; }
+    simple_fmt& operator %(T const& value) { return push(value); }
     
-    void reset() {
-        output_.clear();
-        pos_ = 0;
+    void reset();
+    
+    operator std::string() {
+        return str();
     }
     
-    void realize()
-    {
-        format::fmt_command cmd;        
-        if( format::process_fmt(fmt_, pos_, cmd, output_) != -1 ) 
-            throw generic_exception("simple_fmt: not all arguments realized");        
-        pos_ = fmt_.size();
+    operator const char*() {
+        return c_str();
     }
     
     std::string const& str() {
@@ -100,12 +59,19 @@ public:
         return output_.c_str();
     }
     
-private:    
+private:
+    int check_command();
+    void realize();
+
     std::string fmt_;
     int pos_;
     std::string output_;
 };
 
+///
+/// The default formatter supported by tinfra.
+///
+typedef simple_fmt fmt;
 
 } // end namespace tinfra
 

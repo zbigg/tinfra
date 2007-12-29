@@ -2,18 +2,48 @@
 
 #include <unittest++/UnitTest++.h>
 
+using tinfra::fmt;
 using tinfra::simple_fmt;
 
-TEST(simple_fmt)
-{
-    CHECK( simple_fmt("").str() == "");
-    CHECK( simple_fmt("a").str() == "a");
-    CHECK( simple_fmt("%%").str() == "%");
-    CHECK( simple_fmt("a%%b").str() == "a%b");
-}
+SUITE(tinfra_fmt) {
+    TEST(fmt_basic)
+    {
+        CHECK( fmt("").str() == "");
+        CHECK( fmt("a").str() == "a");
+        CHECK( fmt("%%").str() == "%");
+        CHECK( fmt("a%%b").str() == "a%b");
+    }
 
-TEST(simple_fmt2)
-{
-    CHECK_EQUAL( "TEST", (simple_fmt("%s") % "TEST").c_str() );
-    CHECK_EQUAL( "TEST", (simple_fmt("T%sT") % "ES").c_str() );
-}
+    TEST(fmt_str)
+    {
+        CHECK_EQUAL( "TEST", (const char*)(fmt("%s") % "TEST" ) );
+        CHECK_EQUAL( "TEST", (const char*)(fmt("T%sT") % "ES" ) );    
+    }
+
+    TEST(fmt_number)
+    {
+        CHECK_EQUAL( "0", (const char*)(fmt("%i") % 0) );
+        CHECK_EQUAL( "1", (const char*)(fmt("%i") % 1) );
+        CHECK_EQUAL( "-1", (const char*)(fmt("%i") % -1) );
+    }
+
+    TEST(fmt_complex)
+    {
+        CHECK_EQUAL( "AB", (const char*)(fmt("%s%s") % "A" % "B") );
+        CHECK_EQUAL( "ABCDEF", (const char*)(fmt("A%sC%sE%s") % 'B' % 'D' % 'F') );
+    }
+
+    TEST(fmt_errors)
+    {
+        CHECK_THROW( simple_fmt("BOBO%").push(1).str(), tinfra::format_exception); // % at the end
+        CHECK_THROW( simple_fmt("%s%s").push(1).str(), tinfra::format_exception); // not all arguments realized
+        CHECK_THROW( simple_fmt("%s").push(1).push(2).str(), tinfra::format_exception); // to many actual arguments
+    }
+
+    TEST(simple_fmt_errors)
+    {
+        CHECK_THROW( simple_fmt("%x").push(1).str(), tinfra::format_exception); // bad format command
+        CHECK_THROW( simple_fmt("%l").push(1).str(), tinfra::format_exception); // bad format command
+    }
+
+} // end SUITE(fmt)
