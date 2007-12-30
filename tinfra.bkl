@@ -16,6 +16,7 @@
             tinfra/tinfra.cpp
             tinfra/Symbol.cpp
             tinfra/exception.cpp
+            tinfra/exeinfo.cpp
             tinfra/cmd.cpp
             <!--tinfra/io/stream.cpp-->
             tinfra/fmt.cpp
@@ -36,6 +37,7 @@
             <!--tinfra/io/test_stream.cpp-->
             tinfra/test_fmt.cpp
             tinfra/test_symbol.cpp
+            tinfra/test_exeinfo.cpp
             tinfra/test_main.cpp
         </sources>
         <library>tinfra</library>
