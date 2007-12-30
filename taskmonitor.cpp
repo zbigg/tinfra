@@ -6,7 +6,7 @@
 #include <exception>
 #include <fstream>
 
-#include <tinfra/Symbol.h>
+#include <tinfra/symbol.h>
 using namespace std;
 
 #include <tinfra/tinfra.h>
@@ -14,7 +14,7 @@ using namespace std;
 #include <tinfra/xml.h>
 #include <tinfra/xml/XMLStream.h>
 
-using tinfra::Symbol;
+using tinfra::symbol;
 using tinfra::ManagedType;
 
 // 
@@ -45,44 +45,44 @@ struct LexicalInterpreter<yesno> {
 }
 namespace S {
     // symbols
-    extern Symbol active;
-    extern Symbol closed;
-    extern Symbol created;
-    extern Symbol deadline;
-    extern Symbol description;
-    extern Symbol end;
-    extern Symbol fileversion;
-    extern Symbol fullname;
-    extern Symbol group;
-    extern Symbol hide;
-    extern Symbol id;
-    extern Symbol master_task;
-    extern Symbol master_tasks;
-    extern Symbol measure_id;
-    extern Symbol members;
-    extern Symbol members_data;
-    extern Symbol name;
-    extern Symbol persistent;
-    extern Symbol process_measures;
-    extern Symbol progress;
-    extern Symbol project;
-    extern Symbol project_phases;
-    extern Symbol projects;
-    extern Symbol projectphase_id;
-    extern Symbol shortname;
-    extern Symbol start;
-    extern Symbol started;
-    extern Symbol state;
-    extern Symbol time_load;
-    extern Symbol tasks;
-    extern Symbol version;
+    extern symbol active;
+    extern symbol closed;
+    extern symbol created;
+    extern symbol deadline;
+    extern symbol description;
+    extern symbol end;
+    extern symbol fileversion;
+    extern symbol fullname;
+    extern symbol group;
+    extern symbol hide;
+    extern symbol id;
+    extern symbol master_task;
+    extern symbol master_tasks;
+    extern symbol measure_id;
+    extern symbol members;
+    extern symbol members_data;
+    extern symbol name;
+    extern symbol persistent;
+    extern symbol process_measures;
+    extern symbol progress;
+    extern symbol project;
+    extern symbol project_phases;
+    extern symbol projects;
+    extern symbol projectphase_id;
+    extern symbol shortname;
+    extern symbol start;
+    extern symbol started;
+    extern symbol state;
+    extern symbol time_load;
+    extern symbol tasks;
+    extern symbol version;
 }
 
 // Member definition
 struct Member {
     yesno   active;
     string  fullname;
-    Symbol  id;
+    symbol  id;
     string  shortname;
     
     template <typename F>
@@ -112,7 +112,7 @@ struct Group {
 struct Project {
     yesno    active;
     string   fullname;
-    Symbol   id;
+    symbol   id;
     
     template <typename F>
     void apply(F& f) const
@@ -124,7 +124,7 @@ struct Project {
 };
 
 struct ProcessMeasure {
-    Symbol   id;
+    symbol   id;
     string   name;
         
     template <typename F>
@@ -136,7 +136,7 @@ struct ProcessMeasure {
 };
 
 struct ProjectPhase {
-    Symbol   id;
+    symbol   id;
     string   name;
     
     template <typename F>
@@ -148,8 +148,8 @@ struct ProjectPhase {
 };
 
 struct MasterTask {
-    Symbol id;
-    Symbol project;
+    symbol id;
+    symbol project;
     string state;
     yesno  active;
     yesno  persistent;
@@ -168,7 +168,7 @@ struct MasterTask {
 };
 
 struct timestamp {
-    long timestamp;
+    long stamp;
 };
 
 struct TimeLoadEntry {
@@ -189,8 +189,8 @@ enum taskstate {
 
 struct Task {
     string      name;
-    Symbol      project;
-    Symbol      master_task;
+    symbol      project;
+    symbol      master_task;
     timestamp   created;
     timestamp   started;
     int    progress;
@@ -198,8 +198,8 @@ struct Task {
     timestamp   closed;
     timestamp   deadline;
     yesno       hide;
-    Symbol      measure_id;
-    Symbol      projectphase_id;
+    symbol      measure_id;
+    symbol      projectphase_id;
     string      description;
     vector<TimeLoadEntry> time_load;
     
@@ -225,7 +225,7 @@ struct Task {
 
 struct MemberData {
     yesno    active;
-    Symbol   id;
+    symbol   id;
     vector<Task>        tasks;
     
     template <typename F>
@@ -290,8 +290,7 @@ namespace tinfra {
 	template<typename T> struct TypeTraits<vector<T> >: public STLContainer<vector<T> > {};
 }
 
-ostream& operator << (ostream& o, const Symbol& s)  { return o << s.getName().c_str(); }
-ostream& operator << (ostream& o, const timestamp& s)  { return o << s.timestamp; }
+ostream& operator << (ostream& o, const timestamp& s)  { return o << s.stamp; }
 ostream& operator << (ostream& o, const taskstate& s)  { 
     return o << ( s == prepared ? "prepared" :
                   s == active   ? "active":
@@ -299,59 +298,59 @@ ostream& operator << (ostream& o, const taskstate& s)  {
 }
 namespace S {
     // symbols
-    Symbol active = "active";
-    Symbol closed = "closed";;
-    Symbol created = "created";;
-    Symbol deadline = "deadline";;
-    Symbol description = "description";;
-    Symbol end = "end";;
-    Symbol fileversion = "fileversion";
-    Symbol fullname = "fullname";;
-    Symbol group = "group";
-    Symbol hide = "hide";
-    Symbol id = "id";
-    Symbol master_task = "master_task";
-    Symbol master_tasks = "master_tasks";
-    Symbol measure_id = "measure_id";
-    Symbol members = "members";
-    Symbol members_data = "members_data";
-    Symbol name = "name";
-    Symbol persistent = "persistent";
-    Symbol process_measures = "process_measures";
-    Symbol progress = "progress";
-    Symbol project = "project";
-    Symbol project_phases = "project_phases";
-    Symbol projects = "projects";
-    Symbol projectphase_id = "projectphase_id";
-    Symbol shortname = "shortname";
-    Symbol start = "start";
-    Symbol started = "started";
-    Symbol state = "state";
-    Symbol time_load = "time_load";
-    Symbol tasks = "tasks";
-    Symbol version = "version";
+    symbol active = "active";
+    symbol closed = "closed";;
+    symbol created = "created";;
+    symbol deadline = "deadline";;
+    symbol description = "description";;
+    symbol end = "end";;
+    symbol fileversion = "fileversion";
+    symbol fullname = "fullname";;
+    symbol group = "group";
+    symbol hide = "hide";
+    symbol id = "id";
+    symbol master_task = "master_task";
+    symbol master_tasks = "master_tasks";
+    symbol measure_id = "measure_id";
+    symbol members = "members";
+    symbol members_data = "members_data";
+    symbol name = "name";
+    symbol persistent = "persistent";
+    symbol process_measures = "process_measures";
+    symbol progress = "progress";
+    symbol project = "project";
+    symbol project_phases = "project_phases";
+    symbol projects = "projects";
+    symbol projectphase_id = "projectphase_id";
+    symbol shortname = "shortname";
+    symbol start = "start";
+    symbol started = "started";
+    symbol state = "state";
+    symbol time_load = "time_load";
+    symbol tasks = "tasks";
+    symbol version = "version";
 }
 
 void initialize_xml_mapping(tinfra::xml::XMLSymbolMapping& xml_mapping)
 {
-    xml_mapping.map_class_by_traits<TaskMonitor>(Symbol("taskmonitor"));
-    xml_mapping.map_class_by_traits<ProcessMeasure>(Symbol("process-measure"));
-    xml_mapping.map_class_by_traits<ProjectPhase>(Symbol("project-phase"));
-    xml_mapping.map_class_by_traits<Task>(Symbol("task"));
-    xml_mapping.map_class_by_traits<MasterTask>(Symbol("master-task"));
-    xml_mapping.map_class_by_traits<TimeLoadEntry>(Symbol("time-load-entry"));
-    xml_mapping.map_class_by_traits<MemberData>(Symbol("member-data"));
-    xml_mapping.map_class_by_traits<Project>(Symbol("project"));
-    xml_mapping.map_class_by_traits<Member>(Symbol("member"));
+    xml_mapping.map_class_by_traits<TaskMonitor>(symbol("taskmonitor"));
+    xml_mapping.map_class_by_traits<ProcessMeasure>(symbol("process-measure"));
+    xml_mapping.map_class_by_traits<ProjectPhase>(symbol("project-phase"));
+    xml_mapping.map_class_by_traits<Task>(symbol("task"));
+    xml_mapping.map_class_by_traits<MasterTask>(symbol("master-task"));
+    xml_mapping.map_class_by_traits<TimeLoadEntry>(symbol("time-load-entry"));
+    xml_mapping.map_class_by_traits<MemberData>(symbol("member-data"));
+    xml_mapping.map_class_by_traits<Project>(symbol("project"));
+    xml_mapping.map_class_by_traits<Member>(symbol("member"));
         
-    xml_mapping.map_field(S::process_measures,Symbol("process-measures"));
-    xml_mapping.map_field(S::project_phases,Symbol("project-phases"));
-    xml_mapping.map_field(S::master_tasks,Symbol("master-tasks"));
-    xml_mapping.map_field(S::master_task,Symbol("master-task"));
-    xml_mapping.map_field(S::projectphase_id,Symbol("projectphase-id"));
-    xml_mapping.map_field(S::measure_id,Symbol("measure-id"));
-    xml_mapping.map_field(S::members_data,Symbol("members-data"));
-    xml_mapping.map_field(S::time_load,Symbol("time-load"));    
+    xml_mapping.map_field(S::process_measures,symbol("process-measures"));
+    xml_mapping.map_field(S::project_phases,symbol("project-phases"));
+    xml_mapping.map_field(S::master_tasks,symbol("master-tasks"));
+    xml_mapping.map_field(S::master_task,symbol("master-task"));
+    xml_mapping.map_field(S::projectphase_id,symbol("projectphase-id"));
+    xml_mapping.map_field(S::measure_id,symbol("measure-id"));
+    xml_mapping.map_field(S::members_data,symbol("members-data"));
+    xml_mapping.map_field(S::time_load,symbol("time-load"));    
 }
 
 void test1()
@@ -364,13 +363,13 @@ void test1()
     initialize_xml_mapping(xml_symbol_mapping);
     
     tm.process_measures.push_back(tinfra::construct<ProcessMeasure>()
-                                                           (S::id, Symbol("req-1"))
+                                                           (S::id, symbol("req-1"))
                                                            (S::name, string("XXX")));
     tm.project_phases.push_back(tinfra::construct<ProjectPhase>()
-                                                           (S::id, Symbol("m1"))
+                                                           (S::id, symbol("m1"))
                                                            (S::name, string("Test")));
     tinfra::xml::FileXMLOutputStream xml_out(* cout.rdbuf());
-    tinfra::xml::dump(xml_out, Symbol("taskmonitor"), tm, xml_symbol_mapping);
+    tinfra::xml::dump(xml_out, symbol("taskmonitor"), tm, xml_symbol_mapping);
 }
 
 void test2()
@@ -385,14 +384,14 @@ void test2()
         tinfra::xml::XMLBufferOutputStream b1(b);
         tinfra::xml::read_xml("taskmonitor2.xml",b1);
         tinfra::xml::XMLBufferInputStream b2(b);
-        tinfra::xml::load<TaskMonitor>(b2, Symbol("taskmonitor"), tm, xml_symbol_mapping);
+        tinfra::xml::load<TaskMonitor>(b2, symbol("taskmonitor"), tm, xml_symbol_mapping);
         cout << "readed!" << endl;
     }
     {
         tinfra::xml::FileXMLOutputStream xml_out(* cout.rdbuf());
         xml_out.start_document();
         xml_out.set_human_readable(true);
-        tinfra::xml::dump(xml_out, Symbol("taskmonitor"), tm, xml_symbol_mapping);
+        tinfra::xml::dump(xml_out, symbol("taskmonitor"), tm, xml_symbol_mapping);
         cout << "written!" << endl;
     }
     cout << "bye!" << endl;
