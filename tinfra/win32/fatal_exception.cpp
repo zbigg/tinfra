@@ -335,12 +335,6 @@ static void show_stack(HANDLE hThread, CONTEXT& c )
 	    break;
 	
 	address = stack_frame.AddrPC.Offset;
-	
-	// display its contents
-	//printf( "\n%3d %c%c %08lx %08lx %08lx %08lx ",
-	//	frameNum, s.Far? 'F': '.', s.Virtual? 'V': '.',
-	//	s.AddrPC.Offset, s.AddrReturn.Offset,
-	//	s.AddrFrame.Offset, s.AddrStack.Offset );
 
 	if( stack_frame.AddrPC.Offset == 0 || stack_frame.AddrReturn.Offset == 0) break;
 	
@@ -348,19 +342,11 @@ static void show_stack(HANDLE hThread, CONTEXT& c )
 	    if ( gle != 487 )
 		    printf( "SymGetSymFromAddr(): gle = %lu\n", gle );
 	} else {
-	    // UnDecorateSymbolName()
-	    //pUnDecorateSymbolName( pSym->Name, undName, MAXNAMELEN, UNDNAME_NAME_ONLY );
+
 	    pUnDecorateSymbolName( pSym->Name, undFullName, MAXNAMELEN, UNDNAME_COMPLETE );
-	    /*printf( "%s", undName );
-	    if ( offsetFromSymbol != 0 )
-		    printf( " %+ld bytes", (long) offsetFromSymbol );
-	    putchar( '\n' );
-	    printf( "    Sig:  %s\n", pSym->Name );
-	    printf( "    Decl: %s\n", undFullName );*/
 	    symbol_name = undFullName;
 	}	    
 
-	// show line number info, NT5.0-method (SymGetLineFromAddr())
 	if ( pSymGetLineFromAddr != NULL ) { 
 	    if ( ! pSymGetLineFromAddr( hProcess, address, &offsetFromSymbol, &Line ) )
 	    {
@@ -369,15 +355,12 @@ static void show_stack(HANDLE hThread, CONTEXT& c )
 	    }
 	    else
 	    {
-		//printf( "    Line: %s(%lu) %+ld bytes\n",
-		//	Line.FileName, Line.LineNumber, offsetFromSymbol );
 		line_number = Line.LineNumber;
 		file_name = Line.FileName;
 		symbol_offset = offsetFromSymbol;
 	    }
 	}
 
-	// show module info (SymGetModuleInfo())
 	if ( ! pSymGetModuleInfo( hProcess, address, &Module ) )
 	{
 	    printf( "SymGetModuleInfo): gle = %lu\n", gle );
@@ -388,6 +371,7 @@ static void show_stack(HANDLE hThread, CONTEXT& c )
 	}
 	
 	printf("0x%08x", (unsigned int)address);
+
 	if( module_name ) {
 	    printf(" (%s)", module_name);	    
 	}
