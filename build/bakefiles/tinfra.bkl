@@ -2,7 +2,6 @@
 
 <makefile>
     <include file="common.bkl"/>
-    <!-- <set var="PLATFORM">win32</set> -->
     
     <set var="TINFRA_PLATFORM_SOURCES" hints="files">
         <if cond="PLATFORM_WIN32=='1'">tinfra/win32/fatal_exception.cpp</if>
@@ -10,6 +9,7 @@
         <if cond="PLATFORM_UNIX=='1'">tinfra/posix/fatal_exception.cpp</if>
     </set>
 
+    <!-- public things -->
     <lib id="tinfra" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
@@ -22,14 +22,39 @@
             tinfra/fmt.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
+        <install-to>$(LIBDIR)</install-to> 
     </lib>
+    
     <lib id="tinfra_xml" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
             tinfra/xml/XMLStream.cpp
             tinfra/xml/XMLStreamReader.cpp
         </sources>
+        <install-to>$(LIBDIR)</install-to> 
     </lib>
+    <using module="datafiles"/>
+    
+    <data-files-tree>
+        <srcdir>$(SRCDIR)</srcdir>
+        <install-to>$(INCLUDEDIR)</install-to> 
+        <files>
+            tinfra/StaticCacheObject.h
+            tinfra/cmd.h
+            tinfra/exception.h
+            tinfra/exeinfo.h
+            tinfra/fmt.h
+            tinfra/io/stream.h
+            tinfra/multitype_map.h
+            tinfra/symbol.h
+            tinfra/tinfra.h
+            tinfra/tinfra_lex.h
+            tinfra/xml/XMLStream.h
+            tinfra/xml.h
+        </files>        
+    </data-files-tree>
+    
+    <!-- local things -->
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
@@ -45,16 +70,18 @@
         <sys-lib>unittest++</sys-lib>
         <sys-lib>zcompat</sys-lib>
     </exe>
+    
     <exe id="test_fatal_exception" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
             tinfra/test_fatal_exception.cpp
         </sources>
         <library>tinfra</library>
-    </exe>    
+    </exe>
+    
     <action id="check" depends="unittests">
         <depends>unittests</depends>
         <depends>test_fatal_exception</depends>
-        <command>sh check.sh $(BUILDDIR)</command>
+        <command>sh $(SRCDIR)/check.sh $(BUILDDIR)</command>
     </action>
 </makefile>
