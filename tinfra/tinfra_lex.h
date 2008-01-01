@@ -182,6 +182,11 @@ void from_string(char const* str, F& dest) {
         LexicalInterpreter<F>::from_string(str, dest);
 }
 
+template<typename F>
+void from_string(std::string const& str, F& dest) {
+        LexicalInterpreter<F>::from_string(str.c_str(), dest);
+}
+
 
 template <typename F>
 void to_string(F const& value, std::string& dest) {
