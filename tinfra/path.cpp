@@ -10,7 +10,7 @@
 namespace tinfra {
 namespace path {
 
-std::string join(const std::string& a, const std::string b) 
+std::string join(const std::string& a, const std::string& b) 
 {
     if( a.size() > 0 && b.size() > 0 )
         return a + '/' + b;

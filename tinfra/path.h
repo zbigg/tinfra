@@ -6,7 +6,7 @@
 namespace tinfra { 
 namespace path {
     
-std::string join(const std::string& a, const std::string b);
+std::string join(const std::string& a, const std::string& b);
     
 bool exists(const char* name);
     
