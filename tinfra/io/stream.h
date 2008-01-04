@@ -14,14 +14,35 @@ class io_exception: public generic_exception {
 public:
     io_exception(std::string const& message): generic_exception(message) {}
 };
+namespace detail {
+    class stream {
+    public:
+        virtual ~stream() {}
+        enum seek_origin {
+            start,
+            end,
+            current
+        };
+        virtual void close() = 0;
+        virtual int seek(int pos, seek_origin origin = start) = 0;
+        virtual int read(char* dest, int size) = 0;
+        virtual int write(const char* data, int size) = 0;
+        virtual void sync() = 0;
+    };
+} // end namespace detail
+
 class zstreambuf : public std::streambuf {
     //typedef std::streambuf::streamsize streamsize;
     
 private:
-    ZSTREAM     _stream;
-    bool        _own;
+    detail::stream* stream_;
+    bool            own_;
+    char*           buffer_;
+    int             buffer_len_;
+    bool            own_buffer_;
+    
 public:
-    zstreambuf(ZSTREAM stream = 0, bool own = false);
+    zstreambuf(detail::stream* stream = 0, bool own = false);
     zstreambuf(char const* name, std::ios::openmode mode = std::ios::in);
 
     /** Open a file in native filesystem */
@@ -56,7 +77,7 @@ public:
     virtual int_type pbackfail (int_type=traits_type::eof());
     virtual pos_type seekoff (off_type, std::ios::seekdir, std::ios::openmode=std::ios::in | std::ios::out);
     virtual pos_type seekpos (pos_type, std::ios::openmode=std::ios::in | std::ios::out);    
-    //virtual basic_streambuf< char_type, _Traits >* setbuf (char_type *, streamsize)    
+    virtual std::streambuf* setbuf (char *, std::streamsize);
     virtual std::streamsize showmanyc ();
     virtual int sync ();
     virtual int_type uflow ();
@@ -74,8 +95,10 @@ public:
     ///
     /// human readable Java like interface
     ///
-    int read(void* dest, int size);
-    int write(const void* data, int size);
+    int read(char* data, int size);
+    int write(char const* data, int size);
+private:
+    bool need_buf();
 };
 
 /*

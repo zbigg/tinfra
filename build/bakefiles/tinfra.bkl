@@ -18,7 +18,7 @@
             tinfra/exception.cpp
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
-            <!--tinfra/io/stream.cpp-->
+            tinfra/io/stream.cpp
             tinfra/fmt.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
@@ -59,8 +59,8 @@
         <include>$(SRCDIR)</include>
         <sources>
             tinfra/test_multitype_map.cpp
-            <!--tinfra/io/test_stream.cpp-->
             tinfra/test_fmt.cpp
+            tinfra/io/test_stream.cpp            
             tinfra/test_symbol.cpp
             tinfra/test_exeinfo.cpp
             tinfra/test_main.cpp
