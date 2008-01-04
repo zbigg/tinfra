@@ -21,6 +21,7 @@
             <!--tinfra/io/stream.cpp-->
             tinfra/fmt.cpp
             tinfra/path.cpp
+            tinfra/fs.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -51,6 +52,7 @@
             tinfra/tinfra.h
             tinfra/tinfra_lex.h
             tinfra/path.h
+            tinfra/fs.h
             tinfra/xml/XMLStream.h
             tinfra/xml.h
         </files>        
@@ -66,6 +68,7 @@
             tinfra/test_symbol.cpp
             tinfra/test_exeinfo.cpp
             tinfra/test_path.cpp
+            tinfra/test_fs.cpp
             tinfra/test_main.cpp
         </sources>
         <library>tinfra</library>

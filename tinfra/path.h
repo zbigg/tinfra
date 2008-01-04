@@ -16,6 +16,9 @@ bool exists(const std::string& name) { return exists(name.c_str()); }
 
 bool is_dir(const char* name);
 
+inline
+bool is_dir(std::string const& name) { return is_dir(name.c_str()); }
+
 std::string basename(const std::string& name);
 
 std::string dirname(const std::string& name);
