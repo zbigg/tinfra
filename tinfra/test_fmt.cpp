@@ -45,5 +45,10 @@ SUITE(tinfra_fmt) {
         CHECK_THROW( simple_fmt("%x").push(1).str(), tinfra::format_exception); // bad format command
         CHECK_THROW( simple_fmt("%l").push(1).str(), tinfra::format_exception); // bad format command
     }
-
+    
+    TEST(fmt_type_str)
+    {
+        const char* str = "zero";
+        CHECK_EQUAL( str, (const char*)(fmt("%s") % str));
+    }
 } // end SUITE(fmt)

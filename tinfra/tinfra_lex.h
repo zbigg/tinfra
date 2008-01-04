@@ -83,6 +83,16 @@ struct LexicalInterpreter<std::string> {
 	}
 };
 
+template<> 
+struct LexicalInterpreter<const char*> {
+	static void to_string(const char* v, std::string& dest) {
+		dest = v;
+	}
+	static void to_string(const char* v, std::ostream& dest) {
+		dest << v;
+	}	
+};
+
 template<int N> 
 struct LexicalInterpreter<char[N]> {
 	static void to_string(const char v[N], std::string& dest) {
