@@ -3,6 +3,8 @@
 #include <ostream>
 #include <iostream>
 
+#include <zcompat/zpio.h>
+
 #include <unittest++/UnitTest++.h>
 
 void write_file(const char* name, std::string const& data)
@@ -14,6 +16,18 @@ void write_file(const char* name, std::string const& data)
         o << data;
     }
     buf.close();    
+}
+
+TEST(stream_open_bad_file)
+{
+    tinfra::zstreambuf buf;
+    CHECK_THROW( buf.open_file("this_file_doesn't_exist", std::ios_base::in), tinfra::io_exception);
+}
+
+TEST(stream_open_bad_socket)
+{
+    tinfra::zstreambuf buf;
+    CHECK_THROW( buf.open_socket("this_host_doesnt_exist", 80), tinfra::io_exception);
 }
 
 TEST(stream_basic)
@@ -32,9 +46,9 @@ TEST(stream_socket)
     {
         std::istream i(&b);
         std::string t;
-        while( i ) {
-            std::getline(i, t);
-            std::cout << t;
+        while( std::getline(i, t) ) {            
+            //zprintf("%s\n", t.c_str());
+            std::cout << t << std::endl;
         }
     }
 } 

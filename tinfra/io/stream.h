@@ -38,7 +38,7 @@ private:
     detail::stream* stream_;
     bool            own_;
     char*           buffer_;
-    int             buffer_len_;
+    int             buffer_size_;
     bool            own_buffer_;
     
 public:

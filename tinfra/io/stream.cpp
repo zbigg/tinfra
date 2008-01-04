@@ -83,7 +83,6 @@ static int ios_to_zcompat_openmode(ios::openmode mode)
 static stream* open_file(char const* name, ios::openmode mode)
 {
     int zcompat_mode = ios_to_zcompat_openmode(mode);
-    cerr << "opening " << name << " " << zcompat_mode << endl;
     ZSTREAM s = zfopen(name, zcompat_mode);
     if( s == 0 ) {
         throw io_exception(fmt("unable to open '%s' : %s") % name % zstrerror(errno));
@@ -118,12 +117,14 @@ static stream* open_anon_pipe()
 } //end namespace detail
 
 zstreambuf::zstreambuf(detail::stream* stream, bool own)
-    : stream_(stream), own_(own) 
+    : stream_(stream), own_(own),
+      buffer_(0), buffer_size_(0), own_buffer_(false)
 {
 }
 
 zstreambuf::zstreambuf(char const* name, ios::openmode mode) 
-    : stream_(0), own_(false)
+    : stream_(0), own_(false),
+      buffer_(0), buffer_size_(0), own_buffer_(false)
 {
     stream_ = detail::open_file(name, mode);
     own_ = true;
@@ -185,7 +186,7 @@ streambuf* zstreambuf::setbuf (char * buffer, streamsize buffer_size)
     own_buffer_ = false;
     return this;
 }
-bool need_buf()
+bool zstreambuf::need_buf()
 {
     // TODO: some condition for controlling buffer support
     //       and default buffer size
@@ -193,7 +194,7 @@ bool need_buf()
     if( buffer_ ) {
         return true;
     } else if( default_buffer_size > 0 ) {
-        buffer_ = new char[default_buffer_size]
+        buffer_ = new char[default_buffer_size];
         buffer_size_ = default_buffer_size;
         own_buffer_ = true;
     } else {
@@ -202,6 +203,10 @@ bool need_buf()
 }
 
 int zstreambuf::sync() {
+    //zprintf("sync\n");
+    if( pptr() > pbase() ) {            
+        write(pbase(), pptr() - pbase());
+    }
     stream_->sync();
     return 0;
 }
@@ -216,6 +221,7 @@ streamsize zstreambuf::showmanyc ()
 //
 zstreambuf::int_type zstreambuf::underflow ()
 {
+    //zprintf("underflow\n");
     if( need_buf() ) {
         int read_result = read(buffer_, buffer_size_);
         if( read_result == 0 )
@@ -224,15 +230,16 @@ zstreambuf::int_type zstreambuf::underflow ()
         return *gptr();
     } else {
         char a[1];
-        int read_result = read(&a, 1);
-        if( a == 0 )
+        int read_result = read(a, 1);
+        if( read_result == 0 )
             return streambuf::traits_type::eof();
-        return a;
+        return a[0];
     }
 }
 
 zstreambuf::int_type zstreambuf::uflow ()
 {
+    //zprintf("uflow\n");
     int_type result = underflow();
     gbump(1);
     return result;
@@ -240,6 +247,7 @@ zstreambuf::int_type zstreambuf::uflow ()
 
 zstreambuf::int_type zstreambuf::pbackfail (int_type c)
 {
+    //zprintf("pbackfail: %i\n", c);
     // XXX: how to implement it?
     //  hint: http://www.cplusplus.com/reference/iostream/streambuf/pbackfail.html
     return streambuf::traits_type::eof();
@@ -250,7 +258,11 @@ zstreambuf::int_type zstreambuf::pbackfail (int_type c)
 //
 zstreambuf::int_type zstreambuf::overflow (int_type c)
 {
+    //zprintf("overflow: %i\n", c);
     if (need_buf() ) {
+        if( pptr() > pbase() ) {            
+            write(pbase(), pptr() - pbase());
+        }
         buffer_[0] = c;
         setg(buffer_, buffer_ + 1, buffer_ + buffer_size_);
         return 1;
@@ -269,22 +281,28 @@ zstreambuf::int_type zstreambuf::overflow (int_type c)
 //
 zstreambuf::pos_type zstreambuf::seekoff (off_type off, ios::seekdir dir, ios::openmode)
 {
-    int origin = dir == ios::beg ? detail::stream::begin : 
-                        ios::cur ? detail::stream::cur   :
-                                   detail::stream::end;    
-    return _stream->seek(off, origin);
+    detail::stream::seek_origin origin = (
+                 dir == ios::beg ? detail::stream::start : 
+                 dir == ios::cur ? detail::stream::current :
+                                   detail::stream::end );    
+    return stream_->seek(off, origin);
 }
 
 zstreambuf::pos_type zstreambuf::seekpos (pos_type pos, ios::openmode)
 {
-    return seekoff(pos, ios::begin);
+    return seekoff(pos, ios::beg);
 }
 
 int zstreambuf::read(char* dest, int size) {
-    return stream_->read(dest, size);
+    int result = stream_->read(dest, size);
+    //zprintf("readed: %i\n", result);
+    //zwrite(zstdout, dest, result);
+    return result;
 }
 
 int zstreambuf::write(const char* data, int size) {
+    //zprintf("writing: %i\n", size);
+    //zwrite(zstdout, data, size);
     return stream_->write(data, size);
 }
 
