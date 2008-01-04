@@ -49,8 +49,7 @@
 
         <set var="BUILDDIR">out$(DIRSEP)$(BUILDNAME)</set>
     </if>
-        
-    
+            
     <!-- THESE SETTINGS are appended to all exe,lib,dll,module -->
     <template id="default-workspace-settings">
         <runtime-libs>dynamic</runtime-libs>
@@ -59,4 +58,34 @@
         <warnings>$(WARNING_FLAG)</warnings>
         <define>$(DEBUG_PREPFLAG)</define>
     </template>
+    
+    <set var="VARS_DONT_ELIMINATE" append="1">top_srcdir</set> 
+    <fragment format='autoconf'> 
+#
+# Keep Makefiles recent
+#
+
+${top_srcdir}/Makefile.in: ${top_srcdir}/build/bakefiles/*.bkl
+	@echo "... Rebaking makefiles by bakefile_gen ... "
+	( set -e
+	  cd $(top_srcdir)/build/bakefiles 
+	  bakefile_gen -f autoconf
+	)
+
+#${top_srcdir}/config.h: ${top_srcdir}/config.h.in
+#	@echo "::: Rebuilding config.h"
+#	(cd $(top_builddir)./ ; ./config.status ; )
+
+${top_srcdir}/configure: ${top_srcdir}/configure.ac
+	@echo "::: Recreating configure script"
+	(cd $(top_srcdir); autoconf ; )
+
+$(top_builddir)./config.status : ${top_srcdir}/configure
+	@echo "::: Recheking configuration ..."
+	(cd $(top_builddir)./ ; ./config.status --recheck ; )
+
+Makefile: $(srcdir)/Makefile.in $(top_builddir)./config.status
+	@echo "::: Rebuilding autoconf generated  files ..."
+	(cd $(top_builddir)./ ; ./config.status ; )
+    </fragment>
 </makefile>

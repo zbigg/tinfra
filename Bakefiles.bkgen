@@ -3,7 +3,7 @@
     <disable-formats>dmars,dmars_smake,cbx_unix,cbuilderx,msvc4prj</disable-formats>
     
     <input>
-        tinfra.bkl
+        build/bakefiles/tinfra.bkl
     </input>
     
     <add-formats>
@@ -11,12 +11,12 @@
     </add-formats>
     
     <add-flags formats="autoconf">
-        -o../../Makefile.in
+        -oMakefile.in
     </add-flags>
     <add-flags formats="msvc">
-        -o../../makefile.vc
+        -omakefile.vc
     </add-flags>    
     <add-flags formats="msvc6prj">
-        -o../../tinfra.dsw
+        -otinfra.dsw
     </add-flags>
 </bakefile-gen>
