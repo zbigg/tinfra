@@ -1,3 +1,8 @@
+#include "tinfra/fmt.h"
+#include "tinfra/exeinfo.h"
+
+#include <sys/time.h>
+
 #include "tinfra/path.h"
 
 // need from system
@@ -55,6 +60,22 @@ std::string dirname(const std::string& name)
     } else {
         return name.substr(0,p);
     }
+}
+
+std::string tmppath()
+{
+    std::string result;
+    const char* tmpdir  = ::getenv("TMP");
+    if( !tmpdir) tmpdir = ::getenv("TEMP");
+#ifdef _WIN32
+    if( !tmpdir) tmpdir = "/Temp";
+#else
+    if( !tmpdir) tmpdir = "/tmp";
+#endif
+    time_t t;
+    ::time(&t);
+    int stamp = t % 104729; // this is some arbitrary prime number
+    return fmt("%s/%s_%s") % tmpdir % basename(get_exepath()) % stamp;
 }
 
 } }

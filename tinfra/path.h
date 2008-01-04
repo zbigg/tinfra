@@ -23,6 +23,8 @@ std::string basename(const std::string& name);
 
 std::string dirname(const std::string& name);
 
+std::string tmppath();
+
 } } // end namespace tinfra::path
 
 #endif
