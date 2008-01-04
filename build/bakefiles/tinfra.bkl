@@ -14,7 +14,7 @@
         <include>$(SRCDIR)</include>
         <sources>
             tinfra/tinfra.cpp
-            tinfra/Symbol.cpp
+            tinfra/symbol.cpp
             tinfra/exception.cpp
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
