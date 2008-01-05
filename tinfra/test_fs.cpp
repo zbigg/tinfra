@@ -1,32 +1,35 @@
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
+#include "tinfra/test.h"
 #include <iostream>
 
 #include <unittest++/UnitTest++.h>
 
 using namespace tinfra::fs;
 using namespace tinfra::path;
+using namespace tinfra::test;
 
 SUITE(tinfra_fs)
 {
     TEST(test_copy)
     {
-        copy("libtinfra.a", "libtinfra.b");
+        TempTestLocation testLocation("testtest_file");
+        copy("testtest_file", "boo.test");
+        CHECK( is_file("boo.test") );
+        // TODO: check file contents
     }
     
     TEST(test_list_files)
     {
-        std::vector<std::string> files;
-        list_files("tinfra", files);
-        CHECK( files.size() > 0 );
-        for( std::vector<std::string>::const_iterator i = files.begin(); i!=files.end(); ++i )
-        {
-            std::cout << *i << std::endl;
-        }
+        TempTestLocation tmp_location("testtest_dir");
+        std::vector<std::string> files = list_files(".");
+        CHECK_EQUAL(1, files.size());
+        CHECK_EQUAL("testtest_dir", files[0]);        
     }
     
     TEST(test_mkdir_rmdir)
     {
+        TempTestLocation tmp_location;
         {
             const char* name = "kukkuryku";
             CHECK( !exists(name));
@@ -52,7 +55,8 @@ SUITE(tinfra_fs)
     }
     TEST(test_recursive)
     {
-        recursive_copy("tinfra", "boo");
+        TempTestLocation tmp_location("testtest_dir");
+        recursive_copy("testtest_dir", "boo");
         recursive_rm("boo");
     }
 }

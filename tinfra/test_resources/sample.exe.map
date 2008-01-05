@@ -1,0 +1,41 @@
+00401000 t _gnu_exception_handler@4
+00401150 t __mingw_CRTStartup
+00401280 T mainCRTStartup
+004012a0 T WinMainCRTStartup
+004012c0 T atexit
+004012d0 T _onexit
+004012e0 T __do_sjlj_init
+004012f0 T Testmultitype_map::RunImpl(UnitTest::TestResults&) const	D:/projects/tinfra/trunk/./tinfra/test_multitype_map.cpp:15
+00402f80 t __static_initialization_and_destruction_0(int, int)	D:/projects/tinfra/trunk/./tinfra/test_multitype_map.cpp:26
+00403040 t global constructors keyed to testmultitype_mapInstance	D:/projects/tinfra/trunk/./tinfra/test_multitype_map.cpp:27
+00403060 t global destructors keyed to testmultitype_mapInstance	D:/projects/tinfra/trunk/./tinfra/test_multitype_map.cpp:28
+00403070 T tinfra_fmt::Testfmt_basic::RunImpl(UnitTest::TestResults&) const	D:/projects/tinfra/trunk/./tinfra/test_fmt.cpp:10
+004040d0 T tinfra_fmt::Testfmt_type_str::RunImpl(UnitTest::TestResults&) const	D:/projects/tinfra/trunk/./tinfra/test_fmt.cpp:50
+00404660 T tinfra_fmt::Testfmt_str::RunImpl(UnitTest::TestResults&) const	D:/projects/tinfra/trunk/./tinfra/test_fmt.cpp:18
+004050d0 T tinfra_fmt::Testsimple_fmt_errors::RunImpl(UnitTest::TestResults&) const	D:/projects/tinfra/trunk/./tinfra/test_fmt.cpp:44
+00405b10 T tinfra_fmt::Testfmt_errors::RunImpl(UnitTest::TestResults&) const	D:/projects/tinfra/trunk/./tinfra/test_fmt.cpp:37
+00406b70 T tinfra_fmt::Testfmt_number::RunImpl(UnitTest::TestResults&) const	D:/projects/tinfra/trunk/./tinfra/test_fmt.cpp:24
+00407ad0 T tinfra_fmt::Testfmt_complex::RunImpl(UnitTest::TestResults&) const	D:/projects/tinfra/trunk/./tinfra/test_fmt.cpp:31
+00408970 t __static_initialization_and_destruction_0(int, int)	D:/projects/tinfra/trunk/./tinfra/test_fmt.cpp:54
+00408db0 t global constructors keyed to _ZN10tinfra_fmt21testfmt_basicInstanceE	D:/projects/tinfra/trunk/./tinfra/test_fmt.cpp:55
+00408dd0 t global destructors keyed to _ZN10tinfra_fmt21testfmt_basicInstanceE	D:/projects/tinfra/trunk/./tinfra/test_fmt.cpp:56
+00408de0 T tinfra_symbol::Testsymbol_basic::RunImpl(UnitTest::TestResults&) const	D:/projects/tinfra/trunk/./tinfra/test_symbol.cpp:10
+004091b0 t __static_initialization_and_destruction_0(int, int)	D:/projects/tinfra/trunk/./tinfra/test_symbol.cpp:16
+00409280 t global constructors keyed to _ZN13tinfra_symbol24testsymbol_basicInstanceE	D:/projects/tinfra/trunk/./tinfra/test_symbol.cpp:17
+004092a0 t global destructors keyed to _ZN13tinfra_symbol24testsymbol_basicInstanceE	D:/projects/tinfra/trunk/./tinfra/test_symbol.cpp:18
+004092b0 t tinfra_exeinfo::boo(tinfra::symbol_info const&)	D:/projects/tinfra/trunk/./tinfra/test_exeinfo.cpp:17
+00409300 T tinfra_exeinfo::Testsymbol_map::RunImpl(UnitTest::TestResults&) const	D:/projects/tinfra/trunk/./tinfra/test_exeinfo.cpp:22
+00409b60 t __static_initialization_and_destruction_0(int, int)	D:/projects/tinfra/trunk/./tinfra/test_exeinfo.cpp:30
+00409c60 t global constructors keyed to _ZN14tinfra_exeinfo22testsymbol_mapInstanceE	D:/projects/tinfra/trunk/./tinfra/test_exeinfo.cpp:31
+00409c80 t global destructors keyed to _ZN14tinfra_exeinfo22testsymbol_mapInstanceE	D:/projects/tinfra/trunk/./tinfra/test_exeinfo.cpp:32
+00409c90 T tinfra_path::Testtest_join::RunImpl(UnitTest::TestResults&) const	d:/projects/tinfra/trunk/./tinfra/test_path.cpp:32
+0040b5c0 T tinfra_path::Testtest_dirname::RunImpl(UnitTest::TestResults&) const	d:/projects/tinfra/trunk/./tinfra/test_path.cpp:22
+0040c850 T tinfra_path::Testtest_basename::RunImpl(UnitTest::TestResults&) const	d:/projects/tinfra/trunk/./tinfra/test_path.cpp:12
+0040dae0 t __static_initialization_and_destruction_0(int, int)	d:/projects/tinfra/trunk/./tinfra/test_path.cpp:41
+0040dcc0 t global constructors keyed to _ZN11tinfra_path25testtest_basenameInstanceE	d:/projects/tinfra/trunk/./tinfra/test_path.cpp:42
+0040dce0 t global destructors keyed to _ZN11tinfra_path25testtest_basenameInstanceE	d:/projects/tinfra/trunk/./tinfra/test_path.cpp:43
+0040dcf0 T tinfra_fs::Testtest_copy::RunImpl(UnitTest::TestResults&) const	d:/projects/tinfra/trunk/./tinfra/test_fs.cpp:13
+0040dd10 T tinfra_fs::Testtest_mkdir_rmdir::RunImpl(UnitTest::TestResults&) const	d:/projects/tinfra/trunk/./tinfra/test_fs.cpp:29
+0040e5f0 T tinfra_fs::Testtest_recursive::RunImpl(UnitTest::TestResults&) const	d:/projects/tinfra/trunk/./tinfra/test_fs.cpp:54
+0040e620 T tinfra_fs::Testtest_list_files::RunImpl(UnitTest::TestResults&) const	d:/projects/tinfra/trunk/./tinfra/test_fs.cpp:18
+0040e9a0 t __static_initialization_and_destruction_0(int, int)	d:/projects/tinfra/trunk/./tinfra/test_fs.cpp:58
