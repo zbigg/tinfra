@@ -20,6 +20,8 @@
             tinfra/cmd.cpp
             tinfra/io/stream.cpp
             tinfra/fmt.cpp
+            tinfra/path.cpp
+            tinfra/fs.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -49,6 +51,8 @@
             tinfra/symbol.h
             tinfra/tinfra.h
             tinfra/tinfra_lex.h
+            tinfra/path.h
+            tinfra/fs.h
             tinfra/xml/XMLStream.h
             tinfra/xml.h
         </files>        
@@ -58,13 +62,18 @@
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
+            tinfra/test_path.cpp
+            tinfra/test_fs.cpp
+            tinfra/test_test.cpp
             tinfra/test_multitype_map.cpp
             tinfra/test_fmt.cpp
             tinfra/io/test_stream.cpp            
             tinfra/test_symbol.cpp
-            tinfra/test_exeinfo.cpp
+            tinfra/test_exeinfo.cpp            
+            tinfra/test.cpp
             tinfra/test_main.cpp
         </sources>
+        <define>SRCDIR="$(SRCDIR)"</define>
         <library>tinfra</library>
         <library>tinfra_xml</library>
         <sys-lib>unittest++</sys-lib>

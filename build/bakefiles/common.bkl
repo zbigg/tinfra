@@ -67,14 +67,7 @@
 
 ${top_srcdir}/Makefile.in: ${top_srcdir}/build/bakefiles/*.bkl
 	@echo "... Rebaking makefiles by bakefile_gen ... "
-	( set -e
-	  cd $(top_srcdir)/build/bakefiles 
-	  bakefile_gen -f autoconf
-	)
-
-#${top_srcdir}/config.h: ${top_srcdir}/config.h.in
-#	@echo "::: Rebuilding config.h"
-#	(cd $(top_builddir)./ ; ./config.status ; )
+	(cd $(top_srcdir); bakefile_gen -f autoconf )
 
 ${top_srcdir}/configure: ${top_srcdir}/configure.ac
 	@echo "::: Recreating configure script"

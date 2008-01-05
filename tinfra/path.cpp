@@ -1,0 +1,95 @@
+#include "tinfra/fmt.h"
+#include "tinfra/exeinfo.h"
+
+#include <sys/time.h>
+
+#include "tinfra/path.h"
+
+// need from system
+//    stat
+//    path separator, 
+//       NO! always use / (only user and incompatible system calls will get system specific paths)
+//  
+#include <sys/stat.h>
+
+namespace tinfra {
+namespace path {
+
+std::string join(const std::string& a, const std::string& b) 
+{
+    if( a.size() > 0 && b.size() > 0 )
+        return a + '/' + b;
+    else if( a.size() > 0 ) 
+        return a;
+    else if (b.size() > 0 )
+        return b;
+    else
+        return "";
+}
+
+bool exists(const char* name)
+{
+    struct stat st;
+    return ::stat(name, &st) == 0;
+}
+
+bool is_dir(const char* name)
+{
+    struct stat st;
+    return ::stat(name, &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+bool is_file(const char* name)
+{
+    struct stat st;
+    return ::stat(name, &st) == 0 && S_ISREG(st.st_mode);
+}
+
+std::string basename(const std::string& name)
+{
+    std::string::size_type p = name.find_last_of("/\\");
+    if( p == std::string::npos ) {
+        return name;
+    } else {
+        return name.substr(p+1);
+    }
+}
+
+std::string dirname(const std::string& name)
+{
+    if( name.size() == 0 ) return ".";
+    std::string::size_type p = name.find_last_of("/\\");
+    if( p == std::string::npos ) {
+        return ".";
+    } else if( p == 0 )  {
+        return "/";
+    } else {
+        return name.substr(0,p);
+    }
+}
+
+std::string tmppath()
+{
+    std::string result;    
+    const char* tmpdir  = ::getenv("TMP");
+    if( !tmpdir) tmpdir = ::getenv("TEMP");
+#ifdef _WIN32
+    if( !tmpdir) tmpdir = "/Temp";
+#else
+    if( !tmpdir) tmpdir = "/tmp";
+#endif
+    // TODO: it's somewhat weak radnomization strategy
+    //       invent something better
+    time_t t;
+    ::time(&t);
+    static bool srand_called = false;
+    if( !srand_called ) {
+        srand_called = true;
+        ::srand(t);
+    }
+    int stamp = ::rand() % 104729; // 104729 is some arbitrary prime number
+    
+    return fmt("%s/%s_%s_%s") % tmpdir % basename(get_exepath()) % t % stamp;
+}
+
+} }
