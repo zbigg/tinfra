@@ -4,13 +4,19 @@
 namespace tinfra {
 namespace fs {
     
-void list_files(const char* name, std::vector<std::string>& result);
-    
+void list_files(const char* path, std::vector<std::string>& result);
+inline std::vector<std::string> list_files(const char* path) {
+    std::vector<std::string> r;
+    list_files(path, r);
+    return r;
+}
     
 void copy(const char* src, const char* dest);
-    
+
+void cd(const char* dirname);
+std::string pwd();
 void mkdir(const char* name, bool create_parents = true);
-    
+
 void rm(const char* name);
 void rmdir(const char* name);
 

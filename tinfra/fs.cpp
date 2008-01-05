@@ -57,6 +57,7 @@ void list_files(const char* dirname, std::vector<std::string>& result)
         result.push_back(name);
     }    
 #else
+    throw generic_exception("tinfra::fs::list_files not implemented on this platform");
 #endif    
 }
 
@@ -174,6 +175,24 @@ void copy(const char* src, const char* dest)
     }
     
     copy(in, out);
+}
+
+void cd(const char* dirname)
+{
+    int result = ::chdir(dirname);
+    if( result == -1 ) {
+        std::string error_str = ::strerror(errno);
+        throw generic_exception(fmt("unable to open output '%s': %s") % dirname % error_str);
+    }
+}
+
+std::string pwd()
+{
+    char buf[1024];
+    if( getcwd(buf, sizeof(buf)) == 0 ) {
+        throw generic_exception("fs::pwd unable read pwd (implement it better!)");
+    }
+    return std::string(buf);
 }
 
 } }

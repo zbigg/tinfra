@@ -36,7 +36,13 @@ bool exists(const char* name)
 bool is_dir(const char* name)
 {
     struct stat st;
-    return ::stat(name, &st) == 0 && (st.st_mode & S_IFDIR) == S_IFDIR;
+    return ::stat(name, &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+bool is_file(const char* name)
+{
+    struct stat st;
+    return ::stat(name, &st) == 0 && S_ISREG(st.st_mode);
 }
 
 std::string basename(const std::string& name)
@@ -64,7 +70,7 @@ std::string dirname(const std::string& name)
 
 std::string tmppath()
 {
-    std::string result;
+    std::string result;    
     const char* tmpdir  = ::getenv("TMP");
     if( !tmpdir) tmpdir = ::getenv("TEMP");
 #ifdef _WIN32
@@ -72,10 +78,18 @@ std::string tmppath()
 #else
     if( !tmpdir) tmpdir = "/tmp";
 #endif
+    // TODO: it's somewhat weak radnomization strategy
+    //       invent something better
     time_t t;
     ::time(&t);
-    int stamp = t % 104729; // this is some arbitrary prime number
-    return fmt("%s/%s_%s") % tmpdir % basename(get_exepath()) % stamp;
+    static bool srand_called = false;
+    if( !srand_called ) {
+        srand_called = true;
+        ::srand(t);
+    }
+    int stamp = ::rand() % 104729; // 104729 is some arbitrary prime number
+    
+    return fmt("%s/%s_%s_%s") % tmpdir % basename(get_exepath()) % t % stamp;
 }
 
 } }

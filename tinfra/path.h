@@ -14,6 +14,7 @@ inline
 bool exists(const std::string& name) { return exists(name.c_str()); }
 
 
+bool is_file(const char* name);
 bool is_dir(const char* name);
 
 inline
