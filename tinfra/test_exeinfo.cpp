@@ -20,9 +20,8 @@ SUITE(tinfra_exeinfo) {
     
     TEST(symbol_map)
     {
-        tinfra::test::TempTestLocation testLocation("unittests.exe.map");        
-        string mappath = "unittests.exe.map";
-        cout << "mappath: " << mappath << endl;
+        tinfra::test::TempTestLocation testLocation("sample.exe.map");        
+        string mappath = "sample.exe.map";
         std::ifstream input(mappath.c_str());
         CHECK( !!input );
         tinfra::read_symbol_map(input, boo);
