@@ -21,8 +21,10 @@ inline
 bool is_dir(std::string const& name) { return is_dir(name.c_str()); }
 
 std::string basename(const std::string& name);
+inline std::string basename(const char* name) { return basename(std::string(name)); }
 
 std::string dirname(const std::string& name);
+inline std::string dirname(const char* name) { return dirname(std::string(name)); }
 
 std::string tmppath();
 

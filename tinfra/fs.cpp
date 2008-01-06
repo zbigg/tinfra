@@ -6,6 +6,9 @@
 #include <fstream>
 #include <ios>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <string.h>
 #include <errno.h>
 #include <iostream>
@@ -52,7 +55,7 @@ void list_files(const char* dirname, std::vector<std::string>& result)
     dirent* entry;
     while( (entry = ::readdir(dir)) != 0 ) 
     {
-        std::string name(entry->d_name, entry->d_namlen);
+        std::string name(entry->d_name);
         if( name == ".." || name == "." ) continue;
         result.push_back(name);
     }    

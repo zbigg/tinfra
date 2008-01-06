@@ -21,7 +21,7 @@ public:
     void unlock() { 
         ::pthread_mutex_unlock(&mutex_); 
     }
-    pthread_mutex_t& getMutex() { return mutex_; }
+    pthread_mutex_t* getMutex() { return &mutex_; }
 };
 
 class Condition {
@@ -38,11 +38,11 @@ public:
     void broadcast() {
         ::pthread_cond_broadcast(&cond_); 
     }
-    void wait(Mutex::handle_type* mutex) { 
+    void wait(pthread_mutex_t* mutex) { 
         ::pthread_cond_wait(&cond_, mutex );
     }
     void wait(Mutex& mutex) { 
-        wait( & mutex.getMutex() );
+        ::pthread_cond_wait(&cond_, mutex.getMutex() );
     }
 };
 

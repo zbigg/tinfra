@@ -23,27 +23,52 @@ SUITE(test_thread)
         return 0;
     }
     
+    
     TEST(test_thread_simple)
     {
         Thread t = Thread::start(nothing, 0);
         CHECK_EQUAL(0, (int) t.join() );
     }
+    struct A {
+	Condition c;
+	Mutex m;
+	
+	void signal() { 
+	    m.lock();
+	    c.signal();
+	    m.unlock();
+	}
+	void wait()
+	{
+	    m.lock();
+	    c.wait(m);
+	    m.unlock();
+	}
+    };
     
     void* cond_signaler(void* p)
     {
-        Condition* cond = static_cast<Condition*>(p);
-        cond->signal();
+        A* a = static_cast<A*>(p);
+	a->wait(); // wait for green light
+	sleep(1); // do some job
+	a->signal(); // signal job finished
+        return 0;
+    }
+    void* cond_waiter(void* p)
+    {
+        A* a = static_cast<A*>(p);
+	a->signal(); // set up green light
+	a->wait(); // wait for finish
         return 0;
     }
     
     TEST(test_thread_cond)
     {
-        Mutex m;
-        Condition cond;
-        Thread t = Thread::start(cond_signaler, &cond);
-        m.lock();
-        cond.wait(m);
-        m.unlock();
-        CHECK_EQUAL(0, (int) t.join() );
+        A* a = new A;
+        Thread p = Thread::start(cond_signaler, a);
+        Thread c = Thread::start(cond_waiter, a);
+        CHECK_EQUAL(0, (int) c.join() );
+        CHECK_EQUAL(0, (int) p.join() );
     }
+    
 }
