@@ -1,4 +1,6 @@
 #include "tinfra/thread.h"
+#include <sstream>
+
 #include <unittest++/UnitTest++.h>
 
 using namespace tinfra;
@@ -50,7 +52,11 @@ SUITE(test_thread)
     {
         A* a = static_cast<A*>(p);
 	a->wait(); // wait for green light
-	sleep(1); // do some job
+	for(int i = 0; i < 100*1000; i++ ) {
+            std::ostringstream a;
+            a << i*2;
+            std::string x = a.str();
+        }
 	a->signal(); // signal job finished
         return 0;
     }
