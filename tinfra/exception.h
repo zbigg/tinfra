@@ -15,8 +15,8 @@ struct stackentry {
 
 typedef std::vector<stackentry> stacktrace_t;
 
-void populate_stacktrace(stacktrace_t& dest,int ignore_stacks=0);
-
+void populate_stacktrace(stacktrace_t& dest,int ignore_frames=0);
+void print_stacktrace(std::ostream& dest, int ignore_frames=0);
 class generic_exception: public std::exception {
 public:
     generic_exception(std::string const& message);
