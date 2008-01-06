@@ -1,0 +1,5 @@
+
+SUN:
+    http://docs.sun.com/app/docs/doc/816-5168/6mbb3hr1v?a=view#atomic-cas-3c
+    
+    Hazard Pointers: Safe Memory Reclamation for Lock-Free Objects
