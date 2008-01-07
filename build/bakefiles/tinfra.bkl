@@ -80,7 +80,7 @@
         <library>tinfra</library>
         <library>tinfra_xml</library>
         <sys-lib>unittest++</sys-lib>
-        <sys-lib>zcompat</sys-lib>
+        <!-- <sys-lib>zcompat</sys-lib> -->
         <sys-lib>pthread</sys-lib>
     </exe>
     
