@@ -9,7 +9,7 @@
 static void (*fatal_exception_handler) (void) = 0;
 
 namespace tinfra {
-void fatal_sighandler(int)
+extern "C" void tinfra_fatal_sighandler(int)
 {
     if( fatal_exception_handler ) {
 	print_stacktrace(std::cerr,2);
@@ -18,9 +18,9 @@ void fatal_sighandler(int)
     abort();
 }
 void initialize_fatal_exception_handler()
-{
-    signal(SIGSEGV, &fatal_sighandler);
-    signal(SIGBUS, &fatal_sighandler);
+{    
+    std::signal(SIGSEGV, &tinfra_fatal_sighandler);
+    std::signal(SIGBUS, &tinfra_fatal_sighandler);
     
     // TODO: register signals
     // SIGSEGV: show_stack & abort

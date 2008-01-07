@@ -36,6 +36,7 @@ struct holder {
 };
 
 #ifdef HAVE_OPENDIR
+template<>
 void holder<DIR*>::dispose(DIR* dir)
 {
     ::closedir(dir);
