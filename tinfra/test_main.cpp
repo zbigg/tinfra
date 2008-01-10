@@ -19,15 +19,17 @@
 
 static void out(const char* message, ...)
 {
-    char buf[2048];
     va_list ap;
     va_start(ap, message);
-    std::vsprintf(buf,message, ap);
-    va_end(ap);
-    std::printf("%s",buf);
 #ifdef _WIN32
+    char buf[2048];
+    std::vsprintf(buf,message, ap);
+    std::printf("%s",buf);
     OutputDebugString(buf);
+#else
+    std::vfprintf(stdout, message, ap);
 #endif
+    va_end(ap);
 }
 
 class TinfraTestReporter: public UnitTest::TestReporter {
