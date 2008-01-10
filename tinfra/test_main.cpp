@@ -10,8 +10,8 @@
 
 #include <unittest++/TestReporter.h>
 #include <unittest++/TestDetails.h>
-#include <cstdio>
-#include <cstddef>
+#include <stdio.h> // screw cxxx headers because they are incompatible
+#include <stdarg.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -23,11 +23,11 @@ static void out(const char* message, ...)
     va_start(ap, message);
 #ifdef _WIN32
     char buf[2048];
-    std::vsprintf(buf,message, ap);
-    std::printf("%s",buf);
+    vsprintf(buf,message, ap);
+    printf("%s",buf);
     OutputDebugString(buf);
 #else
-    std::vfprintf(stdout, message, ap);
+    vprintf(message, ap);
 #endif
     va_end(ap);
 }
