@@ -28,6 +28,7 @@ AC_CANONICAL_HOST
 
 AC_BAKEFILE([m4_include(autoconf_inc.m4)])
 
+AC_CHECK_HEADER(pthread.h)
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 

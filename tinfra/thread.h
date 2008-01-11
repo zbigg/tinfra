@@ -2,6 +2,11 @@
 #define __tinfra_thread_h__
 
 #include <vector>
+
+#if 1 || defined (HAVE_PTHREAD_H)
+
+#define TINFRA_THREADS 1
+
 #include <pthread.h>
 
 namespace tinfra {
@@ -84,6 +89,15 @@ public:
     void join(std::vector<void*>* result = 0);
     
 };
-};
+
+} // end namespace tinfra
+
+#else // HAVE_PTHREAD_H
+
+#define TINFRA_THREADS 0
+
+namespace tinfra {}
+
+#endif
 
 #endif
