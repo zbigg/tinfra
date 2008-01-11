@@ -116,7 +116,7 @@ static const std::string xml_head = "<?xml version=\"1.0\" ?>\n";
 
 void FileXMLOutputStream::start_document()
 {    
-    dest_.sputn(xml_head.c_str(), xml_head.size());
+	dest_.sputn(xml_head.c_str(), static_cast<std::streamsize>(xml_head.size()));
     xml_document_started_ = true;
 }
 void FileXMLOutputStream::start_tag(const char* tag_name, const char* const* args)
@@ -124,7 +124,7 @@ void FileXMLOutputStream::start_tag(const char* tag_name, const char* const* arg
     ensure_tag_start_closed();
     maybe_indent();
     dest_.sputc('<');
-    dest_.sputn(tag_name,strlen(tag_name));
+    dest_.sputn(tag_name, static_cast<std::streamsize>(strlen(tag_name)));
     in_start_tag_ = true;
     if( args ) {        
         while( *args ) {
@@ -142,9 +142,9 @@ void FileXMLOutputStream::arg(const char* name, const char* value)
 {
     // I(in_start_tag_);
     dest_.sputc(' ');
-    dest_.sputn(name,strlen(name));
+	dest_.sputn(name,std::streamsize(strlen(name)));
     dest_.sputn("=\"",2);
-    dest_.sputn(value,strlen(value));
+    dest_.sputn(value,std::streamsize(strlen(value)));
     dest_.sputc('"');
 }
 
@@ -152,7 +152,7 @@ void FileXMLOutputStream::char_data(const char* value)
 {
     ensure_tag_start_closed();
     maybe_indent();
-    dest_.sputn(value,strlen(value));
+    dest_.sputn(value,std::streamsize(strlen(value)));
 }
 
 void FileXMLOutputStream::end_tag(const char* tag_name)
@@ -164,7 +164,7 @@ void FileXMLOutputStream::end_tag(const char* tag_name)
         --tag_nest_;
         maybe_indent();
         dest_.sputn("</",2);
-        dest_.sputn(tag_name, strlen(tag_name));
+        dest_.sputn(tag_name, std::streamsize(strlen(tag_name)));
         dest_.sputc('>');
     }
     maybe_newline();
@@ -231,7 +231,7 @@ void XMLBufferOutputStream::start_tag(const char* tag_name, const char* const* a
     events.buffer.push_back(e);
 }
 
-void XMLBufferOutputStream::arg(const char* name, const char* value)
+void XMLBufferOutputStream::arg(const char*, const char*)
 {
     // TODO:
     // throw tinfra::generic_exception("XMLMemoryStream::arg unimplemented");

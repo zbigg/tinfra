@@ -26,9 +26,9 @@ public:
     
     template <typename T>
     simple_fmt& push(T const& value) {
-        int cmd_pos = check_command();
+        std::size_t cmd_pos = check_command();
         std::string tmp;
-        to_string(value, tmp);
+        to_string<T>(value, tmp);
         output_.append(tmp);
         pos_= cmd_pos;        
         return *this;
@@ -60,11 +60,11 @@ public:
     }
     
 private:
-    int check_command();
+    std::size_t check_command();
     void realize();
 
     std::string fmt_;
-    int pos_;
+	std::size_t pos_;
     std::string output_;
 };
 

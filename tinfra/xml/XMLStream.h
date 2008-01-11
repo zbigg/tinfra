@@ -1,7 +1,7 @@
 #ifndef __tinfra_xml_XMLStream_h_h
 #define __tinfra_xml_XMLStream_h_h
 
-
+#include "tinfra/platform.h"
 #include <string>
 #include <vector>
 #include <streambuf>

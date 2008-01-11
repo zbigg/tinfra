@@ -6,7 +6,7 @@
 namespace tinfra {
 
 struct symbol_info {
-    void*       address;
+    intptr_t    address;
     char const* name;
     char const* file_name;
     int         line_number;

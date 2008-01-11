@@ -29,9 +29,9 @@ public:
 	
 	// getters and cast operators
 	
-	id_type            getId() const   { return symbolId; }
-	const std::string& getName() const { return symbolNames->at(symbolId); } 
+	id_type            id() const      { return symbolId; }
         const char*        c_str() const   { return symbolNames->at(symbolId).c_str(); }
+	const std::string& str() const     { return symbolNames->at(symbolId); }
 	
 	operator const string& () const    { return symbolNames->at(symbolId); }
 	operator const char* () const      { return c_str(); }

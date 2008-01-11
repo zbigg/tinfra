@@ -16,7 +16,7 @@ SUITE(test_test) {
             test::TempTestLocation testLocation;
             CHECK(cwd != fs::pwd());
             std::vector<std::string> files = fs::list_files(".");
-            CHECK_EQUAL(0, files.size());
+            CHECK_EQUAL(0, int(files.size()));
         }
         CHECK_EQUAL(cwd, fs::pwd());
     }
@@ -28,7 +28,7 @@ SUITE(test_test) {
             test::TempTestLocation testLocation("testtest_file");
             CHECK(cwd != fs::pwd());
             std::vector<std::string> files = fs::list_files(".");
-            CHECK_EQUAL(1, files.size());
+            CHECK_EQUAL(1, int(files.size()));
             CHECK_EQUAL("testtest_file", files[0]);
         }
         CHECK_EQUAL(cwd, fs::pwd());
@@ -41,7 +41,7 @@ SUITE(test_test) {
             test::TempTestLocation testLocation("testtest_dir");
             CHECK(cwd != fs::pwd());
             std::vector<std::string> files = fs::list_files(".");
-            CHECK_EQUAL(1, files.size());
+            CHECK_EQUAL(1, int(files.size()));
             CHECK_EQUAL("testtest_dir", files[0]);
             CHECK( path::is_dir("testtest_dir"));
             CHECK( path::is_dir("testtest_dir/a"));        

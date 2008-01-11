@@ -13,13 +13,13 @@ namespace cmd {
 static void print_maybe_multiline(string const& PS1, string const& PS2, string const& message, ostream& out)
 {
     // TODO: implement "multiline behaviour"
-    unsigned start = 0;
+    size_t start = 0;
     bool finished = false;
     do {
         if( start == message.size() ) break;
             
-        unsigned eol = message.find_first_of('\n', start);
-        unsigned len;
+        size_t eol = message.find_first_of('\n', start);
+        size_t len;
         if( eol == string::npos ) {
             if( start != message.size()-1 ) {
                 len = string::npos;
@@ -28,12 +28,12 @@ static void print_maybe_multiline(string const& PS1, string const& PS2, string c
                 return;
             }
         } else {    
-            unsigned pi = eol;
+            size_t pi = eol;
             if( pi > start+1 && message[eol-1] == '\r' ) --pi;
             len = pi-start;
         }
         if( len != 0 ) 
-            cerr << (start == 0 ? PS1: PS2) << message.substr(start, len) << endl;            
+            out << (start == 0 ? PS1: PS2) << message.substr(start, len) << endl;            
         start = eol+1;
     } while( !finished );
 }
@@ -56,7 +56,7 @@ app::~app()
 
 void app::program_name(string const& p)
 {
-    unsigned pi = p.find_last_of("/\\");
+    size_t pi = p.find_last_of("/\\");
     if( pi != string::npos)
         program_name_ = p.substr(pi+1);
     else

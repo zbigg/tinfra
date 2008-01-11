@@ -1,7 +1,13 @@
 #include "tinfra/fmt.h"
 #include "tinfra/exeinfo.h"
 
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 
 #include "tinfra/path.h"
 
@@ -36,13 +42,17 @@ bool exists(const char* name)
 bool is_dir(const char* name)
 {
     struct stat st;
-    return ::stat(name, &st) == 0 && S_ISDIR(st.st_mode);
+    if( ::stat(name, &st) != 0 ) 
+		return false;
+	return (st.st_mode & S_IFDIR) == S_IFDIR;
 }
 
 bool is_file(const char* name)
 {
     struct stat st;
-    return ::stat(name, &st) == 0 && S_ISREG(st.st_mode);
+    if( ::stat(name, &st) != 0 ) 
+		return false;
+	return (st.st_mode & S_IFREG) == S_IFREG;
 }
 
 std::string basename(const std::string& name)
@@ -85,7 +95,7 @@ std::string tmppath()
     static bool srand_called = false;
     if( !srand_called ) {
         srand_called = true;
-        ::srand(t);
+        ::srand(static_cast<unsigned>(t));
     }
     int stamp = ::rand() % 104729; // 104729 is some arbitrary prime number
     

@@ -8,12 +8,12 @@ static void fatal_exception_handler(void)
     std::cout << FATAL_EXCEPTION_MESSAGE << std::endl;
 }
 
-int f(int a)
+int f(long a)
 {
     if( a > 0 ) {
         return f(a-1);
     } else {
-        char* p = (char*)a;
+        char* p = 0;
         *p = 0;
         return 0;
     }
@@ -21,7 +21,7 @@ int f(int a)
 
 void segv()
 {
-    f(4);
+    f(4L);
 }
 
 void test_segv(tinfra::cmd::app& app)
@@ -31,7 +31,7 @@ void test_segv(tinfra::cmd::app& app)
     segv();
 }
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #define sleep(a) Sleep(a*1000)
 #else

@@ -14,7 +14,7 @@ using std::endl;
 SUITE(tinfra_exeinfo) {
     
     
-    static void boo(tinfra::symbol_info const& syminfo) {
+    static void boo(tinfra::symbol_info const&) {
         //cout << (unsigned int)syminfo.address << " " << syminfo.name << endl;
     }
     

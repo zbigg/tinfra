@@ -77,7 +77,7 @@ static std::string test_resources_dir = SRCDIR "/tinfra/test_resources";
 static std::string test_resources_dir =  "tinfra/test_resources";
 #endif
 
-int test_main(int argc, char** argv)
+int test_main(int, char**)
 {
     TinfraTestReporter reporter;
     return UnitTest::RunAllTests(reporter, UnitTest::Test::GetTestList(), 0);

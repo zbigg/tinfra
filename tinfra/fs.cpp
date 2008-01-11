@@ -1,4 +1,5 @@
 
+#include "tinfra/platform.h"
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
@@ -17,7 +18,9 @@
 #include <direct.h>
 #endif
 
-#define HAVE_OPENDIR
+#ifdef HAVE_IO_H
+#include <io.h>
+#endif
 
 #ifdef HAVE_OPENDIR
 #include <dirent.h>
@@ -60,6 +63,20 @@ void list_files(const char* dirname, std::vector<std::string>& result)
         if( name == ".." || name == "." ) continue;
         result.push_back(name);
     }    
+#elif defined HAVE_FINDFIRST
+	std::string a = dirname;
+	a += "\\*";
+	_finddata_t finddata;
+	intptr_t nonce = _findfirst(a.c_str(), &finddata);
+	if( nonce == -1 ) 
+		return;
+	do {
+		std::string name(finddata.name);
+		if( name != ".." && name != "." ) {
+			result.push_back(name);
+		}
+	} while( _findnext(nonce, &finddata) == 0);
+	_findclose(nonce);
 #else
     throw generic_exception("tinfra::fs::list_files not implemented on this platform");
 #endif    

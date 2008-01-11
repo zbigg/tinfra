@@ -30,7 +30,7 @@ public:
 
     bool parse(std::streambuf& in)
     {
-        while(true) {
+        while( true) {
             int BUFF_SIZE = 16384;
             
             char *buff = (char*)XML_GetBuffer(parser, BUFF_SIZE);
@@ -71,7 +71,7 @@ public:
     {
         target.end_tag(name);
     }
-    void characterData(const char* data, int len)
+    void characterData(const char* data, int)
     {
         target.char_data(data);
     }

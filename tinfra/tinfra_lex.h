@@ -2,6 +2,7 @@
 #define __tinfra_lex_h__
 #include <sstream>
 
+#include "tinfra/platform.h"
 #include "tinfra.h"
 #include "exception.h"
 
@@ -37,19 +38,9 @@ namespace detail {
 // default implementation to catch all default casts
 template <typename T>
 struct LexicalInterpreter {
-	static void to_string(T const& v, std::string& r) {
-	    std::ostringstream fmt;
-	    to_string(v, fmt);
-	    r = fmt.str();
-	}
-	static void to_string(T const& v, std::ostream& r) {
-	    //std::cerr << "WARNING! to_string<" << TypeTraits<T>::name() << ">(" << v << ") -> \"\"" << std::endl;
-	    r << "<no conversion>";
-	}
-	static void from_string(const char* v, T& t) {
-	    //std::cerr << "WARNING! from_string<" << TypeTraits<T>::name() << ">(" << v << ") -> NO OOP" << std::endl;
-	    t = T();
-	}
+	static void to_string(T const&, std::string&);
+	static void to_string(T const&, std::ostream&);
+	static void from_string(const char*, T&);
 };
 
 // default implementation provided by default stream bases string IO
@@ -105,15 +96,25 @@ struct LexicalInterpreter<char[N]> {
 		if( ::strlen(v) <= N-1 ) {
 		    ::strcpy(dest,v);
 		} else {
-                    throw bad_lexical_cast(TypeTraits<const char*>::name(), TypeTraits<char[N]>::name());
+            throw bad_lexical_cast(TypeTraits<const char*>::name(), TypeTraits<char[N]>::name());
 		}
+	}
+};
+
+template<int N> 
+struct LexicalInterpreter<char const[N]> {
+	static void to_string(const char v[N], std::string& dest) {
+		dest = v;
+	}
+	static void to_string(const char v[N], std::ostream& dest) {
+		dest << v;
 	}
 };
 
 template<> 
 struct LexicalInterpreter<symbol> {
 	static void to_string(symbol const& v, std::string& dest) {	    
-	    dest = v.getName();
+	    dest = v.str();
 	}
 	static void to_string(symbol const& v, std::ostream& dest) {
 	    dest << v.c_str();

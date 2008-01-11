@@ -21,7 +21,15 @@
 #define IMGSYMLEN ( sizeof(IMAGEHLP_SYMBOL) )
 #define TTBUFLEN 65536 // for a temp buffer
 
+#ifdef _MSC_VER
+#pragma warning( disable: 4311) // 'type cast' : pointer truncation from 'BYTE *' to 'DWORD'
+                                // because it's meaningfull only on win64 platform
+                                // and we don't support it yet
+#endif
 
+#ifdef _WIN64
+#error "fatal_exception not implemented for win64" 
+#endif
 
 // SymCleanup()
 typedef BOOL (__stdcall *tSymCleanup)( IN HANDLE hProcess );
@@ -133,7 +141,7 @@ bool initialize_imaghelp()
     return true;
 }
 
-BOOL WINAPI ConsoleHandler(DWORD event)
+BOOL WINAPI ConsoleHandler(DWORD)
 {
     /* TODO: should we differentiate anyhow ?
     switch(event)
@@ -151,7 +159,7 @@ BOOL WINAPI ConsoleHandler(DWORD event)
     }
     */
     throw tinfra::generic_exception("interrupt");
-    return FALSE;
+    //return FALSE;
 }
 
 static void (*fatal_exception_handler) (void) = 0;
@@ -473,10 +481,10 @@ static bool fillModuleListTH32( ModuleList& modules, DWORD pid )
 
     // I think the DLL is called tlhelp32.dll on Win9X, so we try both
     const char *dllname[] = { "kernel32.dll", "tlhelp32.dll" };
-    HINSTANCE hToolhelp;
-    tCT32S pCT32S;
-    tM32F pM32F;
-    tM32N pM32N;
+    HINSTANCE hToolhelp = 0;
+    tCT32S pCT32S = 0;
+    tM32F pM32F = 0;
+    tM32N pM32N = 0;
 
     HANDLE hSnap;
     MODULEENTRY32 me = { sizeof me };
@@ -536,7 +544,7 @@ typedef struct _MODULEINFO {
 
 
 
-static bool fillModuleListPSAPI( ModuleList& modules, DWORD pid, HANDLE hProcess )
+static bool fillModuleListPSAPI( ModuleList& modules, DWORD, HANDLE hProcess )
 {
     // EnumProcessModules()
     typedef BOOL (__stdcall *tEPM)( HANDLE hProcess, HMODULE *lphModule, DWORD cb, LPDWORD lpcbNeeded );

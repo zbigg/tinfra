@@ -5,6 +5,8 @@
 
 using namespace tinfra;
 
+#if TINFRA_THREADS
+
 SUITE(test_thread)
 {
     TEST(test_mutex)
@@ -78,3 +80,4 @@ SUITE(test_thread)
     }
     
 }
+#endif // TINFRA_THREADS

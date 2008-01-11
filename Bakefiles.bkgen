@@ -7,7 +7,7 @@
     </input>
     
     <add-formats>
-        msvc,msvc6prj,autoconf
+        msvc,msvs2003prj,autoconf
     </add-formats>
     
     <add-flags formats="autoconf">
@@ -16,7 +16,7 @@
     <add-flags formats="msvc">
         -omakefile.vc
     </add-flags>    
-    <add-flags formats="msvc6prj">
-        -otinfra.dsw
+    <add-flags formats="msvs2003prj">
+        -otinfra.sln
     </add-flags>
 </bakefile-gen>

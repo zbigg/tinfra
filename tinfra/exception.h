@@ -1,6 +1,7 @@
 #ifndef __tinfra_exception_h_
 #define __tinfra_exception_h_
 
+#include "tinfra/platform.h"
 #include <exception>
 #include <string>
 #include <vector>

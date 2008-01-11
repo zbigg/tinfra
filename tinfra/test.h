@@ -18,8 +18,8 @@ public:
 private:
     void init();
     std::string name_;
-    std::string tmp_path_;
     std::string orig_pwd_;
+    std::string tmp_path_;
 };
 
 void user_wait(const char* prompt = 0);

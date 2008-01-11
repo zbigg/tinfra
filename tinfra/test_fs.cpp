@@ -21,7 +21,7 @@ SUITE(tinfra_fs)
     {
         test::TempTestLocation tmp_location("testtest_dir");
         std::vector<std::string> files = fs::list_files(".");
-        CHECK_EQUAL(1, files.size());
+		CHECK_EQUAL(1, int(files.size()));
         CHECK_EQUAL("testtest_dir", files[0]);        
     }
     

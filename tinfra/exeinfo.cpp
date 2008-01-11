@@ -1,13 +1,15 @@
 #include <istream>
 #include <cstdio>
+#include <cstring>
+#include <cctype>
 
 #include "tinfra/exeinfo.h"
 namespace tinfra {
 
 static void trim(char* str)
 {	
-	int len = ::strlen(str);
-	while( ::isspace(str[len-1]) && len > 0) {
+	size_t len = std::strlen(str);
+	while( std::isspace(str[len-1]) && len > 0) {
 		str[len-1] = '\0';
 		len--;
 	}
@@ -19,20 +21,22 @@ void read_symbol_map(std::istream& input, symbol_table_visitor visitor)
     
     while( input.getline(linebuf, sizeof(linebuf)) ) {
         trim(linebuf);
-        long address = 0;
+        intptr_t address = 0;
         char type = 0;
         char name_buf[1024];
         char filename_buf[1024];
         int  line_number = 0;
         //FIXME - don't work for symbols with spaces in names
-        int result = std::sscanf(linebuf, "%08x %c %s\t%s:%i", &address, &type, name_buf, filename_buf, line_number);
+		int address_tmp;
+        int result = std::sscanf(linebuf, "%08x %c %s\t%s:%i", &address_tmp, &type, name_buf, filename_buf, line_number);
+		address = address_tmp;
         symbol_info current_symbol;
         current_symbol.address = 0;
         current_symbol.name = 0;
         current_symbol.file_name = 0;
         current_symbol.line_number = 0;
         if( result == 0 ) continue;
-        current_symbol.address = (void*) address;
+        current_symbol.address = address;
         if( result >= 3 )
             current_symbol.name = name_buf;
         if( result >= 4 )
@@ -47,8 +51,9 @@ static std::string exepath = "";
 
 std::string get_exepath()
 {
-    if( exepath == "" ) {
+    if( exepath.size() == 0 ) {
         // TODO: write some OS-dependent code here
+		return "";
     } else {
         return exepath;
     }
