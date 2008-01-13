@@ -51,6 +51,30 @@ public:
     }
 };
 
+class Monitor {
+    Mutex      m;
+    Condition  c;
+public:
+    void lock()      { m.lock(); }
+    void unlock()    { m.unlock(); }
+    
+    void wait()      { c.wait(m); }
+    void signal()    { c.signal(); }
+    void broadcast() { c.broadcast(); }
+};
+
+class Synhronizator {
+    Monitor& m;
+    
+public:
+    Synhronizator(Monitor& m): m(m) { m.lock(); }
+    ~Synhronizator() { m.unlock(); }
+    
+    void wait()      { m.wait(); }
+    void signal()    { m.signal(); }
+    void broadcast() { m.broadcast(); }
+};
+
 class Thread {
     pthread_t thread_;
 public:
@@ -75,7 +99,7 @@ public:
 
     template <typename T>
         Thread start(void* (*entry)(T), T param) {
-            return start(static_cast<Thread::thread_entry>(entry), (void*)param);
+            return start(reinterpret_cast<Thread::thread_entry>(entry), (void*)param);
         }
     
     void   add(Thread t);

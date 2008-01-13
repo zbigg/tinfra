@@ -81,6 +81,7 @@
             tinfra/test_symbol.cpp
             tinfra/test_exeinfo.cpp            
             tinfra/test_thread.cpp
+            tinfra/test_queue.cpp
             tinfra/test.cpp
             tinfra/test_main.cpp
         </sources>

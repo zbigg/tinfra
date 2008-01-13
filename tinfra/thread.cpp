@@ -1,5 +1,7 @@
 #include "tinfra/thread.h"
 
+#include <iostream>
+
 #include <pthread.h>
 #include "tinfra/fmt.h"
 
@@ -10,14 +12,34 @@ static void thread_error(const char* message, int rc)
     throw generic_exception(fmt("failed to %s: %i") % message % rc);
 }
 
-Thread Thread::start( thread_entry entry, void* param )
+struct thread_entry_param {
+    void*             (* entry)(void*);
+    void*                param;
+};
+
+static void* thread_master_fun(void* param)
+{
+    try {
+        std::auto_ptr<thread_entry_param> p2((thread_entry_param*)param);
+        return p2->entry(p2->param);
+    } catch(std::exception& e) {
+        std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % 0 % e.what();
+        return 0;
+    }
+}
+Thread Thread::start(thread_entry entry, void* param )
 {
     pthread_t thread;
     pthread_attr_t attr;
     
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-    int rc = pthread_create(&thread, &attr, entry, (void *)param);
+    
+    std::auto_ptr<thread_entry_param> param2(new thread_entry_param());
+    param2->entry = entry;
+    param2->param = param;
+    int rc = pthread_create(&thread, &attr, thread_master_fun, (void *)param2.get());
+    param2.release();
     pthread_attr_destroy(&attr);
     
     if( rc != 0 ) 
@@ -33,7 +55,13 @@ Thread Thread::start_detached( Thread::thread_entry entry, void* param )
     
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    int rc = pthread_create(&thread, &attr, entry, (void *)param);
+    
+    std::auto_ptr<thread_entry_param> param2(new thread_entry_param());
+    param2->entry = entry;
+    param2->param = param;
+    int rc = pthread_create(&thread, &attr, thread_master_fun, (void *)param2.get());
+    param2.release();
+    
     pthread_attr_destroy(&attr);
     
     if( rc != 0 ) 
