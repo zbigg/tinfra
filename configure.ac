@@ -13,7 +13,7 @@ AC_INIT(
     [z.zagorski@gmail.com])
 AC_CONFIG_AUX_DIR([build/autoconf])
 AC_CONFIG_SRCDIR([tinfra/tinfra.h])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADER([tinfra/config.h])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -28,7 +28,10 @@ AC_CANONICAL_HOST
 
 AC_BAKEFILE([m4_include(autoconf_inc.m4)])
 
-AC_CHECK_HEADER(pthread.h)
+AC_CHECK_HEADERS([pthread.h])
+
+AC_CHECK_FUNCS([opendir])
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 

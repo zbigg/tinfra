@@ -57,9 +57,17 @@
             tinfra/thread.h
             tinfra/xml/XMLStream.h
             tinfra/xml.h
-        </files>        
+            tinfra/platform.h
+        </files>
     </data-files-tree>
     
+    <data-files-tree cond="FORMAT=='autoconf'">
+        <srcdir>$(SRCDIR)</srcdir>
+        <install-to>$(INCLUDEDIR)</install-to> 
+        <files>
+            tinfra/config.h
+        </files>
+    </data-files-tree>
     <!-- local things -->
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
