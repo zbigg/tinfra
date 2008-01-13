@@ -55,6 +55,7 @@
             tinfra/path.h
             tinfra/fs.h
             tinfra/thread.h
+            tinfra/queue.h
             tinfra/xml/XMLStream.h
             tinfra/xml.h
             tinfra/platform.h
