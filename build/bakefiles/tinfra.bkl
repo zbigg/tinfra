@@ -18,7 +18,7 @@
             tinfra/exception.cpp
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
-            <!--tinfra/io/stream.cpp-->
+            tinfra/io/stream.cpp
             tinfra/fmt.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
@@ -76,8 +76,8 @@
             tinfra/test_fs.cpp
             tinfra/test_test.cpp
             tinfra/test_multitype_map.cpp
-            <!--tinfra/io/test_stream.cpp-->
             tinfra/test_fmt.cpp
+            tinfra/io/test_stream.cpp            
             tinfra/test_symbol.cpp
             tinfra/test_exeinfo.cpp            
             tinfra/test_thread.cpp
