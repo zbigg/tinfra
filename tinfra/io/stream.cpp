@@ -1,122 +1,45 @@
 #include "tinfra/io/stream.h"
+#include "tinfra/io/zcompat.h"
+#include "tinfra/io/socket.h"
 #include "tinfra/fmt.h"
 
 #include <sstream>
 #include <iostream>
 #include <cstring>
 
-#include <zcompat/zpio.h>
-
 using namespace std;
 
 namespace tinfra {
-namespace detail {
+namespace io {
 
-/*
-class stream {
-    virtual ~stream() {}
-    enum {
-        start,
-        end,
-        current
-    } seek_origin;        
-    void close() = 0;
-    int seek(int pos, seek_origin origin = start) = 0;
-    int read(char* dest, int size) = 0;
-    int write(const char* data, int size) = 0;
-};
-*/
-    
-class zcompatstream_: public stream {
-    ZSTREAM stream_;
-public:
-    zcompatstream_(ZSTREAM stream): stream_(stream) {}
-    void close() {
-        if( stream_ && ::zclose(stream_) == -1 ) {
-            throw io_exception(::zstrerror(stream_->error));
-        }
-        stream_ = 0;
-    }
-    int seek(int pos, stream::seek_origin origin)
-    {
-        int whence = origin == stream::start ? ZSEEK_SET :
-                     origin == stream::end   ? ZSEEK_END :
-                                               ZSEEK_CUR;
-        int result = ::zseek(stream_, pos, whence);
-        if( result == -1 ) {
-            throw io_exception(::zstrerror(stream_->error));
-        }
-        return result;
-    }
-    int read(char* data, int size)
-    {
-        int result = ::zread(stream_, data, size);
-        if( result == -1 ) {
-            throw io_exception(::zstrerror(stream_->error));
-        }
-        return result;
-    }
-    int write(const char* data, int size)
-    {
-        int result = ::zwrite(stream_, data, size);
-        if( result == -1 ) {
-            throw io_exception(::zstrerror(stream_->error));
-        }
-        return result;
-    }
-    void sync() 
-    {
-    }
-};
-    
-static int ios_to_zcompat_openmode(ios::openmode mode)
+//
+// general IO connectors
+//
+stream* open_file(char const* name, ios::openmode mode)
 {
-    int result = 0;
-    if( (mode & ios::in) == ios::in)       result |= ZO_READ;
-    if( (mode & ios::out) == ios::out)     result |= ZO_WRITE | ZO_CREAT;
-    if( (mode & ios::app) == ios::app)     result |= ZO_APPEND | ZO_CREAT;
-    if( (mode & ios::trunc) == ios::trunc) result |= ZO_TRUNC;
-    //if( mode & ios::bin == ios::bin)     result |= ZO_BINARY;  else result |= ZO_TEXT;
-    return result;
+    return zcompat::open_file(name, mode);
 }
 
-static stream* open_file(char const* name, ios::openmode mode)
+stream* open_socket(char const* address, int port)
 {
-    int zcompat_mode = ios_to_zcompat_openmode(mode);
-    ZSTREAM s = zfopen(name, zcompat_mode);
-    if( s == 0 ) {
-        throw io_exception(fmt("unable to open '%s' : %s") % name % zstrerror(errno));
-    }
-    return new zcompatstream_(s);
+    return socket::open_client_socket(address, port);
 }
 
-static stream* open_socket(char const* address, int port)
+stream* open_command_pipe(char const* command, ios::openmode mode)
 {
-    ZSTREAM s = zsopen(address,  port);
-    if( s == 0 ) {
-        throw io_exception(fmt("unable to connect '%s:%i' : %s") % address % port % zstrerror(errno) );
-    }
-    return new zcompatstream_(s);
+    return zcompat::open_command_pipe(command, mode);
 }
 
-static stream* open_command_pipe(char const* command, ios::openmode mode)
-{
-    int zcompat_mode = ios_to_zcompat_openmode(mode);
-    ZSTREAM s = ::zpopen(command, zcompat_mode);
-    if( s == 0 ) {
-        throw io_exception(zstrerror(errno));
-    }
-    return new zcompatstream_(s);
-}
-
-static stream* open_anon_pipe()
+stream* open_anon_pipe()
 {    
-    throw io_exception("unimplemented");
+    throw io_exception("anon_pipe: unimplemented");
 }
 
-} //end namespace detail
+//
+// zstreambuf implementation
+//
 
-zstreambuf::zstreambuf(detail::stream* stream, bool own)
+zstreambuf::zstreambuf(stream* stream, bool own)
     : stream_(stream), own_(own),
       buffer_(0), buffer_size_(0), own_buffer_(false)
 {
@@ -126,8 +49,7 @@ zstreambuf::zstreambuf(char const* name, ios::openmode mode)
     : stream_(0), own_(false),
       buffer_(0), buffer_size_(0), own_buffer_(false)
 {
-    stream_ = detail::open_file(name, mode);
-    own_ = true;
+    open_file(name, mode);
 }
 
 zstreambuf::~zstreambuf() { 
@@ -137,7 +59,7 @@ zstreambuf::~zstreambuf() {
 zstreambuf& zstreambuf::open_file(char const* name, ios::openmode mode)
 {
     close();
-    stream_ = detail::open_file(name, mode);
+    stream_ = tinfra::io::open_file(name, mode);
     own_ = true;
     return *this;
 }
@@ -145,7 +67,7 @@ zstreambuf& zstreambuf::open_file(char const* name, ios::openmode mode)
 zstreambuf& zstreambuf::open_socket(char const* target, int port)
 {
     close();
-    stream_ = detail::open_socket(target, port);    
+    stream_ = tinfra::io::open_socket(target, port);    
     own_ = true;
     return *this;
     }
@@ -153,7 +75,7 @@ zstreambuf& zstreambuf::open_socket(char const* target, int port)
 zstreambuf& zstreambuf::open_pipe(char const* command, ios::openmode mode)
 {
     close();
-    stream_ = detail::open_socket(command, mode);
+    stream_ = tinfra::io::open_command_pipe(command, mode);
     own_ = true;
     return *this;
 }
@@ -161,7 +83,7 @@ zstreambuf& zstreambuf::open_pipe(char const* command, ios::openmode mode)
 zstreambuf& zstreambuf::open_pipe()
 {
     close();
-    stream_ = detail::open_anon_pipe();
+    stream_ = tinfra::io::open_anon_pipe();
     own_ = true;
     return *this;
 }
@@ -281,10 +203,10 @@ zstreambuf::int_type zstreambuf::overflow (int_type c)
 //
 zstreambuf::pos_type zstreambuf::seekoff (off_type off, ios::seekdir dir, ios::openmode)
 {
-    detail::stream::seek_origin origin = (
-                 dir == ios::beg ? detail::stream::start : 
-                 dir == ios::cur ? detail::stream::current :
-                                   detail::stream::end );    
+    stream::seek_origin origin = (
+                 dir == ios::beg ? stream::start : 
+                 dir == ios::cur ? stream::current :
+                                   stream::end );    
     return stream_->seek(off, origin);
 }
 
@@ -306,5 +228,27 @@ int zstreambuf::write(const char* data, int size) {
     return stream_->write(data, size);
 }
 
-} //end namespace tinfra
+//
+// misc
+//
+
+void copy(std::streambuf& in, std::streambuf& out)
+{
+    char buffer[8192];
+    std::streamsize readed;
+    while( (readed = in.sgetn(buffer, sizeof(buffer))) > 0 ) 
+    {
+        std::streamsize written = 0;
+        while( written < readed ) 
+        {
+            std::streamsize wt = out.sputn(buffer + written, readed-written);
+            if( wt < 0 ) {
+                std::string error_str = "?";
+                throw generic_exception(fmt("error writing file: %s") % error_str);
+            }
+            written += wt;
+        }
+    }
+}
+} } //end namespace tinfra::io
 

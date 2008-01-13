@@ -9,40 +9,41 @@
 #include "tinfra/exception.h"
 
 namespace tinfra { 
+namespace io {
     
 class io_exception: public generic_exception {
 public:
     io_exception(std::string const& message): generic_exception(message) {}
 };
-namespace detail {
-    class stream {
-    public:
-        virtual ~stream() {}
-        enum seek_origin {
-            start,
-            end,
-            current
-        };
-        virtual void close() = 0;
-        virtual int seek(int pos, seek_origin origin = start) = 0;
-        virtual int read(char* dest, int size) = 0;
-        virtual int write(const char* data, int size) = 0;
-        virtual void sync() = 0;
+
+class stream {
+public:
+    virtual ~stream() {}
+    enum seek_origin {
+        start,
+        end,
+        current
     };
-} // end namespace detail
+    virtual void close() = 0;
+    virtual int seek(int pos, seek_origin origin = start) = 0;
+    virtual int read(char* dest, int size) = 0;
+    virtual int write(const char* data, int size) = 0;
+    virtual void sync() = 0;
+};
+
 
 class zstreambuf : public std::streambuf {
     //typedef std::streambuf::streamsize streamsize;
     
 private:
-    detail::stream* stream_;
-    bool            own_;
-    char*           buffer_;
-    int             buffer_size_;
-    bool            own_buffer_;
+    stream* stream_;
+    bool    own_;
+    char*   buffer_;
+    int     buffer_size_;
+    bool    own_buffer_;
     
 public:
-    zstreambuf(detail::stream* stream = 0, bool own = false);
+    zstreambuf(stream* stream = 0, bool own = false);
     zstreambuf(char const* name, std::ios::openmode mode = std::ios::in);
 
     /** Open a file in native filesystem */
@@ -101,12 +102,8 @@ private:
     bool need_buf();
 };
 
-/*
-class zistream : public istream {
-    zistream& open_file(char const* filename, ios_base::openmode mode = ios_base::in);
-    zistream& open_socket(char*
-};
-*/
-} // end namespace tinfra
+void copy(std::streambuf& in, std::streambuf& out);
+
+} } // end namespace tinfra::io
 
 #endif

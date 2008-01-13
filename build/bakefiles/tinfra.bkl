@@ -19,6 +19,8 @@
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
             tinfra/io/stream.cpp
+            tinfra/io/socket.cpp
+            tinfra/io/zcompat.cpp
             tinfra/fmt.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
@@ -36,9 +38,10 @@
         </sources>
         <install-to>$(LIBDIR)</install-to> 
     </lib>
+    
     <using module="datafiles"/>
     
-    <data-files-tree>
+    <data-files-tree id="headers">
         <srcdir>$(SRCDIR)</srcdir>
         <install-to>$(INCLUDEDIR)</install-to> 
         <files>
@@ -61,13 +64,14 @@
         </files>
     </data-files-tree>
     
-    <data-files-tree cond="FORMAT=='autoconf'">
+    <data-files-tree id="headers-autoconf" cond="FORMAT=='autoconf'">
         <srcdir>$(SRCDIR)</srcdir>
         <install-to>$(INCLUDEDIR)</install-to> 
         <files>
             tinfra/config.h
         </files>
     </data-files-tree>
+    
     <!-- local things -->
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
@@ -88,8 +92,12 @@
         <library>tinfra</library>
         <library>tinfra_xml</library>
         <sys-lib>unittest++</sys-lib>
-        <!-- <sys-lib>zcompat</sys-lib> -->
+        <sys-lib>zcompat</sys-lib>
         <sys-lib>pthread</sys-lib>
+        <if cond="FORMAT!='autoconf' and PLATFORM_WIN32=='1'"> 
+            <sys-lib>wsock32</sys-lib>
+        </if>
+        
     </exe>
     
     <exe id="test_fatal_exception" template="default-workspace-settings">
