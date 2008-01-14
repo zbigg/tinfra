@@ -5,12 +5,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #endif
 
 namespace tinfra {
@@ -178,12 +175,29 @@ stream* open_native(void* handle)
 
 static void throw_io_exception(const char* message)
 {
-    throw new io_exception(fmt("%s: %s") % message % strerror(errno));
+    throw io_exception(fmt("%s: %s") % message % strerror(errno));
 }
 
 stream* open_file(const char* name, std::ios::openmode mode)
 {
-    throw io_exception("posix native file not implemented");
+    int flags = 0;
+    {
+	const bool fread  = (mode & std::ios::in) == std::ios::in;
+	const bool fwrite = (mode & std::ios::out) == std::ios::out;
+	if( fread && fwrite )
+	    flags |=  O_RDWR | O_CREAT;
+	else if( fread )
+	    flags |= O_RDONLY;
+	else if ( fwrite )
+	    flags |= O_WRONLY | O_CREAT;
+	else
+	    throw_io_exception("bad openmode");
+	if( (mode & std::ios::trunc) == std::ios::trunc) flags |= O_TRUNC;
+	if( (mode & std::ios::app) == std::ios::app) flags |= O_APPEND;
+    }
+    int fd = ::open(name, flags, 00644);
+    if( fd == -1 ) throw_io_exception(fmt("unable to open %s") % name);
+    return new native_stream(fd);
 }
 
 void native_stream::close()
@@ -195,17 +209,36 @@ void native_stream::close()
 
 int native_stream::seek(int pos, stream::seek_origin origin)
 {
-    throw io_exception("posix native file not implemented");
+    int whence;
+    switch( origin ) {
+    case stream::start:
+        whence = SEEK_SET;
+        break;
+    case stream::current:
+        whence = SEEK_CUR;
+        break;
+    case stream::end:
+        whence = SEEK_END;
+        break;
+    }
+    off_t e = lseek(handle_, pos, whence);
+    if( e == (off_t)-1 )
+	throw_io_exception("seek failed");
+    return (int)e;
 }
 
 int native_stream::read(char* data, int size)
 {
-    throw io_exception("posix native file not implemented");
+    int r = ::read(handle_, data, size);
+    if( r < 0 ) throw_io_exception("read failed");
+    return r;
 }
 
 int native_stream::write(char const* data, int size)
 {
-    throw io_exception("posix native file not implemented");
+    int w = ::write(handle_, data, size);
+    if( w < 0 ) throw_io_exception("write failed");
+    return w;
 }
 
 void native_stream::sync()

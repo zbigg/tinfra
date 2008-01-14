@@ -5,8 +5,6 @@
 #include <sstream>
 #include <string>
 
-#include <zcompat/zpio.h>
-
 #include <unittest++/UnitTest++.h>
 #include "tinfra/test.h"
 
