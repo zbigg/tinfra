@@ -1,6 +1,7 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/io/zcompat.h"
 #include "tinfra/io/socket.h"
+#include "tinfra/io/file.h"
 #include "tinfra/fmt.h"
 
 #include <sstream>
@@ -17,7 +18,7 @@ namespace io {
 //
 stream* open_file(char const* name, ios::openmode mode)
 {
-    return zcompat::open_file(name, mode);
+    return file::open_file(name, mode);
 }
 
 stream* open_socket(char const* address, int port)
@@ -27,7 +28,7 @@ stream* open_socket(char const* address, int port)
 
 stream* open_command_pipe(char const* command, ios::openmode mode)
 {
-    return zcompat::open_command_pipe(command, mode);
+    throw io_exception("command pipe: unimplemented");
 }
 
 stream* open_anon_pipe()

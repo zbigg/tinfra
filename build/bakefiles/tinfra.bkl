@@ -19,8 +19,9 @@
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
             tinfra/io/stream.cpp
+            tinfra/io/file.cpp
             tinfra/io/socket.cpp
-            tinfra/io/zcompat.cpp
+            <!-- tinfra/io/zcompat.cpp -->
             tinfra/fmt.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
@@ -51,6 +52,9 @@
             tinfra/exeinfo.h
             tinfra/fmt.h
             tinfra/io/stream.h
+            tinfra/io/file.h
+            tinfra/io/socket.h
+            <!--tinfra/io/zcompat.h-->
             tinfra/multitype_map.h
             tinfra/symbol.h
             tinfra/tinfra.h
@@ -92,7 +96,7 @@
         <library>tinfra</library>
         <library>tinfra_xml</library>
         <sys-lib>unittest++</sys-lib>
-        <sys-lib>zcompat</sys-lib>
+        <!-- <sys-lib>zcompat</sys-lib> -->
         <sys-lib>pthread</sys-lib>
         <if cond="FORMAT!='autoconf' and PLATFORM_WIN32=='1'"> 
             <sys-lib>wsock32</sys-lib>
