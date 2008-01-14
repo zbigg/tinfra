@@ -3,6 +3,7 @@
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
+#include "tinfra/io/stream.h"
 #include <streambuf>
 #include <fstream>
 #include <ios>
@@ -155,25 +156,6 @@ void mkdir(const char* name, bool create_parents)
     }
 }
 
-static void copy(std::streambuf& in, std::streambuf& out)
-{
-    char buffer[8192];
-    std::streamsize readed;
-    while( (readed = in.sgetn(buffer, sizeof(buffer))) > 0 ) 
-    {
-        std::streamsize written = 0;
-        while( written < readed ) 
-        {
-            std::streamsize wt = out.sputn(buffer + written, readed-written);
-            if( wt < 0 ) {
-                std::string error_str = "?";
-                throw generic_exception(fmt("error writing file: %s") % error_str);
-            }
-            written += wt;
-        }
-    }
-}
-
 void copy(const char* src, const char* dest)
 {
     if( path::is_dir(src) ) 
@@ -195,7 +177,7 @@ void copy(const char* src, const char* dest)
         throw generic_exception(fmt("unable to open output '%s': %s") % dest % error_str);
     }
     
-    copy(in, out);
+    tinfra::io::copy(in, out);
 }
 
 void cd(const char* dirname)
