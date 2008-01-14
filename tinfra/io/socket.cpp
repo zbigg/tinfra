@@ -165,23 +165,25 @@ static socket_type create_socket()
 
 static int get_inet_address(const char* address,int rport, struct sockaddr_in* sa)
 {
-    ::hostent*    ha;
-    ::in_addr     ia;
+    
+    
+    
     ensure_socket_initialized();
-#ifdef ZSYS_WIN
-    unsigned long      ian;
-#endif
+    
     std::memset(sa,0,sizeof(*sa));
     sa->sin_family = AF_INET;
     sa->sin_port = htons((short)rport);
 
+    ::in_addr     ia;
 #ifdef TS_WINSOCK
-    ian =  ::inet_addr(address);
+    unsigned long ian =  ::inet_addr(address);
     ia.s_addr = ian;
+
     if( ian == INADDR_NONE ) {
 #else /* here UNIX */
     if( !::inet_aton(address,&ia) ) {
 #endif
+        ::hostent*    ha;
         ha = ::gethostbyname(address);
         if( ha == NULL )
 	    throw io_exception(fmt("unable to resolve: %s") % address);
