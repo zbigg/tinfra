@@ -75,6 +75,12 @@ public:
     void broadcast() { m.broadcast(); }
 };
 
+class Runnable {
+public:
+    virtual ~Runnable() {}
+    virtual void run() = 0;
+};
+
 class Thread {
     pthread_t thread_;
 public:
@@ -82,6 +88,9 @@ public:
     static Thread current() { return Thread(::pthread_self()); }
     
     typedef void* (thread_entry)(void*);
+
+    static Thread start( Runnable& runnable);
+    static Thread start_detached( Runnable& runnable);    
     
     static Thread start( thread_entry entry, void* param );
     static Thread start_detached( thread_entry entry, void* param );

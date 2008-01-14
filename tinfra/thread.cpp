@@ -70,6 +70,23 @@ Thread Thread::start_detached( Thread::thread_entry entry, void* param )
     return Thread(thread);
 }
 
+static void* runnable_entry(void* param)
+{
+    Runnable* runnable = static_cast<Runnable*>(param);
+    runnable->run();
+    return 0;
+}
+
+Thread Thread::start( Runnable& runnable)
+{
+    return start(runnable_entry, (void*) &runnable);
+}
+
+Thread Thread::start_detached( Runnable& runnable)
+{   
+    return start_detached(runnable_entry, (void*) &runnable);    
+}
+
 void* Thread::join()
 {
     void* retvalue;
