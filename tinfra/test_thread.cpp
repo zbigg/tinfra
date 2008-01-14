@@ -79,5 +79,22 @@ SUITE(test_thread)
         CHECK_EQUAL(0, (int) p.join() );
     }
     
+    struct TestRunnable: public Runnable {
+        int i;
+        
+        void run()
+        {
+            i = 1;
+        }
+    };
+    
+    TEST(test_runnable)
+    {
+        TestRunnable runnable;
+        runnable.i = 0;
+        Thread t = Thread::start(runnable);
+        t.join();
+        CHECK_EQUAL(1, runnable.i);
+    }
 }
 #endif // TINFRA_THREADS

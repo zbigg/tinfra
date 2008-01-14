@@ -62,6 +62,7 @@
             tinfra/path.h
             tinfra/fs.h
             tinfra/thread.h
+            tinfra/queue.h
             tinfra/xml/XMLStream.h
             tinfra/xml.h
             tinfra/platform.h
@@ -89,6 +90,7 @@
             tinfra/test_symbol.cpp
             tinfra/test_exeinfo.cpp            
             tinfra/test_thread.cpp
+            tinfra/test_queue.cpp
             tinfra/test.cpp
             tinfra/test_main.cpp
         </sources>
