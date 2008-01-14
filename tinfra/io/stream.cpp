@@ -1,5 +1,4 @@
 #include "tinfra/io/stream.h"
-#include "tinfra/io/zcompat.h"
 #include "tinfra/io/socket.h"
 #include "tinfra/io/file.h"
 #include "tinfra/fmt.h"

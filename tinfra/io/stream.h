@@ -1,8 +1,6 @@
 #ifndef __tinfra_io_stream_h_
 #define __tinfra_io_stream_h_
 
-#include <zcompat/zpio.h>
-
 #include <ios>
 #include <streambuf>
 
