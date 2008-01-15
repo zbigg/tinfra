@@ -73,6 +73,10 @@ SUITE(test_thread)
     TEST(test_thread_cond)
     {
         A* a = new A;
+	// TODO: this test is screwed up (seen on dual-core on win32)
+	//      waiter if it's fast enough consume signal
+	//      sent to signaler
+	//      must use two synchronizers
         Thread p = Thread::start(cond_signaler, a);
         Thread c = Thread::start(cond_waiter, a);
         CHECK_EQUAL(0, (int) c.join() );
