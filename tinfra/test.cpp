@@ -18,11 +18,6 @@ static std::string top_srcdir = SRCDIR;
 static std::string top_srcdir = ".";
 #endif
 
-TempTestLocation::TempTestLocation()
-    : name_(""), orig_pwd_(""), tmp_path_("") 
-{
-    init();
-}
 TempTestLocation::TempTestLocation(std::string const& name)
     : name_(name), orig_pwd_(""), tmp_path_("") 
 {
