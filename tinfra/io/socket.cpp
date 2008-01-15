@@ -1,6 +1,8 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/io/socket.h"
 #include "tinfra/fmt.h"
+#include "tinfra/string.h" // debug only
+#include <iostream> // debug only
 
 #ifdef _WIN32
 #include <winsock.h>
@@ -51,6 +53,11 @@ static const socket_type invalid_socket = static_cast<socket_type>(-1);
 static void close_socket(socket_type socket);
 static void throw_socket_error(const char* message);
 
+static void L(const std::string& msg)
+{
+    //std::cerr << "socket: " << escape_c(msg) << std::endl;
+}
+
 class socketstream: public stream {
     socket_type socket_;
 public:
@@ -69,7 +76,9 @@ public:
     }
     int read(char* data, int size)
     {
+        L(fmt("%i: reading ...") % socket_);
         int result = ::recv(socket_, data ,size, 0);
+        L(fmt("%i: readed %i '%s'") % socket_ % result % std::string(data,result));
         if( result == -1 ) {
             throw_socket_error("unable to read from socket");
         }
@@ -77,7 +86,9 @@ public:
     }
     int write(const char* data, int size)
     {
+        L(fmt("%i: send '%s'") % socket_ % std::string(data,size));
         int result = ::send(socket_, data, size, 0);
+        L(fmt("%i: sent %i") % socket_ % result);
         if( result == -1 ) {
             throw_socket_error("unable to write to socket");
         }
@@ -168,9 +179,6 @@ static socket_type create_socket()
 
 static int get_inet_address(const char* address,int rport, struct sockaddr_in* sa)
 {
-    
-    
-    
     ensure_socket_initialized();
     
     std::memset(sa,0,sizeof(*sa));

@@ -1,6 +1,7 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/io/socket.h"
 #include "tinfra/thread.h"
+#include "tinfra/string.h"
 #include <ostream>
 #include <istream>
 #include <iostream>
@@ -9,15 +10,6 @@
 
 #include <unittest++/UnitTest++.h>
 #include "tinfra/test.h"
-
-static void trim(std::string& s)
-{
-    int size = s.size();
-    if( size == 0 ) return;
-    if( s[size-1] == '\n' ) s.erase(--size, 1);
-    if( size == 0 ) return;
-    if( s[size-1] == '\r' ) s.erase(--size, 1);
-}
 
 class Client: public tinfra::Runnable {
     std::auto_ptr<tinfra::io::stream> client;
@@ -30,16 +22,16 @@ public:
     {
         bool connected = true;
         std::string response;
-        response = "hello!";
-        client->write(response.c_str(), response.size());
-        client->write("\r\n",2);
+        //response = "hello!";
+        //client->write(response.c_str(), response.size());
+        //client->write("\r\n",2);
         while( connected ) {            
             {
                 tinfra::io::zstreambuf buf(client.get());
                 std::istream in(&buf);
                 std::string cmd;
                 std::getline(in, cmd);
-                trim(cmd);
+                tinfra::strip_inplace(cmd);
                 std::cerr << "S<" << cmd << std::endl;
                 if( cmd == "stop") {
                     server.stop();
@@ -66,7 +58,8 @@ class TestServer: public tinfra::io::socket::Server, public tinfra::Runnable {
 public:
     virtual void onAccept(std::auto_ptr<tinfra::io::stream> client) {
         Runnable* worker = new Client(client, *this);
-        tinfra::Thread::start_detached(*worker);
+        //tinfra::Thread::start_detached(*worker);
+        worker->run();
     }
     
     virtual void run()
@@ -79,11 +72,12 @@ public:
 std::string invoke(std::istream& in, std::ostream& out, std::string const& msg)
 {
     out << msg << std::endl;
-    std::cerr << "C>" << msg << std::endl;
+    out.flush();
+    std::cerr << "C>'" << tinfra::escape_c(msg) << "'" << std::endl;
     std::string tmp;
     std::getline(in, tmp);
-    trim(tmp);
-    std::cerr << "C<" << tmp << std::endl;
+    tinfra::strip_inplace(tmp);
+    std::cerr << "C<'" << tinfra::escape_c(tmp) << "'" << std::endl;
     return tmp;
 }
 
@@ -101,6 +95,7 @@ TEST(test_server)
         std::ostream out(&obuf);
         
         CHECK_EQUAL( "zbyszek", invoke(in,out, "zbyszek"));
+        CHECK_EQUAL( "A", invoke(in,out, "A"));
         CHECK_EQUAL( "", invoke(in,out, ""));
         CHECK_EQUAL( "quitting", invoke(in,out, "stop"));
     }
