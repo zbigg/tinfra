@@ -32,7 +32,7 @@ public:
                 std::string cmd;
                 std::getline(in, cmd);
                 tinfra::strip_inplace(cmd);
-                std::cerr << "S<" << cmd << std::endl;
+                //std::cerr << "S<" << cmd << std::endl;
                 if( cmd == "stop") {
                     server.stop();
                     connected = false;
@@ -45,7 +45,7 @@ public:
                 }
             }
             {   
-                std::cerr << "S>" << response << std::endl;
+                //std::cerr << "S>" << response << std::endl;
                 client->write(response.c_str(), response.size());
                 client->write("\r\n",2);
             }
@@ -57,7 +57,7 @@ public:
 class TestServer: public tinfra::io::socket::Server, public tinfra::Runnable {
 public:
     virtual void onAccept(std::auto_ptr<tinfra::io::stream> client) {
-        Runnable* worker = new Client(client, *this);
+        Runnable* worker = new Client(client, *this);        
         //tinfra::Thread::start_detached(*worker);
         worker->run();
     }
@@ -73,11 +73,11 @@ std::string invoke(std::istream& in, std::ostream& out, std::string const& msg)
 {
     out << msg << std::endl;
     out.flush();
-    std::cerr << "C>'" << tinfra::escape_c(msg) << "'" << std::endl;
+    //std::cerr << "C>'" << tinfra::escape_c(msg) << "'" << std::endl;
     std::string tmp;
     std::getline(in, tmp);
     tinfra::strip_inplace(tmp);
-    std::cerr << "C<'" << tinfra::escape_c(tmp) << "'" << std::endl;
+    //std::cerr << "C<'" << tinfra::escape_c(tmp) << "'" << std::endl;
     return tmp;
 }
 

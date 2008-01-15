@@ -53,10 +53,15 @@ static const socket_type invalid_socket = static_cast<socket_type>(-1);
 static void close_socket(socket_type socket);
 static void throw_socket_error(const char* message);
 
+// TODO this log facility should be tinfra-wide
+#ifdef _DEBUG
 static void L(const std::string& msg)
 {
     //std::cerr << "socket: " << escape_c(msg) << std::endl;
 }
+#else
+#define L(a) (void)0
+#endif
 
 class socketstream: public stream {
     socket_type socket_;
@@ -288,6 +293,11 @@ void Server::run()
 
 void Server::stop()
 {
+    // TODO there is no way to concurently stop
+    // server when it's accepting next connection
+    // so we can't do multithreading
+    // idea: use WSAAsyncSelect or ... fake connect
+    // to self to signal "something" and then exit
     stopped_ = true;
 }
 
