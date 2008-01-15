@@ -23,6 +23,7 @@
             tinfra/io/socket.cpp
             <!-- tinfra/io/zcompat.cpp -->
             tinfra/fmt.cpp
+            tinfra/string.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
             tinfra/thread.cpp
@@ -51,6 +52,7 @@
             tinfra/exception.h
             tinfra/exeinfo.h
             tinfra/fmt.h
+            tinfra/string.h
             tinfra/io/stream.h
             tinfra/io/file.h
             tinfra/io/socket.h
@@ -81,6 +83,7 @@
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
+            tinfra/test_string.cpp
             tinfra/test_path.cpp            
             tinfra/test_fs.cpp
             tinfra/test_test.cpp
