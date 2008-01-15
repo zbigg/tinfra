@@ -16,7 +16,7 @@ public:
 
 class stream {
 public:
-    virtual ~stream() {}
+    virtual ~stream() { }
     enum seek_origin {
         start,
         end,

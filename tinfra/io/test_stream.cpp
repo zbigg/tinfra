@@ -1,4 +1,5 @@
 #include "tinfra/io/stream.h"
+#include "tinfra/io/socket.h"
 #include <ostream>
 #include <istream>
 #include <iostream>

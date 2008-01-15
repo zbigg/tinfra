@@ -55,7 +55,10 @@ class socketstream: public stream {
     socket_type socket_;
 public:
     socketstream(socket_type socket): socket_(socket) {}
-        
+    ~socketstream() {
+        if( socket_ != invalid_socket )
+            close();
+    }
     void close() {        
         close_socket(socket_);
         socket_ = invalid_socket;        
@@ -250,12 +253,21 @@ stream* accept_client_connection(stream* server_socket)
 // Server implementation
 //
 
-Server::Server(const char* address, int port)
+Server::Server()
+    : stopped_(false)
 {
-    stopped_ = false;
+}
+Server::Server(const char* address, int port)
+    : stopped_(false)
+{
+    bind(address, port);
+}
+
+void Server::bind(const char* address, int port)
+{
     server_socket_ = std::auto_ptr<stream>(open_server_socket(address,port));
 }
-    
+
 void Server::run()
 {
     while( !stopped_ ) {
@@ -263,6 +275,7 @@ void Server::run()
         
         onAccept(std::auto_ptr<stream>(client_socket));
     }
+    server_socket_->close();
 }
 
 void Server::stop()

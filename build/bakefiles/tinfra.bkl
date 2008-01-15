@@ -87,6 +87,7 @@
             tinfra/test_multitype_map.cpp
             tinfra/test_fmt.cpp
             tinfra/io/test_stream.cpp            
+            tinfra/test_server.cpp
             tinfra/test_symbol.cpp
             tinfra/test_exeinfo.cpp            
             tinfra/test_thread.cpp
