@@ -20,6 +20,7 @@
             tinfra/cmd.cpp
             <!--tinfra/io/stream.cpp-->
             tinfra/fmt.cpp
+            tinfra/string.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
             tinfra/thread.cpp
@@ -47,6 +48,7 @@
             tinfra/exception.h
             tinfra/exeinfo.h
             tinfra/fmt.h
+            tinfra/string.h
             tinfra/io/stream.h
             tinfra/multitype_map.h
             tinfra/symbol.h
@@ -73,6 +75,7 @@
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
+            tinfra/test_string.cpp
             tinfra/test_path.cpp            
             tinfra/test_fs.cpp
             tinfra/test_test.cpp
