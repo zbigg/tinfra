@@ -64,7 +64,6 @@ public:
     
     virtual void run()
     {
-        bind("localhost", 10900);
         tinfra::io::socket::Server::run();
     }
 };
@@ -84,6 +83,7 @@ std::string invoke(std::istream& in, std::ostream& out, std::string const& msg)
 TEST(test_server)
 {
     TestServer server;
+    server.bind("localhost", 10900);
     tinfra::Thread server_thread = tinfra::Thread::start(server);    
     {        
         std::auto_ptr<tinfra::io::stream> client = std::auto_ptr<tinfra::io::stream>(tinfra::io::socket::open_client_socket("localhost",10900));
