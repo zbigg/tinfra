@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iostream>
 #include <cstring>
+#include <cctype>
 
 using namespace std;
 
@@ -108,11 +109,14 @@ streambuf* zstreambuf::setbuf (char * buffer, streamsize buffer_size)
     own_buffer_ = false;
     return this;
 }
+
+static const int default_buffer_size =  32768;
+
 bool zstreambuf::need_buf()
 {
     // TODO: some condition for controlling buffer support
     //       and default buffer size
-    const int default_buffer_size =  31268;
+    
     if( buffer_ ) {
         return true;
     } else if( default_buffer_size > 0 ) {
@@ -128,6 +132,7 @@ int zstreambuf::sync() {
     //zprintf("sync\n");
     if( pptr() > pbase() ) {            
         write(pbase(), pptr() - pbase());
+        setp(buffer_, buffer_ + buffer_size_);
     }
     stream_->sync();
     return 0;
@@ -174,6 +179,25 @@ zstreambuf::int_type zstreambuf::pbackfail (int_type c)
     //  hint: http://www.cplusplus.com/reference/iostream/streambuf/pbackfail.html
     return streambuf::traits_type::eof();
 }
+std::streamsize zstreambuf::xsgetn (zstreambuf::char_type *data, std::streamsize size)
+{
+    std::streamsize readed = 0;
+    {
+        const std::streamsize available_in_buffer = gptr() < egptr();
+        if( available_in_buffer ) {
+            const std::streamsize to_read_from_buffer = std::min(size, egptr()-gptr());
+            std::memcpy(data, gptr(), to_read_from_buffer);
+            gbump(to_read_from_buffer);
+            if( to_read_from_buffer == size ) 
+                return size;
+            size -= to_read_from_buffer;
+            data += to_read_from_buffer;
+            readed += to_read_from_buffer;
+        }
+    }
+    readed += read(data, size);
+    return readed;
+}
 
 //
 // output
@@ -186,7 +210,8 @@ zstreambuf::int_type zstreambuf::overflow (int_type c)
             write(pbase(), pptr() - pbase());
         }
         buffer_[0] = c;
-        setg(buffer_, buffer_ + 1, buffer_ + buffer_size_);
+        setp(buffer_, buffer_ + buffer_size_);
+        pbump(1);
         return 1;
     } else {
         char theC = c;
@@ -198,11 +223,45 @@ zstreambuf::int_type zstreambuf::overflow (int_type c)
     }
 }
 
+std::streamsize zstreambuf::xsputn (const zstreambuf::char_type *data, std::streamsize size) 
+{
+    std::streamsize written = 0;
+    { // first try ... fill in rest of buffer
+        std::streamsize available_buffer  = epptr() - pptr();
+        if( available_buffer > 0) {
+            std::streamsize to_buffer_len = std::min(size, available_buffer);
+            std::memcpy(pptr(), data, to_buffer_len);
+            pbump(to_buffer_len);
+            if( size == to_buffer_len ) 
+                return size;
+            written += to_buffer_len;
+            data += to_buffer_len;
+            size -= to_buffer_len;
+        }
+    }
+    
+    if( pptr() > pbase() ) sync();
+        
+    std::streamsize possible_buffer_size = buffer_size_ ? buffer_size_ : default_buffer_size;
+    
+    if( size <= possible_buffer_size && need_buf() ) {
+        std::streamsize available_buffer  = epptr() - pptr();
+        if( available_buffer >= size ) {
+            std::memcpy(pptr(), data, size);
+            pbump(size);
+            return written + size;
+        } 
+    }
+    written += write(data, size);
+    return written;
+}
 // 
 // seek
 //
 zstreambuf::pos_type zstreambuf::seekoff (off_type off, ios::seekdir dir, ios::openmode)
 {
+    sync();
+    setg(0,0,0);
     stream::seek_origin origin = (
                  dir == ios::beg ? stream::start : 
                  dir == ios::cur ? stream::current :

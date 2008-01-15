@@ -82,14 +82,8 @@ public:
     virtual int_type uflow ();
     virtual int_type underflow ();
     
-    virtual std::streamsize xsgetn (char_type *__s, std::streamsize __n)
-    {
-        return read(__s, __n);
-    }
-    virtual std::streamsize xsputn (const char_type *__s, std::streamsize __n) 
-    {
-        return write(__s, __n);
-    }
+    virtual std::streamsize xsgetn (char_type *__s, std::streamsize __n);
+    virtual std::streamsize xsputn (const char_type *__s, std::streamsize __n);
     
     ///
     /// human readable Java like interface
