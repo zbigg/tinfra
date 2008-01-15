@@ -24,13 +24,21 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
-AC_CANONICAL_HOST
+AC_CANONICAL_SYSTEM
+
 
 AC_BAKEFILE([m4_include(autoconf_inc.m4)])
 
 AC_CHECK_HEADERS([pthread.h])
 
 AC_CHECK_FUNCS([opendir])
+
+case "$target" in
+*-mingw|*-mingw32)
+	LIBS="$LIBS -lwsock32"
+	;;
+esac
+
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

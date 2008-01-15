@@ -15,7 +15,7 @@ void strip_inplace(std::string& s)
 {    
     {
         std::size_t pos = s.find_first_not_of(whitespace);
-        if( pos != std::string::npos )
+        if( pos != 0 )
             s.erase(0,pos);
     }
     {

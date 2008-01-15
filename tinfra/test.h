@@ -8,8 +8,7 @@ namespace test {
 
 class TempTestLocation {
 public:
-    explicit TempTestLocation();
-    explicit TempTestLocation(std::string const& name);
+    explicit TempTestLocation(std::string const& name = "");
     ~TempTestLocation();
     
     std::string getPath() const;
