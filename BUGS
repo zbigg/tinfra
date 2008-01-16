@@ -1,0 +1,5 @@
+3. test_thread_cond: screwed up, possible race condition
+
+2. unix: test_server: failre while reading some texts, probably messed up zstreambuf
+
+1. unix: server socketd laeves port in TIME_WAIT state
