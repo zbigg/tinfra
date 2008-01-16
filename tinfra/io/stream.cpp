@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cstring>
 #include <cctype>
+#include <algorithm>
 
 using namespace std;
 
@@ -183,9 +184,9 @@ std::streamsize zstreambuf::xsgetn (zstreambuf::char_type *data, std::streamsize
 {
     std::streamsize readed = 0;
     {
-        const std::streamsize available_in_buffer = gptr() < egptr();
+        const std::streamsize available_in_buffer = egptr() - gptr();
         if( available_in_buffer ) {
-            const std::streamsize to_read_from_buffer = std::min(size, egptr()-gptr());
+            const std::streamsize to_read_from_buffer = std::min(size, available_in_buffer);
             std::memcpy(data, gptr(), to_read_from_buffer);
             gbump(to_read_from_buffer);
             if( to_read_from_buffer == size ) 

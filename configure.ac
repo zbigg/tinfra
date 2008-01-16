@@ -38,7 +38,8 @@ case "$target" in
 	LIBS="$LIBS -lwsock32"
 	;;
 esac
-
+AC_CHECK_LIB(socket, socket)
+AC_CHECK_LIB(nsl,gethostbyname)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

@@ -17,6 +17,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <errno.h>
 
 #define TS_BSD
 #endif
@@ -181,8 +182,11 @@ static socket_type create_socket()
         throw_socket_error("socket creation failed");
     return result;
 }
+#ifndef INADDR_NONE
+#define INADDR_NONE -1
+#endif
 
-static int get_inet_address(const char* address,int rport, struct sockaddr_in* sa)
+static void get_inet_address(const char* address,int rport, struct sockaddr_in* sa)
 {
     ensure_socket_initialized();
     
@@ -191,14 +195,9 @@ static int get_inet_address(const char* address,int rport, struct sockaddr_in* s
     sa->sin_port = htons((short)rport);
 
     ::in_addr     ia;
-#ifdef TS_WINSOCK
     unsigned long ian =  ::inet_addr(address);
     ia.s_addr = ian;
-
     if( ian == INADDR_NONE ) {
-#else /* here UNIX */
-    if( !::inet_aton(address,&ia) ) {
-#endif
         ::hostent*    ha;
         ha = ::gethostbyname(address);
         if( ha == NULL )
