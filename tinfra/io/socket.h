@@ -14,11 +14,13 @@ stream* accept_client_connection(stream* server_socket);
 
 class Server {
     std::auto_ptr<stream> server_socket_;
-    bool stopped_;
+    volatile bool stopped_;
+    std::string   bound_address_;
+    int           bound_port_;
 public:
     Server();
     Server(const char* address, int port);
-
+    virtual ~Server() {}
     void bind(const char* address, int port);
     void run();
     void stop();

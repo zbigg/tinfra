@@ -278,26 +278,30 @@ Server::Server(const char* address, int port)
 void Server::bind(const char* address, int port)
 {
     server_socket_ = std::auto_ptr<stream>(open_server_socket(address,port));
+    bound_address_ = address;
+    bound_port_ = port;
 }
 
 void Server::run()
 {
     while( !stopped_ ) {
         stream* client_socket = accept_client_connection(server_socket_.get());
-        
-        onAccept(std::auto_ptr<stream>(client_socket));
+        if( !stopped_ ) 
+            onAccept(std::auto_ptr<stream>(client_socket));
     }
     server_socket_->close();
 }
 
 void Server::stop()
-{
-    // TODO there is no way to concurently stop
-    // server when it's accepting next connection
-    // so we can't do multithreading
-    // idea: use WSAAsyncSelect or ... fake connect
-    // to self to signal "something" and then exit
+{    
     stopped_ = true;
+    
+    try {
+        stream* f = open_client_socket(bound_address_.c_str(), bound_port_);
+        if( f ) 
+            delete f;
+    } catch( io_exception& wtf)  {
+    }
 }
 
 } } } //end namespace tinfra::io::socket

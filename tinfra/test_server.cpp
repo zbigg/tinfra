@@ -20,6 +20,7 @@ public:
         
     virtual void run()
     {
+        
         bool connected = true;
         std::string response;
         //response = "hello!";
@@ -79,26 +80,38 @@ std::string invoke(std::istream& in, std::ostream& out, std::string const& msg)
     //std::cerr << "C<'" << tinfra::escape_c(tmp) << "'" << std::endl;
     return tmp;
 }
-
-TEST(test_server)
+SUITE(tinfra_server)
 {
-    TestServer server;
-    server.bind("localhost", 10900);
-    tinfra::Thread server_thread = tinfra::Thread::start(server);    
-    {        
-        std::auto_ptr<tinfra::io::stream> client = std::auto_ptr<tinfra::io::stream>(tinfra::io::socket::open_client_socket("localhost",10900));
-        
-        tinfra::io::zstreambuf ibuf(client.get());
-        tinfra::io::zstreambuf obuf(client.get());
-        
-        std::istream in(&ibuf);
-        std::ostream out(&obuf);
-        
-        CHECK_EQUAL( "zbyszek", invoke(in,out, "zbyszek"));
-        CHECK_EQUAL( "A", invoke(in,out, "A"));
-        CHECK_EQUAL( "", invoke(in,out, ""));
-        CHECK_EQUAL( "quitting", invoke(in,out, "stop"));
+    TEST(test_server_generic)
+    {
+        TestServer server;
+        server.bind("localhost", 10900);
+        tinfra::Thread server_thread = tinfra::Thread::start(server);    
+        {        
+            std::auto_ptr<tinfra::io::stream> client = std::auto_ptr<tinfra::io::stream>(tinfra::io::socket::open_client_socket("localhost",10900));
+            
+            tinfra::io::zstreambuf ibuf(client.get());
+            tinfra::io::zstreambuf obuf(client.get());
+            
+            std::istream in(&ibuf);
+            std::ostream out(&obuf);
+            
+            CHECK_EQUAL( "zbyszek", invoke(in,out, "zbyszek"));
+            CHECK_EQUAL( "A", invoke(in,out, "A"));
+            CHECK_EQUAL( "", invoke(in,out, ""));
+            CHECK_EQUAL( "quitting", invoke(in,out, "stop"));
+        }
+        server.stop();
+        server_thread.join();
     }
-    server.stop();
-    server_thread.join();
+
+    // check if Server::stop can abort blocking accept call
+    TEST(test_server_stop)
+    {
+        TestServer server;
+        server.bind("localhost", 10901);
+        tinfra::Thread server_thread = tinfra::Thread::start(server);    
+        server.stop();
+        server_thread.join();
+    }
 }
