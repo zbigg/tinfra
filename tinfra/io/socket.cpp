@@ -177,7 +177,7 @@ static void close_socket(socket_type socket)
 static socket_type create_socket()
 {
     ensure_socket_initialized();
-    int result = ::socket(AF_INET,SOCK_STREAM,0);
+    socket_type result = ::socket(AF_INET,SOCK_STREAM,0);
     if( result == invalid_socket ) 
         throw_socket_error("socket creation failed");
     return result;
@@ -285,9 +285,9 @@ void Server::bind(const char* address, int port)
 void Server::run()
 {
     while( !stopped_ ) {
-        stream* client_socket = accept_client_connection(server_socket_.get());
+        std::auto_ptr<stream> client_socket = std::auto_ptr<stream>(accept_client_connection(server_socket_.get()));
         if( !stopped_ ) 
-            onAccept(std::auto_ptr<stream>(client_socket));
+            onAccept(client_socket);
     }
     server_socket_->close();
 }
