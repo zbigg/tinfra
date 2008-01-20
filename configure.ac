@@ -31,7 +31,7 @@ AC_BAKEFILE([m4_include(autoconf_inc.m4)])
 
 AC_CHECK_HEADERS([pthread.h])
 
-AC_CHECK_FUNCS([opendir])
+AC_CHECK_FUNCS([opendir nanosleep usleep])
 
 case "$target" in
 *-mingw|*-mingw32)

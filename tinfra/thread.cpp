@@ -8,6 +8,13 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+#ifdef HAVE_NANOSLEEP
+#include <time.h>
+#elif defined HAVE_USLEEP
+#include <unistd.h>
+#endif
+
 namespace tinfra {
 
 static void thread_error(const char* message, int rc)
@@ -102,8 +109,17 @@ void Thread::sleep(long milliseconds)
 {
 #ifdef _WIN32
     ::Sleep(milliseconds);
+#elif defined(HAVE_NANOSLEEP)
+    // nanosleep accepts nanoseconds
+    timespec req,rem;
+    req.tv_sec  = milliseconds / 1000000000;
+    rem.tv_nsec = milliseconds % 1000000000;
+    ::nanosleep(&req, &rem);
+#elif defined(HAVE_USLEEP)
+    // usleep accepts microseconds
+    ::usleep(milliseconds/1000);
 #else
-    thread_error("sleep not implemented on this platform"
+    thread_error("sleep not implemented on this platform",0);
 #endif
 }
 
