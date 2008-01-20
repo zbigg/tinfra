@@ -30,6 +30,19 @@ public:
         this->pop_front();
         return result;
     }
+    
+    T peek(T const& def = T())
+    {
+        Synhronizator s(monitor_);
+        
+        if( this->size() == 0 ) {
+            return def;
+        } else {
+            T result = this->front();
+            this->pop_front();
+            return result;
+        }
+    }
 };
 }
 

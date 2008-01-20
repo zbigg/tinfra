@@ -86,7 +86,7 @@ class Thread {
 public:
     explicit Thread(pthread_t thread): thread_(thread) {}
     static Thread current() { return Thread(::pthread_self()); }
-    
+    static void sleep(long milliseconds);
     typedef void* (thread_entry)(void*);
 
     static Thread start( Runnable& runnable);
@@ -104,6 +104,7 @@ class ThreadSet {
 public:
     ~ThreadSet();
 
+    Thread start( Runnable& runnable);
     Thread start(Thread::thread_entry entry, void* param);
 
     template <typename T>

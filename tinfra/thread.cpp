@@ -5,6 +5,9 @@
 #include <pthread.h>
 #include "tinfra/fmt.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
 namespace tinfra {
 
 static void thread_error(const char* message, int rc)
@@ -95,6 +98,15 @@ void* Thread::join()
     return retvalue;
 }
 
+void Thread::sleep(long milliseconds)
+{
+#ifdef _WIN32
+    ::Sleep(milliseconds);
+#else
+    thread_error("sleep not implemented on this platform"
+#endif
+}
+
 ThreadSet::~ThreadSet()
 {
     join(0);
@@ -108,6 +120,13 @@ void   ThreadSet::add(Thread t)
 Thread ThreadSet::start(Thread::thread_entry entry, void* param)
 {
     Thread t = Thread::start(entry, param);
+    threads_.push_back(t);
+    return t;
+}
+
+Thread ThreadSet::start(Runnable& runnable)
+{
+    Thread t =  Thread::start(runnable);
     threads_.push_back(t);
     return t;
 }
