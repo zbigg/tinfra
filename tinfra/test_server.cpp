@@ -2,6 +2,7 @@
 #include "tinfra/io/socket.h"
 #include "tinfra/thread.h"
 #include "tinfra/string.h"
+#include "tinfra/server.h"
 #include <ostream>
 #include <istream>
 #include <iostream>
@@ -13,9 +14,9 @@
 
 class Client: public tinfra::Runnable {
     std::auto_ptr<tinfra::io::stream> client;
-    tinfra::io::socket::Server& server;
+    tinfra::net::Server& server;
 public:
-    Client(std::auto_ptr<tinfra::io::stream> _client, tinfra::io::socket::Server& _server)
+    Client(std::auto_ptr<tinfra::io::stream> _client, tinfra::net::Server& _server)
         : client(_client), server(_server) {}
         
     virtual void run()
@@ -55,7 +56,7 @@ public:
     }
 };
 
-class TestServer: public tinfra::io::socket::Server, public tinfra::Runnable {
+class TestServer: public tinfra::net::Server, public tinfra::Runnable {
 public:
     virtual void onAccept(std::auto_ptr<tinfra::io::stream> client) {
         Runnable* worker = new Client(client, *this);        
@@ -65,7 +66,7 @@ public:
     
     virtual void run()
     {
-        tinfra::io::socket::Server::run();
+        tinfra::net::Server::run();
     }
 };
 

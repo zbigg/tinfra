@@ -21,6 +21,7 @@
             tinfra/io/stream.cpp
             tinfra/io/file.cpp
             tinfra/io/socket.cpp
+            tinfra/server.cpp
             <!-- tinfra/io/zcompat.cpp -->
             tinfra/fmt.cpp
             tinfra/string.cpp
