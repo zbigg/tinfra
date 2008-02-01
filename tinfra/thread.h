@@ -1,12 +1,13 @@
 #ifndef __tinfra_thread_h__
 #define __tinfra_thread_h__
 
+#include "tinfra/platform.h"
+
 #include <vector>
 
 #if 1 || defined (HAVE_PTHREAD_H)
 
 #define TINFRA_THREADS 1
-
 #include <pthread.h>
 
 namespace tinfra {
@@ -96,6 +97,7 @@ public:
     static Thread start_detached( thread_entry entry, void* param );
     
     void* join();
+	size_t to_number() const;
 };
 
 class ThreadSet {

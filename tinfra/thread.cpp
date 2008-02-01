@@ -33,7 +33,7 @@ static void* thread_master_fun(void* param)
         std::auto_ptr<thread_entry_param> p2((thread_entry_param*)param);
         return p2->entry(p2->param);
     } catch(std::exception& e) {
-        std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % 0 % e.what();
+		std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % Thread::current().to_number() % e.what();
         return 0;
     }
 }
@@ -123,6 +123,11 @@ void Thread::sleep(long milliseconds)
 #endif
 }
 
+size_t Thread::to_number() const
+{
+	long* a = (long*)&thread_;
+	return *a;
+}
 ThreadSet::~ThreadSet()
 {
     join(0);
