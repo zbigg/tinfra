@@ -125,6 +125,7 @@ std::string win32_strerror(DWORD error_code)
     }
     std::string result((char*)lpMsgBuf);
     ::LocalFree(lpMsgBuf);
+    strip_inplace(result);
     return result;
 }
 
@@ -155,14 +156,27 @@ static void ensure_socket_initialized()
 #endif
 }
 
-static void throw_socket_error(const char* message)
+static int  socket_get_last_error()
 {
 #ifdef TS_WINSOCK
-    int error_code = WSAGetLastError();
-    throw io_exception(fmt("%s: %s") % message % win32_strerror(error_code));
+    return WSAGetLastError();
 #else
-    throw io_exception(fmt("%s: %s") % message % strerror(errno));
+    return errno;
 #endif
+}
+
+static void throw_socket_error(int error_code, const char* message)
+{
+#ifdef TS_WINSOCK
+    throw io_exception(fmt("%s: %s (%i)") % message % win32_strerror(error_code) % error_code);
+#else
+    throw io_exception(fmt("%s: %s (%i)") % message % strerror(errno) % errno);
+#endif
+}
+
+static void throw_socket_error(const char* message)
+{
+    throw_socket_error(socket_get_last_error(), message);
 }
 static void close_socket(socket_type socket)
 {
@@ -218,8 +232,9 @@ stream* open_client_socket(char const* address, int port)
     socket_type s = create_socket();
     
     if( ::connect(s, (struct sockaddr*)&sock_addr,sizeof(sock_addr)) < 0 ) {
+        int error_code = socket_get_last_error();
         close_socket(s);
-        throw_socket_error(fmt("unable to connect %s:%i") % address % port);
+        throw_socket_error(error_code, fmt("unable to connect %s:%i") % address % port);
     }
     return new socketstream(s);
 }
