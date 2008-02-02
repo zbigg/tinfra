@@ -14,6 +14,8 @@
 #include <imagehlp.h>
 
 #include "tinfra/exception.h"
+#include "tinfra/exeinfo.h"
+#include "tinfra/thread.h"
 
 #define gle (GetLastError())
 #define lenof(a) (sizeof(a) / sizeof((a)[0]))
@@ -98,6 +100,7 @@ struct ModuleEntry
 typedef std::vector< ModuleEntry > ModuleList;
 typedef ModuleList::iterator ModuleListIter;
 
+static void show_stack(  ); // dump a stack of current thread
 static void show_stack( HANDLE hThread, CONTEXT& c ); // dump a stack
 static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep );
 static void enumAndLoadModuleSymbols( HANDLE hProcess, DWORD pid );
@@ -166,7 +169,7 @@ static void (*fatal_exception_handler) (void) = 0;
 
 static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
 {
-    printf( "Fatal exception occurred.\n");
+    printf( "%s[%i]: Fatal exception occurred.\n", tinfra::get_exepath().c_str(), tinfra::Thread::current().to_number());
     printf( "Call stack:\n");
     show_stack( GetCurrentThread(), *(ep->ContextRecord) );    
     if( fatal_exception_handler ) {
@@ -176,8 +179,21 @@ static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
+
 namespace tinfra {
     
+void terminate_handler()
+{
+    printf( "%s[%i]: Terminate called.\n", tinfra::get_exepath().c_str(), tinfra::Thread::current().to_number());
+    printf( "Call stack:\n");
+    show_stack( ); 
+    if( fatal_exception_handler ) {
+	fatal_exception_handler( /* ??? */);
+    }
+    printf( "Terminating application.\n");    
+    abort();
+}
+
 void initialize_fatal_exception_handler()
 {    
     static bool initialized = false;
@@ -193,6 +209,9 @@ void initialize_fatal_exception_handler()
     if( !SetConsoleCtrlHandler(ConsoleHandler, TRUE) ) {
 	// TODO: issue a warning
     }
+    
+    std::set_terminate(terminate_handler);
+    
     initialized = true;
 }
 void set_fatal_exception_handler(void (*handler) (void))
@@ -271,6 +290,69 @@ cleanup:
     delete[] tmpSymSearchPath;
     return result;
 }
+struct  thread_callstack_dumper_args {
+    HANDLE hThread;
+    bool finished;
+};
+static DWORD __stdcall thread_callstack_dumper( void * arg)
+{
+    thread_callstack_dumper_args* args = (thread_callstack_dumper_args*)arg;    
+    
+    ::CONTEXT context;
+    memset( &context, '\0', sizeof(::CONTEXT) );
+    context.ContextFlags = CONTEXT_FULL;
+
+    ::SuspendThread(args->hThread);
+    if ( ! ::GetThreadContext( args->hThread, &context ) ) {
+        printf("unable to read thread context, call stack dump failed");
+    } else {
+        show_stack( args->hThread, context);
+    }
+    ::ResumeThread(args->hThread);
+    args->finished = true;
+    return 0;
+}
+
+static void show_stack()
+{
+    thread_callstack_dumper_args args;
+    
+    if( ::DuplicateHandle(::GetCurrentProcess(),
+                    ::GetCurrentThread(),
+                    ::GetCurrentProcess(),
+                    &args.hThread,
+                    0, FALSE, DUPLICATE_SAME_ACCESS) == 0 )
+    {
+        printf("unable to create thread handle, call stack dump failed");
+        return;
+    }
+    args.finished = 0;
+    
+    //DWORD hDumpThreadId;
+    HANDLE hDumpThread = ::CreateThread( NULL, 5*524288, thread_callstack_dumper,  &args, 0, 0 );
+    if( hDumpThread == NULL ) {
+        ::CloseHandle(args.hThread);
+        printf("unable create dumper thread, call stack dump failed");
+        return;
+    }
+    
+    {   // let dumper thread suspend us and wait half-actively for 
+        // "job done" signal
+        int old_thread_priotity = GetThreadPriority(GetCurrentThread());
+        ::SetThreadPriority( GetCurrentThread(), THREAD_PRIORITY_IDLE );
+        while( !args.finished) {
+            ::Sleep( 20 );
+        }
+        ::SetThreadPriority( GetCurrentThread(), old_thread_priotity );
+    }
+    {
+        // wait for child thread
+        ::WaitForSingleObject( hDumpThread, INFINITE );
+        ::CloseHandle(hDumpThread);
+        ::CloseHandle(args.hThread);
+    }
+}
+
 static void show_stack(HANDLE hThread, CONTEXT& c )
 {
     // normally, call ImageNtHeader() and use machine info from PE header

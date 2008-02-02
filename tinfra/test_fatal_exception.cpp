@@ -1,5 +1,7 @@
 #include "tinfra/exception.h"
 #include "tinfra/cmd.h"
+#include "tinfra/thread.h"
+#include "tinfra/fmt.h"
 #include <iostream>
 
 #define FATAL_EXCEPTION_MESSAGE "test_fatal_exception: SUCCESS catched fatal exception"
@@ -31,6 +33,21 @@ void test_segv(tinfra::cmd::app& app)
     segv();
 }
 
+void* thread_func(void*)
+{
+    segv();
+    return 0;
+}
+
+void test_thread_segv(tinfra::cmd::app& app)
+{
+    using namespace tinfra;
+    app.inform("segfaulting in child thread, fatal exception_handler should be called from child thread");
+    app.inform(fmt("main thread: %i") % Thread::current().to_number());
+    Thread t = Thread::start(thread_func,0);
+    t.join();
+}
+
 #ifdef _WIN32
 #include <windows.h>
 #define sleep(a) Sleep(a*1000)
@@ -44,9 +61,10 @@ void test_segv(tinfra::cmd::app& app)
 // What is sent to window on windows ?
 // INT is sent on Ctrl+C (unix/windows)
 //
-void test_terminate()
+void test_terminate(tinfra::cmd::app& app)
 {
-    
+    app.inform("calling terminate, fatal exception_handler should be called");
+    throw;
 }
 
 struct simple_raii {
@@ -63,6 +81,7 @@ void test_interrupt(tinfra::cmd::app& app)
     simple_raii destructor_tester(app);
     sleep(10);
 }
+
 int test_main(int argc, char** argv)
 {    
     tinfra::cmd::app& app = tinfra::cmd::app::get();
@@ -76,7 +95,11 @@ int test_main(int argc, char** argv)
     //    test_terminate();
     else if( test_name == "int" )
         test_interrupt(app);
-    else 
+    else if( test_name == "thread_segv" )
+        test_thread_segv(app);
+    else if( test_name == "terminate" )
+        test_terminate(app);
+    else
         app.fail("unknown test type");
     return 0;
 }
