@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <string.h>
+#include <cstring>
 #include <errno.h>
 #include <iostream>
 
@@ -46,9 +46,15 @@ void holder<DIR*>::dispose(DIR* dir)
     ::closedir(dir);
     dir = 0;
 }
+#elif defined HAVE_FINDFIRST
+template<>
+void holder<intptr_t>::dispose(intptr_t i)
+{
+    _findclose(i);
+}
 #endif
 
-void list_files(const char* dirname, std::vector<std::string>& result)
+void list_files(const char* dirname, file_list_visitor& visitor)
 {
 #ifdef HAVE_OPENDIR
     DIR* dir = ::opendir(dirname);
@@ -59,10 +65,9 @@ void list_files(const char* dirname, std::vector<std::string>& result)
     holder<DIR*> dir_closer(dir);
     dirent* entry;
     while( (entry = ::readdir(dir)) != 0 ) 
-    {
-        std::string name(entry->d_name);
-        if( name == ".." || name == "." ) continue;
-        result.push_back(name);
+    {        
+        if( std::strcmp(entry->d_name,"..") == 0 || std::strcmp(entry->d_name,".") == 0 ) continue;
+        visitor.accept(entry->d_name);
     }    
 #elif defined HAVE_FINDFIRST
 	std::string a = dirname;
@@ -71,16 +76,31 @@ void list_files(const char* dirname, std::vector<std::string>& result)
 	intptr_t nonce = _findfirst(a.c_str(), &finddata);
 	if( nonce == -1 ) 
 		return;
+        holder<intptr_t> nonce_closer(nonce);
 	do {
-		std::string name(finddata.name);
-		if( name != ".." && name != "." ) {
-			result.push_back(name);
+		if( std::strcmp(finddata.name,"..") != 0 && std::strcmp(finddata.name, ".") != 0 ) {
+			visitor.accept(finddata.name);
 		}
-	} while( _findnext(nonce, &finddata) == 0);
-	_findclose(nonce);
+	} while( _findnext(nonce, &finddata) == 0);	
 #else
     throw generic_exception("tinfra::fs::list_files not implemented on this platform");
-#endif    
+#endif  
+}
+
+struct vector_sink_file_visitor: public file_list_visitor {
+    std::vector<std::string>& result;
+    vector_sink_file_visitor(std::vector<std::string>& result): result(result) {}
+        
+    virtual void accept(const char* name)
+    {
+        result.push_back(name);
+    }
+};
+
+void list_files(const char* dirname, std::vector<std::string>& result)
+{
+    vector_sink_file_visitor visitor(result);
+    list_files(dirname, visitor);
 }
 
 void recursive_copy(const char* src, const char* dest)
