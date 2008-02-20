@@ -218,5 +218,40 @@ std::string pwd()
     return std::string(buf);
 }
 
+namespace {
+static void walk_(const char* start, walker& walker);
+struct walker_file_visitor: public tinfra::fs::file_list_visitor {
+    const char* parent_;
+    walker& walker_;
+    
+    walker_file_visitor(const char* parent, walker& walker): parent_(parent), walker_(walker) {}
+        
+    void accept(const char* name)
+    {
+        std::string file_path(tinfra::path::join(parent_, name));
+        bool is_dir = tinfra::path::is_dir(file_path);
+        bool dig_further = walker_.accept(name,  parent_, is_dir);
+        if( is_dir && dig_further ) {
+            walk_(file_path.c_str(), walker_);
+        }
+    }
+};
+
+static void walk_(const char* start, walker& w)
+{    
+    walker_file_visitor visitor(start, w);
+    tinfra::fs::list_files(start, visitor);    
+}
+}
+
+void walk(const char* start, walker& w)
+{
+    try 
+    {
+        walk_(start, w);
+    } 
+    catch(walker::stop) { }
+}
+
 } }
 

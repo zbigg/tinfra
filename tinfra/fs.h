@@ -34,5 +34,28 @@ void list_files(std::string const& name, std::vector<std::string>& result) { ret
 inline 
 void recursive_copy(std::string const& src, std::string const& dest) { return recursive_copy(src.c_str(), dest.c_str()); }
 
+struct walker 
+{
+    /** Throw this from accept to stop walk. */
+    struct stop { };
+    
+    /** 
+        Accept element.
+    
+        @return callback should return if it's interested in walking
+                through children of current element 
+        @throws throws walker::stop to forcifully stop walking
+    */
+    virtual bool accept(const char* name, const char* parent, bool is_dir) = 0;
+};
+
+/** Walk through filesystem hierarchy.
+
+*/
+void walk(const char* start, walker& w);
+
+inline 
+void walk(std::string const& start, walker& w) { walk(start.c_str(), w); }
+
 } }
 

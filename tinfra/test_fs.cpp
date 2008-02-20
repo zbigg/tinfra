@@ -57,4 +57,17 @@ SUITE(tinfra_fs)
         fs::recursive_copy("testtest_dir", "boo");
         fs::recursive_rm("boo");
     }
+    
+    TEST(test_walk)
+    {
+        test::TempTestLocation tmp_location("testtest_dir");
+        struct foo_walker: public fs::walker {
+            virtual bool accept(const char* name, const char* parent, bool is_dir)
+            {
+                return true;
+            }            
+        };
+        foo_walker foo;
+        fs::walk(".", foo);
+    }
 }
