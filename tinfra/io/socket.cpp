@@ -51,6 +51,7 @@ typedef int    socket_type;
 
 static const socket_type invalid_socket = static_cast<socket_type>(-1);
 
+static int  close_socket_nothrow(socket_type socket);
 static void close_socket(socket_type socket);
 static void throw_socket_error(const char* message);
 
@@ -69,17 +70,25 @@ class socketstream: public stream {
 public:
     socketstream(socket_type socket): socket_(socket) {}
     ~socketstream() {
-        if( socket_ != invalid_socket )
-            close();
+        if( socket_ != invalid_socket ) {            
+            if( close_socket_nothrow(socket_) == -1 ) {
+                // TODO: add silent failures reporting
+                // int err = socket_get_last_error();
+                // tinfra::silent_failure(fmt("socket close failed: %i" % blabla )
+            }
+        }
     }
     void close() {        
-        close_socket(socket_);
-        socket_ = invalid_socket;        
+        socket_type tmp(socket_);
+        socket_ = invalid_socket;
+        close_socket(tmp);
     }
+    
     int seek(int pos, stream::seek_origin origin)
     {
         throw io_exception("sockets don't support seek()");
     }
+    
     int read(char* data, int size)
     {
         L(fmt("%i: reading ...") % socket_);
@@ -90,6 +99,7 @@ public:
         }
         return result;
     }
+    
     int write(const char* data, int size)
     {
         L(fmt("%i: send '%s'") % socket_ % std::string(data,size));
@@ -100,9 +110,12 @@ public:
         }
         return result;
     }
+    
     void sync() 
     {
+        // TODO: are sockets synchronized by default ? check it for unix/winsock
     }
+    
     socket_type get_socket() const { return socket_; }
 };
 
@@ -178,13 +191,19 @@ static void throw_socket_error(const char* message)
 {
     throw_socket_error(socket_get_last_error(), message);
 }
-static void close_socket(socket_type socket)
+
+static int close_socket_nothrow(socket_type socket)
 {
 #ifdef TS_WINSOCK
-    int rc = ::closesocket(socket);
+    return ::closesocket(socket);
 #else
-    int rc = ::close(socket);
-#endif
+    return ::close(socket);
+#endif    
+}
+
+static void close_socket(socket_type socket)
+{
+    int rc = close_socket_nothrow(socket);
     if( rc == -1 ) throw_socket_error("unable to close socket");
 }
 
@@ -233,7 +252,7 @@ stream* open_client_socket(char const* address, int port)
     
     if( ::connect(s, (struct sockaddr*)&sock_addr,sizeof(sock_addr)) < 0 ) {
         int error_code = socket_get_last_error();
-        close_socket(s);
+        close_socket_nothrow(s);
         throw_socket_error(error_code, fmt("unable to connect %s:%i") % address % port);
     }
     return new socketstream(s);
@@ -253,13 +272,15 @@ stream* open_server_socket(char const* listening_host, int port)
     socket_type s = create_socket();
     
     if( ::bind(s,(struct sockaddr*)&sock_addr,sizeof(sock_addr)) < 0 ) {
-        close_socket(s);
-        throw_socket_error("bind failed");
+        int error_code = socket_get_last_error();
+        close_socket_nothrow(s);
+        throw_socket_error(error_code, "bind failed");
     }
 
     if( ::listen(s,5) < 0 ) {
-        close_socket(s);
-        throw_socket_error("listen failed"); 
+        int error_code = socket_get_last_error();
+        close_socket_nothrow(s);
+        throw_socket_error(error_code, "listen failed");
     }
     
     return new socketstream(s);

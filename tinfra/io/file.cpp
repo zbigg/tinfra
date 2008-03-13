@@ -23,25 +23,40 @@ static const handle_type invalid_handle = 0;
 typedef int handle_type;
 static const handle_type invalid_handle = -1;
 #endif
-    
+
 class native_stream: public stream {
-    handle_type        handle_;
+    handle_type handle_;
 
 public:
     native_stream(handle_type handle): handle_(handle) {}
     virtual ~native_stream();
     void close();
+    
     int seek(int pos, stream::seek_origin origin);
     int read(char* data, int size);
     int write(const char* data, int size);
     void sync();
     handle_type get_native() const { return handle_; }
+private:
+    int close_nothrow();
 };    
+static void throw_io_exception(const char* message);
 
 native_stream::~native_stream()
 {
-    if( handle_ != invalid_handle )
-        close();
+    if( handle_ != invalid_handle ) {
+        if( close_nothrow() == -1 ) {
+            // TODO: add silent failures reporting
+            // int err = get_last_error();
+            // tinfra::silent_failure(fmt("file close failed: %i" % blabla )
+        }
+    }
+}
+
+void native_stream::close()
+{
+    if( close_nothrow() == -1 ) 
+        throw_io_exception("close failed");
 }
 
 #ifdef _WIN32
@@ -106,11 +121,11 @@ stream* open_file(const char* name, std::ios::openmode mode)
     return new native_stream(handle);
 }
 
-void native_stream::close()
+int native_stream::close_nothrow()
 {
-    if( ::CloseHandle(handle_) == 0 ) 
-        throw_io_exception("close failed");
+    int rc = ::CloseHandle(handle_);
     handle_ = invalid_handle;
+    return (rc == 0) ? -1 : 0;
 }
 
 int native_stream::seek(int pos, stream::seek_origin origin)
@@ -202,11 +217,11 @@ stream* open_file(const char* name, std::ios::openmode mode)
     return new native_stream(fd);
 }
 
-void native_stream::close()
+int native_stream::close()
 {
-    if( ::close(handle_) < 0 ) 
-        throw_io_exception("close failed");
+    int rc = ::close(handle_);
     handle_ = invalid_handle;
+    return rc;
 }
 
 int native_stream::seek(int pos, stream::seek_origin origin)
