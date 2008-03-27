@@ -1,48 +1,35 @@
 #include "tinfra/io/stream.h"
-#include "tinfra/io/file.h"
+#include "tinfra/io/win32.h"
 #include "tinfra/fmt.h"
 
-#ifdef _WIN32
 #include <windows.h>
-#else
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <unistd.h>
-#endif
 
 namespace tinfra {
 namespace io {
-namespace file {
+namespace win32 {
 
-#ifdef _WIN32
-typedef HANDLE handle_type;
-static const handle_type invalid_handle = 0;
-#else 
-typedef int handle_type;
-static const handle_type invalid_handle = -1;
-#endif
+static const HANDLE invalid_handle = 0;
 
-class native_stream: public stream {
-    handle_type handle_;
+class win32_stream: public stream {
+    HANDLE handle_;
 
 public:
-    native_stream(handle_type handle): handle_(handle) {}
-    virtual ~native_stream();
+    win32_stream(HANDLE handle): handle_(handle) {}
+    virtual ~win32_stream();
     void close();
     
     int seek(int pos, stream::seek_origin origin);
     int read(char* data, int size);
     int write(const char* data, int size);
     void sync();
-    handle_type get_native() const { return handle_; }
+    HANDLE get_native() const { return handle_; }
 private:
     int close_nothrow();
-};    
+};
+
 static void throw_io_exception(const char* message);
 
-native_stream::~native_stream()
+win32_stream::~win32_stream()
 {
     if( handle_ != invalid_handle ) {
         if( close_nothrow() == -1 ) {
@@ -53,22 +40,21 @@ native_stream::~native_stream()
     }
 }
 
-void native_stream::close()
+void win32_stream::close()
 {
     if( close_nothrow() == -1 ) 
         throw_io_exception("close failed");
 }
 
-#ifdef _WIN32
-
 static void throw_io_exception(const char* message)
 {
-    throw new io_exception(fmt("%s: %i") % message % ::GetLastError());
+    unsigned int error = ::GetLastError();
+    throw new io_exception(fmt("%s: %s(%i)") % message % get_error_string(error) % error);
 }
 
 stream* open_native(void* handle)
 {
-    return new native_stream((HANDLE)handle);
+    return new win32_stream((HANDLE)handle);
 }
 
 stream* open_file(const char* name, std::ios::openmode mode)
@@ -118,17 +104,17 @@ stream* open_file(const char* name, std::ios::openmode mode)
     if( handle == INVALID_HANDLE_VALUE || handle == NULL ) {
         throw io_exception(fmt("unable to open %s") % name);
     }
-    return new native_stream(handle);
+    return new win32_stream(handle);
 }
 
-int native_stream::close_nothrow()
+int win32_stream::close_nothrow()
 {
     int rc = ::CloseHandle(handle_);
     handle_ = invalid_handle;
     return (rc == 0) ? -1 : 0;
 }
 
-int native_stream::seek(int pos, stream::seek_origin origin)
+int win32_stream::seek(int pos, stream::seek_origin origin)
 {
     DWORD native_origin = 0;
     
@@ -151,7 +137,7 @@ int native_stream::seek(int pos, stream::seek_origin origin)
     }
 }
 
-int native_stream::read(char* data, int size)
+int win32_stream::read(char* data, int size)
 {
     DWORD readed;
     if( ReadFile(handle_,
@@ -165,7 +151,7 @@ int native_stream::read(char* data, int size)
     return readed;
 }
 
-int native_stream::write(char const* data, int size)
+int win32_stream::write(char const* data, int size)
 {
     DWORD written;
     if( WriteFile(handle_,
@@ -179,88 +165,42 @@ int native_stream::write(char const* data, int size)
     return written;
 }
 
-void native_stream::sync()
+void win32_stream::sync()
 {
 }
 
-#else
-
-stream* open_native(void* handle)
+std::string get_error_string(unsigned int error_code)
 {
-    return new native_stream((int)handle);
+    LPVOID lpMsgBuf;
+    if( ::FormatMessage(
+	FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+	NULL,
+	error_code,
+	MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+	(LPTSTR) &lpMsgBuf,
+	0,
+	NULL
+	) < 0 || lpMsgBuf == NULL) {
+
+	return fmt("unknown error: %i") % error_code;
+    }
+    std::string result((char*)lpMsgBuf);
+    ::LocalFree(lpMsgBuf);
+    strip_inplace(result);
+    return result;
 }
 
-static void throw_io_exception(const char* message)
-{
-    throw io_exception(fmt("%s: %s") % message % strerror(errno));
-}
+} // end namespace tinfra::io::win32
 
 stream* open_file(const char* name, std::ios::openmode mode)
 {
-    int flags = 0;
-    {
-	const bool fread  = (mode & std::ios::in) == std::ios::in;
-	const bool fwrite = (mode & std::ios::out) == std::ios::out;
-	if( fread && fwrite )
-	    flags |=  O_RDWR | O_CREAT;
-	else if( fread )
-	    flags |= O_RDONLY;
-	else if ( fwrite )
-	    flags |= O_WRONLY | O_CREAT;
-	else
-	    throw_io_exception("bad openmode");
-	if( (mode & std::ios::trunc) == std::ios::trunc) flags |= O_TRUNC;
-	if( (mode & std::ios::app) == std::ios::app) flags |= O_APPEND;
-    }
-    int fd = ::open(name, flags, 00644);
-    if( fd == -1 ) throw_io_exception(fmt("unable to open %s") % name);
-    return new native_stream(fd);
+    return win32::open_file(name, mode);
 }
 
-int native_stream::close()
+stream* open_native(void* handle)
 {
-    int rc = ::close(handle_);
-    handle_ = invalid_handle;
-    return rc;
+    return win32::open_native(handle);
 }
 
-int native_stream::seek(int pos, stream::seek_origin origin)
-{
-    int whence;
-    switch( origin ) {
-    case stream::start:
-        whence = SEEK_SET;
-        break;
-    case stream::current:
-        whence = SEEK_CUR;
-        break;
-    case stream::end:
-        whence = SEEK_END;
-        break;
-    }
-    off_t e = lseek(handle_, pos, whence);
-    if( e == (off_t)-1 )
-	throw_io_exception("seek failed");
-    return (int)e;
-}
+} }
 
-int native_stream::read(char* data, int size)
-{
-    int r = ::read(handle_, data, size);
-    if( r < 0 ) throw_io_exception("read failed");
-    return r;
-}
-
-int native_stream::write(char const* data, int size)
-{
-    int w = ::write(handle_, data, size);
-    if( w < 0 ) throw_io_exception("write failed");
-    return w;
-}
-
-void native_stream::sync()
-{
-}
-
-#endif
-} } }

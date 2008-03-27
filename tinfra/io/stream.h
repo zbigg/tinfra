@@ -29,6 +29,11 @@ public:
     virtual void sync() = 0;
 };
 
+stream* open_native(void* handle);
+stream* open_file(const char* name, std::ios::openmode mode);
+
+//void    open_process(std::vector<std::string> args, process& result);
+
 
 class zstreambuf : public std::streambuf {
     //typedef std::streambuf::streamsize streamsize;
@@ -72,8 +77,8 @@ public:
     virtual void imbue (const std::locale &)
     {
     }
-    virtual int_type overflow (int_type=traits_type::eof());
-    virtual int_type pbackfail (int_type=traits_type::eof());
+    virtual int_type overflow (int_type = -1);
+    virtual int_type pbackfail (int_type = -1);
     virtual pos_type seekoff (off_type, std::ios::seekdir, std::ios::openmode=std::ios::in | std::ios::out);
     virtual pos_type seekpos (pos_type, std::ios::openmode=std::ios::in | std::ios::out);    
     virtual std::streambuf* setbuf (char *, std::streamsize);

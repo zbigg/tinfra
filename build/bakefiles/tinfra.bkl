@@ -4,9 +4,15 @@
     <include file="common.bkl"/>
     
     <set var="TINFRA_PLATFORM_SOURCES" hints="files">
-        <if cond="PLATFORM_WIN32=='1'">tinfra/win32/fatal_exception.cpp</if>
+        <if cond="PLATFORM_WIN32=='1'">
+            tinfra/win32/fatal_exception.cpp
+            tinfra/io/win32.cpp
+        </if>
         
-        <if cond="PLATFORM_UNIX=='1'">tinfra/posix/fatal_exception.cpp</if>
+        <if cond="PLATFORM_UNIX=='1'">
+            tinfra/posix/fatal_exception.cpp
+            tinfra/io/win32.cpp
+        </if>
     </set>
 
     <!-- public things -->
@@ -19,7 +25,6 @@
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
             tinfra/io/stream.cpp
-            tinfra/io/file.cpp
             tinfra/io/socket.cpp
             tinfra/server.cpp
             <!-- tinfra/io/zcompat.cpp -->

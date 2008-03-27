@@ -1,6 +1,5 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/io/socket.h"
-#include "tinfra/io/file.h"
 #include "tinfra/fmt.h"
 
 #include <sstream>
@@ -17,10 +16,6 @@ namespace io {
 //
 // general IO connectors
 //
-stream* open_file(char const* name, ios::openmode mode)
-{
-    return file::open_file(name, mode);
-}
 
 stream* open_socket(char const* address, int port)
 {
