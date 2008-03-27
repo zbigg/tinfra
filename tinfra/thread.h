@@ -2,6 +2,7 @@
 #define __tinfra_thread_h__
 
 #include "tinfra/platform.h"
+#include "tinfra/runner.h"
 
 #include <vector>
 
@@ -76,12 +77,6 @@ public:
     void broadcast() { m.broadcast(); }
 };
 
-class Runnable {
-public:
-    virtual ~Runnable() {}
-    virtual void run() = 0;
-};
-
 class Thread {
     pthread_t thread_;
 public:
@@ -91,7 +86,9 @@ public:
     typedef void* (thread_entry)(void*);
 
     static Thread start( Runnable& runnable);
-    static Thread start_detached( Runnable& runnable);    
+    /// Start a detached thread
+    /// runnable will be deleted before thread end
+    static Thread start_detached( Runnable* runnable);    
     
     static Thread start( thread_entry entry, void* param );
     static Thread start_detached( thread_entry entry, void* param );

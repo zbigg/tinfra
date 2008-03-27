@@ -28,6 +28,7 @@
             tinfra/path.cpp
             tinfra/fs.cpp
             tinfra/thread.cpp
+            tinfra/runner.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 

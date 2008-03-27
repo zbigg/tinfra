@@ -33,7 +33,7 @@ static void* thread_master_fun(void* param)
         std::auto_ptr<thread_entry_param> p2((thread_entry_param*)param);
         return p2->entry(p2->param);
     } catch(std::exception& e) {
-		std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % Thread::current().to_number() % e.what();
+        std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % Thread::current().to_number() % e.what();
         return 0;
     }
 }
@@ -87,14 +87,21 @@ static void* runnable_entry(void* param)
     return 0;
 }
 
+static void* runnable_entry_delete(void* param)
+{
+    std::auto_ptr<Runnable> runnable(static_cast<Runnable*>(param));
+    runnable->run();
+    return 0;
+}
+
 Thread Thread::start( Runnable& runnable)
 {
     return start(runnable_entry, (void*) &runnable);
 }
 
-Thread Thread::start_detached( Runnable& runnable)
+Thread Thread::start_detached( Runnable* runnable)
 {   
-    return start_detached(runnable_entry, (void*) &runnable);    
+    return start_detached(runnable_entry_delete, (void*) &runnable);    
 }
 
 void* Thread::join()
