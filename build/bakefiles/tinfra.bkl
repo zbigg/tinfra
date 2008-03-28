@@ -6,7 +6,8 @@
     <set var="TINFRA_PLATFORM_SOURCES" hints="files">
         <if cond="PLATFORM_WIN32=='1'">
             tinfra/win32/fatal_exception.cpp
-            tinfra/io/win32.cpp
+            tinfra/win32/w32_io.cpp
+            tinfra/win32/w32_common.cpp
         </if>
         
         <if cond="PLATFORM_UNIX=='1'">

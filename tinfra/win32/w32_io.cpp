@@ -1,13 +1,15 @@
 #include "tinfra/io/stream.h"
-#include "tinfra/io/win32.h"
 #include "tinfra/fmt.h"
+#include "tinfra/win32.h"
 
 #include <windows.h>
 
 namespace tinfra {
-namespace io {
 namespace win32 {
 
+using tinfra::io::stream;
+using tinfra::io::io_exception;
+    
 static const HANDLE invalid_handle = 0;
 
 class win32_stream: public stream {
@@ -169,38 +171,22 @@ void win32_stream::sync()
 {
 }
 
-std::string get_error_string(unsigned int error_code)
-{
-    LPVOID lpMsgBuf;
-    if( ::FormatMessage(
-	FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-	NULL,
-	error_code,
-	MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-	(LPTSTR) &lpMsgBuf,
-	0,
-	NULL
-	) < 0 || lpMsgBuf == NULL) {
+} } // end namespace tinfra::win32
 
-	return fmt("unknown error: %i") % error_code;
-    }
-    std::string result((char*)lpMsgBuf);
-    ::LocalFree(lpMsgBuf);
-    strip_inplace(result);
-    return result;
-}
+//
+// link win32 io as default IO
+//
 
-} // end namespace tinfra::io::win32
-
+namespace tinfra { namespace io {
+   
 stream* open_file(const char* name, std::ios::openmode mode)
 {
-    return win32::open_file(name, mode);
+    return tinfra::win32::open_file(name, mode);
 }
 
 stream* open_native(void* handle)
 {
-    return win32::open_native(handle);
+    return tinfra::win32::open_native(handle);
 }
-
-} }
-
+    
+} } // end namespace tinfra::io
