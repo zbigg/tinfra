@@ -1,5 +1,4 @@
 #include "tinfra/io/stream.h"
-#include "tinfra/io/file.h"
 #include "tinfra/fmt.h"
 
 #include <sys/types.h>
@@ -50,9 +49,9 @@ void posix_stream::close()
         throw_io_exception("close failed");
 }
 
-stream* open_native(void* handle)
+stream* open_native(intptr_t handle)
 {
-    return new posix_stream((int)handle);
+    return new posix_stream(static_cast<int>(handle));
 }
 
 static void throw_io_exception(const char* message)
@@ -82,7 +81,7 @@ stream* open_file(const char* name, std::ios::openmode mode)
     return new posix_stream(fd);
 }
 
-int posix_stream::close()
+int posix_stream::close_nothrow()
 {
     int rc = ::close(handle_);
     handle_ = invalid_handle;

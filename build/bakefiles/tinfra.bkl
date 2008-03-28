@@ -12,7 +12,7 @@
         
         <if cond="PLATFORM_UNIX=='1'">
             tinfra/posix/fatal_exception.cpp
-            tinfra/io/win32.cpp
+            tinfra/io/posix.cpp
         </if>
     </set>
 

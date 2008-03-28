@@ -29,7 +29,7 @@ public:
     virtual void sync() = 0;
 };
 
-stream* open_native(void* handle);
+stream* open_native(intptr_t handle);
 stream* open_file(const char* name, std::ios::openmode mode);
 
 //void    open_process(std::vector<std::string> args, process& result);

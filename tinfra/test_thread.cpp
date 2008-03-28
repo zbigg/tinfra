@@ -31,7 +31,7 @@ SUITE(test_thread)
     TEST(test_thread_simple)
     {
         Thread t = Thread::start(nothing, 0);
-        CHECK_EQUAL(0, (int) t.join() );
+        CHECK_EQUAL(0, (intptr_t) t.join() );
     }
     struct A {
 	Condition c;
@@ -79,8 +79,8 @@ SUITE(test_thread)
 	//      must use two synchronizers
         Thread p = Thread::start(cond_signaler, a);
         Thread c = Thread::start(cond_waiter, a);
-        CHECK_EQUAL(0, (int) c.join() );
-        CHECK_EQUAL(0, (int) p.join() );
+        CHECK_EQUAL(0, (intptr_t) c.join() );
+        CHECK_EQUAL(0, (intptr_t) p.join() );
     }
     
     struct TestRunnable: public Runnable {
