@@ -8,11 +8,13 @@
             tinfra/win32/fatal_exception.cpp
             tinfra/win32/w32_io.cpp
             tinfra/win32/w32_common.cpp
+            tinfra/posix/thread.cpp <!-- win32 native thread support still broken -->
         </if>
         
         <if cond="PLATFORM_UNIX=='1'">
             tinfra/posix/fatal_exception.cpp
             tinfra/io/posix.cpp
+            tinfra/posix/thread.cpp
         </if>
     </set>
 
@@ -33,7 +35,7 @@
             tinfra/string.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
-            tinfra/thread.cpp
+            tinfra/threadcmn.cpp
             tinfra/runner.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
