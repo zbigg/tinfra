@@ -1,4 +1,5 @@
 ^makefile.vc$
+^Makefile$
 ^Makefile.in$
 ^.bakefile_gen.state$
 ^GNUmakefile$
@@ -11,3 +12,12 @@
 \.dsp$
 \.ncb$
 autoconf_inc.m4
+\.exe$
+^config.log$
+^config.status$
+^configure$
+^bk-deps$
+^aclocal.m4$
+^test_result
+^tinfra/config.h$
+^tinfra/config.h.in$

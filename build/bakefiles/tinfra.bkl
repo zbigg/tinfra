@@ -64,7 +64,6 @@
             tinfra/fmt.h
             tinfra/string.h
             tinfra/io/stream.h
-            tinfra/io/file.h
             tinfra/io/socket.h
             tinfra/server.h
             <!--tinfra/io/zcompat.h-->
