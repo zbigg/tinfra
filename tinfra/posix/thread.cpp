@@ -1,13 +1,14 @@
+//
+// posix/thread.cpp
+//   pthread based implementation of threads
+//
+
 #include "tinfra/thread.h"
 
 #include <iostream>
 
 #include <pthread.h>
 #include "tinfra/fmt.h"
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 #ifdef HAVE_NANOSLEEP
 #include <time.h>
@@ -37,6 +38,7 @@ static void* thread_master_fun(void* param)
         return 0;
     }
 }
+
 Thread Thread::start(thread_entry entry, void* param )
 {
     pthread_t thread;
@@ -114,9 +116,7 @@ void* Thread::join()
 
 void Thread::sleep(long milliseconds)
 {
-#ifdef _WIN32
-    ::Sleep(milliseconds);
-#elif defined(HAVE_NANOSLEEP)
+#if defined(HAVE_NANOSLEEP)
     // nanosleep accepts nanoseconds
     timespec req,rem;
     req.tv_sec  = milliseconds / 1000000000;
@@ -132,42 +132,8 @@ void Thread::sleep(long milliseconds)
 
 size_t Thread::to_number() const
 {
-	long* a = (long*)&thread_;
+	size_t* a = (size_t*)&thread_;
 	return *a;
-}
-ThreadSet::~ThreadSet()
-{
-    join(0);
-}
-
-void   ThreadSet::add(Thread t)
-{
-    threads_.push_back(t);
-}
-
-Thread ThreadSet::start(Thread::thread_entry entry, void* param)
-{
-    Thread t = Thread::start(entry, param);
-    threads_.push_back(t);
-    return t;
-}
-
-Thread ThreadSet::start(Runnable& runnable)
-{
-    Thread t =  Thread::start(runnable);
-    threads_.push_back(t);
-    return t;
-}
-
-void ThreadSet::join(std::vector<void*>* result)
-{
-    while( threads_.size() > 0 ) {
-        std::vector<Thread>::iterator i = threads_.end()-1;
-        void* r = i->join();
-        threads_.erase(i);
-        if( result )
-            result->push_back(r);
-    }
 }
 
 }
