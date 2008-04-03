@@ -110,6 +110,7 @@
             tinfra/test_queue.cpp
             tinfra/test.cpp
             tinfra/test_main.cpp
+            tinfra/test_subprocess.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <library>tinfra</library>

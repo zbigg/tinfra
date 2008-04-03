@@ -29,7 +29,7 @@ public:
     void set_stdout_mode(pipe_mode pm)  { stdout_mode = pm; }
     void set_stderr_mode(pipe_mode pm)  { stderr_mode = pm; }
     
-    virtual ~subprocess();
+    virtual ~subprocess() {}
     
     virtual void     start(const char* command) = 0;
     
@@ -54,6 +54,8 @@ protected:
 
     std::string working_dir;
 };
+
+subprocess* create_subprocess();
 
 }
 
