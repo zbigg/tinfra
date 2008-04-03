@@ -49,9 +49,9 @@ void posix_stream::close()
         throw_io_exception("close failed");
 }
 
-stream* open_native(intptr_t handle)
+stream* open_native(int fd)
 {
-    return new posix_stream(static_cast<int>(handle));
+    return new posix_stream(fd);
 }
 
 static void throw_io_exception(const char* message)
@@ -131,6 +131,11 @@ void posix_stream::sync()
 stream* open_file(const char* name, std::ios::openmode mode)
 {
     return posix::open_file(name, mode);
+}
+
+stream* open_native(intptr_t handle)
+{
+    return posix::open_native(static_cast<int>(handle));
 }
 
 } }
