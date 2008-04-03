@@ -48,7 +48,7 @@ public:
 stream* open_native(intptr_t handle);
 stream* open_file(const char* name, std::ios::openmode mode);
 
-stream* open_command_pipe(char const* command, ios::openmode mode);
+stream* open_command_pipe(char const* command, std::ios::openmode mode);
 stream* open_anon_pipe();
 
 stream* create_dstream(stream* input, stream* output);
