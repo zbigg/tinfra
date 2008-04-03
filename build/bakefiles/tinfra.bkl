@@ -7,6 +7,7 @@
         <if cond="PLATFORM_WIN32=='1'">
             tinfra/win32/fatal_exception.cpp
             tinfra/win32/w32_io.cpp
+            tinfra/win32/w32_subprocess.cpp
             tinfra/win32/w32_common.cpp
             tinfra/posix/thread.cpp <!-- win32 native thread support still broken -->
         </if>
@@ -63,8 +64,9 @@
             tinfra/exeinfo.h
             tinfra/fmt.h
             tinfra/string.h
-            tinfra/io/stream.h
+            tinfra/io/stream.h            
             tinfra/io/socket.h
+            tinfra/subprocess.h
             tinfra/server.h
             <!--tinfra/io/zcompat.h-->
             tinfra/multitype_map.h
