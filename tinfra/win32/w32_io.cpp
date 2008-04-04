@@ -184,9 +184,9 @@ stream* open_file(const char* name, std::ios::openmode mode)
     return tinfra::win32::open_file(name, mode);
 }
 
-stream* open_native(void* handle)
+stream* open_native(intptr_t handle)
 {
-    return tinfra::win32::open_native(handle);
+    return tinfra::win32::open_native(reinterpret_cast<HANDLE>(handle));
 }
     
 } } // end namespace tinfra::io

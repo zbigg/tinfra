@@ -1,7 +1,11 @@
+#include "tinfra/subprocess.h"
+
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
 #include "tinfra/win32.h"
+#include "tinfra/holder.h"
 
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 namespace tinfra {
@@ -9,21 +13,31 @@ namespace tinfra {
 template<> 
 void holder<HANDLE>::release() {
     if( value_ != 0 ) {
-        ::CloseJandle(value_);
+        ::CloseHandle(value_);
         value_ = 0;
     }    
 }
 
 namespace win32 {
-    
+
+using tinfra::io::stream;
+using tinfra::io::io_exception;
+using tinfra::io::open_native;
+
+static void throw_io_exception(const char* message)
+{
+    unsigned int error = ::GetLastError();
+    throw new io_exception(fmt("%s: %s(%i)") % message % get_error_string(error) % error);
+}
+
 //
 // pipe support for win32
 //
 
 struct win32_subprocess: public subprocess {
-    win32_stream* stdin;
-    win32_stream* stdout;
-    win32_stream* stderr;
+    stream* stdin_;
+    stream* stdout_;
+    stream* stderr_;
     
     HANDLE process_handle;
     
@@ -35,10 +49,10 @@ struct win32_subprocess: public subprocess {
     }
     
     ~win32_subprocess() {
-        delete stdin;
-        delete stdout;
-        if( stdin != stderr )
-            delete stderr;
+        delete stdin_;
+        delete stdout_;
+        if( stdin_ != stderr_ )
+            delete stderr_;
         
         get_exit_code();
         
@@ -75,46 +89,45 @@ struct win32_subprocess: public subprocess {
         }
     }
     
-    virtual stream*  get_stdin()  { return stdin;  }
-    virtual stream*  get_stdout() { return stdout; }
-    virtual stream*  get_stderr() { return stderr; }
+    virtual stream*  get_stdin()  { return stdin_;  }
+    virtual stream*  get_stdout() { return stdout_; }
+    virtual stream*  get_stderr() { return stderr_; }
     
-    virtual intptr_t get_native_handle() { return process_handle; }
+    virtual intptr_t get_native_handle() { return reinterpret_cast<intptr_t>(process_handle); }
     
     void start(const char* command) {
-        holder<HANDLE> out_here(0);    // writing HERE -> child
-        holder<HANDLE> out_remote(0);  // reading CHILD <- here
+        holder<HANDLE> out_here(0);     // writing HERE -> child
+        holder<HANDLE> out_remote(0);   // reading CHILD <- here
         
-        holder<HANDLE> in_here(0);     // reading HERE <- child
-        holder<HANDLE> in_emote(0);    // writing CHILD -> here
+        holder<HANDLE> in_here(0);      // reading HERE <- child
+        holder<HANDLE> in_remote(0);    // writing CHILD -> here
         
-        holder<HANDLE> err_here(0);    // reading HERE <- child (diagnostic)
-        holder<HANDLE> err_emote(0);   // writing CHILD -> here (diagnostic)
+        holder<HANDLE> err_here(0);     // reading HERE <- child (diagnostic)
+        holder<HANDLE> err_remote(0);   // writing CHILD -> here (diagnostic)
         
-        const bool redirect_stderr = true;
-        const bool fread =  (mode & std::ios::in) == std::ios::in;
-        const bool fwrite = (mode & std::ios::out) == std::ios::out;
-        const bool ferr  =  true && ! redirect_stderr;
+        const bool fread =  (stdout_mode == REDIRECT);
+        const bool fwrite = (stdin_mode  == REDIRECT);
+        const bool ferr  =  (stderr_mode == REDIRECT && !redirect_stderr);
         
-        stdin = stderr = stdout = 0;
+        stdin_ = stderr_ = stdout_ = 0;
         
         if( fwrite ) {            
-            if ( CreatePipe(&out_remote, &out_here, NULL, 4096) == 0 ) {
+            if ( CreatePipe(&(HANDLE)out_remote, &(HANDLE)out_here, NULL, 4096) == 0 ) {
                 throw_io_exception("CreatePipe failed");
             }
-            SetHandleInformation(out[0],HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+            SetHandleInformation(out_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         }
         if( fread ) {
-            if ( CreatePipe(&in_here, &in_remote, NULL, 4096) == 0 ) {
+            if ( CreatePipe(&(HANDLE)in_here, &(HANDLE)in_remote, NULL, 4096) == 0 ) {
                 throw_io_exception("CreatePipe failed");
             }
-            SetHandleInformation(in[1], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+            SetHandleInformation(in_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         }
         if( ferr ) {
-            if ( CreatePipe(&err_here, &err_remote, NULL, 4096) == 0 ) {
+            if ( CreatePipe(&(HANDLE)err_here, &(HANDLE)err_remote, NULL, 4096) == 0 ) {
                 throw_io_exception("CreatePipe failed");
             }
-            SetHandleInformation(err[1], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+            SetHandleInformation(err_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         }
         {	    /* spawn process */
             PROCESS_INFORMATION processi;
@@ -126,44 +139,44 @@ struct win32_subprocess: public subprocess {
             /* GetStartupInfo(&si);*/
             
             if( fwrite ) {
-                stdout = new win32_stream(out_here);
+                stdout_ = open_native(reinterpret_cast<intptr_t>((HANDLE)out_here));
                 out_here = 0;
                 si.hStdInput = out_remote;
             } else {
-                stdout = 0;
+                stdout_ = 0;
                 si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
             }
             
             if( fread ) {
-                stdin = new win32_stream(in_here);
+                stdin_ = open_native(reinterpret_cast<intptr_t>((HANDLE)in_here));
                 in_here = 0;
                 si.hStdInput = in_remote;
             } else {
-                stdin = 0;
+                stdin_ = 0;
                 si.hStdInput = GetStdHandle(STD_OUTPUT_HANDLE);
             }
             
             if( redirect_stderr ) {
-                stderr = stdin;
-                hStdError = in_remote;
+                stderr_ = stdin_;
+                si.hStdError = in_remote;
             } else if( ferr ) {
-                stderr = new win32_stream(err_here);
+                stderr_ = open_native(reinterpret_cast<intptr_t>((HANDLE)err_here));
                 err_here = 0;
-                hStdError = err_remote;
+                si.hStdError = err_remote;
             } else {
-                stderr = NULL;
+                stderr_ = NULL;
                 si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
             }
                         
             si.dwFlags |= STARTF_USESTDHANDLES;
-            if( readf && writef ) {
-                creationFlags |= DETACHED_PROCESS;
-                si.dwFlags |= STARTF_USESHOWWINDOW;
-                si.wShowWindow = SW_HIDE;
-            }
+            
+            creationFlags |= DETACHED_PROCESS;
+            si.dwFlags |= STARTF_USESHOWWINDOW;
+            si.wShowWindow = SW_HIDE;
+        
             if( CreateProcess(
                 NULL,
-                (char*)program,
+                (char*)command,
                 NULL,
                 NULL,
                 TRUE,
@@ -187,7 +200,7 @@ struct win32_subprocess: public subprocess {
 //
 
 subprocess* create_subprocess() {
-    return new win32_subprocess();
+    return new win32::win32_subprocess();
 }
 
 } // end namespace tinfra::win32
