@@ -2,6 +2,7 @@
 #include "tinfra/fmt.h"
 #include "tinfra/win32.h"
 
+#include <stdio.h>
 #include <windows.h>
 
 namespace tinfra {
@@ -46,12 +47,13 @@ void win32_stream::close()
 {
     if( close_nothrow() == -1 ) 
         throw_io_exception("close failed");
+    
 }
 
 static void throw_io_exception(const char* message)
 {
     unsigned int error = ::GetLastError();
-    throw new io_exception(fmt("%s: %s(%i)") % message % get_error_string(error) % error);
+    throw io_exception(fmt("%s: %s(%i)") % message % get_error_string(error) % error);
 }
 
 stream* open_native(void* handle)
@@ -148,8 +150,12 @@ int win32_stream::read(char* data, int size)
                 &readed,
                 NULL) == 0)
     {
+        DWORD error = ::GetLastError();
+        if( error == ERROR_BROKEN_PIPE )
+            return 0;
         throw_io_exception("read failed"); 
     }
+    printf("win32_stream: readed %i bytes\n", readed);
     return readed;
 }
 
@@ -161,9 +167,10 @@ int win32_stream::write(char const* data, int size)
                   (DWORD)  size,
                   &written,
                   NULL ) == 0 ) 
-    {
+    {        
         throw_io_exception("write failed"); 
     }
+    printf("win32_stream: written %i bytes\n", written);
     return written;
 }
 

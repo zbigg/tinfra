@@ -37,10 +37,10 @@ public:
     void ReportFailure(UnitTest::TestDetails const& details, char const* failure)
     {
 
-#ifdef __APPLE__
+#ifdef _MSC_VER 
+        char const* const errorFormat = "%s(%d): error: FAILURE in %s: %s\n";        
+#else   // only MSC has weird message format, rest use name:line: message (AFAIK)
         char const* const errorFormat = "%s:%d: error: FAILURE in %s: %s\n";
-#else
-        char const* const errorFormat = "%s(%d): error: FAILURE in %s: %s\n";
 #endif
         out(errorFormat, details.filename, details.lineNumber, details.testName, failure);
     }

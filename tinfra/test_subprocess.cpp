@@ -25,15 +25,14 @@ SUITE(tinfra_subprocess) {
         std::auto_ptr<subprocess> p(tinfra::create_subprocess());
         
         p->set_stdin_mode(subprocess::REDIRECT);
-        p->set_stdout_mode(subprocess::REDIRECT);
+        p->set_stdout_mode(subprocess::REDIRECT);        
         
         p->start("sort");
-        
-        
-        write_file(p->get_stdout(), "z\nc\nb\na\n");
-        p->get_stdout()->close();
+        write_file(p->get_stdin(), "z\nc\nb\na\n");
+        p->get_stdin()->close();
+
         std::string result;
-        read_file(p->get_stdin(), result);
+        read_file(p->get_stdout(), result);
         p->wait();
         CHECK_EQUAL("a\nb\nc\nz\n", result.c_str());
     }

@@ -27,7 +27,7 @@ using tinfra::io::open_native;
 static void throw_io_exception(const char* message)
 {
     unsigned int error = ::GetLastError();
-    throw new io_exception(fmt("%s: %s(%i)") % message % get_error_string(error) % error);
+    throw io_exception(fmt("%s: %s(%i)") % message % get_error_string(error) % error);
 }
 
 //
@@ -51,7 +51,7 @@ struct win32_subprocess: public subprocess {
     ~win32_subprocess() {
         delete stdin_;
         delete stdout_;
-        if( stdin_ != stderr_ )
+        if( stdout_ != stderr_ )
             delete stderr_;
         
         get_exit_code();
@@ -96,6 +96,7 @@ struct win32_subprocess: public subprocess {
     virtual intptr_t get_native_handle() { return reinterpret_cast<intptr_t>(process_handle); }
     
     void start(const char* command) {
+        /*
         holder<HANDLE> out_here(0);     // writing HERE -> child
         holder<HANDLE> out_remote(0);   // reading CHILD <- here
         
@@ -104,6 +105,15 @@ struct win32_subprocess: public subprocess {
         
         holder<HANDLE> err_here(0);     // reading HERE <- child (diagnostic)
         holder<HANDLE> err_remote(0);   // writing CHILD -> here (diagnostic)
+        */
+        HANDLE out_here(0);     // writing HERE -> child
+        HANDLE out_remote(0);   // reading CHILD <- here
+        
+        HANDLE in_here(0);      // reading HERE <- child
+        HANDLE in_remote(0);    // writing CHILD -> here
+        
+        HANDLE err_here(0);     // reading HERE <- child (diagnostic)
+        HANDLE err_remote(0);   // writing CHILD -> here (diagnostic)
         
         const bool fread =  (stdout_mode == REDIRECT);
         const bool fwrite = (stdin_mode  == REDIRECT);
@@ -111,53 +121,67 @@ struct win32_subprocess: public subprocess {
         
         stdin_ = stderr_ = stdout_ = 0;
         
-        if( fwrite ) {            
-            if ( CreatePipe(&(HANDLE)out_remote, &(HANDLE)out_here, NULL, 4096) == 0 ) {
-                throw_io_exception("CreatePipe failed");
+        {
+            SECURITY_ATTRIBUTES saAttr; 
+            
+            saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
+            saAttr.bInheritHandle = TRUE; 
+            saAttr.lpSecurityDescriptor = NULL; 
+            
+            if( fwrite ) {            
+                if ( CreatePipe(&out_remote, &out_here, &saAttr, 0) == 0 ) {
+                    throw_io_exception("CreatePipe failed");
+                }
+                SetHandleInformation(out_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+                SetHandleInformation(out_here,   HANDLE_FLAG_INHERIT, 0);
             }
-            SetHandleInformation(out_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        }
-        if( fread ) {
-            if ( CreatePipe(&(HANDLE)in_here, &(HANDLE)in_remote, NULL, 4096) == 0 ) {
-                throw_io_exception("CreatePipe failed");
+            if( fread ) {
+                if ( CreatePipe(&in_here, &in_remote, &saAttr, 0) == 0 ) {
+                    throw_io_exception("CreatePipe failed");
+                }
+                SetHandleInformation(in_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+                SetHandleInformation(in_here,   HANDLE_FLAG_INHERIT, 0);
             }
-            SetHandleInformation(in_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        }
-        if( ferr ) {
-            if ( CreatePipe(&(HANDLE)err_here, &(HANDLE)err_remote, NULL, 4096) == 0 ) {
-                throw_io_exception("CreatePipe failed");
+            if( ferr ) {
+                if ( CreatePipe(&err_here, &    err_remote, &saAttr, 0) == 0 ) {
+                    throw_io_exception("CreatePipe failed");
+                }
+                SetHandleInformation(err_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+                SetHandleInformation(err_here,   HANDLE_FLAG_INHERIT, 0);
             }
-            SetHandleInformation(err_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         }
         {	    /* spawn process */
-            PROCESS_INFORMATION processi;
             STARTUPINFO si;
+            
+            PROCESS_INFORMATION processi;
             DWORD creationFlags = 0;
 
+            memset(&processi,0,sizeof(processi));
+            
             memset(&si,0,sizeof(si));
             si.cb = sizeof(si);
             /* GetStartupInfo(&si);*/
             
             if( fwrite ) {
-                stdout_ = open_native(reinterpret_cast<intptr_t>((HANDLE)out_here));
+                stdin_ = open_native(reinterpret_cast<intptr_t>((HANDLE)out_here));
                 out_here = 0;
                 si.hStdInput = out_remote;
             } else {
-                stdout_ = 0;
+                stdin_ = 0;
                 si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
             }
             
             if( fread ) {
-                stdin_ = open_native(reinterpret_cast<intptr_t>((HANDLE)in_here));
+                stdout_ = open_native(reinterpret_cast<intptr_t>((HANDLE)in_here));
                 in_here = 0;
-                si.hStdInput = in_remote;
+                si.hStdOutput = in_remote;
             } else {
-                stdin_ = 0;
-                si.hStdInput = GetStdHandle(STD_OUTPUT_HANDLE);
+                stdout_ = 0;
+                si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
             }
             
-            if( redirect_stderr ) {
-                stderr_ = stdin_;
+            if( redirect_stderr && fread ) {
+                stderr_ = stdout_;
                 si.hStdError = in_remote;
             } else if( ferr ) {
                 stderr_ = open_native(reinterpret_cast<intptr_t>((HANDLE)err_here));
@@ -170,9 +194,9 @@ struct win32_subprocess: public subprocess {
                         
             si.dwFlags |= STARTF_USESTDHANDLES;
             
-            creationFlags |= DETACHED_PROCESS;
-            si.dwFlags |= STARTF_USESHOWWINDOW;
-            si.wShowWindow = SW_HIDE;
+            //creationFlags |= DETACHED_PROCESS;
+            //si.dwFlags |= STARTF_USESHOWWINDOW;
+            //si.wShowWindow = SW_HIDE;
         
             if( CreateProcess(
                 NULL,
@@ -189,6 +213,12 @@ struct win32_subprocess: public subprocess {
                 throw_io_exception("CreateProcess failed");
             }
             process_handle = processi.hProcess;
+            if( in_remote )
+                ::CloseHandle(in_remote);
+            if( out_remote )
+                ::CloseHandle(out_remote);
+            if( err_remote )
+                ::CloseHandle(err_remote);
         }
     }
 };

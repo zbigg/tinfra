@@ -51,7 +51,7 @@ void dstream::close() {
     if( output_ ) output_->close();
 }
 int dstream::seek(int pos, seek_origin origin) {
-    int r;
+    int r = 0;
     if( input_ )
         r = input_->seek(pos, origin);
     if( output_ )
