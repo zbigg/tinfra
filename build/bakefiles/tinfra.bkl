@@ -9,12 +9,14 @@
             tinfra/win32/w32_io.cpp
             tinfra/win32/w32_common.cpp
             tinfra/posix/thread.cpp <!-- win32 native thread support still broken -->
+            tinfra/win32/runtime.cpp
         </if>
         
         <if cond="PLATFORM_UNIX=='1'">
             tinfra/posix/fatal_exception.cpp
             tinfra/posix/posix_io.cpp
             tinfra/posix/thread.cpp
+            tinfra/posix/runtime.cpp
         </if>
     </set>
 

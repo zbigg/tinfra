@@ -1,0 +1,33 @@
+tinfra::symbol 
+    - already there
+    - symbol registry should be customizable - new perfect hashed subinstances should be available
+    - (future performance improvement)
+    - symbol reg should be fast (maybe almost ideal hashmap)
+    - maybe put all symbols in namespace ::S
+        - then create macro S(foo)
+        - 
+tinfra logging/autding
+    - logging
+    - there should be DOUT(blabla)
+        DOUT(fmt())
+        DOUT
+    - there should be some silent logger or a SILENT_FAILURE logging severity
+    - tinfra::silent_failure(std::string const&) is a shourtcut for
+        - tinfra::logger().log(tinfra::log::SILENT_FAILURE, msg)
+        
+    - logger
+        log(severity, message)
+        log(severity, message, t)
+        log(severity, message, t, stacktrace)
+    
+    
+tinfra stacktrace:
+    stackframe {
+        void*       address;
+        const char* files;
+        int         line_numner
+    }
+    typedef std::vector<stackframe> stacktrace_t;
+    
+    bool is_stacktrace_supported()
+    bool get_stacktrace(stacktrace_t& t)
