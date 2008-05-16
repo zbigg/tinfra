@@ -95,6 +95,16 @@ struct win32_subprocess: public subprocess {
     
     virtual intptr_t get_native_handle() { return reinterpret_cast<intptr_t>(process_handle); }
     
+    void start(std::vector<std::string> const& args) {
+        std::ostringstream cmd;
+        for(std::vector<std::string>::const_iterator i = args.begin(); i != args.end(); ++i ) {
+            if( i != args.begin() ) cmd << " ";
+            if( i->find_first_of(" \t") )
+                cmd << "\"" << *i << "\"";
+        }
+        start(cmd.str().c_str());
+    }
+    
     void start(const char* command) {
         /*
         holder<HANDLE> out_here(0);     // writing HERE -> child

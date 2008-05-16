@@ -32,6 +32,7 @@ public:
     virtual ~subprocess() {}
     
     virtual void     start(const char* command) = 0;
+    virtual void     start(std::vector<std::string> const& args) = 0;
     
     virtual void     wait() = 0;
     virtual int      get_exit_code() = 0;
