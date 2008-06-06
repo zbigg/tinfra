@@ -35,6 +35,19 @@ public:
         return i != m->end();
     }
     
+    /** Returns true if this map contains map of given T */
+    template<typename T>
+    bool contains_type() const {
+        std::map<K, T> const* m = get_type_map<T>(get_type_key<T>());
+        return m != 0;
+    }
+    
+    /** Returns true if this map contains map of given T */    
+    bool contains_type(std::type_info const& type) const {
+        wrapper_map_t::const_iterator mapi = wrapper_map.find(&type);
+        return mapi != wrapper_map.end();
+    }
+    
     /**
     * Get value
     *
@@ -82,6 +95,30 @@ public:
         std::map<K, T>* m = get_type_map<T>(mkey,true);
         typename std::map<K, T>::value_type p(k,v);
         m->insert(p);
+    }
+    
+    template <typename T>
+    typename std::map<K, T>::iterator begin() {        
+        return get_type_map<T>(get_type_key<T>(),true)->begin();
+    }
+    
+    template <typename T>
+    typename std::map<K, T>::const_iterator begin() const {
+        std::map<K, T> const* m = get_type_map<T>(get_type_key<T>());
+        if( m ) return m->begin();
+        return std::map<K, T>::const_iterator();
+    }
+    
+    template <typename T>
+    typename std::map<K, T>::iterator end() {
+        return get_type_map<T>(get_type_key<T>(),true)->end();
+    }
+    
+    template <typename T>
+    typename std::map<K, T>::const_iterator end() const {
+        std::map<K, T> const* m = get_type_map<T>(get_type_key<T>());
+        if( m ) return m->end();
+        return std::map<K, T>::const_iterator();
     }
     
     /// XXX: should we put it here ?

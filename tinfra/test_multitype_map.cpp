@@ -19,8 +19,22 @@ TEST(multitype_map)
     CHECK_VALUE(m, "b", double, 2.4);
     CHECK_VALUE(m, "c", string, "Z");
     
+    CHECK( m.begin<int>() != m.end<int>() );
+    CHECK( m.begin<double>() != m.end<double>() );
+    CHECK( m.begin<string>() != m.end<string>() );
+    
+    CHECK(  m.contains_type<int>() );
+    CHECK( !m.contains_type<short>() );
+    
+    CHECK(  m.contains_type(typeid(int)) );
+    CHECK( !m.contains_type(typeid(short)) );
+    
     m.clear();
     CHECK( !m.contains<int>("a") );
     CHECK( !m.contains<double>("a") );
     CHECK( !m.contains<string>("Z") );
+    
+    CHECK( m.begin<int>() == m.end<int>() );
+    CHECK( m.begin<double>() == m.end<double>() );
+    CHECK( m.begin<string>() == m.end<string>() );
 }
