@@ -27,6 +27,9 @@ public:
     virtual int read(char* dest, int size) = 0;
     virtual int write(const char* data, int size) = 0;
     virtual void sync() = 0;
+    
+    virtual intptr_t native() const = 0;
+    virtual void release() = 0;
 };
 
 stream* open_native(intptr_t handle);

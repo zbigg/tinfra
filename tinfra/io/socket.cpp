@@ -116,6 +116,15 @@ public:
         // TODO: are sockets synchronized by default ? check it for unix/winsock
     }
     
+    intptr_t native() const 
+    {
+        return socket_;
+    }
+    void release() 
+    {
+        socket_ = invalid_socket;
+    }
+    
     socket_type get_socket() const { return socket_; }
 };
 
