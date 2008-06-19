@@ -27,7 +27,7 @@ public:
 
     intptr_t native() const 
     {
-        return static_cast<intptr_t>(handle_);
+        return reinterpret_cast<intptr_t>(handle_);
     }
     void release() 
     {
