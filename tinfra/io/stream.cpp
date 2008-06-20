@@ -22,7 +22,7 @@ stream* open_socket(char const* address, int port)
     return socket::open_client_socket(address, port);
 }
 
-stream* open_command_pipe(char const* command, ios::openmode mode)
+stream* open_command_pipe(char const* command, openmode mode)
 {
     throw io_exception("command pipe: unimplemented");
 }
@@ -42,7 +42,7 @@ zstreambuf::zstreambuf(stream* stream, bool own)
 {
 }
 
-zstreambuf::zstreambuf(char const* name, ios::openmode mode) 
+zstreambuf::zstreambuf(char const* name, openmode mode) 
     : stream_(0), own_(false),
       buffer_(0), buffer_size_(0), own_buffer_(false)
 {
@@ -53,7 +53,7 @@ zstreambuf::~zstreambuf() {
     close();
 }
 
-zstreambuf& zstreambuf::open_file(char const* name, ios::openmode mode)
+zstreambuf& zstreambuf::open_file(char const* name, openmode mode)
 {
     close();
     stream_ = tinfra::io::open_file(name, mode);
@@ -69,7 +69,7 @@ zstreambuf& zstreambuf::open_socket(char const* target, int port)
     return *this;
     }
 
-zstreambuf& zstreambuf::open_pipe(char const* command, ios::openmode mode)
+zstreambuf& zstreambuf::open_pipe(char const* command, openmode mode)
 {
     close();
     stream_ = tinfra::io::open_command_pipe(command, mode);
@@ -254,7 +254,7 @@ std::streamsize zstreambuf::xsputn (const zstreambuf::char_type *data, std::stre
 // 
 // seek
 //
-zstreambuf::pos_type zstreambuf::seekoff (off_type off, ios::seekdir dir, ios::openmode)
+zstreambuf::pos_type zstreambuf::seekoff (off_type off, ios::seekdir dir, openmode)
 {
     sync();
     setg(0,0,0);
@@ -265,7 +265,7 @@ zstreambuf::pos_type zstreambuf::seekoff (off_type off, ios::seekdir dir, ios::o
     return stream_->seek(off, origin);
 }
 
-zstreambuf::pos_type zstreambuf::seekpos (pos_type pos, ios::openmode)
+zstreambuf::pos_type zstreambuf::seekpos (pos_type pos, openmode)
 {
     return seekoff(pos, ios::beg);
 }

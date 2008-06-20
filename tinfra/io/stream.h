@@ -14,6 +14,8 @@ public:
     io_exception(std::string const& message): generic_exception(message) {}
 };
 
+typedef std::ios::openmode openmode;
+
 class stream {
 public:
     virtual ~stream() { }
@@ -33,7 +35,7 @@ public:
 };
 
 stream* open_native(intptr_t handle);
-stream* open_file(const char* name, std::ios::openmode mode);
+stream* open_file(const char* name, openmode mode);
 
 //void    open_process(std::vector<std::string> args, process& result);
 
