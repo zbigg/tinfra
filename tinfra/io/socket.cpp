@@ -4,6 +4,8 @@
 #include "tinfra/os_common.h"
 
 #include "tinfra/string.h" // debug only
+
+#include "tinfra/win32.h"
 #include <iostream> // debug only
 
 #include <stdexcept>
@@ -132,30 +134,8 @@ public:
     socket_type get_socket() const { return socket_; }
 };
 
-#ifdef _WIN32
-// TODO: it's already present in w32_common
-std::string win32_strerror(DWORD error_code)
-{
-    LPVOID lpMsgBuf;
-    if( ::FormatMessage(
-	FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-	NULL,
-	error_code,
-	MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-	(LPTSTR) &lpMsgBuf,
-	0,
-	NULL
-	) < 0 || lpMsgBuf == NULL) {
-
-	return fmt("unknown error: %i") % error_code;
-    }
-    std::string result((char*)lpMsgBuf);
-    ::LocalFree(lpMsgBuf);
-    strip_inplace(result);
-    return result;
-}
-
-#endif
+static void throw_socket_error(const char* message);
+static void throw_socket_error(int error_code, const char* message);
 
 static void ensure_socket_initialized()
 {
@@ -170,13 +150,13 @@ static void ensure_socket_initialized()
     err = WSAStartup(wVersionRequested, &wsaData);
 
     if (err != 0)
-	throw io_exception(fmt("unable to initialize WinSock system: %s") % win32_strerror(err));
+	throw_socket_error(err, "unable to initialize WinSock subsystem");
 
     if ( LOBYTE( wsaData.wVersion ) != 1 ||
 	   HIBYTE( wsaData.wVersion ) != 1 ) {
         WSACleanup();
         errno = ENODEV;
-        throw io_exception("bad winsock version");
+        throw_socket_error(err, "unsupported WinSock version");
     }
     winsock_initialized = true;
 #endif
@@ -194,14 +174,7 @@ static int  socket_get_last_error()
 static void throw_socket_error(int error_code, const char* message)
 {
 #ifdef TS_WINSOCK
-    std::string error_str = fmt("%s: %s (%i)") % message % win32_strerror(error_code) % error_code;
-    // TODO: differentiate between logic, domain and runtime errors
-    //switch( error_code ) {
-    //case 
-    //default:
-        throw std::runtime_error(error_str);
-    //}
-    
+    tinfra::win32::throw_system_error(error_code, message);
 #else
     throw_errno_error(errno, message);
 #endif
@@ -243,6 +216,7 @@ static socket_type create_socket()
 static void get_inet_address(const char* address,int rport, struct sockaddr_in* sa)
 {
     ensure_socket_initialized();
+    if( address == 0 ) throw std::invalid_argument("null address pointer");
     
     std::memset(sa,0,sizeof(*sa));
     sa->sin_family = AF_INET;
@@ -256,12 +230,14 @@ static void get_inet_address(const char* address,int rport, struct sockaddr_in* 
         ha = ::gethostbyname(address);
         if( ha == NULL ) {
 #ifdef TS_WINSOCK
-            throw_socket_error(fmt("unable to resolve: %s") % address);
+            throw_socket_error(fmt("unable to resolve '%s'") % address);
 #else
-            std::string message = fmt("unable to resolve: %s: %s") % address % hstrerror(h_errno);
+            std::string message = fmt("unable to resolve '%s': %s") % address % hstrerror(h_errno);
             switch( h_errno ) {
             case HOST_NOT_FOUND:
-            case NO_ADDRESS:            
+            case NO_ADDRESS:
+            // TODO: check on uix machine: NO_DATA should be also domain error
+            // case NO_DATA: 
                 throw std::domain_error(message);
             default:
                 throw std::runtime_error(message);
@@ -283,7 +259,7 @@ stream* open_client_socket(char const* address, int port)
     
     socket_type s = create_socket();
     
-    if( ::connect(s, (struct sockaddr*)&sock_addr,sizeof(sock_addr)) < 0 ) {
+    if( ::connect(s, (struct sockaddr*)&sock_addr,sizeof(sock_addr)) != 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
         throw_socket_error(error_code, fmt("unable to connect to '%s:%i'") % address % port);
@@ -304,13 +280,13 @@ stream* open_server_socket(char const* listening_host, int port)
     
     socket_type s = create_socket();
     
-    if( ::bind(s,(struct sockaddr*)&sock_addr,sizeof(sock_addr)) < 0 ) {
+    if( ::bind(s,(struct sockaddr*)&sock_addr,sizeof(sock_addr)) != 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
         throw_socket_error(error_code, "bind failed");
     }
 
-    if( ::listen(s,5) < 0 ) {
+    if( ::listen(s,5) != 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
         throw_socket_error(error_code, "listen failed");

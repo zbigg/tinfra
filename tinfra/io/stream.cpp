@@ -67,7 +67,7 @@ zstreambuf& zstreambuf::open_socket(char const* target, int port)
     stream_ = tinfra::io::open_socket(target, port);    
     own_ = true;
     return *this;
-    }
+}
 
 zstreambuf& zstreambuf::open_pipe(char const* command, openmode mode)
 {
