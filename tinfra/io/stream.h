@@ -48,6 +48,9 @@ public:
     virtual int write(const char* data, int size);
 
     virtual void sync();
+    
+    virtual intptr_t native() const;
+    virtual void release();
 };
 
 stream* open_native(intptr_t handle);
