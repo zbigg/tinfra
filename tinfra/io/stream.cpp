@@ -33,6 +33,52 @@ stream* open_anon_pipe()
 }
 
 //
+// dstream implementation
+//
+
+dstream::dstream(stream* input, stream* output)
+: input_(input), output_(output) 
+{
+}
+
+dstream::~dstream() { 
+    delete input_;
+    delete output_;
+}
+
+void dstream::close() {    
+    if( input_ )  input_->close();
+    if( output_ ) output_->close();
+}
+int dstream::seek(int pos, seek_origin origin) {
+    int r = 0;
+    if( input_ )
+        r = input_->seek(pos, origin);
+    if( output_ )
+        r = output_->seek(pos, origin);
+    return r;
+}
+int dstream::read(char* dest, int size) {
+    if( !input_ )
+        throw io_exception("trying to read from write-only stream");
+    return input_->read(dest, size);
+}
+int dstream::write(const char* data, int size) {
+    if( !output_ )
+        throw io_exception("trying to write to read-only stream");
+    return output_->write(data, size);
+}
+void dstream::sync() {
+    if( input_ ) input_->sync();
+    if( output_ ) output_->sync();
+}
+
+stream* create_dstream(stream* input_, stream* output_)
+{
+    return new dstream(input_, output_);
+}
+
+//
 // zstreambuf implementation
 //
 
