@@ -73,7 +73,8 @@ stream* open_file(const char* name, std::ios::openmode mode)
 	    flags |= O_WRONLY | O_CREAT;
 	else
 	    throw_io_exception("bad openmode");
-	if( (mode & std::ios::trunc) == std::ios::trunc) flags |= O_TRUNC;
+	if( (mode & std::ios::trunc) == std::ios::trunc)
+		flags |= O_TRUNC;
 	if( (mode & std::ios::app) == std::ios::app) flags |= O_APPEND;
     }
     int fd = ::open(name, flags, 00644);
