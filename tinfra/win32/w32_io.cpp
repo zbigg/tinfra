@@ -25,6 +25,16 @@ public:
     int read(char* data, int size);
     int write(const char* data, int size);
     void sync();
+
+    intptr_t native() const 
+    {
+        return reinterpret_cast<intptr_t>(handle_);
+    }
+    void release() 
+    {
+        handle_ = invalid_handle;
+    }
+
     HANDLE get_native() const { return handle_; }
 private:
     int close_nothrow();

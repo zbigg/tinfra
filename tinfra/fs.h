@@ -7,6 +7,7 @@ namespace fs {
 struct file_list_visitor {
     virtual void accept(const char* name) =0;
 };
+
 void list_files(const char* path, file_list_visitor& visitor);
 void list_files(const char* path, std::vector<std::string>& result);
 inline std::vector<std::string> list_files(const char* path) {

@@ -39,6 +39,7 @@
             tinfra/fs.cpp
             tinfra/threadcmn.cpp
             tinfra/runner.cpp
+            tinfra/os_common.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -78,6 +79,7 @@
             tinfra/fs.h
             tinfra/thread.h
             tinfra/queue.h
+            tinfra/os_common.h
             tinfra/xml/XMLStream.h
             tinfra/xml.h
             tinfra/platform.h

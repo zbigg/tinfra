@@ -1,8 +1,12 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/io/socket.h"
 #include "tinfra/fmt.h"
+#include "tinfra/os_common.h"
+
 #include "tinfra/string.h" // debug only
 #include <iostream> // debug only
+
+#include <stdexcept>
 
 #ifdef _WIN32
 #include <winsock.h>
@@ -116,11 +120,20 @@ public:
         // TODO: are sockets synchronized by default ? check it for unix/winsock
     }
     
+    intptr_t native() const 
+    {
+        return socket_;
+    }
+    void release() 
+    {
+        socket_ = invalid_socket;
+    }
+    
     socket_type get_socket() const { return socket_; }
 };
 
 #ifdef _WIN32
-
+// TODO: it's already present in w32_common
 std::string win32_strerror(DWORD error_code)
 {
     LPVOID lpMsgBuf;
@@ -181,9 +194,16 @@ static int  socket_get_last_error()
 static void throw_socket_error(int error_code, const char* message)
 {
 #ifdef TS_WINSOCK
-    throw io_exception(fmt("%s: %s (%i)") % message % win32_strerror(error_code) % error_code);
+    std::string error_str = fmt("%s: %s (%i)") % message % win32_strerror(error_code) % error_code;
+    // TODO: differentiate between logic, domain and runtime errors
+    //switch( error_code ) {
+    //case 
+    //default:
+        throw std::runtime_error(error_str);
+    //}
+    
 #else
-    throw io_exception(fmt("%s: %s (%i)") % message % strerror(errno) % errno);
+    throw_errno_error(errno, message);
 #endif
 }
 
@@ -204,7 +224,8 @@ static int close_socket_nothrow(socket_type socket)
 static void close_socket(socket_type socket)
 {
     int rc = close_socket_nothrow(socket);
-    if( rc == -1 ) throw_socket_error("unable to close socket");
+    if( rc == -1 ) 
+        throw_socket_error("unable to close socket");
 }
 
 static socket_type create_socket()
@@ -233,8 +254,20 @@ static void get_inet_address(const char* address,int rport, struct sockaddr_in* 
     if( ian == INADDR_NONE ) {
         ::hostent*    ha;
         ha = ::gethostbyname(address);
-        if( ha == NULL )
-	    throw io_exception(fmt("unable to resolve: %s") % address);
+        if( ha == NULL ) {
+#ifdef TS_WINSOCK
+            throw_socket_error(fmt("unable to resolve: %s") % address);
+#else
+            std::string message = fmt("unable to resolve: %s: %s") % address % hstrerror(h_errno);
+            switch( h_errno ) {
+            case HOST_NOT_FOUND:
+            case NO_ADDRESS:            
+                throw std::domain_error(message);
+            default:
+                throw std::runtime_error(message);
+            }
+#endif
+        }            
     	std::memcpy(&sa->sin_addr, ha->h_addr, ha->h_length);
     } else {
         /* found with inet_addr or inet_aton */
@@ -253,7 +286,7 @@ stream* open_client_socket(char const* address, int port)
     if( ::connect(s, (struct sockaddr*)&sock_addr,sizeof(sock_addr)) < 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
-        throw_socket_error(error_code, fmt("unable to connect %s:%i") % address % port);
+        throw_socket_error(error_code, fmt("unable to connect to '%s:%i'") % address % port);
     }
     return new socketstream(s);
 }
@@ -289,10 +322,12 @@ stream* open_server_socket(char const* listening_host, int port)
 stream* accept_client_connection(stream* server_socket)
 {
     socketstream* socket = dynamic_cast<socketstream*>(server_socket);
-    if( !socket ) throw_socket_error("accept: not a socketstream");
+    if( !socket ) 
+        throw std::invalid_argument("accept: not a socketstream");
     
     socket_type accept_sock = ::accept(socket->get_socket(), NULL, NULL );
-    if( accept_sock == invalid_socket ) throw_socket_error("accept failed");
+    if( accept_sock == invalid_socket ) 
+        throw_socket_error("accept failed");
         
     return new socketstream(accept_sock);
 }

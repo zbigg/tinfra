@@ -4,8 +4,11 @@
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
 #include "tinfra/io/stream.h"
+#include "tinfra/os_common.h"
+
 #include <streambuf>
 #include <fstream>
+#include <stdexcept>
 #include <ios>
 
 #include <sys/types.h>
@@ -29,6 +32,7 @@
 
 namespace tinfra {
 namespace fs {
+
 
 template <typename T>
 struct holder {
@@ -59,8 +63,7 @@ void list_files(const char* dirname, file_list_visitor& visitor)
 #ifdef HAVE_OPENDIR
     DIR* dir = ::opendir(dirname);
     if( !dir ) {
-        std::string error_str = ::strerror(errno);
-        throw generic_exception(fmt("unable to read dir '%s': %s") % dirname % error_str);
+        throw_errno_error(errno, fmt("unable to read dir '%s'") % dirname);
     }
     holder<DIR*> dir_closer(dir);
     dirent* entry;
@@ -143,8 +146,7 @@ void rm(const char* name)
 {
     int result = ::unlink(name);
     if( result == -1 ) {
-        std::string error_str = ::strerror(errno);
-        throw generic_exception(fmt("unable to remove '%s': %s") % name % error_str);
+        throw_errno_error(errno, fmt("unable to remove file '%s'") % name);
     }
 }
 
@@ -152,8 +154,7 @@ void rmdir(const char* name)
 {
     int result = ::rmdir(name);
     if( result == -1 ) {
-        std::string error_str = ::strerror(errno);
-        throw generic_exception(fmt("unable to remove dir '%s': %s") % name % error_str);
+        throw_errno_error(errno, fmt("unable to remove folder '%s'") % name);
     }
 }
 
@@ -164,22 +165,21 @@ void mkdir(const char* name, bool create_parents)
         if( create_parents )
             mkdir(parent.c_str());
         else
-            throw generic_exception(fmt("unable to create dir '%s': %s") % name % "parent folder doesn't exist");
+            throw std::logic_error(fmt("unable to create dir '%s': %s") % name % "parent folder doesn't exist");
 #ifdef _WIN32
     int result = ::mkdir(name);
 #else
     int result = ::mkdir(name, 0777);
 #endif
     if( result == -1 ) {
-        std::string error_str = strerror(errno);
-        throw generic_exception(fmt("unable to create dir '%s': %s") % name % error_str);
+        throw_errno_error(errno, fmt("unable to create dir '%s'") % name);
     }
 }
 
 void copy(const char* src, const char* dest)
 {
     if( path::is_dir(src) ) 
-        throw generic_exception("tinfra::fs::copy supports only generic files");
+        throw std::invalid_argument("tinfra::fs::copy supports only generic files");
     if( path::is_dir(dest) ) {
         copy(src, path::join(dest, path::basename(src) ).c_str());
         return;
@@ -187,14 +187,14 @@ void copy(const char* src, const char* dest)
     std::filebuf in;
     if( !in.open(src, std::ios::in | std::ios::binary) ) {
         std::string error_str = "?";
-        throw generic_exception(fmt("unable to open input '%s': %s") % src % error_str);
+        throw std::runtime_error(fmt("unable to open input '%s': %s") % src % error_str);
     }
     
     std::filebuf out;
     if( ! out.open(dest, std::ios::out | std::ios::trunc | std::ios::binary) ) 
     {
         std::string error_str = "?";
-        throw generic_exception(fmt("unable to open output '%s': %s") % dest % error_str);
+        throw std::runtime_error(fmt("unable to open output '%s': %s") % dest % error_str);
     }
     
     tinfra::io::copy(in, out);
@@ -204,8 +204,7 @@ void cd(const char* dirname)
 {
     int result = ::chdir(dirname);
     if( result == -1 ) {
-        std::string error_str = ::strerror(errno);
-        throw generic_exception(fmt("unable to open output '%s': %s") % dirname % error_str);
+        throw_errno_error(errno, fmt("unable to open output '%s'") % dirname);
     }
 }
 
@@ -213,7 +212,7 @@ std::string pwd()
 {
     char buf[1024];
     if( getcwd(buf, sizeof(buf)) == 0 ) {
-        throw generic_exception("fs::pwd unable read pwd (implement it better!)");
+        throw_errno_error(errno, "fs::pwd() unable read pwd (implement it better!)");
     }
     return std::string(buf);
 }

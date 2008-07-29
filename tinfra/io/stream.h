@@ -29,29 +29,8 @@ public:
     virtual void sync() = 0;
 };
 
-class dstream: public stream {
-    stream* input_;
-    stream* output_;        
-public:
-    dstream(stream* input, stream* output);
-    
-    virtual ~dstream();
-
-    virtual void close();
-    virtual int seek(int pos, seek_origin origin = start);
-    virtual int read(char* dest, int size);
-    virtual int write(const char* data, int size);
-
-    virtual void sync();
-};
-
 stream* open_native(intptr_t handle);
 stream* open_file(const char* name, std::ios::openmode mode);
-
-stream* open_command_pipe(char const* command, std::ios::openmode mode);
-stream* open_anon_pipe();
-
-stream* create_dstream(stream* input, stream* output);
 
 //void    open_process(std::vector<std::string> args, process& result);
 
