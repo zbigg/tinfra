@@ -32,6 +32,7 @@ bool get_stacktrace(stacktrace_t& t)
     void* addresses[256];
     int size = ::backtrace(addresses, 256);
     char** symbols = ::backtrace_symbols(addresses,size);
+    dest.reserve(size-ignore_stacks);
     for( int i = ignore_stacks; i < size; i++ ) {
 	stackentry a;
 	a.address = addresses[i];
