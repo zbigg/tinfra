@@ -40,8 +40,9 @@ void print_stacktrace(std::ostream& out, int ignore_frames)
     populate_stacktrace(stacktrace,ignore_frames);
 
     for( stacktrace_t::const_iterator i = stacktrace.begin(); i != stacktrace.end(); ++i ) {
-		out << "0x" << std::setfill('0') << std::setw(sizeof(i->address)) << std::hex << i->address 
-	          << "(" << i->symbol << ")" << std::endl;
+            out << std::setfill('0') << std::setw(sizeof(i->address)) << std::hex << i->address 
+                << " (" << i->symbol << ")" 
+                << std::endl;
     }
 }
 //
