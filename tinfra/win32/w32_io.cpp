@@ -166,7 +166,7 @@ int win32_stream::read(char* data, int size)
             return 0;
         throw_get_last_error("read failed"); 
     }
-    printf("win32_stream: readed %i bytes\n", readed);
+    //printf("win32_stream: readed %i bytes\n", readed);
     return readed;
 }
 
@@ -180,9 +180,8 @@ int win32_stream::write(char const* data, int size)
                   NULL ) == 0 ) 
     {        
         throw_get_last_error("write failed"); 
-        return -1;
     }
-    printf("win32_stream: written %i bytes\n", written);
+    //printf("win32_stream: written %i bytes\n", written);
     return written;
 }
 
