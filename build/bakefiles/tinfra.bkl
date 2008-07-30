@@ -10,6 +10,7 @@
             tinfra/win32/w32_subprocess.cpp
             tinfra/win32/w32_common.cpp
             tinfra/posix/thread.cpp <!-- win32 native thread support still broken -->
+            tinfra/win32/w32_runtime.cpp
         </if>
         
         <if cond="PLATFORM_UNIX=='1'">
@@ -17,6 +18,7 @@
             tinfra/posix/posix_io.cpp
             tinfra/posix/posix_subprocess.cpp
             tinfra/posix/thread.cpp
+            tinfra/posix/w32_runtime.cpp
         </if>
     </set>
 
@@ -27,6 +29,7 @@
             tinfra/tinfra.cpp
             tinfra/symbol.cpp
             tinfra/exception.cpp
+            tinfra/runtime.cpp
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
             tinfra/io/stream.cpp
