@@ -28,14 +28,14 @@ enum {
 class fd_holder {
     int fd;
 public:
-    explicit fd_holder(int fd): fd(fd) {}
+    explicit fd_holder(int pfd): fd(pfd) {}
         
     ~fd_holder() { 
         if( fd != -1 )
             ::close(fd);
     }
     
-    fd_holder& operator =(int fd) { this->fd = fd; return *this; }
+    fd_holder& operator =(int pfd) { this->fd = pfd; return *this; }
     
     operator int () const { return fd; }
 };
@@ -45,7 +45,7 @@ static void throw_io_exception(const char* message)
     throw io_exception(fmt("%s: %s") % message % strerror(errno));
 }
 
-static int execute_command(const char* command)
+int execute_command(const char* command)
 {
     int r = system(command);
     if( r < 0 )
@@ -58,7 +58,7 @@ static int execute_command(const char* command)
     return r;
 }
 
-static int execute_command(std::vector<std::string> const& args)
+int execute_command(std::vector<std::string> const& args)
 {
     char** raw_args;
     raw_args = new char*[args.size()+1];
@@ -78,9 +78,9 @@ static int execute_command(std::vector<std::string> const& args)
 //
 
 struct posix_subprocess: public subprocess {
-    stream* stdin;
-    stream* stdout;
-    stream* stderr;
+    stream* sinput;
+    stream* soutput;
+    stream* serror;
     
     int pid;
     
@@ -93,10 +93,10 @@ struct posix_subprocess: public subprocess {
     }
     
     ~posix_subprocess() {
-        delete stdin;
-        delete stdout;
-        if( stdin != stderr )
-            delete stderr;
+        delete sinput;
+        delete soutput;
+        if( sinput != serror )
+            delete serror;
     }
     
     virtual void     wait() {
@@ -136,9 +136,9 @@ struct posix_subprocess: public subprocess {
             throw_io_exception(fmt("kill(%i,SIGKILL)") % pid);
     }
     
-    virtual stream*  get_stdin()  { return stdin;  }
-    virtual stream*  get_stdout() { return stdout; }
-    virtual stream*  get_stderr() { return stderr; }
+    virtual stream*  get_stdin()  { return sinput;  }
+    virtual stream*  get_stdout() { return soutput; }
+    virtual stream*  get_stderr() { return serror; }
     
     virtual intptr_t get_native_handle() { return pid; }
     
@@ -166,7 +166,7 @@ struct posix_subprocess: public subprocess {
         const bool fwrite = (stdin_mode == REDIRECT);
         const bool ferr  =  (stderr_mode == REDIRECT && !redirect_stderr);
         
-        stdin = stderr = stdout = 0;
+        sinput = serror = soutput = 0;
         
         if( fwrite ) {            
             int boo[2];
@@ -235,7 +235,7 @@ struct posix_subprocess: public subprocess {
                 ::exit(127);
             }
             // TODO it should rather be exec
-            int result = execute_command(command);
+            int result = tinfra::posix::execute_command(command);
             //std::cerr << "PSP: execute_command() returned " << result << std::endl;
             if( result < 0 ) {
                 std::cerr << "TIC: system() failed!" << std::endl;
@@ -243,20 +243,20 @@ struct posix_subprocess: public subprocess {
             _exit(result);
         } else {
             if( fwrite ) {
-                stdin = open_native(out_here);
+                sinput = open_native(out_here);
                 out_here = -1;
             }
             
             if( fread ) {
-                stdout = open_native(in_here);
+                soutput = open_native(in_here);
                 in_here = -1;
             }
             
             if( ferr ) {
-                stderr = open_native(err_here);
+                serror = open_native(err_here);
                 err_here = -1;
             } else if( redirect_stderr ) {
-                stderr = stdout;
+                serror = soutput;
             } 
         }
     }

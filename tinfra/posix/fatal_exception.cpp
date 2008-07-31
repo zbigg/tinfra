@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <csignal>
+#include <signal.h>
 
 static void (*fatal_exception_handler) (void) = 0;
 
