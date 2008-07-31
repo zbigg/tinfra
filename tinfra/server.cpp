@@ -13,11 +13,11 @@ using namespace tinfra::io::socket;
 using namespace tinfra::io;
 
 Server::Server()
-    : stopped_(false), bound_port_(0)
+    : stopping_(false), stopped_(false), bound_port_(0)
 {
 }
 Server::Server(const char* address, int port)
-    : stopped_(false), bound_port_(0)
+    : stopping_(false), stopped_(false), bound_port_(0)
 {
     bind(address, port);
 }
@@ -46,8 +46,10 @@ void Server::run()
 {
     while( !stopped_ ) {
         std::auto_ptr<stream> client_socket = std::auto_ptr<stream>(accept_client_connection(server_socket_.get()));
-        if( !stopped_ ) 
+        if( !stopping_ ) 
             onAccept(client_socket);
+        else 
+            stopped_ = true;
     }
     server_socket_->close();
 }
@@ -64,7 +66,7 @@ void Server::stop()
     try {
         
         //std::cerr << "atempting to stop SERVER" << std::endl;
-        
+        stopping_ = true;
         stream* f = open_client_socket(connect_address.c_str(), bound_port_);
         if( f ) {
             delete f;
@@ -73,6 +75,7 @@ void Server::stop()
     } catch( std::exception& e)  {
         throw std::runtime_error(fmt("unable to stop server %s:%s: %s") %  connect_address % bound_address_ % e.what());
     }
+    stopping_ = false;
 }
 
 } }
