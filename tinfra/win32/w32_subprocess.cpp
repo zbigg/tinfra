@@ -57,11 +57,15 @@ struct win32_subprocess: public subprocess {
         delete stdout_;
         if( stdout_ != stderr_ )
             delete stderr_;
-        
-        get_exit_code();
-        
-        if( !::CloseHandle(process_handle) ) {
-            // TODO: silent win32 error
+        try {
+            get_exit_code();
+        } catch(std::exception& e) {
+            // TODO: silent win32 error 
+        }
+        if( process_handle ) {
+            if( !::CloseHandle(process_handle) ) {
+                // TODO: silent win32 error
+            }
         }
     }
     
@@ -72,7 +76,7 @@ struct win32_subprocess: public subprocess {
     }
     
     virtual int      get_exit_code() {
-        if( process_handle != NULL ) {
+        if( exit_code == -1 && process_handle != NULL ) {
             DWORD dwExitCode;
             if( !::GetExitCodeProcess(process_handle,&dwExitCode) ) {
                 throw_system_error("GetExitCodeProcess failed");
