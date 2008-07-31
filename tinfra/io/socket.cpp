@@ -283,7 +283,7 @@ stream* open_server_socket(char const* listening_host, int port)
     
     {
         int r = 1;
-        if( ::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) ) {
+        if( ::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)(void*)&r, sizeof(r)) ) {
             // TODO: it should be warning
             std::cerr << "unable to set SO_REUSEADDR=1 on socket" << std::endl;
         }

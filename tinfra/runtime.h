@@ -2,6 +2,7 @@
 #define __tinfra_runtime_h__
 
 #include <vector>
+#include <string>
 
 namespace tinfra {
 
