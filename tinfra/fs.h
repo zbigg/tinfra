@@ -1,26 +1,41 @@
+#ifndef __tinfra_fs_h__
+#define __tinfra_fs_h__
+
 #include <string>
 #include <vector>
 
 namespace tinfra {
 namespace fs {
 
+typedef std::vector<std::string> file_name_list;
+    
 struct file_list_visitor {
     virtual void accept(const char* name) =0;
 };
 
 void list_files(const char* path, file_list_visitor& visitor);
-void list_files(const char* path, std::vector<std::string>& result);
-inline std::vector<std::string> list_files(const char* path) {
-    std::vector<std::string> r;
+void list_files(const char* path, file_name_list& result);
+inline file_name_list list_files(const char* path) {
+    file_name_list r;
     list_files(path, r);
     return r;
 }
-    
+
+struct file_info {
+    size_t    size;
+    bool      is_dir;   
+    time_t    modification_time;
+    time_t    access_time;
+};
+
+file_info stat(const char* name);
 void copy(const char* src, const char* dest);
 
 void cd(const char* dirname);
 std::string pwd();
 void mkdir(const char* name, bool create_parents = true);
+
+void mv(const char* src, const char* dest);
 
 void rm(const char* name);
 void rmdir(const char* name);
@@ -30,7 +45,7 @@ void recursive_rm(const char* src);
 
 // std::string inliners
 inline
-void list_files(std::string const& name, std::vector<std::string>& result) { return list_files(name.c_str(), result); }
+void list_files(std::string const& name, file_name_list& result) { return list_files(name.c_str(), result); }
 
 inline 
 void recursive_copy(std::string const& src, std::string const& dest) { return recursive_copy(src.c_str(), dest.c_str()); }
@@ -60,3 +75,4 @@ void walk(std::string const& start, walker& w) { walk(start.c_str(), w); }
 
 } }
 
+#endif
