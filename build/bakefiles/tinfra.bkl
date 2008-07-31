@@ -43,6 +43,7 @@
             tinfra/threadcmn.cpp
             tinfra/runner.cpp
             tinfra/os_common.cpp
+            tinfra/vfs.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -86,6 +87,7 @@
             tinfra/xml/XMLStream.h
             tinfra/xml.h
             tinfra/platform.h
+            tinfra/vfs.h
         </files>
     </data-files-tree>
     

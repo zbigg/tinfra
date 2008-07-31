@@ -61,4 +61,20 @@ void throw_system_error(std::string const& message)
     unsigned int error = ::GetLastError();
     throw_system_error(error, message);
 }
+
+void get_available_drives(std::vector<std::string>& result)
+{
+    TCHAR drives[30];
+    
+    if( ::GetLogicalDriveStrings(sizeof(drives), drives) == 0 ) {
+        throw_system_error("GetLogicalDriveStrings failed"); 
+    }
+    //printf("DDD %s\n", drives);
+    TCHAR* p = drives;
+    while( *p ) {
+        result.push_back(fmt("%c:/") % *p);
+        p++;
+    }
+}
+
 } } // end namespace tinfra::win32
