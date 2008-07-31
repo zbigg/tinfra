@@ -62,7 +62,7 @@ stream* open_anon_pipe();
 stream* create_dstream(stream* input, stream* output);
 
 //void    open_process(std::vector<std::string> args, process& result);
-
+void copy(stream* in, stream* out, size_t max_bytes = 0);
 
 class zstreambuf : public std::streambuf {
     //typedef std::streambuf::streamsize streamsize;
@@ -128,6 +128,7 @@ private:
     bool need_buf();
 };
 
+// TODO: it shouldn't be here
 void copy(std::streambuf& in, std::streambuf& out);
 
 } } // end namespace tinfra::io

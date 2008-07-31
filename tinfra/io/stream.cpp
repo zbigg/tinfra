@@ -345,10 +345,30 @@ int zstreambuf::write(const char* data, int size) {
 //
 // misc
 //
+static const int COPY_BUFFER_SIZE = 65536;
+
+void copy(stream* in, stream* out, size_t max_bytes)
+{
+    char buffer[COPY_BUFFER_SIZE];
+    // TODO: implement max_bytes > 0 case
+    if( max_bytes != 0 )
+        throw std::logic_error("copy(streams, max_bytes != 0) not implemented");
+    int readed;
+    while( (readed = in->read(buffer, sizeof(buffer))) > 0 ) {
+        int written = 0;
+        while( written < readed ) {
+            int cw = out->write(buffer + written, readed-written);
+            if( cw <= 0 ) {
+                throw std::runtime_error("error copying file, output stream closed?");
+            }
+            written += cw;
+        }
+    }
+}
 
 void copy(std::streambuf& in, std::streambuf& out)
 {
-    char buffer[8192];
+    char buffer[COPY_BUFFER_SIZE];
     std::streamsize readed;
     while( (readed = in.sgetn(buffer, sizeof(buffer))) > 0 ) 
     {
@@ -364,5 +384,6 @@ void copy(std::streambuf& in, std::streambuf& out)
         }
     }
 }
+
 } } //end namespace tinfra::io
 
