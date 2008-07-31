@@ -34,7 +34,7 @@ AC_CHECK_HEADERS([pthread.h])
 AC_CHECK_FUNCS([opendir nanosleep usleep])
 
 case "$target" in
-*-mingw|*-mingw32)
+*-mingw*|*-mingw32*)
 	LIBS="$LIBS -lwsock32"
 	;;
 esac
