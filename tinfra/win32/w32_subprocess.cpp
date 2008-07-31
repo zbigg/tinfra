@@ -48,7 +48,7 @@ struct win32_subprocess: public subprocess {
     int exit_code;
     
     win32_subprocess()
-        : exit_code(-1)
+        : process_handle(0), exit_code(-1)
     {
     }
     
