@@ -213,6 +213,13 @@ static socket_type create_socket()
 #define INADDR_NONE -1
 #endif
 
+#if !defined(TS_WINSOCK) && !defined(HAVE_HSTRERROR)
+static const char* hstrerror(int error_code)
+{
+	return "host not found";
+}
+#endif
+
 static void get_inet_address(const char* address, int rport, struct sockaddr_in* sa)
 {
     ensure_socket_initialized();
