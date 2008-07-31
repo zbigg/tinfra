@@ -213,7 +213,7 @@ static socket_type create_socket()
 #define INADDR_NONE -1
 #endif
 
-static void get_inet_address(const char* address,int rport, struct sockaddr_in* sa)
+static void get_inet_address(const char* address, int rport, struct sockaddr_in* sa)
 {
     ensure_socket_initialized();
     if( address == 0 ) throw std::invalid_argument("null address pointer");
@@ -249,6 +249,7 @@ static void get_inet_address(const char* address,int rport, struct sockaddr_in* 
         /* found with inet_addr or inet_aton */
         std::memcpy(&sa->sin_addr,&ia,sizeof(ia));
     }
+    sa->sin_port = htons((short)rport);
 }
 
 stream* open_client_socket(char const* address, int port)
@@ -280,7 +281,14 @@ stream* open_server_socket(char const* listening_host, int port)
     
     socket_type s = create_socket();
     
-    if( ::bind(s,(struct sockaddr*)&sock_addr,sizeof(sock_addr)) != 0 ) {
+    {
+        int r = 1;
+        if( ::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) ) {
+            // TODO: it should be warning
+            std::cerr << "unable to set SO_REUSEADDR=1 on socket" << std::endl;
+        }
+    }
+    if( ::bind(s,(struct sockaddr*)&sock_addr, sizeof(sock_addr)) != 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
         throw_socket_error(error_code, "bind failed");
