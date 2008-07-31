@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "exception.h"
+#include "tinfra/exception.h"
 
 #ifdef linux
 #include <execinfo.h>
@@ -22,7 +22,8 @@ bool is_stacktrace_supported()
     return false;
 #endif
 }
-bool get_stacktrace(stacktrace_t& t) 
+
+bool get_stacktrace(stacktrace_t& dest)
 {
 #ifdef HAVE_BACKTRACE
     // Reference
@@ -32,9 +33,10 @@ bool get_stacktrace(stacktrace_t& t)
     void* addresses[256];
     int size = ::backtrace(addresses, 256);
     char** symbols = ::backtrace_symbols(addresses,size);
+    const int ignore_stacks = 1;
     dest.reserve(size-ignore_stacks);
     for( int i = ignore_stacks; i < size; i++ ) {
-	stackentry a;
+	stackframe a;
 	a.address = addresses[i];
 	a.symbol = symbols[i];
 	dest.push_back(a);
@@ -46,7 +48,4 @@ bool get_stacktrace(stacktrace_t& t)
 #endif
 }
 
-            out << std::setfill('0') << std::setw(sizeof(i->address)) << std::hex << i->address 
-                << " (" << i->symbol << ")" 
-                << std::endl;
 } // end of namespace tinfra

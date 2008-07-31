@@ -18,7 +18,7 @@
             tinfra/posix/posix_io.cpp
             tinfra/posix/posix_subprocess.cpp
             tinfra/posix/thread.cpp
-            tinfra/posix/w32_runtime.cpp
+            tinfra/posix/posix_runtime.cpp
         </if>
     </set>
 

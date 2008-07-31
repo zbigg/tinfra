@@ -11,7 +11,12 @@ static void (*fatal_exception_handler) (void) = 0;
 namespace tinfra {
 extern "C" void tinfra_fatal_sighandler(int)
 {
-    print_stacktrace(std::cerr,2);
+    if( is_stacktrace_supported() ) {
+        stacktrace_t stacktrace;
+        get_stacktrace(stacktrace);
+        print_stacktrace(stacktrace, std::cerr);
+    }
+    
     if( fatal_exception_handler ) {
 	fatal_exception_handler();
     }

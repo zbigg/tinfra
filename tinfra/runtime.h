@@ -8,11 +8,11 @@ namespace tinfra {
 struct stackframe {
     void*       address;
     
-    char*       symbol;
-    char*       file_name;
+    std::string symbol;
+    std::string file_name;
     int         line_number;
     
-    ~stackframe();
+    stackframe();
 };
 
 typedef std::vector<stackframe> stacktrace_t;
