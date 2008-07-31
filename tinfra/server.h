@@ -20,7 +20,7 @@ class Server {
 public:
     Server();
     Server(const char* address, int port);
-    virtual ~Server() {}
+    virtual ~Server();
     void bind(const char* address, int port);
     void run();
     void stop();

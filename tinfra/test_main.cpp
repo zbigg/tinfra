@@ -10,6 +10,9 @@
 
 #include <unittest++/TestReporter.h>
 #include <unittest++/TestDetails.h>
+#include <unittest++/TestResults.h>
+#include <unittest++/TestReporter.h>
+
 #include <stdio.h> // screw cxxx headers because they are incompatible
 #include <stdarg.h>
 
@@ -37,10 +40,10 @@ public:
     void ReportFailure(UnitTest::TestDetails const& details, char const* failure)
     {
 
-#ifdef __APPLE__
+#ifdef _MSC_VER 
+        char const* const errorFormat = "%s(%d): error: FAILURE in %s: %s\n";        
+#else   // only MSC has weird message format, rest use name:line: message (AFAIK)
         char const* const errorFormat = "%s:%d: error: FAILURE in %s: %s\n";
-#else
-        char const* const errorFormat = "%s(%d): error: FAILURE in %s: %s\n";
 #endif
         out(errorFormat, details.filename, details.lineNumber, details.testName, failure);
     }
@@ -77,10 +80,52 @@ static std::string test_resources_dir = SRCDIR "/tinfra/test_resources";
 static std::string test_resources_dir =  "tinfra/test_resources";
 #endif
 
-int test_main(int, char**)
+UnitTest::Test const* search_test(UnitTest::TestList& tl, const char* name)
+{
+    UnitTest::Test const* test = tl.GetHead();
+    while( test != 0 ) {
+        if( std::strcmp(test->m_details.testName, name) == 0 )
+            return test;
+        test = test->next;
+    }
+    return 0;
+}
+int test_main(int argc, char** argv)
 {
     TinfraTestReporter reporter;
-    return UnitTest::RunAllTests(reporter, UnitTest::Test::GetTestList(), 0);
+    if( argc > 1 ) {
+        UnitTest::TestResults result(&reporter);
+        
+        UnitTest::Timer overallTimer;
+        overallTimer.Start();
+    
+        for( int i = 0; i < argc-1; ++i ) {
+            const char* test_name = argv[i+1];
+            UnitTest::Test const* current_test = search_test(UnitTest::Test::GetTestList(), test_name);
+            if( !current_test ) {
+                out("FAUILURE: test %s not found\n", test_name);
+                continue;
+            }
+            
+            UnitTest::Timer testTimer;
+            testTimer.Start();
+            
+            result.OnTestStart(current_test->m_details);
+            
+            current_test->Run(result);
+            
+            int const testTimeInMs = testTimer.GetTimeInMs();
+            
+            result.OnTestFinish(current_test->m_details, testTimeInMs/1000.0f);
+        } 
+        
+        float const secondsElapsed = overallTimer.GetTimeInMs() / 1000.0f;
+        reporter.ReportSummary(result.GetTotalTestCount(), result.GetFailedTestCount(), result.GetFailureCount(), secondsElapsed);
+    
+        return result.GetFailureCount();
+    } else {
+        return UnitTest::RunAllTests(reporter, UnitTest::Test::GetTestList(), 0);
+    }
 }
 
 int main(int argc, char** argv)
