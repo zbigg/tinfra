@@ -64,16 +64,20 @@ void throw_system_error(std::string const& message)
 
 void get_available_drives(std::vector<std::string>& result)
 {
-    TCHAR drives[30];
+    TCHAR drives[1024];
+    DWORD len;
+    len = ::GetLogicalDriveStrings(sizeof(drives), drives);
     
-    if( ::GetLogicalDriveStrings(sizeof(drives), drives) == 0 ) {
+    if( len == 0 || len > sizeof(drives)) {
         throw_system_error("GetLogicalDriveStrings failed"); 
     }
-    //printf("DDD %s\n", drives);
+    
     TCHAR* p = drives;
-    while( *p ) {
-        result.push_back(fmt("%c:/") % *p);
-        p++;
+    while( *p && len > 0 ) {
+        int l2 = strlen(p);    
+        result.push_back(fmt("%s:/") % p[0]);
+        p += l2+1;
+        len -= l2;
     }
 }
 
