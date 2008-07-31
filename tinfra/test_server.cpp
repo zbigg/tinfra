@@ -87,9 +87,10 @@ SUITE(tinfra_server)
     {
         TestServer server;
         server.bind("localhost", 10900);
-        tinfra::Thread server_thread = tinfra::Thread::start(server);    
+        tinfra::ThreadSet ts;
+        tinfra::Thread server_thread = ts.start(server);    
         {        
-            std::auto_ptr<tinfra::io::stream> client = std::auto_ptr<tinfra::io::stream>(tinfra::io::socket::open_client_socket("localhost",10900));
+            std::auto_ptr<tinfra::io::stream> client(tinfra::io::socket::open_client_socket("localhost",10900));
             
             tinfra::io::zstreambuf ibuf(client.get());
             tinfra::io::zstreambuf obuf(client.get());
@@ -103,7 +104,6 @@ SUITE(tinfra_server)
             CHECK_EQUAL( "quitting", invoke(in,out, "stop"));
         }
         server.stop();
-        server_thread.join();
     }
 
     // check if Server::stop can abort blocking accept call
@@ -111,8 +111,9 @@ SUITE(tinfra_server)
     {
         TestServer server;
         server.bind("localhost", 10901);
-        tinfra::Thread server_thread = tinfra::Thread::start(server);    
+        tinfra::ThreadSet ts;
+        ts.start(server);
+        
         server.stop();
-        server_thread.join();
     }
 }
