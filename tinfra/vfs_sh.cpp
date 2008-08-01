@@ -105,12 +105,18 @@ class vfs_sh: public generic_vfs {
         shell::result r;
         s.execute(c,r);
         
-        // TOD api for readline lines
+        // TOD api for reading lines
     }
     
     tinfra::fs::file_info stat(const char* path)
     {
-        return tinfra::fs::stat(path);
+        shell::command c;
+        c << "stat" << "--format" << "%s\n%F\n%Y\n%X\n" << name;
+        
+        shell::result r;
+        s.execute(c,r);
+        
+        return r.exit_code() == 0;
     }
     
     tinfra::io::stream* open(const char* path, tinfra::io::openmode mode)
