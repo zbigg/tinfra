@@ -78,16 +78,20 @@ std::string dirname(const std::string& name)
     }
 }
 
-std::string tmppath()
+std::string tmppath(const char* prefix, const char* tmpdir)
 {
-    std::string result;    
-    const char* tmpdir  = ::getenv("TMP");
-    if( !tmpdir) tmpdir = ::getenv("TEMP");
-#ifdef _WIN32
-    if( !tmpdir) tmpdir = "/Temp";
-#else
-    if( !tmpdir) tmpdir = "/tmp";
-#endif
+    if( tmpdir == 0 || strlen(tmpdir) == 0 ) {
+        tmpdir  = ::getenv("TMP");
+        if( !tmpdir) 
+            tmpdir = ::getenv("TEMP");
+        #ifdef _WIN32
+            if( !tmpdir) 
+                tmpdir = "/Temp";
+        #else
+            if( !tmpdir) 
+                tmpdir = "/tmp";
+        #endif
+    }       
     // TODO: it's somewhat weak radnomization strategy
     //       invent something better
     time_t t;
@@ -97,9 +101,16 @@ std::string tmppath()
         srand_called = true;
         ::srand(static_cast<unsigned>(t));
     }
+    
     int stamp = ::rand() % 104729; // 104729 is some arbitrary prime number
     
-    return fmt("%s/%s_%s_%s") % tmpdir % basename(get_exepath()) % t % stamp;
+    std::string sprefix;
+    if( prefix == 0 || strlen(prefix) == 0) {
+        sprefix = basename(get_exepath()).c_str();
+    } else {
+        sprefix = prefix;
+    }
+    return fmt("%s/%s_%s_%s") % tmpdir % sprefix % t % stamp;
 }
 
 } }
