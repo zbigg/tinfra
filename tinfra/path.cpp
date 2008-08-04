@@ -8,6 +8,7 @@
 #ifdef HAVE_TIME_H
 #include <time.h>
 #endif
+#include <iostream>
 
 #include "tinfra/path.h"
 
@@ -39,20 +40,50 @@ bool exists(const char* name)
     return ::stat(name, &st) == 0;
 }
 
+static bool is_dir_sep(char a)
+{
+    return    a == '/' 
+           || a == '\\';
+}
+
 bool is_dir(const char* name)
 {
+    int len = strlen(name);
+    
+    if( len == 1 && name[0] == '.' )      // current directory
+        return true;
+    
+    if( len == 1 && is_dir_sep(name[0]) ) // single backslash 
+        return true;
+    
+#ifdef _WIN32
+    if( len >= 2 && std::isalpha(name[0]) && name[1] == ':' ) {
+        if( len == 2 )
+            return true; // A:
+        if( len == 3 && is_dir_sep(name[2]) )
+            return true; // A:\ and A:/
+    }
+    // NOTE: win32 stat doesn't accept trailing slash/back 
+    // slash in folder name
+    std::string tmp;
+    if( len > 1 && is_dir_sep(name[len-1]) ) {
+        tmp.assign(name, len-1);
+        name = tmp.c_str();
+    }
+#endif
+    
     struct stat st;
     if( ::stat(name, &st) != 0 ) 
-		return false;
-	return (st.st_mode & S_IFDIR) == S_IFDIR;
+        return false;
+    return (st.st_mode & S_IFDIR) == S_IFDIR;
 }
 
 bool is_file(const char* name)
 {
     struct stat st;
     if( ::stat(name, &st) != 0 ) 
-		return false;
-	return (st.st_mode & S_IFREG) == S_IFREG;
+        return false;
+    return (st.st_mode & S_IFREG) == S_IFREG;
 }
 
 std::string basename(const std::string& name)

@@ -6,7 +6,24 @@ using std::string;
 
 SUITE(tinfra_path)
 {
-
+    TEST(test_is_dir)
+    {
+        using tinfra::path::is_dir;
+        CHECK( is_dir("/") );
+        CHECK( is_dir("\\") );
+        
+        CHECK( is_dir(".") );
+        CHECK( is_dir("./") );
+        CHECK( is_dir(".\\") );
+        
+        #ifdef _WIN32
+        
+        CHECK( is_dir("C:") );
+        CHECK( is_dir("C:/") );
+        CHECK( is_dir("C:\\") );
+        
+        #endif
+    }
     TEST(test_basename)
     {
 	using tinfra::path::basename;
