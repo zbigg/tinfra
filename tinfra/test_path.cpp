@@ -14,10 +14,10 @@ SUITE(tinfra_path)
         
         CHECK( is_dir(".") );
         CHECK( is_dir("./") );
-        CHECK( is_dir(".\\") );
         
         #ifdef _WIN32
         
+        CHECK( is_dir(".\\") );
         CHECK( is_dir("C:") );
         CHECK( is_dir("C:/") );
         CHECK( is_dir("C:\\") );
