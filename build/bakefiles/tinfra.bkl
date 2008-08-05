@@ -86,6 +86,7 @@
             tinfra/xml/XMLStream.h
             tinfra/xml.h
             tinfra/platform.h
+            tinfra/runtime.h
         </files>
     </data-files-tree>
     
