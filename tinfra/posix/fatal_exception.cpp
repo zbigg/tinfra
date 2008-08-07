@@ -7,15 +7,20 @@
 #include <csignal>
 #include <signal.h>
 
+#include "tinfra/exeinfo.h"
+
 static void (*fatal_exception_handler) (void) = 0;
 
 namespace tinfra {
-extern "C" void tinfra_fatal_sighandler(int)
+extern "C" void tinfra_fatal_sighandler(int signo)
 {
+    std::cerr << get_exepath() << ": fatal signal " << signo << " received." << std::endl;
     if( is_stacktrace_supported() ) {
         stacktrace_t stacktrace;
-        get_stacktrace(stacktrace);
-        print_stacktrace(stacktrace, std::cerr);
+        if( get_stacktrace(stacktrace) ) {
+            stacktrace.erase(stacktrace.begin(), stacktrace.begin()+2);
+            print_stacktrace(stacktrace, std::cerr);
+        }
     }
     
     if( fatal_exception_handler ) {

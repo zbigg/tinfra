@@ -6,17 +6,15 @@
 
 namespace tinfra {
 
-struct stackframe {
-    void*       address;
-    
-    std::string symbol;
-    std::string file_name;
-    int         line_number;
-    
-    stackframe();
-};
+#define TINFRA_THROW(a) do { \
+    std::cerr << __func__ << "(" << __FILE__ << ":" << __LINE__ << ") failure: " # a << std::endl; \
+    if( tinfra::is_stacktrace_supported() ) { \
+        tinfra::stacktrace_t t; \
+        if( tinfra::get_stacktrace(t) ) \
+            tinfra::print_stacktrace(t, std::cerr); \
+    } } while(0)
 
-typedef std::vector<stackframe> stacktrace_t;
+typedef std::vector<void*> stacktrace_t;
 
 //
 // stacktrace support
@@ -37,6 +35,16 @@ bool get_stacktrace(stacktrace_t& t);
 ///
 void print_stacktrace(stacktrace_t const& st, std::ostream& out);
 
+
+// debug information support
+
+struct debug_info {
+    std::string source_file;
+    int         source_line;
+    std::string function;
+};
+
+bool get_debug_info(void* address, debug_info& dest);
 ///
 /// Initialize handler for fatal exception (win32 structured, SIGSGV etc)
 ///
