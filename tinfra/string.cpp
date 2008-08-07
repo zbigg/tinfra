@@ -71,4 +71,27 @@ std::string escape_c(const std::string& a)
     return result;
 }
 
+std::vector<std::string> split(std::string const& in, const char* delimiters)
+{
+    std::vector<std::string> result;
+    std::size_t start = 0;
+    do {
+        std::size_t pos = in.find_first_of(delimiters, start);
+        result.push_back(in.substr(start, pos-start));
+        
+        start = pos;
+        
+        if( start != std::string::npos ) {
+            start = in.find_first_not_of(delimiters, start);
+        }
+    } while( start != std::string::npos );
+        
+    return result;
+}
+
+std::vector<std::string> split_lines(std::string const& in)
+{
+    return split(in, "\r\n");
+}
+
 } // end namespace tinfra
