@@ -4,15 +4,21 @@
 #include <vector>
 #include <string>
 
+#include "tinfra/exeinfo.h"
+
 namespace tinfra {
 
 #define TINFRA_THROW(a) do { \
-    std::cerr << __func__ << "(" << __FILE__ << ":" << __LINE__ << ") failure: " # a << std::endl; \
-    if( tinfra::is_stacktrace_supported() ) { \
+    std::cerr << tinfra::get_exepath() << ": " << # a << std::endl; \
+    if( false && tinfra::is_stacktrace_supported() ) { \
         tinfra::stacktrace_t t; \
         if( tinfra::get_stacktrace(t) ) \
             tinfra::print_stacktrace(t, std::cerr); \
-    } } while(0)
+    } else { \
+        std::cerr << "\tat " << __func__ << "(" << __FILE__ << ":" << __LINE__ << ")" << std::endl; \
+    } \
+    throw a; \
+    } while(0)
 
 typedef std::vector<void*> stacktrace_t;
 
