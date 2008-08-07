@@ -58,6 +58,10 @@ protected:
 
 subprocess* create_subprocess();
 
+/// $(command) or `command` subsitute
+/// TODO: create stream counterpart
+std::string capture_command(std::string const& command);
+
 }
 
 #endif // #ifndef __tinfra_subprocess_h__

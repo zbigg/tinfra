@@ -33,6 +33,7 @@
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
             tinfra/io/stream.cpp
+            tinfra/subprocess.cpp
             tinfra/io/socket.cpp
             tinfra/server.cpp
             <!-- tinfra/io/zcompat.cpp -->
