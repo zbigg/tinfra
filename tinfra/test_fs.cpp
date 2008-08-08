@@ -1,4 +1,5 @@
 #include "tinfra/fs.h"
+#include "tinfra/vfs.h"
 #include "tinfra/path.h"
 #include "tinfra/test.h"
 #include <iostream>
@@ -76,5 +77,20 @@ SUITE(tinfra_fs)
         };
         foo_walker foo;
         fs::walk(".", foo);
+    }
+    
+    void test_vfs(UnitTest::TestResults& testResults_, UnitTest::TestDetails const& m_details, tinfra::vfs& fs)
+    {
+        // check if the roots are available
+        tinfra::fs::file_name_list roots = fs.roots();
+        for( tinfra::fs::file_name_list::const_iterator r = roots.begin(); r != roots.end(); ++r)
+            CHECK( fs.is_dir(r->c_str()) );
+        
+        
+    }
+    
+    TEST(test_local_vfs)
+    {
+        test_vfs(testResults_, m_details, tinfra::local_fs());
     }
 }

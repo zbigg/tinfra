@@ -8,6 +8,7 @@
 #ifdef HAVE_TIME_H
 #include <time.h>
 #endif
+#include <iostream>
 
 #include "tinfra/path.h"
 
@@ -39,20 +40,50 @@ bool exists(const char* name)
     return ::stat(name, &st) == 0;
 }
 
+static bool is_dir_sep(char a)
+{
+    return    a == '/' 
+           || a == '\\';
+}
+
 bool is_dir(const char* name)
 {
+    int len = strlen(name);
+    
+    if( len == 1 && name[0] == '.' )      // current directory
+        return true;
+    
+    if( len == 1 && is_dir_sep(name[0]) ) // single backslash 
+        return true;
+    
+#ifdef _WIN32
+    if( len >= 2 && std::isalpha(name[0]) && name[1] == ':' ) {
+        if( len == 2 )
+            return true; // A:
+        if( len == 3 && is_dir_sep(name[2]) )
+            return true; // A:\ and A:/
+    }
+    // NOTE: win32 stat doesn't accept trailing slash/back 
+    // slash in folder name
+    std::string tmp;
+    if( len > 1 && is_dir_sep(name[len-1]) ) {
+        tmp.assign(name, len-1);
+        name = tmp.c_str();
+    }
+#endif
+    
     struct stat st;
     if( ::stat(name, &st) != 0 ) 
-		return false;
-	return (st.st_mode & S_IFDIR) == S_IFDIR;
+        return false;
+    return (st.st_mode & S_IFDIR) == S_IFDIR;
 }
 
 bool is_file(const char* name)
 {
     struct stat st;
     if( ::stat(name, &st) != 0 ) 
-		return false;
-	return (st.st_mode & S_IFREG) == S_IFREG;
+        return false;
+    return (st.st_mode & S_IFREG) == S_IFREG;
 }
 
 std::string basename(const std::string& name)
@@ -78,16 +109,20 @@ std::string dirname(const std::string& name)
     }
 }
 
-std::string tmppath()
+std::string tmppath(const char* prefix, const char* tmpdir)
 {
-    std::string result;    
-    const char* tmpdir  = ::getenv("TMP");
-    if( !tmpdir) tmpdir = ::getenv("TEMP");
-#ifdef _WIN32
-    if( !tmpdir) tmpdir = "/Temp";
-#else
-    if( !tmpdir) tmpdir = "/tmp";
-#endif
+    if( tmpdir == 0 || strlen(tmpdir) == 0 ) {
+        tmpdir  = ::getenv("TMP");
+        if( !tmpdir) 
+            tmpdir = ::getenv("TEMP");
+        #ifdef _WIN32
+            if( !tmpdir) 
+                tmpdir = "/Temp";
+        #else
+            if( !tmpdir) 
+                tmpdir = "/tmp";
+        #endif
+    }       
     // TODO: it's somewhat weak radnomization strategy
     //       invent something better
     time_t t;
@@ -97,9 +132,16 @@ std::string tmppath()
         srand_called = true;
         ::srand(static_cast<unsigned>(t));
     }
+    
     int stamp = ::rand() % 104729; // 104729 is some arbitrary prime number
     
-    return fmt("%s/%s_%s_%s") % tmpdir % basename(get_exepath()) % t % stamp;
+    std::string sprefix;
+    if( prefix == 0 || strlen(prefix) == 0) {
+        sprefix = basename(get_exepath()).c_str();
+    } else {
+        sprefix = prefix;
+    }
+    return fmt("%s/%s_%s_%s") % tmpdir % sprefix % t % stamp;
 }
 
 } }
