@@ -120,10 +120,10 @@
             tinfra/test_subprocess.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
+        <define>UNITTEST_IGNORE_SIGNALS</define>
         <library>tinfra</library>
         <library>tinfra_xml</library>
         <sys-lib>unittest++</sys-lib>
-        <!-- <sys-lib>zcompat</sys-lib> -->
         <sys-lib>pthread</sys-lib>
         <if cond="FORMAT!='autoconf' and PLATFORM_WIN32=='1'"> 
             <sys-lib>wsock32</sys-lib>
