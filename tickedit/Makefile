@@ -1,5 +1,5 @@
-CPPFLAGS=`wx-config --cxxflags`
-LDLIBS=`wx-config --libs stc` -ltinfra
+CPPFLAGS=`wx-config --cxxflags` -g
+LDLIBS=`wx-config --libs stc` -ltinfra -g
 
 PROG=tickedit
 CC=g++
