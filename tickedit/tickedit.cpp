@@ -1,42 +1,23 @@
 #include <wx/app.h>
 #include <wx/frame.h>
-#include <wx/textctrl.h>
-#include <wx/sizer.h>
-#include <wx/panel.h>
-#include <wx/stattext.h>
-#include <wx/stc/stc.h>
+
+
 #include <wx/aui/aui.h>
+
 #include <wx/toolbar.h>
+
 #include <wx/artprov.h>
+
+#include <wx/recguard.h>
+
 #include <tinfra/cmd.h>
 
 #include <map>
 #include <iostream>
+#include <sstream>
 
-//
-// TickEditorTextControl interface
-//
-
-class TickEditorTextControl: public wxStyledTextCtrl {
-public:
-    TickEditorTextControl();
-    TickEditorTextControl(wxWindow *parent, wxWindowID id=wxID_ANY,
-               const wxPoint& pos = wxDefaultPosition,
-               const wxSize& size = wxDefaultSize, long style = 0,
-               const wxString& name = wxT("TickEditorTextControl"));
-
-    bool Create(wxWindow *parent, wxWindowID id=wxID_ANY,
-                const wxPoint& pos = wxDefaultPosition,
-                const wxSize& size = wxDefaultSize, long style = 0,
-                const wxString& name = wxT("TickEditorTextControl"));
-
-private:
-    void init();
-};
-
-//
-//
-//
+#include "TickEditorTextControl.h"
+#include "common.h"
 
 struct ActionInfo {
     int id;
@@ -140,32 +121,7 @@ ActionInfo* ActionManager::getActionInfo(std::string const& name)
 
 #define AM_ACTION(id, name, label, icon_resource, shortcut) ActionManager::getInstance()->registerAction(id, name, label, icon_resource, shortcut)
 #define AM_ACTION_AUTO(name, label, icon_resource, shortcut) ActionManager::getInstance()->registerAction(name, label, icon_resource, shortcut)
-//
-// TickEditorTextControl implementation
-//
 
-TickEditorTextControl::TickEditorTextControl(wxWindow *parent, wxWindowID id,
-               const wxPoint& pos,
-               const wxSize& size, long style,
-               const wxString& name)
-: wxStyledTextCtrl(parent, id, pos, size, style, name)
-{
-    init();
-}
-
-void TickEditorTextControl::init()
-{
-}
-
-
-
-bool TickEditorTextControl::Create(wxWindow *parent, wxWindowID id,
-                const wxPoint& pos,
-                const wxSize& size, long style,
-                const wxString& name)
-{
-    return wxStyledTextCtrl::Create(parent, id, pos, size, style, name);
-}
 
 #define AUTO_LOADER(name)                       \
 class name##Loader: public wxModule {           \
@@ -182,7 +138,7 @@ AUTO_LOADER(EditorCommands)
     AM_ACTION(wxID_COPY,    "copy",   "&Copy",    "edit-copy",    "CTRL+C");
     AM_ACTION(wxID_PASTE,   "paste",  "&Paste",   "edit-paste",   "CTRL+V");
     AM_ACTION(wxID_DELETE,  "delete", "&Delete",  "edit-delete",  "DEL");
-    AM_ACTION(wxID_DELETE,  "find",   "&Find",    "edit-find",    "CTRL+F");
+    AM_ACTION(wxID_FIND,    "find",   "&Find",    "edit-find",    "CTRL+F");
     AM_ACTION(wxID_REPLACE, "replace", "R&eplace","edit-find-replace", "CTRL+H");  
 
     return true;
@@ -200,6 +156,9 @@ AUTO_LOADER(DocumentCommands)
     
     return true;
 }
+
+
+
 
 class TickEditApp: public wxApp {
 public:
@@ -221,14 +180,14 @@ public:
         if( cmdev && (
             cmdev->GetEventType() == wxEVT_COMMAND_BUTTON_CLICKED || 
             cmdev->GetEventType() == wxEVT_COMMAND_MENU_SELECTED ) ) {
-            std::cerr << "command " << ev.GetClassInfo()->GetClassName() << " id=" << ev.GetId() << std::endl;
-                
-            static int fe = 10;
+            std::cerr << "command " << toString(ev) <<  std::endl;
             
-            if( --fe == 0 ) {
-                char* p = 0;
-                *p = 0;
-            }
+            //~ static int fe = 10;
+            
+            //~ if( --fe == 0 ) {
+                //~ char* p = 0;
+                //~ *p = 0;
+            //~ }
         }
         return wxApp::ProcessEvent(ev);
     }
@@ -275,12 +234,68 @@ wxToolBar* buildEditorToolbar(wxWindow* parent)
     addAction(t, wxID_CUT);
     addAction(t, wxID_COPY);
     addAction(t, wxID_PASTE);
+    t->AddSeparator();
     addAction(t, wxID_FIND);
     addAction(t, wxID_REPLACE);
     
     return t;
 }
 
+class ControlCommandForwarder: public wxEvtHandler {
+    wxWindow* wnd;
+public:    
+    ControlCommandForwarder(wxWindow* wnd): wnd(wnd) {}
+        
+    bool ProcessEvent(wxEvent& ev)
+    {
+        // guard against recursion
+        static wxRecursionGuardFlag recursionFlag;        
+        wxRecursionGuard guard(recursionFlag);
+        
+        if ( guard.IsInside() )
+            return Skip(ev);
+
+        // choose event type
+        bool forward = false;
+        int etype = ev.GetEventType();
+        if( etype == wxEVT_UPDATE_UI ) {
+            forward = true;
+        } else if( etype == wxEVT_COMMAND_BUTTON_CLICKED 
+                || etype == wxEVT_COMMAND_MENU_SELECTED 
+                || etype == wxEVT_COMMAND_TOOL_CLICKED ) 
+        {
+            ev.SetEventType(wxEVT_COMMAND_MENU_SELECTED);
+            forward = true;        
+        }
+        if( !forward )
+            return Skip(ev);
+        
+        // send the event
+        wxWindow* active = wxWindow::FindFocus(); // TODO: in fact it should be AUI active window
+        if( ! active )
+            return Skip(ev);
+        
+        
+        
+        bool handled = active->GetEventHandler()->ProcessEvent(ev);
+        
+        if( handled && dynamic_cast<wxUpdateUIEvent*>(&ev) == 0 ) 
+            std::cerr << "ControlCommandForwarder -> " << toString(ev) << " to " << toString(active) << "HANDLED!\n";
+        
+        if( handled ) 
+            return true;
+        
+        return Skip(ev);
+    }
+    
+    bool Skip(wxEvent& ev)
+    {
+        if( GetNextHandler() ) 
+            return GetNextHandler()->ProcessEvent(ev);
+        else
+            return wxEvtHandler::ProcessEvent(ev);
+    }
+};
 
 int tickedit_main(int argc, char** argv)
 {
@@ -290,7 +305,10 @@ int tickedit_main(int argc, char** argv)
             wxDefaultPosition, wxDefaultSize, 
             wxDEFAULT_FRAME_STYLE | wxRESIZE_BORDER | wxMAXIMIZE_BOX | wxMINIMIZE_BOX);
     {
+        frame->PushEventHandler(new ControlCommandForwarder(frame));
+        
         wxAuiManager mgr(frame,   wxAUI_MGR_ALLOW_ACTIVE_PANE | wxAUI_MGR_ALLOW_FLOATING | wxAUI_MGR_RECTANGLE_HINT );
+        
         wxAuiNotebook* editorHost = new wxAuiNotebook(frame);        
         TickEditorTextControl* notepad = new TickEditorTextControl(frame);
         
@@ -310,6 +328,8 @@ int tickedit_main(int argc, char** argv)
         wxGetApp().SetExitOnFrameDelete(true);
         wxGetApp().SetTopWindow(frame);
         wxGetApp().MainLoop();
+        
+        frame->PopEventHandler(); // AUICommandHelper
     }
     wxEntryCleanup();
     return 0;
