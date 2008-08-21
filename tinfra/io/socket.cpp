@@ -287,10 +287,6 @@ stream* open_server_socket(char const* listening_host, int port)
     }
     
     socket_type s = create_socket();
-    {
-        int r = 1;
-        setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)(void*)&r, sizeof(r));
-    }
     
     {
         int r = 1;
