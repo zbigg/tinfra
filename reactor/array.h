@@ -18,7 +18,7 @@ public:
     
     size_type size() const { return _end - _begin; }
     
-    void size(int new_size) {
+    void size(size_t new_size) {
         if( size() != new_size ) {
             iterator new_begin = new T[new_size];
             
