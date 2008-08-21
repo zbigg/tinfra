@@ -34,7 +34,18 @@ bool TickEditorTextControl::Create(wxWindow *parent, wxWindowID id,
                 const wxSize& size, long style,
                 const wxString& name)
 {
-    return wxStyledTextCtrl::Create(parent, id, pos, size, style, name);
+    if( !wxStyledTextCtrl::Create(parent, id, pos, size, style, name) )
+        return false;
+    
+    SetLexer(wxSTC_LEX_CONTAINER);
+    
+    StyleSetForeground(0, *wxRED );
+    StyleSetBold(0,1);
+    StyleSetForeground(1, *wxBLUE );
+    StyleSetForeground(2, *wxGREEN );
+    //StyleSetForeground(0, makeColour(1,0,0) );
+    
+    return true;
 }
 
 bool TickEditorTextControl::HasSelection()
@@ -101,11 +112,24 @@ public:
         }
     }
     
-    //~ bool ProcessEvent(wxEvent& ev)
-    //~ {
-        //~ //std::cerr << "TickEditorTextControl::Impl event: << " << toString(ev) << "\n";
-        //~ return wxEvtHandler::ProcessEvent(ev);
-    //~ }
+    void onStyleNeeded(wxStyledTextEvent& ev)
+    {
+        int startPos = ctrl->GetEndStyled();
+        int lineNumber = ctrl->LineFromPosition(startPos);
+        startPos = ctrl->PositionFromLine(lineNumber);
+        int endPos = ev.GetPosition();
+        
+        std::cerr << "TickEditorTextControl: styling range [" << startPos << "," << endPos << "]\n";
+        int pos = startPos;
+        ctrl->StartStyling(pos, 0x1f); 
+        while( pos < endPos ) {
+            int c = ctrl->GetCharAt(pos);
+            int s = pos % 3;
+            
+            ctrl->SetStyling(1, s);            
+            pos += 1;
+        }
+    }
 private:
     DECLARE_EVENT_TABLE();
     DECLARE_DYNAMIC_CLASS(TickEditorTextControl::Implementation);
@@ -125,6 +149,8 @@ BEGIN_EVENT_TABLE(TickEditorTextControl::Implementation, wxEvtHandler)
     EVT_UPDATE_UI(wxID_PASTE, TickEditorTextControl::Implementation::onEditorCommandUI)
     EVT_UPDATE_UI(wxID_DELETE, TickEditorTextControl::Implementation::onEditorCommandUI)
     EVT_UPDATE_UI(wxID_SAVE, TickEditorTextControl::Implementation::onEditorCommandUI)
+
+    EVT_STC_STYLENEEDED(-1, TickEditorTextControl::Implementation::onStyleNeeded)
 END_EVENT_TABLE()
 
 // this is at the end to know implementation of TickEditorTextControl::Implementation

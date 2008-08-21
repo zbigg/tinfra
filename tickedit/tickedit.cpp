@@ -151,14 +151,11 @@ AUTO_LOADER(DocumentCommands)
     AM_ACTION(wxID_REVERT,"revert",  "&Revert", "revert",      "CTRL+R");
     AM_ACTION(wxID_CLOSE, "close",   "&Close",  "fileclose",   "CTRL+W");
     AM_ACTION(wxID_SAVE,  "save",    "&Save",   "filesave",    "CTRL+S");
-    AM_ACTION(wxID_SAVEAS,"save-as", "Save &as","filesaveas", "CTRL+SHIFT+S");
+    AM_ACTION(wxID_SAVEAS,"save-as", "Save &as","filesaveas",  "CTRL+SHIFT+S");
     AM_ACTION(wxID_PRINT, "print",   "&Print",  "fileprint",   "CTRL+P");
     
     return true;
 }
-
-
-
 
 class TickEditApp: public wxApp {
 public:
@@ -182,12 +179,12 @@ public:
             cmdev->GetEventType() == wxEVT_COMMAND_MENU_SELECTED ) ) {
             std::cerr << "command " << toString(ev) <<  std::endl;
             
-            //~ static int fe = 10;
+            static int fe = 10;
             
-            //~ if( --fe == 0 ) {
-                //~ char* p = 0;
-                //~ *p = 0;
-            //~ }
+            if( --fe == 0 ) {
+                char* p = 0;
+                *p = 0;
+            }
         }
         return wxApp::ProcessEvent(ev);
     }
@@ -272,10 +269,10 @@ public:
         
         // send the event
         wxWindow* active = wxWindow::FindFocus(); // TODO: in fact it should be AUI active window
+        
+
         if( ! active )
             return Skip(ev);
-        
-        
         
         bool handled = active->GetEventHandler()->ProcessEvent(ev);
         
