@@ -14,6 +14,12 @@ public:
     io_exception(std::string const& message): generic_exception(message) {}
 };
 
+class would_block: public std::runtime_error {
+public:
+    would_block(std::string const& m): std::runtime_error(m) {}
+
+};
+
 typedef std::ios::openmode openmode;
 
 class stream {

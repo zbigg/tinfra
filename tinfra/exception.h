@@ -2,6 +2,7 @@
 #define __tinfra_exception_h_
 
 #include <exception>
+#include <stdexcept>
 #include <string>
 
 #include "tinfra/runtime.h"

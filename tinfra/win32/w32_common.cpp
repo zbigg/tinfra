@@ -1,6 +1,8 @@
 #include "tinfra/platform.h"
 #include "tinfra/fmt.h"
 
+#include "tinfra/io/stream.h"
+
 #include "tinfra/win32.h"
 #include <stdexcept>
 
@@ -52,6 +54,9 @@ void throw_system_error(unsigned int error, std::string const& message)
     case ERROR_INVALID_HANDLE:
         throw_system_error2<std::invalid_argument>(error, message);
     
+    case WSAEWOULDBLOCK:
+        throw_system_error2<tinfra::io::would_block>(error, message);
+        
     default:
         throw_system_error2<std::runtime_error>(error, message);
     }
