@@ -58,7 +58,7 @@ public:
 
 class TestServer: public tinfra::net::Server, public tinfra::Runnable {
 public:
-    virtual void onAccept(std::auto_ptr<tinfra::io::stream> client) {
+    virtual void onAccept(std::auto_ptr<tinfra::io::stream> client, std::string const&) {
         Runnable* worker = new Client(client, *this);        
         //tinfra::Thread::start_detached(*worker);
         worker->run();

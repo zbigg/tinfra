@@ -28,7 +28,7 @@ public:
     bool stopped() const { return stopped_; }
 protected:
 
-    virtual void onAccept(std::auto_ptr<stream> client) = 0;
+    virtual void onAccept(std::auto_ptr<stream> client, std::string const& peer_address) = 0;
 };
 
 } }

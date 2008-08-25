@@ -15,6 +15,8 @@
 
 #define TS_WINSOCK
 
+typedef int socklen_t;
+
 #else
 
 #include <unistd.h>
@@ -310,16 +312,34 @@ stream* open_server_socket(char const* listening_host, int port)
     return new socketstream(s);
 }
 
-stream* accept_client_connection(stream* server_socket)
+std::string get_peer_address_string(sockaddr_in const& address)
+{
+    char buf[64] = "0.0.0.0";
+#ifdef HAVE_INET_NTOP
+    if( inet_ntop(AF_INET, &address.sin_addr, buf, sizeof(buf)) == 0 ) {
+        return "<unknown>";
+    }
+#elif defined TS_WINSOCK
+    strncpy( buf, inet_ntoa(address.sin_addr), sizeof(buf));    
+#endif
+    return tinfra::fmt("%s:%i") % buf % ntohs(address.sin_port);
+}
+
+stream* accept_client_connection(stream* server_socket, std::string* peer_address)
 {
     socketstream* socket = dynamic_cast<socketstream*>(server_socket);
     if( !socket ) 
         throw std::invalid_argument("accept: not a socketstream");
     
-    socket_type accept_sock = ::accept(socket->get_socket(), NULL, NULL );
+    socklen_t addr_size = sizeof(sockaddr_in);
+    sockaddr_in client_address;
+    socket_type accept_sock = ::accept(socket->get_socket(), (struct sockaddr*)&client_address, &addr_size );
+    
     if( accept_sock == invalid_socket ) 
         throw_socket_error("accept failed");
-        
+    
+    if( peer_address )
+        *peer_address = get_peer_address_string(client_address);
     return new socketstream(accept_sock);
 }
 

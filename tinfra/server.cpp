@@ -45,9 +45,10 @@ void Server::bind(const char* address, int port)
 void Server::run()
 {
     while( !stopped_ ) {
-        std::auto_ptr<stream> client_socket = std::auto_ptr<stream>(accept_client_connection(server_socket_.get()));
+        std::string peer_address;
+        std::auto_ptr<stream> client_socket(accept_client_connection(server_socket_.get(), &peer_address));
         if( !stopping_ ) 
-            onAccept(client_socket);
+            onAccept(client_socket, peer_address);
         else 
             stopped_ = true;
     }
