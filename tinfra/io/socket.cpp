@@ -344,5 +344,27 @@ stream* accept_client_connection(stream* server_socket, std::string* peer_addres
     return new socketstream(accept_sock);
 }
 
+void set_blocking(intptr_t socket_, bool blocking)
+{
+    socket_type socket = static_cast<socket_type>(socket_);
+    
+#ifdef TS_WINSOCK
+    unsigned long block = blocking ? 0 : 1;
+    if( ioctlsocket(socket, FIONBIO, &block) < 0 )
+        throw_socket_error("set_blocking: ioctlsocket(FIONBIO) failed");
+#else
+    int flags = fcntl( socket, F_GETFL );
+    if( flags < 0 )
+        throw_socket_error("set_blocking: fcntl(F_GETFL) failed");
+    if( blocking )
+        flags |= O_NONBLOCK;
+    else
+        flags &= ~(O_NONBLOCK);
+    if( fcntl( socket, F_SETFL, flags ) < 0 )
+        throw_socket_error("set_blocking: fcntl(F_SETFL) failed");
+#endif
+    
+}
+
 } } } //end namespace tinfra::io::socket
 
