@@ -97,8 +97,20 @@ SUITE(tinfra_server)
             
             std::istream in(&ibuf);
             std::ostream out(&obuf);
-            
+	    
+            // TODO: this test fails with "zyszek" sometimes
+	    //       because zstreambuf is broken
+	    //       in following read sequence: 
+	    //  sendto(4, "zbyszek", 7, 0, NULL, 0)     = 7
+	    //  sendto(4, "\n", 1, 0, NULL, 0)          = 1
+	    //  recvfrom(4, "z", 1, 0, NULL, NULL)      = 1
+	    //  recvfrom(4, "byszek", 32768, 0, NULL, NULL) = 6
+	    //  recvfrom(4, "\r\n", 32768, 0, NULL, NULL) = 2
+	    //
+	    // and thus std::getline( returns "zyszek\r\n")
+		
             CHECK_EQUAL( "zbyszek", invoke(in,out, "zbyszek"));
+	    
             CHECK_EQUAL( "A", invoke(in,out, "A"));
             CHECK_EQUAL( "", invoke(in,out, ""));
             CHECK_EQUAL( "quitting", invoke(in,out, "stop"));
