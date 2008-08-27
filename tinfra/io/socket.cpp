@@ -285,6 +285,7 @@ stream* open_server_socket(char const* listening_host, int port)
     if( listening_host ) {
         get_inet_address(listening_host, port, &sock_addr);
     } else {
+        listening_host = "0.0.0.0";
         sock_addr.sin_port = htons((short) port);
     }
     
@@ -300,7 +301,7 @@ stream* open_server_socket(char const* listening_host, int port)
     if( ::bind(s,(struct sockaddr*)&sock_addr, sizeof(sock_addr)) != 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
-        throw_socket_error(error_code, "bind failed");
+        throw_socket_error(error_code, fmt("bind to '%s:%i' failed") % listening_host % port );
     }
 
     if( ::listen(s,5) != 0 ) {
