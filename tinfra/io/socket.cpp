@@ -26,6 +26,7 @@ typedef int socklen_t;
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #define TS_BSD
 #endif
