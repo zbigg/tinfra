@@ -357,7 +357,7 @@ void set_blocking(intptr_t socket_, bool blocking)
     int flags = fcntl( socket, F_GETFL );
     if( flags < 0 )
         throw_socket_error("set_blocking: fcntl(F_GETFL) failed");
-    if( blocking )
+    if( !blocking )
         flags |= O_NONBLOCK;
     else
         flags &= ~(O_NONBLOCK);
