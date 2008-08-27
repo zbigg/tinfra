@@ -28,7 +28,7 @@ void read_symbol_map(std::istream& input, symbol_table_visitor visitor)
         int  line_number = 0;
         //FIXME - don't work for symbols with spaces in names
 		int address_tmp;
-        int result = std::sscanf(linebuf, "%08x %c %s\t%s:%i", &address_tmp, &type, name_buf, filename_buf, line_number);
+        int result = std::sscanf(linebuf, "%08x %c %s\t%s:%i", &address_tmp, &type, name_buf, filename_buf, &line_number);
 		address = address_tmp;
         symbol_info current_symbol;
         current_symbol.address = 0;

@@ -13,11 +13,11 @@ using namespace tinfra::io::socket;
 using namespace tinfra::io;
 
 Server::Server()
-    : stopping_(false), stopped_(false), bound_port_(0)
+    : stopped_(false), stopping_(false), bound_port_(0)
 {
 }
 Server::Server(const char* address, int port)
-    : stopping_(false), stopped_(false), bound_port_(0)
+    : stopped_(false), stopping_(false), bound_port_(0)
 {
     bind(address, port);
 }

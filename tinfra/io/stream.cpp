@@ -178,6 +178,7 @@ bool zstreambuf::need_buf()
         buffer_ = new char[default_buffer_size];
         buffer_size_ = default_buffer_size;
         own_buffer_ = true;
+        return true;
     } else {
         return false;
     }
