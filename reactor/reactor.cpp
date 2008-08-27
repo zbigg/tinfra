@@ -75,6 +75,25 @@ static void make_nonblocking(int socket)
     int flags = fcntl(socket, F_GETFL, &flags);
     fcntl(socket, F_SETFL, flags | O_NONBLOCK);
 }
+
+/*
+        problem here:
+                who manages channels ?
+                IOReactor ? no, stupid - next class with add/remove use/ref
+                shared_ptr ? no
+                a Manager
+                
+        A Manager manages lifecycle of dynamicly living objects
+        using probably reference counting.
+        
+        Manager api:
+                add(object) == add & use()
+                use(object) incref
+                remove(object) decref
+                
+                it will have tools like 
+                        ScopedLock<T> bla(manager, some_object)
+                
 class PollIOReactor: public IOReactor {
 public:
     
