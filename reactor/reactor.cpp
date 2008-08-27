@@ -1,89 +1,21 @@
-#include <vector>
-#include <algorithm>
 #include <stdexcept>
-#include <list>
-#include <map>
-#include <poll.h>
+#include <string>
 
 #include <iostream>
 #include <sstream>
 
-#include <boost/shared_ptr.hpp>
 #include "tinfra/cmd.h"
 #include "tinfra/io/stream.h"
 #include "tinfra/io/socket.h"
 
-#include "array.h"
-
-/// remove all 
-template <typename C1, typename C2>
-void remove(C1& victim, C2 const& to_remove)
-{
-    for(typename C2::const_iterator i = to_remove.begin(); i != to_remove.end(); ++i ) {
-        typename C1::iterator iv = std::find(victim.begin(), victim.end(), *i);
-        victim.erase(iv);
-    }
-}
-
-class IOChannel;
-
-class IOReactor {
-public:
-    enum {
-        READ = 1, WRITE = 2
-    };
-    virtual void add_channel(IOChannel* c) = 0;
-    virtual void remove_channel(IOChannel* c) = 0;
-    virtual void listen_channel(IOChannel* c, int mask, bool enable) = 0;
-
-    virtual ~IOReactor() {}
-};
-
-class IOChannel {
-public:
-    typedef IOChannel* ptr;
-    
-    virtual int  file() = 0;
-    
-    virtual void close() = 0;
-        
-    virtual void failure(IOReactor& r) { 
-        r.remove_channel(this); 
-        close(); 
-    }
-    
-    virtual void hangup(IOReactor& r) { 
-        r.remove_channel(this); 
-        close(); 
-    }
-    virtual void data_available(IOReactor&) {
-        std::cerr << "IOChannel: warning data_available on abstract IOChannel!" << std::endl;
-    }
-    virtual void write_possible(IOReactor&) {
-        std::cerr << "IOChannel: warning write_possible on abstract IOChannel!" << std::endl;
-    }
-        
-    virtual ~IOChannel() {}
-};
-
-// TODO, move it to tinfra
-#include <unistd.h>
-#include <fcntl.h>
-
-static void make_nonblocking(int socket)
-{
-    int flags = fcntl(socket, F_GETFL, &flags);
-    fcntl(socket, F_SETFL, flags | O_NONBLOCK);
-}
-
 /*
         problem here:
                 who manages channels ?
-                IOReactor ? no, stupid - next class with add/remove use/ref
+                Dispatcher ? no, stupid - next class with add/remove
                 shared_ptr ? no
                 a Manager
                 
-        A Manager manages lifecycle of dynamicly living objects
+        A Manager manages lifecycle of dynamically living objects
         using probably reference counting.
         
         Manager api:
@@ -93,185 +25,24 @@ static void make_nonblocking(int socket)
                 
                 it will have tools like 
                         ScopedLock<T> bla(manager, some_object)
-                
-class PollIOReactor: public IOReactor {
+*/
+
+#include "aio.h"
+//#include "tinfra/aio.h"
+
+using tinfra::aio::Dispatcher;
+using tinfra::aio::Channel;
+
+class HelloServer: public tinfra::aio::ListeningChannel {
 public:
-    
-    int timeout;
-    
-    void remove_channel(IOChannel* c) 
-    {
-        to_remove.push_back(c);
-    }
-    
-    virtual void add_channel(IOChannel* c) 
-    {
-        channels.push_back(c);
-        channel_props[c] = 0;
-	
-	make_nonblocking(c->file());
-    }
-    
-    virtual void listen_channel(IOChannel* c, int flags, bool enable) 
-    {    
-        if( enable ) {
-            channel_props[c] |=  flags;
-        } else {
-            channel_props[c] &= ~flags;
-        }
-    }
-
-    void cleanup() {
-        for(ChannelsList::const_iterator i = to_remove.begin(); i != to_remove.end(); ++i ) {
-            IOChannel* channel = *i;
-            channel_props.erase(channel);
-            
-            ChannelsList::iterator ic = std::find(channels.begin(), channels.end(), channel);
-            if( ic != channels.end() ) 
-                channels.erase(ic);
-            
-            throw std::logic_error("test exit");
-        }
-        
-        to_remove.clear();
-    }
-    
-public:
-    void loop()
-    {
-        array<pollfd> pollfds;
-        while( channels.size() > 0) {
-            make_fds(channels, pollfds);
-            
-            int r = poll(pollfds.begin(), channels.size(), timeout);
-            
-            if( r == 0 ) {
-                continue;
-            }
-            if( r == -1 ) {
-                perror("loop: poll failed, retrying");
-                continue;
-            }
-            
-            int i = 0;        
-            for(pollfd* pfd = pollfds.begin(); pfd != pollfds.end(); ++pfd,++i ) {
-                if( pfd->revents == 0 ) 
-                    continue;
-                
-                IOChannel::ptr channel = channels[i];
-                if( (pfd->revents & POLLERR) == POLLERR ) {
-                    //std::cerr << "channel failure!" << std::endl;
-                    channel->failure(*this);
-                    continue;
-                }
-                if( (pfd->revents & POLLHUP) == POLLHUP ) {
-                    //std::cerr << "channel hangup!" << std::endl;
-                    channel->hangup(*this);
-                    continue;
-                }
-                try {
-                    if( (pfd->revents & POLLIN  ) == POLLIN ) {
-                        //std::cerr << "data available!" << std::endl;
-                        channel->data_available(*this);
-                    }
-                    if( (pfd->revents & POLLOUT ) == POLLOUT) {
-                        //std::cerr << "write possible" << std::endl;
-                        channel->write_possible(*this);
-                    }
-                } catch(std::exception& e) {
-                    channel->close();
-                    remove_channel(channel);
-                    
-                } catch(...) {
-                    channel->close();
-                    remove_channel(channel);
-                }
-            }
-            
-            cleanup();
-        }
-    }
-    
-private:
-    typedef std::vector<IOChannel*> ChannelsList;
-
-    ChannelsList channels;
-    ChannelsList to_remove;
-    std::map<IOChannel*,int> channel_props;
-    void make_fds(PollIOReactor::ChannelsList const& channels, array<pollfd>& result)
-    {    
-        result.size(channels.size());
-        
-        int k = 0;
-        for(PollIOReactor::ChannelsList::const_iterator i = channels.begin(); i != channels.end(); ++i,k++ )
-        {
-            IOChannel::ptr c = *i;
-            result[k].fd = c->file();
-            int props = channel_props[c];
-            int events = 0;            
-            if( (props & IOReactor::READ) == IOReactor::READ )
-                events |= POLLIN;
-            if( (props & IOReactor::WRITE) == IOReactor::WRITE )
-                events |= POLLOUT;
-            result[k].events = events;
-            result[k].revents = 0;
-        }
-    }
-};
-
-class ListeningIOChannel: public IOChannel 
-{
-    tinfra::io::stream* main_socket;
-    
-public:
-    ListeningIOChannel(int port)
-        : main_socket(0)
-    {
-        listen(port);
-    }
-    ~ListeningIOChannel()
-    {
-        delete main_socket;
-    }
-    
-    int file() { 
-        return main_socket->native(); 
-    }
-    
-    void close() { 
-        main_socket->close(); 
-    }
-    
-    void listen(int port)
-    {
-        main_socket = tinfra::io::socket::open_server_socket(0, port);
-    }
-    
-    void data_available(IOReactor& r) 
-    {
-        std::string peer_address;
-        
-        tinfra::io::stream* new_socket = tinfra::io::socket::accept_client_connection(main_socket, &peer_address);
-        
-        on_accept(r, new_socket, peer_address);
-    }
-    
-protected:
-    virtual void on_accept(IOReactor&, tinfra::io::stream* channel, std::string const& remote_peer) = 0;
-};
-
-
-class EchoChannel: public ListeningIOChannel {
-public:
-    EchoChannel(int port = 9999): ListeningIOChannel(port) {}
+    HelloServer(int port = 9999): ListeningChannel(port) {}
 protected: 
-    virtual void on_accept(IOReactor&, tinfra::io::stream* channel, std::string const& remote_peer)
+    virtual void on_accept(Dispatcher&, tinfra::io::stream* stream, std::string const& remote_peer)
     {
         std::cerr << "got connection from '" << remote_peer << "'" << std::endl;
-        channel->write("hello\r\n",7);
-        delete channel;
+        stream->write("hello\r\n",7);
+        delete stream;
     }
-    
 };
 
 
@@ -294,7 +65,7 @@ public:
 
 typedef std::string buffer;
 
-class ProtocolWrapperChannel: public IOChannel {
+class ProtocolWrapperChannel: public Channel {
 public:
     ProtocolWrapperChannel(tinfra::io::stream* channel, ProtocolHandler* handler)
         : channel(channel), 
@@ -411,18 +182,18 @@ protected:
             channel->close();
         }
     }
-    virtual void failure(IOReactor& r) { 
+    virtual void failure(Dispatcher& r) { 
         r.remove_channel(this); 
         channel->close();
         delete this;
     }
     
-    virtual void hangup(IOReactor& r) { 
+    virtual void hangup(Dispatcher& r) { 
         r.remove_channel(this);
         delete this;
     }
     
-    void data_available(IOReactor& r)
+    void data_available(Dispatcher& r)
     {
         if( closed ) {
             update_listen_status(r);
@@ -455,7 +226,7 @@ protected:
             char buffer[1024];
             int readed = channel->read(buffer, sizeof(buffer));
             if( readed == 0 ) {
-                handler->eof(IOReactor::READ);
+                handler->eof(Dispatcher::READ);
                 read_eof = true;
                 return 0;
             }
@@ -467,7 +238,7 @@ protected:
         }
     }
     
-    void write_possible(IOReactor& r)
+    void write_possible(Dispatcher& r)
     {
         if( closed ) {
             update_listen_status(r);
@@ -477,7 +248,7 @@ protected:
             if( ! write_eof && to_send.size() > 0 ) {
                 int written = channel->write(to_send.data(), to_send.size());
                 if( written == 0 ) {
-                    handler->eof(IOReactor::WRITE);
+                    handler->eof(Dispatcher::WRITE);
                     write_eof = true;
                     
                 } else if( written > 0 ) {
@@ -493,7 +264,7 @@ protected:
         update_listen_status(r);
     }
     
-    void update_listen_status(IOReactor& r)
+    void update_listen_status(Dispatcher& r)
     {
         if( closed ) {
             r.remove_channel(this);
@@ -501,15 +272,15 @@ protected:
             return;
         }
         if( read_eof || handler->is_finished() ) {
-            r.listen_channel(this, IOReactor::READ, false);
+            r.listen_channel(this, Dispatcher::READ, false);
         } else {
-            r.listen_channel(this, IOReactor::READ, true);
+            r.listen_channel(this, Dispatcher::READ, true);
         }
         
         if( write_eof || to_send.size() == 0 ) {
-            r.listen_channel(this, IOReactor::WRITE, false);
+            r.listen_channel(this, Dispatcher::WRITE, false);
         } else {
-            r.listen_channel(this, IOReactor::WRITE, true);
+            r.listen_channel(this, Dispatcher::WRITE, true);
         }
     }
 };
@@ -602,50 +373,52 @@ public:
     }
 };
 
-class HTTPServerChannel: public ListeningIOChannel {
+class HTTPServerChannel: public tinfra::aio::ListeningChannel {
 public:
-    HTTPServerChannel(int port = 9999): ListeningIOChannel(port) {}
+    HTTPServerChannel(int port = 9999): ListeningChannel(port) {}
 protected: 
-    virtual void on_accept(IOReactor& r, tinfra::io::stream* channel, std::string const& remote_peer)
+    virtual void on_accept(Dispatcher& r, tinfra::io::stream* channel, std::string const& remote_peer)
     {
         // TODO: should analyze ownership of objects
         // now protocol is not deleted
         ProtocolWrapperChannel* protocol = new ProtocolWrapperChannel(channel, new HTTPProtocolHandler());
         
         r.add_channel(protocol);
-        r.listen_channel(protocol, IOReactor::READ, true);
+        r.listen_channel(protocol, Dispatcher::READ, true);
     }
 };
 
 static void build_fake_response()
 {
     std::string fake_str = "abcdefgh\r\n";
-    int size = 10000000;
+    unsigned size = 10000000;
     fake_response.reserve(size + fake_str.size());
-    for(int i = 0; i < size/fake_str.size(); i++ ) {
+    for(unsigned i = 0; i < size/fake_str.size(); i++ ) {
             fake_response.append(fake_str);
     }
 }
 
-int tinfra_main(int argc, char** argv)
+int reactor_main(int argc, char** argv)
 {
     build_fake_response();
-    PollIOReactor ctx;
-    EchoChannel echo_service;
+    std::auto_ptr<Dispatcher> ctx = tinfra::aio::createDispatcher();
+    
+    HelloServer echo_service;
     HTTPServerChannel http_service(18081);
-    ctx.timeout = -1;
     
-    ctx.add_channel( & echo_service ) ;
-    ctx.listen_channel( & echo_service, IOReactor::READ, true);
+    ctx->add_channel( & echo_service ) ;
+    ctx->listen_channel( & echo_service, Dispatcher::READ, true);
     
-    ctx.add_channel( & http_service ) ;
-    ctx.listen_channel( & http_service, IOReactor::READ, true);
+    ctx->add_channel( & http_service ) ;
+    ctx->listen_channel( & http_service, Dispatcher::READ, true);
     
-    ctx.loop();
+    while( true ) {
+        ctx->step();
+    }
     return 0;
 }
 
 int main(int argc, char** argv)
 {
-    return tinfra::cmd::main(argc,argv, tinfra_main);
+    return tinfra::cmd::main(argc,argv, reactor_main);
 }
