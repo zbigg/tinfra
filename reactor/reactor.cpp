@@ -66,6 +66,15 @@ public:
     virtual ~IOChannel() {}
 };
 
+// TODO, move it to tinfra
+#include <unistd.h>
+#include <fcntl.h>
+
+static void make_nonblocking(int socket)
+{
+    int flags = fcntl(socket, F_GETFL, &flags);
+    fcntl(socket, F_SETFL, flags | O_NONBLOCK);
+}
 class PollIOReactor: public IOReactor {
 public:
     
@@ -80,6 +89,8 @@ public:
     {
         channels.push_back(c);
         channel_props[c] = 0;
+	
+	make_nonblocking(c->file());
     }
     
     virtual void listen_channel(IOChannel* c, int flags, bool enable) 
@@ -99,6 +110,8 @@ public:
             ChannelsList::iterator ic = std::find(channels.begin(), channels.end(), channel);
             if( ic != channels.end() ) 
                 channels.erase(ic);
+            
+            throw std::logic_error("test exit");
         }
         
         to_remove.clear();
@@ -197,6 +210,10 @@ public:
     {
         listen(port);
     }
+    ~ListeningIOChannel()
+    {
+        delete main_socket;
+    }
     
     int file() { 
         return main_socket->native(); 
@@ -241,6 +258,8 @@ protected:
 
 class ProtocolHandler {
 public:
+    virtual ~ProtocolHandler() {}
+    
     /// Called by ProtocolManager when IO has some data buffered
     /// Protocol should consume as much data as he can
     /// And then return number of bytes consumed    
@@ -262,13 +281,15 @@ public:
         : channel(channel), 
           handler(handler),
           closed(false),
+          close_requested(false),
           read_eof(false),
           write_eof(false),
           public_stream(*this)
     {}
-    ~ProtocolWrapperChannel()
+    virtual ~ProtocolWrapperChannel()
     {
         delete handler;
+        delete channel;
     }
     tinfra::io::stream* get_input_stream() { return &public_stream; }
     tinfra::io::stream* get_output_stream() { return &public_stream; }
@@ -282,6 +303,7 @@ protected:
     buffer to_send;
 
     bool   closed;
+    bool   close_requested;
     bool   read_eof;
     bool   write_eof;    
 
@@ -331,7 +353,7 @@ protected:
         }
         virtual int write(const char* data, int size)
         {
-            if( base.write_eof || base.closed )
+            if( base.write_eof || base.closed || base.close_requested )
                 return 0;
             int written = 0;
             try {
@@ -363,8 +385,22 @@ protected:
     }
     
     virtual void close() {
+        if( to_send.size() > 0 ) {
+            close_requested = true;
+        } else { 
+            closed = true;
+            channel->close();
+        }
+    }
+    virtual void failure(IOReactor& r) { 
+        r.remove_channel(this); 
         channel->close();
-        closed = true;
+        delete this;
+    }
+    
+    virtual void hangup(IOReactor& r) { 
+        r.remove_channel(this);
+        delete this;
     }
     
     void data_available(IOReactor& r)
@@ -394,7 +430,7 @@ protected:
     
     int read_next_chunk()
     {
-        if( closed ) 
+        if( closed || close_requested ) 
             return 0;
         try {
             char buffer[1024];
@@ -432,6 +468,9 @@ protected:
         } catch( tinfra::io::would_block&) {
             // ignore it!
         }
+        if( close_requested && to_send.size() == 0 ) {
+            close();
+        }
         update_listen_status(r);
     }
     
@@ -439,6 +478,7 @@ protected:
     {
         if( closed ) {
             r.remove_channel(this);
+            delete this;
             return;
         }
         if( read_eof || handler->is_finished() ) {
@@ -455,6 +495,8 @@ protected:
     }
 };
 
+std::string fake_response;
+
 class HTTPProtocolHandler: public ProtocolHandler {
 public:
     enum {
@@ -463,6 +505,7 @@ public:
         READING_POST,
         FINISHED
     } state;
+    
     HTTPProtocolHandler()
         : state(BEFORE_REQUEST) 
     {
@@ -489,7 +532,7 @@ public:
                 //std::cerr << "HTTP HEADER : " << line;
                 if( line.size() == 2 ) {
                     state = FINISHED;                
-                    send_response(channel,"Hello you");
+                    send_response(channel,fake_response);
                 }
                 return line.size();     
             }
@@ -521,6 +564,7 @@ public:
         std::ostringstream s;
         s << "HTTP/1.0 200 OK\r\n"
           << "Content-type: text/plain\r\n"
+          << "Connection: close\r\n"
           << "Content-length: " << content.size() << "\r\n"
           << "\r\n"
           << content;
@@ -554,11 +598,22 @@ protected:
     }
 };
 
+static void build_fake_response()
+{
+    std::string fake_str = "abcdefgh\r\n";
+    int size = 10000000;
+    fake_response.reserve(size + fake_str.size());
+    for(int i = 0; i < size/fake_str.size(); i++ ) {
+            fake_response.append(fake_str);
+    }
+}
+
 int tinfra_main(int argc, char** argv)
 {
+    build_fake_response();
     PollIOReactor ctx;
     EchoChannel echo_service;
-    HTTPServerChannel http_service(18080);
+    HTTPServerChannel http_service(18081);
     ctx.timeout = -1;
     
     ctx.add_channel( & echo_service ) ;
