@@ -39,8 +39,7 @@ public:
 protected: 
     virtual void on_accept(Dispatcher&, tinfra::io::stream* stream, std::string const& remote_peer)
     {
-        std::cerr << "got connection from '" << remote_peer << "'" << std::endl;
-        stream->write("hello\r\n",7);
+        stream->write("hello world\r\n",13);
         delete stream;
     }
 };
@@ -50,16 +49,25 @@ class ProtocolHandler {
 public:
     virtual ~ProtocolHandler() {}
     
-    /// Called by ProtocolManager when IO has some data buffered
+    /// Framework calls when IO has some data buffered
     /// Protocol should consume as much data as he can
     /// And then return number of bytes consumed    
     /// @returns 0 if that protocol is unable to assemble any message - IO must gather more data
     /// @returns > 0 length of consumed message
     virtual int  accept_bytes(const char* , int, tinfra::io::stream*) = 0;
     
-    virtual void eof(int direction) = 0;
+    // Framework informs that it has successfully send some bytes
+    // via wire.
+    virtual void write_completed(size_t bytes_sent, size_t bytes_queued) = 0;
 
-    /// check if this protocol handler has finished reading
+    // Framework informs that channel has reached EOF
+    // direction can be set of
+    //     Dispatcher::READ
+    //     Dispatcher::WRITE
+    // to indicate which side is closed now.
+    virtual void eof(int direction) = 0;
+        
+    /// framework checks if this protocol has finished
     virtual bool is_finished() = 0;
 };
 
@@ -75,12 +83,15 @@ public:
           read_eof(false),
           write_eof(false),
           public_stream(*this)
-    {}
+    {
+    }
+    
     virtual ~ProtocolWrapperChannel()
     {
         delete handler;
         delete channel;
     }
+    
     tinfra::io::stream* get_input_stream() { return &public_stream; }
     tinfra::io::stream* get_output_stream() { return &public_stream; }
     
@@ -92,10 +103,10 @@ protected:
     buffer received_bytes;
     buffer to_send;
 
-    bool   closed;
-    bool   close_requested;
-    bool   read_eof;
-    bool   write_eof;    
+    bool   closed;          /// channel is really closed
+    bool   close_requested; /// protocol has requested close
+    bool   read_eof;        /// stream has reported EOF when reading
+    bool   write_eof;       /// stream has reported EOF when writing 
 
     class BufferedNonBlockingStream: public tinfra::io::stream {
         ProtocolWrapperChannel& base;
@@ -141,19 +152,24 @@ protected:
             }
             return readed;
         }
+        
         virtual int write(const char* data, int size)
         {
             if( base.write_eof || base.closed || base.close_requested )
                 return 0;
             int written = 0;
-            try {
-                written = base.channel->write(data, size);
-                if( written == 0 ) {
-                    base.write_eof = true;
-                    return 0;
+            if( to_send.size() == 0 ) {
+                try {
+                    written = base.channel->write(data, size);
+                    if( written == 0 ) {
+                        base.write_eof = true;
+                        base.handler->eof(Dispatcher::WRITE);
+                        return 0;
+                    }
+                    base.handler->write_completed(written, size-written + to_send.size() );
+                } catch( tinfra::io::would_block& w) {
+                    // ignore it, written = 0, so all will be buffered
                 }
-            } catch( tinfra::io::would_block& w) {
-                // ignore it, written = 0, so all will be buffered
             }
             if( written < size ) {
                 base.to_send.append(data + written, size - written);
@@ -253,6 +269,7 @@ protected:
                     
                 } else if( written > 0 ) {
                     to_send.erase(0, written);
+                    handler->write_completed(written, to_send.size());
                 }
             }
         } catch( tinfra::io::would_block&) {
@@ -360,6 +377,11 @@ public:
           << content;
         channel->write(s.str().data(), s.str().size());
         channel->close();
+    }
+    
+    virtual void write_completed(size_t bytes_sent, size_t bytes_queued)
+    {
+        
     }
     
     virtual void eof(int direction)
