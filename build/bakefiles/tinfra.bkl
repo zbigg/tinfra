@@ -81,6 +81,7 @@
             tinfra/tinfra_lex.h
             tinfra/path.h
             tinfra/fs.h
+            tinfra/runner.h
             tinfra/thread.h
             tinfra/queue.h
             tinfra/os_common.h
@@ -88,6 +89,8 @@
             tinfra/xml.h
             tinfra/platform.h
             tinfra/runtime.h
+            tinfra/posix/thread.h
+            tinfra/win32/thread.h
         </files>
     </data-files-tree>
     
