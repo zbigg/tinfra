@@ -54,11 +54,11 @@ class tstring: public string_traits<tstring> {
 public:
     template <int N>
     tstring(const char (&arr)[N]):
-    	str_(arr),
+    	str_((const char*)arr),
 	length_(std::strlen(arr)),
 	stamp_(make_stamp(arr))
     {
-        //cerr << "created ARR tstring(" << this << ") stamp_: " << stamp_ << "\n";
+        //std::cerr << "created ARR tstring(" << this << ") stamp_: " << stamp_ << "\n";
         check_stamp();
     }
     
@@ -67,7 +67,7 @@ public:
 	length_(std::strlen(str)),
 	stamp_(make_stamp(this))
     {
-        //cerr << "created PTR tstring(" << this << ") stamp_: " << stamp_ << "\n";
+        //std::cerr << "created PTR tstring(" << this << ") stamp_: " << stamp_ << "\n";
     }
     
     

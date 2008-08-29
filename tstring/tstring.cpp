@@ -11,52 +11,57 @@
 namespace stack_traits {
     void current_stack_region(void*& bottom, size_t& size)
     {
-      pthread_attr_t attr;
-      int res = pthread_getattr_np(pthread_self(), &attr);
-      if (res != 0) {
-          throw std::runtime_error("pthread_getattr_np");
-      }
-    
-      char* stack_bottom;
-      size_t stack_bytes;
-      res = pthread_attr_getstack(&attr, (void **) &stack_bottom, &stack_bytes);
-      if (res != 0) {
-          pthread_attr_destroy(&attr);
-          throw std::runtime_error("pthread_getattr_np");
-      }
-      //char* stack_top = stack_bottom + stack_bytes;
+#if defined(linux)
+        pthread_attr_t attr;
+        int res = pthread_getattr_np(pthread_self(), &attr);
+        if (res != 0) {
+            throw std::runtime_error("pthread_getattr_np");
+        }
+
+        char* stack_bottom;
+        size_t stack_bytes;
+        res = pthread_attr_getstack(&attr, (void **) &stack_bottom, &stack_bytes);
+        if (res != 0) {
+            pthread_attr_destroy(&attr);
+            throw std::runtime_error("pthread_getattr_np");
+        }
+        //char* stack_top = stack_bottom + stack_bytes;
 #if 0
-      // The block of memory returned by pthread_attr_getstack() includes
-      // guard pages where present.  We need to trim these off.
-      size_t page_bytes = os::Linux::page_size();
-      assert(((intptr_t) stack_bottom & (page_bytes - 1)) == 0, "unaligned stack");
-    
-      size_t guard_bytes;
-      res = pthread_attr_getguardsize(&attr, &guard_bytes);
-      if (res != 0) {
-        fatal1("pthread_attr_getguardsize failed with errno = %d", res);
-      }
-      int guard_pages = align_size_up(guard_bytes, page_bytes) / page_bytes;
-      assert(guard_bytes == guard_pages * page_bytes, "unaligned guard");
-    
-    #ifdef IA64
-      // IA64 has two stacks sharing the same area of memory, a normal
-      // stack growing downwards and a register stack growing upwards.
-      // Guard pages, if present, are in the centre.  This code splits
-      // the stack in two even without guard pages, though in theory
-      // there's nothing to stop us allocating more to the normal stack
-      // or more to the register stack if one or the other were found
-      // to grow faster.
-      int total_pages = align_size_down(stack_bytes, page_bytes) / page_bytes;
-      stack_bottom += (total_pages - guard_pages) / 2 * page_bytes;
+        // The block of memory returned by pthread_attr_getstack() includes
+        // guard pages where present.  We need to trim these off.
+        size_t page_bytes = os::Linux::page_size();
+        assert(((intptr_t) stack_bottom & (page_bytes - 1)) == 0, "unaligned stack");
+
+        size_t guard_bytes;
+        res = pthread_attr_getguardsize(&attr, &guard_bytes);
+        if (res != 0) {
+            throw std::runtime_error("pthread_attr_getguardsize");
+        }
+        int guard_pages = align_size_up(guard_bytes, page_bytes) / page_bytes;
+        assert(guard_bytes == guard_pages * page_bytes, "unaligned guard");
+
+        #ifdef IA64
+        // IA64 has two stacks sharing the same area of memory, a normal
+        // stack growing downwards and a register stack growing upwards.
+        // Guard pages, if present, are in the centre.  This code splits
+        // the stack in two even without guard pages, though in theory
+        // there's nothing to stop us allocating more to the normal stack
+        // or more to the register stack if one or the other were found
+        // to grow faster.
+        int total_pages = align_size_down(stack_bytes, page_bytes) / page_bytes;
+        stack_bottom += (total_pages - guard_pages) / 2 * page_bytes;
     #endif // IA64
-      
-      stack_bottom += guard_bytes;
+        stack_bottom += guard_bytes;
+#endif 
+        pthread_attr_destroy(&attr);
+        bottom = stack_bottom;
+        size = stack_bytes;
+#else
+        char a;
+        size = 1000000;
+        bottom = (&a - size);
 #endif
-      pthread_attr_destroy(&attr);
-      bottom = stack_bottom;
-      size = stack_bytes;
-      std::cerr << "thread=" << pthread_self() << " stack_bottom=" << bottom << " size=" << size << "\n";
+        std::cerr << "thread=" << pthread_self() << " stack_bottom=" << bottom << " size=" << size << "\n";
     }
 
     /*
@@ -84,8 +89,9 @@ namespace stack_traits {
             size_t stack_size;
             current_stack_region(stack_bottom, stack_size);
         }
-        
-        return v == 0 || v < stack_bottom;
+        bool r = (v == 0) || (v < stack_bottom);
+        std::cerr << "is_on_heap(" << v << ") -> " << r << "\n";
+        return r;
         
     }
     bool is_valid_(const void* current, const void* stamp)
@@ -135,6 +141,8 @@ void test_tstring()
     std::string* ds = new std::string("yo");
     tstring d(*ds);
     tstring e(dupaddd);
+    
+    tstring x = badsanta();
 }
 void* test_in_other_thread(void* )
 {
@@ -144,9 +152,9 @@ void* test_in_other_thread(void* )
 int stackstring_main(int argc, char** argv)
 {
     test_tstring();
-    tinfra::ThreadSet ts;
-    ts.start(&test_in_other_thread,0);
-    ts.join();
+    //tinfra::ThreadSet ts;
+    //ts.start(&test_in_other_thread,0);
+    //ts.join();
     return 0;
 }
 
