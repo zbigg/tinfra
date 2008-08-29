@@ -1,11 +1,17 @@
 #CPPFLAGS=
-export LANG=C
-CXXFLAGS=-O0 -Wall
+#CXXFLAGS=-O2 -pg -Wall
+CXXFLAGS=-O0 -g -Wall
 #CFLAGS=-O3 -g
-LDLIBS=-g -L$(HOME)/lib -ltinfra
+#LDLIBS=-g -pg -L$(HOME)/lib -ltinfra
+LDLIBS=-g -L$(HOME)/lib -ltinfra -lpthread
 CC=g++
 
-reactor: aio.o reactor.o	
+reactor: reactor.o	
+
+
+reader: reader.o
+
+stackstring: stackstring.o
 
 clean:
 	rm -rf *.o reactor
