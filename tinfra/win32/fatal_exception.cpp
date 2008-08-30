@@ -16,6 +16,7 @@
 #include "tinfra/exception.h"
 #include "tinfra/exeinfo.h"
 #include "tinfra/thread.h"
+#include "tinfra/runtime.h"
 
 #define gle (GetLastError())
 #define lenof(a) (sizeof(a) / sizeof((a)[0]))
@@ -165,41 +166,27 @@ BOOL WINAPI ConsoleHandler(DWORD)
     //return FALSE;
 }
 
-static void (*fatal_exception_handler) (void) = 0;
-
 static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
 {
+    // TODO: this should be removed and stacktrace should be collected
+    //       not printed
     printf( "%s[%i]: Fatal exception occurred.\n", tinfra::get_exepath().c_str(), tinfra::Thread::current().to_number());
     printf( "Call stack:\n");
     show_stack( GetCurrentThread(), *(ep->ContextRecord) );    
-    if( fatal_exception_handler ) {
-	fatal_exception_handler( /* ??? */);
-    }
-    printf( "Terminating application.\n");    
+    
+    tinfra::stacktrace_t trace;
+    // TODO: trace should be filled and passed to fatal_exit
+    
+    // TODO: abort() or return here ?
+    tinfra::fatal_exit("fatal exception",trace);
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
 
 namespace tinfra {
     
-void terminate_handler()
-{
-    printf( "%s[%i]: Terminate called.\n", tinfra::get_exepath().c_str(), tinfra::Thread::current().to_number());
-    printf( "Call stack:\n");
-    show_stack( ); 
-    if( fatal_exception_handler ) {
-	fatal_exception_handler( /* ??? */);
-    }
-    printf( "Terminating application.\n");    
-    abort();
-}
-
-void initialize_fatal_exception_handler()
-{    
-    static bool initialized = false;
-    if( initialized ) return;
-	
-    fatal_exception_handler = 0;
+void initialize_platform_runtime()
+{    	
     if( !initialize_imaghelp() ) {
 	// TODO: issue a warning
     }
@@ -209,14 +196,6 @@ void initialize_fatal_exception_handler()
     if( !SetConsoleCtrlHandler(ConsoleHandler, TRUE) ) {
 	// TODO: issue a warning
     }
-    
-    std::set_terminate(terminate_handler);
-    
-    initialized = true;
-}
-void set_fatal_exception_handler(void (*handler) (void))
-{
-    fatal_exception_handler = handler;
 }
 
 }

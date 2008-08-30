@@ -14,7 +14,6 @@
         </if>
         
         <if cond="PLATFORM_UNIX=='1'">
-            tinfra/posix/fatal_exception.cpp
             tinfra/posix/posix_io.cpp
             tinfra/posix/posix_subprocess.cpp
             tinfra/posix/thread.cpp

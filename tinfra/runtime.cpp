@@ -1,4 +1,5 @@
 #include <ostream>
+#include <iostream>
 #include <iomanip>
 #include <string.h>
 
@@ -30,4 +31,55 @@ void print_stacktrace(stacktrace_t const& st, std::ostream& out)
     }
 }
 
+void (*fatal_exception_handler) (void) = 0;
+
+void set_fatal_exception_handler(void (*handler) (void))
+{
+    fatal_exception_handler = handler;
 }
+
+// initialize platform specific fatal error
+// handling
+void initialize_platform_runtime(); 
+void terminate_handler();
+
+void initialize_fatal_exception_handler()
+{
+    static bool initialized = false;
+    if( initialized ) 
+        return;
+
+    initialize_platform_runtime();
+    
+    std::set_terminate(terminate_handler);
+}
+
+void terminate_handler()
+{
+    fatal_exit("terminate called");
+}
+
+void fatal_exit(const char* message, stacktrace_t& stacktrace)
+{
+    std::cerr << get_exepath() << ": message" << std::endl;
+    if( stacktrace.size() > 0 ) 
+        print_stacktrace(stacktrace, std::cerr);
+    if( fatal_exception_handler ) {
+	fatal_exception_handler();
+    }
+    std::cerr << "aborting" << std::endl;
+    abort();
+}
+
+void fatal_exit(const char* message)
+{
+    stacktrace_t stacktrace;
+    if( is_stacktrace_supported() ) {
+        get_stacktrace(stacktrace);
+    }
+    
+    fatal_exit(message, stacktrace);
+}
+
+} // end of namespace tinfra
+

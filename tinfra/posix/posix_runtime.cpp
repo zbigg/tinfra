@@ -18,6 +18,8 @@
 #define HAVE_BACKTRACE
 #endif
 
+extern "C" void tinfra_fatal_sighandler(int signo);
+
 namespace tinfra {
 
 bool is_stacktrace_supported()
@@ -78,5 +80,23 @@ bool get_debug_info(void* address, debug_info& result)
     from_string<int>(place[1], result.source_line);
     return true;
 }
+
+void initialize_platform_runtime()
+{
+    std::signal(SIGSEGV, &tinfra_fatal_sighandler);
+    std::signal(SIGBUS,  &tinfra_fatal_sighandler);
+    std::signal(SIGABRT, &tinfra_fatal_sighandler);    
+}
+
+} // end of namespace tinfra
+extern "C" void tinfra_fatal_sighandler(int signo)
+{
+    signal(SIGABRT, SIG_DFL);
+    char buf[64];
+    snprintf(buf, sizeof(buf), "fatal signal %i received", signo);
+    
+    tinfra::fatal_exit(buf);
+}
+
 
 } // end of namespace tinfra

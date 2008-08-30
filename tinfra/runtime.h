@@ -60,6 +60,17 @@ bool get_debug_info(void* address, debug_info& dest);
 void initialize_fatal_exception_handler();
 void set_fatal_exception_handler(void (*handler) (void));
 
+/// Call this if you're in place there is no escape
+///
+/// Prints message, stacktrace (if possible) and aborts.
+void fatal_exit(const char* message);
+
+/// Fatal exit printing given stackrace.
+///
+/// Prints message, stacktrace (if not empty) and aborts.
+/// Used internally.
+void fatal_exit(const char* message, stacktrace_t& stacktrace);
+
 }
 
 #endif
