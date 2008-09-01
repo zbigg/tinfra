@@ -71,20 +71,22 @@ namespace stack_traits {
         return &a;
     }
     */
-    __thread void* stack_bottom = 0;
-    int get_stamp_direction()
+    int get_stack_direction()
     {
         char a;
         char b;
         char* x = &a;
         char* y = &b; // deeper_address();
         int r = y-x;
-        std::cerr << "get_stamp_direction() -> " << r << "\n";
+        //std::cerr << "get_stack_direction() -> " << r << "\n";
         return y-x;
     }
+    
+    __thread void* stack_bottom = 0;
+    
     bool is_on_heap(const void* v)
     {
-        //void* stack_bottom;
+        //void* stack_bottom = 0;
         if( stack_bottom == 0 ) {
             size_t stack_size;
             current_stack_region(stack_bottom, stack_size);
@@ -92,23 +94,25 @@ namespace stack_traits {
         bool r = (v == 0) || (v < stack_bottom);
         std::cerr << "is_on_heap(" << v << ") -> " << r << "\n";
         return r;
-        
     }
     bool is_valid_(const void* current, const void* stamp)
     {
         static int stack_direction = 0;
         if( stack_direction == 0 )
-            stack_direction = get_stamp_direction(); 
+            stack_direction = get_stack_direction();
+        bool r;
         if( stack_direction < 0 )
-            return stamp   >= current || is_on_heap(stamp);
+            r = stamp   >= current;
         else
-            return current <= stamp || is_on_heap(stamp);
+            r = current <= stamp;
+        r = r || is_on_heap(stamp);
+        return r;
     }
     
     bool is_valid(const void* current, const void* stamp)
     {
         bool r = is_valid_(current, stamp);
-        std::cerr << "is_valid(" << current << ", " << stamp << ") -> " << r << "\n";
+        //std::cerr << "is_valid(" << current << ", " << stamp << ") -> " << r << "\n";
         return r;
     }
 } // end namespace stack_traits
@@ -133,16 +137,26 @@ tstring badsanta()
 }
 std::string dupaddd = "kkkk";
 
+int test_param(tstring const& a)
+{
+    return a.size() > 0; 
+}
 void test_tstring()
 {
+    std::string ss = "hello";
+    char buf[1024] = "hhh";
+    
     tstring a = "zbyszek";
     tstring b = a;
     tstring c(b);
     std::string* ds = new std::string("yo");
     tstring d(*ds);
     tstring e(dupaddd);
+    delete ds;
     
-    tstring x = badsanta();
+    test_param(ss);
+    test_param("aa");
+    test_param(buf);
 }
 void* test_in_other_thread(void* )
 {
@@ -152,9 +166,11 @@ void* test_in_other_thread(void* )
 int stackstring_main(int argc, char** argv)
 {
     test_tstring();
-    //tinfra::ThreadSet ts;
+    tinfra::ThreadSet ts;
     //ts.start(&test_in_other_thread,0);
     //ts.join();
+    
+    ts.join();
     return 0;
 }
 
