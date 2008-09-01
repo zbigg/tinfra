@@ -83,12 +83,13 @@ bool get_debug_info(void* address, debug_info& result)
 
 void initialize_platform_runtime()
 {
-    std::signal(SIGSEGV, &tinfra_fatal_sighandler);
-    std::signal(SIGBUS,  &tinfra_fatal_sighandler);
-    std::signal(SIGABRT, &tinfra_fatal_sighandler);    
+    ::signal(SIGSEGV, &tinfra_fatal_sighandler);
+    ::signal(SIGBUS,  &tinfra_fatal_sighandler);
+    ::signal(SIGABRT, &tinfra_fatal_sighandler);    
 }
 
 } // end of namespace tinfra
+
 extern "C" void tinfra_fatal_sighandler(int signo)
 {
     signal(SIGABRT, SIG_DFL);
@@ -99,4 +100,3 @@ extern "C" void tinfra_fatal_sighandler(int signo)
 }
 
 
-} // end of namespace tinfra
