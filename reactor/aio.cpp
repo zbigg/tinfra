@@ -91,19 +91,16 @@ void ListeningChannel::data_available(Dispatcher& r)
 
 // TODO, move it to infra
 
-static void make_nonblocking(int socket)
+static void set_buffers(int socket)
 {
-    int flags = fcntl(socket, F_GETFL, &flags);
-    fcntl(socket, F_SETFL, flags | O_NONBLOCK);
-    
-    int r = 65536;
+    int r = (1 << 15);
     if( setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (void*)&r, sizeof(r)) ) {
         // TODO: it should be warning
         std::cerr << "unable to set SO_RCVBUF=" << r << " on socket " << socket << std::endl;
     }
     
-    int s = 32768;
-    if( setsockopt(socket, SOL_SOCKET, SO_SNDBUF, (void*)&r, sizeof(r)) ) {
+    int s = (1 << 17);
+    if( setsockopt(socket, SOL_SOCKET, SO_SNDBUF, (void*)&s, sizeof(s)) ) {
         // TODO: it should be warning
         std::cerr << "unable to set SO_SNFBUF=" << s << " on socket " << socket << std::endl;
     }
@@ -119,7 +116,8 @@ void GenericDispatcher::add_channel(Channel* c)
     channels.push_back(c);
     channel_props[c] = 0;
     
-    make_nonblocking(c->file());
+    tinfra::io::socket::set_blocking(c->file(), false);
+    set_buffers(c->file());
 }
 
 void GenericDispatcher::listen_channel(Channel* c, int flags, bool enable) 
