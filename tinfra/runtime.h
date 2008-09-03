@@ -71,6 +71,13 @@ void fatal_exit(const char* message);
 /// Used internally.
 void fatal_exit(const char* message, stacktrace_t& stacktrace);
 
+/// Gets the stack bottom for this thread.
+///
+/// Reliable on linux and on threads created using tinfra::Thread 
+/// and tinfra::ThreadSet.
+/// On other platforms returns approximation.
+const void* get_stack_bottom();
+
 }
 
 #endif
