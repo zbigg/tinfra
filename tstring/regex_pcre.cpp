@@ -98,11 +98,13 @@ bool regexp::do_match(match_result* result, const char* str, size_t length) cons
         throw std::logic_error(fmt("PCRE match failed: %s") % err_ptr);
     }
     if( result != 0 ) {
+        match_result& r = *result;
+        r.resize(patterns_count_+1);
         for( size_t i = 0; i <= patterns_count_; ++i ) {
             const char* p = str + offsets[i*2];
             const char* e = str + offsets[i*2 +1];
             const size_t len = e-p;
-            result->push_back(std::string(p, len));
+            r[i].assign(p, len);
         }
     }
     return true;
