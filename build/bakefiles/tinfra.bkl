@@ -38,6 +38,7 @@
             <!-- tinfra/io/zcompat.cpp -->
             tinfra/fmt.cpp
             tinfra/string.cpp
+            tinfra/tstring.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
             tinfra/threadcmn.cpp
@@ -69,6 +70,7 @@
             tinfra/exeinfo.h
             tinfra/fmt.h
             tinfra/string.h
+            tinfra/tstring.h
             tinfra/io/stream.h            
             tinfra/io/socket.h
             tinfra/subprocess.h
