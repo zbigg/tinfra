@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include "tinfra/fmt.h"
+#include "tinfra/string.h"
 #include "tinfra/cmd.h"
 
 class regexp {
@@ -20,29 +21,53 @@ public:
     ~regexp();
     
     bool matches(const char* str, size_t length) const {
-        return do_match(0, str, length);
+        return do_match(0, str, length, 0);
     }
-    bool matches(match_result& result, const char* str, size_t length) const {
-        return do_match(&result, str, length);
+    bool matches(const char* str, size_t length, match_result& result) const {
+        return do_match(&result, str, length, 0);
     }
     
     bool matches(const char* str) const {
-        return do_match(0, str, std::strlen(str));
+        return do_match(0, str, std::strlen(str),0 );
     }
     
-    bool matches(match_result& result, const char* str) const  {
-        return do_match(&result, str, std::strlen(str));
+    bool matches(const char* str, match_result& result) const  {
+        return do_match(&result, str, std::strlen(str), 0 );
     }
+    
+    bool do_match(match_result* result, const char* str, size_t length, size_t* finish_offset) const;
+    
 private:
     void compile(const char* pattern, int options);
+};
+
+class matcher {
+    regexp const& re_;
+    const char* str_;
+    size_t length_;
+    size_t position_;
+    bool have_result_;
+    bool have_match_;
+    regexp::match_result match_;
+public:
+    matcher(regexp const& re, const char* str, size_t length);
+    matcher(regexp const& re, const char* str);
     
-    bool do_match(match_result* result, const char* str, size_t length) const;
+    regexp::match_result const& next();
+    
+    bool has_next();
+
+private:
+    void try_match();
 };
 
 //
 // implementation
 //
 
+//
+// regexp
+//
 using tinfra::fmt;
 
 regexp::regexp(const char* pattern, int options):
@@ -83,7 +108,7 @@ void regexp::compile(const char* pattern, int options)
 }
 
 
-bool regexp::do_match(match_result* result, const char* str, size_t length) const
+bool regexp::do_match(match_result* result, const char* str, size_t length, size_t* finish_offset) const
 {
     const int offsets_size = (patterns_count_+1)*3; // see manual, pcre_exec def
     int offsets[offsets_size]; 
@@ -107,17 +132,80 @@ bool regexp::do_match(match_result* result, const char* str, size_t length) cons
             r[i].assign(p, len);
         }
     }
+    if( finish_offset != 0 ) {
+        *finish_offset = offsets[1];
+    }
     return true;
 }
 
+//
+// matcher
+//
 
+matcher::matcher(regexp const& re, const char* str, size_t length):
+    re_(re),
+    str_(str),
+    length_(length),
+    position_(0),
+    have_result_(false),
+    have_match_(false)
+{}
+
+matcher::matcher(regexp const& re, const char* str):
+    re_(re),
+    str_(str),
+    length_(std::strlen(str)),
+    position_(0),
+    have_result_(false),
+    have_match_(false)
+{}
+
+regexp::match_result const& matcher::next() {
+    if( ! have_result_ ) 
+        try_match();
+    if( have_match_ ) {
+        have_result_ = false;
+        return match_;
+    } else {
+        throw std::runtime_error("no more matches");
+    }
+}
+
+bool matcher::has_next()
+{
+    if( !have_result_ ) 
+        try_match();
+    return have_match_;
+}
+
+
+void matcher::try_match()
+{
+    have_result_ = true;
+    if( position_ == length_ ) {
+        have_match_ = false;
+    } else {
+        size_t match_end;
+        have_match_ = re_.do_match(&match_, 
+                                   str_ + position_, length_ - position_,
+                                   &match_end);
+        position_ = position_ + match_end;
+    }
+}
+
+//
+// sample program, proof of concept
+//
 int regexp_pcre_main(int argc, char** argv)
 {
     regexp re(argv[1]);
     std::string line;
+    
     while( std::getline(std::cin, line) ) {
-        if( re.matches(line.c_str(), line.size() ) ) { 
-            std::cout << line << std::endl;
+        tinfra::strip_inplace(line);
+        for(matcher m(re, line.c_str(), line.size()); m.has_next(); ) {
+            regexp::match_result const& match = m.next();
+            std::cout << match[0] << std::endl;
         }
     }
     return 0;    
