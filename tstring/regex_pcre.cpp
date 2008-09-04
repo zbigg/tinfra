@@ -17,7 +17,7 @@ class regexp {
 public:
     typedef std::vector<std::string> match_result;
     
-    regexp(const char* pattern, int options = 0);
+    regexp(const char* pattern);
     ~regexp();
     
     bool matches(const char* str, size_t length) const {
@@ -70,12 +70,12 @@ private:
 //
 using tinfra::fmt;
 
-regexp::regexp(const char* pattern, int options):
+regexp::regexp(const char* pattern):
     re_(0),
     extra_(0),
     patterns_count_(0)
 {
-    compile(pattern, options);
+    compile(pattern, 0);
 }
 
 regexp::~regexp()
@@ -194,10 +194,68 @@ void matcher::try_match()
 }
 
 //
+// scanner
+//
+
+class scanner {
+    regexp::match_result match_;
+    size_t  current_param_;
+    bool    have_match_;
+public:
+    scanner(regexp const& re, const char* str):  
+        current_param_(0),
+        have_match_(re.matches(str, match_))
+    {
+    }
+    scanner(regexp const& re, const char* str, size_t length):  
+        current_param_(0),
+        have_match_(re.matches(str, length, match_))
+    {
+    }
+    
+    bool matches() const { return have_match_; }
+    
+    operator bool() const { return matches(); }
+    
+    template <typename T>
+    scanner& push(T& value) {
+        if( !have_match_ ) 
+            return *this;
+        current_param_++;
+        if( current_param_ == match_.size() ) {
+            throw std::logic_error("scanner: too many arguments");
+        }
+        tinfra::from_string<T>(match_[current_param_], value);        
+        return *this;
+    }
+    
+    template <typename T>
+    scanner& operator <<(T& value) { return push(value); }
+    
+    template <typename T>
+    scanner& operator %(T& value) { return push(value); }
+};
+
+//
 // sample program, proof of concept
 //
+
+void test_scanner()
+{
+    std::string name;
+    int h,m,s;
+    bool matches = scanner("^(\\w+) (\\d+):(\\d+):(\\d+)$", "Week 1:22:333") % name % h % m % s % s;
+    
+    assert(matches);
+    assert(name=="Week");
+    assert(h==1);
+    assert(m==22);
+    assert(s==333);
+}
 int regexp_pcre_main(int argc, char** argv)
 {
+    test_scanner();
+    
     regexp re(argv[1]);
     std::string line;
     
