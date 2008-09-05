@@ -108,7 +108,8 @@
         <include>$(SRCDIR)</include>
         <sources>
             tinfra/test_string.cpp
-            tinfra/test_path.cpp            
+            tinfra/test_tstring.cpp
+            tinfra/test_path.cpp
             tinfra/test_fs.cpp
             tinfra/test_test.cpp
             tinfra/test_multitype_map.cpp

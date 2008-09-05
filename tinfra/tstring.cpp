@@ -80,6 +80,116 @@ namespace tinfra {
         }
     }
 #endif
+
+// find first of
+tstring::size_type 
+tstring::find_first_of(char_type const* s, size_type pos, size_type n) const
+{
+    if( tstring::size() > 0 ) {
+        for( const_iterator i = begin()+pos; i != end(); ++i ) {
+            if( std::memchr(s, *i, n) != 0 ) // 'not in S' so return
+                return i - begin();
+        }
+    }
+    return npos;
+}
+tstring::size_type 
+tstring::find_first_of(char_type c, size_type pos) const
+{
+    if( tstring::size() > 0 ) {
+        for( const_iterator i = begin()+pos; i != end(); ++i ) {
+            if( *i == c ) // '== C' so return
+                return i - begin();
+        }
+    }
+    return npos;
+}
+
+// find first not of
+
+tstring::size_type
+tstring::find_first_not_of(char_type const* s, size_type pos, size_type n) const
+{
+    if( tstring::size() > 0 ) {
+        for( const_iterator i = begin()+pos; i != end(); ++i ) {
+            if( std::memchr(s, *i, n) == 0 ) // 'not in S' so return
+                return i - begin();
+        }
+    }
+}
+
+tstring::size_type
+tstring::find_first_not_of(char_type c, size_type pos) const
+{
+    if( tstring::size() > 0 ) {
+        for( const_iterator i = begin()+pos; i != end(); ++i ) {
+            if( *i != c )
+                return i - begin();
+        }
+    }
+    return npos;
+}
+
+// find last of
+
+tstring::size_type
+tstring::find_last_of(char_type const* s, size_type pos, size_type n) const
+{
+    if( tstring::size() > 0 ) {
+        // TODO: pos not used!
+        for( const_iterator i = rbegin(); i != rend(); --i ) {
+            if( std::memchr(s, *i, n) != 0 ) // 'in S' so return
+                return i - begin();
+        }
+    }
+    return npos;
+}
+
+tstring::size_type
+tstring::find_last_of(char_type c, size_type pos) const
+{
+    if( tstring::size() > 0 ) {
+        // TODO: pos not used!
+        for( const_iterator i = rbegin(); i != rend(); --i ) {
+            if( *i == c ) // '== C' so return
+                return i - begin();
+        }
+    }
+    return npos;
+}
+
+// find last not of
+
+tstring::size_type
+tstring::find_last_not_of(char_type const* s, size_type pos, size_type n) const
+{
+    if( tstring::size() > 0 ) {
+        // TODO: pos not used!
+        for( const_iterator i = rbegin(); i != rend(); --i ) {
+            if( std::memchr(s, *i, n) == 0 ) // 'not == S' so return
+                return i - begin();
+        }
+    }
+    return npos;
+}
+
+tstring::size_type
+tstring::find_last_not_of(char_type c, size_type pos) const
+{
+    if( tstring::size() > 0 ) {
+        // TODO: pos not used!
+        for( const_iterator i = rbegin(); i != rend(); --i ) {
+            if( *i != c ) // 'not = C' so return
+                return i - begin();
+        }
+    }
+    return npos;
+}
     
 } // end namespace tinfra
+
+std::ostream& operator<<(std::ostream& out, tinfra::tstring const& s)
+{
+    return out.write(s.data(), s.size());
+}
 

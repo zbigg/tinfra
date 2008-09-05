@@ -1,33 +1,9 @@
 #ifndef __tinfra_tstring_h__
 #define __tinfra_tstring_h__
 
+#include <string>
+
 namespace tinfra {
-    
-template <typename IMPL>
-class string_traits {
-    std::string  str()   const  { return std::string(IMPL::data(), IMPL::size()); }
-    
-    operator char const*() const { return IMPL::data(); }
-    
-    char        operator[](size_t n) const { return IMPL::data()[n]; }
-    
-    int cmp (IMPL const& other) const {
-        size_t common_length = std::min(IMPL::size(), other.size());
-        int r = std::memcmp(IMPL::data(), other.data(), common_length);
-        if( r != 0 ) 
-            return r;
-        return IMPL::size() - other.size();
-    }
-    
-    bool operator == (const IMPL& other) const { return cmp(other) == 0; }
-    bool operator != (const IMPL& other) const { return cmp(other) != 0; }
-    
-    bool operator >  (const IMPL& other) const { return cmp(other) > 0; }    
-    bool operator <  (const IMPL& other) const { return cmp(other) < 0; }
-    
-    bool operator >= (const IMPL& other) const { return cmp(other) >= 0; }    
-    bool operator <= (const IMPL& other) const { return cmp(other) <= 0; }
-};
 
 /**
     Temporary string that is valid in this scope and in all children scopes.
@@ -53,7 +29,7 @@ class string_traits {
 
 #define TINFRA_TSTING_CHECKS 0
         
-class tstring: public string_traits<tstring> {
+class tstring  {
     const char* str_;
     size_t      length_;
 #if TINFRA_TSTING_CHECKS
@@ -118,12 +94,83 @@ public:
     
     char const*  data() const  { return str_; }
     
-    //char const*  c_str() const  { return str_; }
+    char const*  c_str() const  { return str_; }
     
-    operator char const*() const { return data(); }
+    std::string  str()   const  { return std::string(tstring::data(), tstring::size()); }
+    
+    //operator char const*() const { return data(); }
+    
+    char        operator[](size_t n) const { return tstring::data()[n]; }
     
     size_t size()       const { return length_; }
+
+    typedef char   char_type;
+    typedef size_t size_type;
     
+    typedef char_type const*  iterator;
+    typedef char_type const*  const_iterator;
+
+    
+    int cmp (tstring const& other) const {
+        size_t common_length = std::min(size(), other.size());
+        int r = std::memcmp(data(), other.data(), common_length);
+        if( r != 0 ) 
+            return r;
+        return tstring::size() - other.size();
+    }
+    
+    bool operator == (const tstring& other) const { return cmp(other) == 0; }
+    bool operator != (const tstring& other) const { return cmp(other) != 0; }
+    
+    bool operator >  (const tstring& other) const { return cmp(other) > 0; }    
+    bool operator <  (const tstring& other) const { return cmp(other) < 0; }
+    
+    bool operator >= (const tstring& other) const { return cmp(other) >= 0; }    
+    bool operator <= (const tstring& other) const { return cmp(other) <= 0; }
+    
+    iterator begin() { return data(); }
+    iterator end() { return data()+tstring::size(); }
+    
+    const_iterator begin() const { return data(); }
+    const_iterator end()   const { return data() + size(); }
+    
+    const_iterator rbegin() const { return data() + size() - 1; }
+    const_iterator rend()   const { return data() - 1; }
+    
+    // find first of
+    size_type find_first_of(tstring const& s, size_type pos = 0) const
+    {
+        return this->find_first_of(s.data(), pos, s.size());
+    }
+    size_type find_first_of(char_type const* s, size_type pos, size_type n) const;
+    size_type find_first_of(char_type c, size_type pos = 0) const;
+    
+    // find first not of
+    size_type find_first_not_of(tstring const& s, size_type pos = 0) const
+    {
+        return this->find_first_not_of(s.data(), pos, s.size());
+    }
+    size_type find_first_not_of(char_type const* s, size_type pos, size_type n) const;
+    size_type find_first_not_of(char_type c, size_type pos = 0) const;
+    
+    // find last of
+    size_type find_last_of(tstring const& s, size_type pos = npos) const
+    {
+        return this->find_last_of(s.data(), pos, s.size());
+    }
+    size_type find_last_of(char_type const* s, size_type pos, size_type n) const;
+    size_type find_last_of(char_type c, size_type pos = npos) const;
+    
+    // find last not of
+    size_type find_last_not_of(tstring const& s, size_type pos = npos) const
+    {
+        return this->find_last_not_of(s.data(), pos, s.size());
+    }
+    
+    size_type find_last_not_of(char_type const* s, size_type pos, size_type n) const;    
+    size_type find_last_not_of(char_type c, size_type pos = npos) const;
+    
+    static const size_type npos = ~(size_type)0;
 private:
 #if TINFRA_TSTING_CHECKS
     static const void* make_stamp(const void* v)
@@ -143,10 +190,7 @@ namespace tstring_detail {
 
 } // end of namespace tinfra
 
-inline std::ostream& operator<<(std::ostream& out, tinfra::tstring const& ts)
-{
-    out.write(ts.data(), ts.size());
-}
+std::ostream& operator<<(std::ostream& out, tinfra::tstring const& s);
 
 #endif
 

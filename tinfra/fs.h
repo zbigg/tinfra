@@ -1,39 +1,36 @@
 #include <string>
 #include <vector>
 
+#include "tinfra/tstring.h"
+
 namespace tinfra {
 namespace fs {
 
 struct file_list_visitor {
-    virtual void accept(const char* name) =0;
+    virtual void accept(tstring const& name) =0;
 };
 
-void list_files(const char* path, file_list_visitor& visitor);
-void list_files(const char* path, std::vector<std::string>& result);
+void list_files(tstring const& path, file_list_visitor& visitor);
+void list_files(tstring const& path, std::vector<std::string>& result);
 inline std::vector<std::string> list_files(const char* path) {
     std::vector<std::string> r;
     list_files(path, r);
     return r;
 }
     
-void copy(const char* src, const char* dest);
+void copy(tstring const& src, tstring const& dest);
 
-void cd(const char* dirname);
+void cd(tstring const& dirname);
+
 std::string pwd();
-void mkdir(const char* name, bool create_parents = true);
 
-void rm(const char* name);
-void rmdir(const char* name);
+void mkdir(tstring const& name, bool create_parents = true);
 
-void recursive_copy(const char* src, const char* dest);
-void recursive_rm(const char* src);
+void rm(tstring const& name);
+void rmdir(tstring const& name);
 
-// std::string inliners
-inline
-void list_files(std::string const& name, std::vector<std::string>& result) { return list_files(name.c_str(), result); }
-
-inline 
-void recursive_copy(std::string const& src, std::string const& dest) { return recursive_copy(src.c_str(), dest.c_str()); }
+void recursive_copy(tstring const& src, tstring const& dest);
+void recursive_rm(tstring const& src);
 
 struct walker 
 {
@@ -47,7 +44,7 @@ struct walker
                 through children of current element 
         @throws throws walker::stop to forcifully stop walking
     */
-    virtual bool accept(const char* name, const char* parent, bool is_dir) = 0;
+    virtual bool accept(tstring const& name, tstring const& parent, bool is_dir) = 0;
 };
 
 /** Walk through filesystem hierarchy.

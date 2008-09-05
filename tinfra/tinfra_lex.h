@@ -5,6 +5,7 @@
 #include "tinfra/platform.h"
 #include "tinfra.h"
 #include "exception.h"
+#include "tinfra/tstring.h"
 
 namespace tinfra {
 
@@ -82,6 +83,17 @@ struct LexicalInterpreter<const char*> {
 	static void to_string(const char* v, std::ostream& dest) {
 		dest << v;
 	}	
+};
+
+// strings are can be casted with no-op
+template<> 
+struct LexicalInterpreter<tstring> {
+	static void to_string(tstring const& v, std::string& dest) {
+		dest.assign(v.data(), v.size());
+	}
+	static void to_string(tstring const& v, std::ostream& dest) {
+		dest.write(v.data(), v.size());
+	}
 };
 
 template<> 
