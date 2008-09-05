@@ -143,9 +143,9 @@ namespace tstring_detail {
 
 } // end of namespace tinfra
 
-std::ostream& operator<<(std::ostream&s, tinfra::tstring const& s)
+inline std::ostream& operator<<(std::ostream& out, tinfra::tstring const& ts)
 {
-    s.write(s.data(), s.size());
+    out.write(ts.data(), ts.size());
 }
 
 #endif
