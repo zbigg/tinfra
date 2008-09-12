@@ -6,7 +6,7 @@ tstring: tstring.o
 
 #tstring.cpp: tstring.h
 
-regex_pcre: regex_pcre.o
+regex_pcre: regex_pcre.o regexp.o
 
 filter: filter.o
 
