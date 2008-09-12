@@ -184,20 +184,14 @@ void copy(const char* src, const char* dest)
         copy(src, path::join(dest, path::basename(src) ).c_str());
         return;
     }
-    std::filebuf in;
-    if( !in.open(src, std::ios::in | std::ios::binary) ) {
-        std::string error_str = "?";
-        throw std::runtime_error(fmt("unable to open input '%s': %s") % src % error_str);
-    }
+
+    typedef std::auto_ptr<tinfra::io::stream> stream_ptr;
     
-    std::filebuf out;
-    if( ! out.open(dest, std::ios::out | std::ios::trunc | std::ios::binary) ) 
-    {
-        std::string error_str = "?";
-        throw std::runtime_error(fmt("unable to open output '%s': %s") % dest % error_str);
-    }
+    stream_ptr in(tinfra::io::open_file(src, std::ios::in | std::ios::binary));
+    stream_ptr out(tinfra::io::open_file(dest, std::ios::out | std::ios::trunc | std::ios::binary));
     
-    tinfra::io::copy(in, out);
+    tinfra::io::copy(in.get(), out.get());
+    out->close();
 }
 
 void cd(const char* dirname)

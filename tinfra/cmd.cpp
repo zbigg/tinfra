@@ -76,6 +76,7 @@ unsigned app::error_count() const
 void app::fail(std::string const& msg)
 {
     print_maybe_multiline(program_name() + ": fatal error: ", msg,cerr);
+    error_count_ += 1;
     exit(1);
 }
 
@@ -94,8 +95,8 @@ void app::error(std::string const& msg)
 void app::inform(std::string const& msg)
 {
     print_maybe_multiline(program_name() + ": ", msg,cerr);
-    error_count_ += 1;
 }
+
 static app default_app;
 
 app& app::get()

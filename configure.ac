@@ -34,12 +34,14 @@ AC_CHECK_HEADERS([pthread.h])
 AC_CHECK_FUNCS([opendir nanosleep usleep])
 
 case "$target" in
-*-mingw|*-mingw32)
+*-mingw*|*-mingw32*)
 	LIBS="$LIBS -lwsock32"
 	;;
 esac
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(nsl,gethostbyname)
+
+AC_CHECK_FUNC(hstrerror)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

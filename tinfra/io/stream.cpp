@@ -7,6 +7,7 @@
 #include <cstring>
 #include <cctype>
 #include <algorithm>
+#include <stdexcept>
 
 using namespace std;
 
@@ -30,6 +31,64 @@ stream* open_command_pipe(char const* command, openmode mode)
 stream* open_anon_pipe()
 {    
     throw io_exception("anon_pipe: unimplemented");
+}
+
+//
+// dstream implementation
+//
+
+dstream::dstream(stream* input, stream* output)
+: input_(input), output_(output) 
+{
+}
+
+dstream::~dstream() { 
+    delete input_;
+    delete output_;
+}
+
+void dstream::close() {    
+    if( input_ )  input_->close();
+    if( output_ ) output_->close();
+}
+int dstream::seek(int pos, seek_origin origin) {
+    int r = 0;
+    if( input_ )
+        r = input_->seek(pos, origin);
+    if( output_ )
+        r = output_->seek(pos, origin);
+    return r;
+}
+int dstream::read(char* dest, int size) {
+    if( !input_ )
+        throw io_exception("trying to read from write-only stream");
+    return input_->read(dest, size);
+}
+int dstream::write(const char* data, int size) {
+    if( !output_ )
+        throw io_exception("trying to write to read-only stream");
+    return output_->write(data, size);
+}
+void dstream::sync() {
+    if( input_ ) input_->sync();
+    if( output_ ) output_->sync();
+}
+
+intptr_t dstream::native() const
+{
+    if( input_ ) return input_->native();
+    if( output_ ) return output_->native();
+    throw std::logic_error("dstream::native: not supported call");
+}
+
+void dstream::release()
+{
+    if( input_ ) input_->release();
+    if( output_ ) output_->release();
+}
+stream* create_dstream(stream* input_, stream* output_)
+{
+    return new dstream(input_, output_);
 }
 
 //
@@ -67,7 +126,7 @@ zstreambuf& zstreambuf::open_socket(char const* target, int port)
     stream_ = tinfra::io::open_socket(target, port);    
     own_ = true;
     return *this;
-    }
+}
 
 zstreambuf& zstreambuf::open_pipe(char const* command, openmode mode)
 {
@@ -119,6 +178,7 @@ bool zstreambuf::need_buf()
         buffer_ = new char[default_buffer_size];
         buffer_size_ = default_buffer_size;
         own_buffer_ = true;
+        return true;
     } else {
         return false;
     }
@@ -286,10 +346,30 @@ int zstreambuf::write(const char* data, int size) {
 //
 // misc
 //
+static const int COPY_BUFFER_SIZE = 65536;
+
+void copy(stream* in, stream* out, size_t max_bytes)
+{
+    char buffer[COPY_BUFFER_SIZE];
+    // TODO: implement max_bytes > 0 case
+    if( max_bytes != 0 )
+        throw std::logic_error("copy(streams, max_bytes != 0) not implemented");
+    int readed;
+    while( (readed = in->read(buffer, sizeof(buffer))) > 0 ) {
+        int written = 0;
+        while( written < readed ) {
+            int cw = out->write(buffer + written, readed-written);
+            if( cw <= 0 ) {
+                throw std::runtime_error("error copying file, output stream closed?");
+            }
+            written += cw;
+        }
+    }
+}
 
 void copy(std::streambuf& in, std::streambuf& out)
 {
-    char buffer[8192];
+    char buffer[COPY_BUFFER_SIZE];
     std::streamsize readed;
     while( (readed = in.sgetn(buffer, sizeof(buffer))) > 0 ) 
     {
@@ -305,5 +385,6 @@ void copy(std::streambuf& in, std::streambuf& out)
         }
     }
 }
+
 } } //end namespace tinfra::io
 

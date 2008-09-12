@@ -116,7 +116,9 @@ void* Thread::join()
 
 void Thread::sleep(long milliseconds)
 {
-#if defined(HAVE_NANOSLEEP)
+#if defined(WIN32)
+    ::Sleep(milliseconds);
+#elif defined(HAVE_NANOSLEEP)
     // nanosleep accepts nanoseconds
     timespec req,rem;
     req.tv_sec  = milliseconds / 1000000000;

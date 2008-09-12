@@ -2,6 +2,7 @@
 #include <cstring>
 #include <errno.h>
 
+#include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
 
 namespace tinfra {
@@ -26,6 +27,9 @@ void throw_errno_error(int error, std::string const & message)
     case EFBIG:
     case ENOSPC:
         throw_errno<std::length_error>(error, message);
+    
+    case EAGAIN:
+        throw_errno<tinfra::io::would_block>(error, message);
     
     case ENOENT:
     case EISDIR:

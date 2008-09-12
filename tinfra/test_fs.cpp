@@ -3,6 +3,8 @@
 #include "tinfra/test.h"
 #include <iostream>
 
+#include <stdexcept>
+
 #include <unittest++/UnitTest++.h>
 
 using namespace tinfra;
@@ -14,7 +16,12 @@ SUITE(tinfra_fs)
         test::TempTestLocation testLocation("testtest_file");
         fs::copy("testtest_file", "boo.test");
         CHECK( path::is_file("boo.test") );
-        // TODO: check file contents
+        
+        // check if source doesn't exist
+        CHECK_THROW( fs::copy("testtest_fileXX", "foo"), std::logic_error);
+        
+        // check if dest directory doesn't exist
+        CHECK_THROW( fs::copy("testtest_file", "fooFOOfoo/foo"), std::logic_error);
     }
     
     TEST(test_list_files)

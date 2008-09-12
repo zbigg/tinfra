@@ -1,6 +1,7 @@
 #include "tinfra/fmt.h"
 
 #include <unittest++/UnitTest++.h>
+#include <sstream>
 
 using tinfra::fmt;
 using tinfra::simple_fmt;
@@ -50,5 +51,12 @@ SUITE(tinfra_fmt) {
     {
         const char* str = "zero";
         CHECK_EQUAL( str, (const char*)(fmt("%s") % str));
+    }
+    
+    TEST(fmt_iostream)
+    {
+	std::ostringstream tst;
+	tst << fmt("%s %s %s") % "a" % 1 % 'c';
+	CHECK_EQUAL("a 1 c", tst.str().c_str());
     }
 } // end SUITE(fmt)

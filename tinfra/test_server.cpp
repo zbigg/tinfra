@@ -58,7 +58,7 @@ public:
 
 class TestServer: public tinfra::net::Server, public tinfra::Runnable {
 public:
-    virtual void onAccept(std::auto_ptr<tinfra::io::stream> client) {
+    virtual void onAccept(std::auto_ptr<tinfra::io::stream> client, std::string const&) {
         Runnable* worker = new Client(client, *this);        
         //tinfra::Thread::start_detached(*worker);
         worker->run();
@@ -87,23 +87,35 @@ SUITE(tinfra_server)
     {
         TestServer server;
         server.bind("localhost", 10900);
-        tinfra::Thread server_thread = tinfra::Thread::start(server);    
+        tinfra::ThreadSet ts;
+        tinfra::Thread server_thread = ts.start(server);    
         {        
-            std::auto_ptr<tinfra::io::stream> client = std::auto_ptr<tinfra::io::stream>(tinfra::io::socket::open_client_socket("localhost",10900));
+            std::auto_ptr<tinfra::io::stream> client(tinfra::io::socket::open_client_socket("localhost",10900));
             
             tinfra::io::zstreambuf ibuf(client.get());
             tinfra::io::zstreambuf obuf(client.get());
             
             std::istream in(&ibuf);
             std::ostream out(&obuf);
-            
+	    
+            // TODO: this test fails with "zyszek" sometimes
+	    //       because zstreambuf is broken
+	    //       in following read sequence: 
+	    //  sendto(4, "zbyszek", 7, 0, NULL, 0)     = 7
+	    //  sendto(4, "\n", 1, 0, NULL, 0)          = 1
+	    //  recvfrom(4, "z", 1, 0, NULL, NULL)      = 1
+	    //  recvfrom(4, "byszek", 32768, 0, NULL, NULL) = 6
+	    //  recvfrom(4, "\r\n", 32768, 0, NULL, NULL) = 2
+	    //
+	    // and thus std::getline( returns "zyszek\r\n")
+		
             CHECK_EQUAL( "zbyszek", invoke(in,out, "zbyszek"));
+	    
             CHECK_EQUAL( "A", invoke(in,out, "A"));
             CHECK_EQUAL( "", invoke(in,out, ""));
             CHECK_EQUAL( "quitting", invoke(in,out, "stop"));
         }
         server.stop();
-        server_thread.join();
     }
 
     // check if Server::stop can abort blocking accept call
@@ -111,8 +123,9 @@ SUITE(tinfra_server)
     {
         TestServer server;
         server.bind("localhost", 10901);
-        tinfra::Thread server_thread = tinfra::Thread::start(server);    
+        tinfra::ThreadSet ts;
+        ts.start(server);
+        
         server.stop();
-        server_thread.join();
     }
 }

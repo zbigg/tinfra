@@ -118,18 +118,26 @@ int posix_stream::seek(int pos, stream::seek_origin origin)
 
 int posix_stream::read(char* data, int size)
 {
-    int r = ::read(handle_, data, size);
-    if( r < 0 ) 
-        throw_errno_error(errno, "read failed");
-    return r;
+    while( true ) {
+        int r = ::read(handle_, data, size);
+        if( r < 0 && errno == EINTR ) 
+            continue;
+        if( r < 0 ) 
+            throw_errno_error(errno, "read failed");
+        return r;
+    }
 }
 
 int posix_stream::write(char const* data, int size)
 {
-    int w = ::write(handle_, data, size);
-    if( w < 0 ) 
-        throw_errno_error(errno, "write failed");
-    return w;
+    while( true ) {
+        int w = ::write(handle_, data, size);
+        if( w < 0 && errno == EINTR )
+            continue;
+        if( w < 0 ) 
+            throw_errno_error(errno, "write failed");
+        return w;
+    }
 }
 
 void posix_stream::sync()

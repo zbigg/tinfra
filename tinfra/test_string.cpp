@@ -22,4 +22,36 @@ SUITE(tinfra_string)
         CHECK_EQUAL("a\\x1c", escape_c("a\x01c"));
         CHECK_EQUAL("abc\\xff", escape_c("abc\xff"));        
     }
+    
+    TEST(split_lines)
+    {
+        using tinfra::split_lines;
+        using std::vector;
+        using std::string;
+        
+        vector<string> r;
+        r = split_lines("");
+        CHECK_EQUAL(1, r.size() );
+        
+        r = split_lines("a");
+        CHECK_EQUAL(1, r.size() );
+        CHECK_EQUAL("a", r[0] );
+        
+        r = split_lines("a\r");
+        CHECK_EQUAL(1, r.size() );
+        CHECK_EQUAL("a", r[0] );
+        
+        r = split_lines("a\n");
+        CHECK_EQUAL(1, r.size() );
+        CHECK_EQUAL("a", r[0] );
+        
+        r = split_lines("a\r\n");
+        CHECK_EQUAL(1, r.size() );
+        CHECK_EQUAL("a", r[0] );
+        
+        r = split_lines("a\r\nb");
+        CHECK_EQUAL(2, r.size() );
+        CHECK_EQUAL("a", r[0] );
+        CHECK_EQUAL("b", r[1] );
+    }
 }

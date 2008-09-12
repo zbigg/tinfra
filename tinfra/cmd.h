@@ -29,6 +29,9 @@ private:
 
 int main(int argc, char* argv[],int (*real_main)(int,char*[]));
 
+#define TINFRA_MAIN(a) int main(int argc, char** argv) \
+    { return tinfra::cmd::main(argc, argv, a); }
+
 } } // end of namespace tinfra::cmd
 
 #endif

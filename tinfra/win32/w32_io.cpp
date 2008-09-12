@@ -2,6 +2,7 @@
 #include "tinfra/fmt.h"
 #include "tinfra/win32.h"
 
+#include <stdio.h>
 #include <windows.h>
 
 namespace tinfra {
@@ -39,7 +40,7 @@ private:
     int close_nothrow();
 };
 
-static void throw_io_exception(const char* message);
+static void throw_get_last_error(const char* message);
 
 win32_stream::~win32_stream()
 {
@@ -55,13 +56,13 @@ win32_stream::~win32_stream()
 void win32_stream::close()
 {
     if( close_nothrow() == -1 ) 
-        throw_io_exception("close failed");
+        throw_get_last_error("close failed");
+    
 }
 
-static void throw_io_exception(const char* message)
+static void throw_get_last_error(const char* message)
 {
-    unsigned int error = ::GetLastError();
-    throw new io_exception(fmt("%s: %s(%i)") % message % get_error_string(error) % error);
+    throw_system_error(message);
 }
 
 stream* open_native(void* handle)
@@ -114,7 +115,7 @@ stream* open_file(const char* name, std::ios::openmode mode)
                 FILE_ATTRIBUTE_NORMAL,
                 NULL);
     if( handle == INVALID_HANDLE_VALUE || handle == NULL ) {
-        throw io_exception(fmt("unable to open %s") % name);
+        throw_get_last_error(fmt("unable to open %s") % name);
     }
     return new win32_stream(handle);
 }
@@ -145,7 +146,9 @@ int win32_stream::seek(int pos, stream::seek_origin origin)
     if( r != 0xffffffff ) {
         return (int)r;
     } else {
-        throw_io_exception("seek failed");
+        throw_get_last_error("seek failed");
+        // doesn't return
+        return -1;
     }
 }
 
@@ -158,8 +161,12 @@ int win32_stream::read(char* data, int size)
                 &readed,
                 NULL) == 0)
     {
-        throw_io_exception("read failed"); 
+        DWORD error = ::GetLastError();
+        if( error == ERROR_BROKEN_PIPE )
+            return 0;
+        throw_get_last_error("read failed"); 
     }
+    //printf("win32_stream: readed %i bytes\n", readed);
     return readed;
 }
 
@@ -171,9 +178,10 @@ int win32_stream::write(char const* data, int size)
                   (DWORD)  size,
                   &written,
                   NULL ) == 0 ) 
-    {
-        throw_io_exception("write failed"); 
+    {        
+        throw_get_last_error("write failed"); 
     }
+    //printf("win32_stream: written %i bytes\n", written);
     return written;
 }
 
@@ -194,9 +202,9 @@ stream* open_file(const char* name, std::ios::openmode mode)
     return tinfra::win32::open_file(name, mode);
 }
 
-stream* open_native(void* handle)
+stream* open_native(intptr_t handle)
 {
-    return tinfra::win32::open_native(handle);
+    return tinfra::win32::open_native(reinterpret_cast<HANDLE>(handle));
 }
     
 } } // end namespace tinfra::io

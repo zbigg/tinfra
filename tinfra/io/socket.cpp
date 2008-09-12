@@ -4,6 +4,8 @@
 #include "tinfra/os_common.h"
 
 #include "tinfra/string.h" // debug only
+
+#include "tinfra/win32.h"
 #include <iostream> // debug only
 
 #include <stdexcept>
@@ -12,6 +14,8 @@
 #include <winsock.h>
 
 #define TS_WINSOCK
+
+typedef int socklen_t;
 
 #else
 
@@ -22,6 +26,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #define TS_BSD
 #endif
@@ -132,30 +137,8 @@ public:
     socket_type get_socket() const { return socket_; }
 };
 
-#ifdef _WIN32
-// TODO: it's already present in w32_common
-std::string win32_strerror(DWORD error_code)
-{
-    LPVOID lpMsgBuf;
-    if( ::FormatMessage(
-	FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-	NULL,
-	error_code,
-	MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-	(LPTSTR) &lpMsgBuf,
-	0,
-	NULL
-	) < 0 || lpMsgBuf == NULL) {
-
-	return fmt("unknown error: %i") % error_code;
-    }
-    std::string result((char*)lpMsgBuf);
-    ::LocalFree(lpMsgBuf);
-    strip_inplace(result);
-    return result;
-}
-
-#endif
+static void throw_socket_error(const char* message);
+static void throw_socket_error(int error_code, const char* message);
 
 static void ensure_socket_initialized()
 {
@@ -170,13 +153,13 @@ static void ensure_socket_initialized()
     err = WSAStartup(wVersionRequested, &wsaData);
 
     if (err != 0)
-	throw io_exception(fmt("unable to initialize WinSock system: %s") % win32_strerror(err));
+	throw_socket_error(err, "unable to initialize WinSock subsystem");
 
     if ( LOBYTE( wsaData.wVersion ) != 1 ||
 	   HIBYTE( wsaData.wVersion ) != 1 ) {
         WSACleanup();
         errno = ENODEV;
-        throw io_exception("bad winsock version");
+        throw_socket_error(err, "unsupported WinSock version");
     }
     winsock_initialized = true;
 #endif
@@ -194,14 +177,7 @@ static int  socket_get_last_error()
 static void throw_socket_error(int error_code, const char* message)
 {
 #ifdef TS_WINSOCK
-    std::string error_str = fmt("%s: %s (%i)") % message % win32_strerror(error_code) % error_code;
-    // TODO: differentiate between logic, domain and runtime errors
-    //switch( error_code ) {
-    //case 
-    //default:
-        throw std::runtime_error(error_str);
-    //}
-    
+    tinfra::win32::throw_system_error(error_code, message);
 #else
     throw_errno_error(errno, message);
 #endif
@@ -240,9 +216,17 @@ static socket_type create_socket()
 #define INADDR_NONE -1
 #endif
 
-static void get_inet_address(const char* address,int rport, struct sockaddr_in* sa)
+#if !defined(TS_WINSOCK) && !defined(HAVE_HSTRERROR)
+static const char* hstrerror(int error_code)
+{
+	return "host not found";
+}
+#endif
+
+static void get_inet_address(const char* address, int rport, struct sockaddr_in* sa)
 {
     ensure_socket_initialized();
+    if( address == 0 ) throw std::invalid_argument("null address pointer");
     
     std::memset(sa,0,sizeof(*sa));
     sa->sin_family = AF_INET;
@@ -256,12 +240,14 @@ static void get_inet_address(const char* address,int rport, struct sockaddr_in* 
         ha = ::gethostbyname(address);
         if( ha == NULL ) {
 #ifdef TS_WINSOCK
-            throw_socket_error(fmt("unable to resolve: %s") % address);
+            throw_socket_error(fmt("unable to resolve '%s'") % address);
 #else
-            std::string message = fmt("unable to resolve: %s: %s") % address % hstrerror(h_errno);
+            std::string message = fmt("unable to resolve '%s': %s") % address % hstrerror(h_errno);
             switch( h_errno ) {
             case HOST_NOT_FOUND:
-            case NO_ADDRESS:            
+            case NO_ADDRESS:
+            // TODO: check on uix machine: NO_DATA should be also domain error
+            // case NO_DATA: 
                 throw std::domain_error(message);
             default:
                 throw std::runtime_error(message);
@@ -273,6 +259,7 @@ static void get_inet_address(const char* address,int rport, struct sockaddr_in* 
         /* found with inet_addr or inet_aton */
         std::memcpy(&sa->sin_addr,&ia,sizeof(ia));
     }
+    sa->sin_port = htons((short)rport);
 }
 
 stream* open_client_socket(char const* address, int port)
@@ -283,7 +270,7 @@ stream* open_client_socket(char const* address, int port)
     
     socket_type s = create_socket();
     
-    if( ::connect(s, (struct sockaddr*)&sock_addr,sizeof(sock_addr)) < 0 ) {
+    if( ::connect(s, (struct sockaddr*)&sock_addr,sizeof(sock_addr)) != 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
         throw_socket_error(error_code, fmt("unable to connect to '%s:%i'") % address % port);
@@ -299,18 +286,26 @@ stream* open_server_socket(char const* listening_host, int port)
     if( listening_host ) {
         get_inet_address(listening_host, port, &sock_addr);
     } else {
+        listening_host = "0.0.0.0";
         sock_addr.sin_port = htons((short) port);
     }
     
     socket_type s = create_socket();
     
-    if( ::bind(s,(struct sockaddr*)&sock_addr,sizeof(sock_addr)) < 0 ) {
+    {
+        int r = 1;
+        if( ::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)(void*)&r, sizeof(r)) ) {
+            // TODO: it should be warning
+            std::cerr << "unable to set SO_REUSEADDR=1 on socket" << std::endl;
+        }
+    }
+    if( ::bind(s,(struct sockaddr*)&sock_addr, sizeof(sock_addr)) != 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
-        throw_socket_error(error_code, "bind failed");
+        throw_socket_error(error_code, fmt("bind to '%s:%i' failed") % listening_host % port );
     }
 
-    if( ::listen(s,5) < 0 ) {
+    if( ::listen(s,5) != 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
         throw_socket_error(error_code, "listen failed");
@@ -319,17 +314,57 @@ stream* open_server_socket(char const* listening_host, int port)
     return new socketstream(s);
 }
 
-stream* accept_client_connection(stream* server_socket)
+std::string get_peer_address_string(sockaddr_in const& address)
+{
+    char buf[64] = "0.0.0.0";
+#ifdef HAVE_INET_NTOP
+    if( inet_ntop(AF_INET, &address.sin_addr, buf, sizeof(buf)) == 0 ) {
+        return "<unknown>";
+    }
+#elif defined TS_WINSOCK
+    strncpy( buf, inet_ntoa(address.sin_addr), sizeof(buf));    
+#endif
+    return tinfra::fmt("%s:%i") % buf % ntohs(address.sin_port);
+}
+
+stream* accept_client_connection(stream* server_socket, std::string* peer_address)
 {
     socketstream* socket = dynamic_cast<socketstream*>(server_socket);
     if( !socket ) 
         throw std::invalid_argument("accept: not a socketstream");
     
-    socket_type accept_sock = ::accept(socket->get_socket(), NULL, NULL );
+    socklen_t addr_size = sizeof(sockaddr_in);
+    sockaddr_in client_address;
+    socket_type accept_sock = ::accept(socket->get_socket(), (struct sockaddr*)&client_address, &addr_size );
+    
     if( accept_sock == invalid_socket ) 
         throw_socket_error("accept failed");
-        
+    
+    if( peer_address )
+        *peer_address = get_peer_address_string(client_address);
     return new socketstream(accept_sock);
+}
+
+void set_blocking(intptr_t socket_, bool blocking)
+{
+    socket_type socket = static_cast<socket_type>(socket_);
+    
+#ifdef TS_WINSOCK
+    unsigned long block = blocking ? 0 : 1;
+    if( ioctlsocket(socket, FIONBIO, &block) < 0 )
+        throw_socket_error("set_blocking: ioctlsocket(FIONBIO) failed");
+#else
+    int flags = fcntl( socket, F_GETFL );
+    if( flags < 0 )
+        throw_socket_error("set_blocking: fcntl(F_GETFL) failed");
+    if( !blocking )
+        flags |= O_NONBLOCK;
+    else
+        flags &= ~(O_NONBLOCK);
+    if( fcntl( socket, F_SETFL, flags ) < 0 )
+        throw_socket_error("set_blocking: fcntl(F_SETFL) failed");
+#endif
+    
 }
 
 } } } //end namespace tinfra::io::socket
