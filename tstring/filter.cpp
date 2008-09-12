@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 
 #include "tinfra/fmt.h"
@@ -14,8 +15,29 @@ class regexp {
     ::pcre*       re_;
     ::pcre_extra* extra_;
     size_t     patterns_count_;
+    
 public:
-    typedef std::vector<std::string> match_result;
+    struct match_entry {               
+        std::string str() const { 
+            return std::string(begin(), size()); 
+        }
+
+        match_entry(): _begin(0), _end(0) {}  
+        match_entry(const char* begin, const char* end): 
+            _begin(begin), 
+            _end(end) 
+        {}
+        
+        const char* begin() const { return _begin; }
+        const char* end() const { return _end; }
+        
+        size_t      size() const { return _end - _begin; }
+    private:
+        const char* _begin;
+        const char* _end;
+    };
+    
+    typedef std::vector<match_entry> match_result;
     
     regexp(const char* pattern);
     ~regexp();
@@ -39,6 +61,7 @@ public:
     
 private:
     void compile(const char* pattern, int options);
+    regexp(regexp const& o) {}
 };
 
 class matcher {
@@ -128,8 +151,7 @@ bool regexp::do_match(match_result* result, const char* str, size_t length, size
         for( size_t i = 0; i <= patterns_count_; ++i ) {
             const char* p = str + offsets[i*2];
             const char* e = str + offsets[i*2 +1];
-            const size_t len = e-p;
-            r[i].assign(p, len);
+            r[i] = match_entry(p, e);
         }
     }
     if( finish_offset != 0 ) {
@@ -240,33 +262,103 @@ public:
 // sample program, proof of concept
 //
 
-void test_scanner()
-{
-    std::string name;
-    int h,m,s;
-    bool matches = scanner("^(\\w+) (\\d+):(\\d+):(\\d+)$", "Week 1:22:333") % name % h % m % s % s;
+#include <algorithm>
+
+#include "tinfra/tstring.h"
+
+using std::string;
+using tinfra::tstring;
+
+//typedef std::vector<string> string_list;
+typedef std::vector<tstring*> string_ref_list;
+
+using tinfra::fmt;
+
+struct rule {
+    regexp       re;
+    //string_list actions;
     
-    assert(matches);
-    assert(name=="Week");
-    assert(h==1);
-    assert(m==22);
-    assert(s==333);
+    rule(const char* re): re(re) {}
+};
+
+struct rope {
+    string_ref_list elements;
+};
+
+typedef std::map<string, tstring*> var_mapping;
+
+std::ostream& operator << (std::ostream& out, rope const& r)
+{
+    for(string_ref_list::const_iterator i = r.elements.begin(); i !=  r.elements.end(); ++i ) {
+        out << **i;
+    }
+    return out;
 }
-int regexp_pcre_main(int argc, char** argv)
+
+#include "pool.h"
+
+
+void process_line(std::ostream& out, string const& input, rule const& rule)
 {
-    test_scanner();
+    static tinfra::pool<tstring> string_pool(50);
+    static tinfra::byte_pool byte_pool(1024);
     
-    regexp re(argv[1]);
+    regexp::match_result r;
+    if( !rule.re.matches(input.c_str(), input.size(), r) ) {
+        std::cout << input << std::endl;
+        return;
+    }
+    
+    const char* begin = input.c_str();
+    const char* end = begin + input.size();
+    const char* current_pos = begin;
+    rope all;
+    var_mapping context;
+    
+    for( size_t i =1; i < r.size(); ++i ) {
+        regexp::match_entry const& me = r[i];
+        tstring* e = string_pool.construct(me.begin(), me.size());
+        tstring* p = string_pool.construct(current_pos, me.begin() - current_pos);
+        
+        context[fmt("%i") % i] = e;
+        context[fmt("pre%i") % i] = p;
+        
+        all.elements.push_back(p);
+        all.elements.push_back(e);
+        
+        if( i > 1 ) { 
+            //context[fmt("post%i") % (i-1)] = p;
+        }
+        current_pos = me.end();
+    }
+    
+    tstring* last = string_pool.construct(current_pos, end-current_pos);
+    context[fmt("post%i") % r.size()] = last;
+    all.elements.push_back(last);
+
+    //process_var_mapping(var_mapping, rule);
+
+    // TODO: write rules engine:
+    //  $1=red($1)
+    //  suffix(timestamp)
+    //  erase(0-4)  - erase all from 0
+    //context["post1"]->insert(0, "[-");
+    //context["post1"]->append("-]");
+    
+    out << all << std::endl;
+    byte_pool.clear();
+    string_pool.clear();
+}
+
+int filter(int argc, char** argv)
+{
     std::string line;
+    rule rule1("(element) ([^ ]+) (.*)");
     
     while( std::getline(std::cin, line) ) {
-        tinfra::strip_inplace(line);
-        for(matcher m(re, line.c_str(), line.size()); m.has_next(); ) {
-            regexp::match_result const& match = m.next();
-            std::cout << match[0] << std::endl;
-        }
+        process_line(std::cout, line, rule1);
     }
     return 0;    
 }
 
-TINFRA_MAIN(regexp_pcre_main);
+TINFRA_MAIN(filter);

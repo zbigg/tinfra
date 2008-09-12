@@ -304,6 +304,44 @@ protected:
 
 std::string fake_response;
 
+namespace http {
+
+struct std_storage_traits {
+	typedef std::string string;
+	using std::vector;
+};
+
+template <typename M = std_storage_traits>
+struct HeaderEntry {
+	typedef M F;
+	F::string name;
+	typename M::string content;
+}; 
+
+template <typename M = std_storage_traits>
+struct Request {
+	(typename M)::string              method;
+	typename M::string              request_uri;
+	typename M::string              http_version;
+	
+	typename M::template vector<HeaderEntry<M> > header;
+	
+	typename M::string              content;
+};
+
+template <typename M = std_storage_traits>
+struct Response {
+	typename M::string              protocol;
+	int                             response_code;
+	typename M::string              response_text;
+	
+	//typename M::vector<HeaderEntry> header;
+	
+	typename M::string              content;
+};
+
+};
+
 class HTTPProtocolHandler: public ProtocolHandler {
 public:
     enum {
