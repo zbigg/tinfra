@@ -37,6 +37,7 @@
             tinfra/server.cpp
             <!-- tinfra/io/zcompat.cpp -->
             tinfra/fmt.cpp
+            tinfra/regexp.cpp
             tinfra/string.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
@@ -44,6 +45,7 @@
             tinfra/runner.cpp
             tinfra/os_common.cpp
             $(TINFRA_PLATFORM_SOURCES)
+            
         </sources>
         <install-to>$(LIBDIR)</install-to> 
     </lib>
@@ -68,6 +70,7 @@
             tinfra/exception.h
             tinfra/exeinfo.h
             tinfra/fmt.h
+            tinfra/regexp.h
             tinfra/string.h
             tinfra/io/stream.h            
             tinfra/io/socket.h
@@ -120,6 +123,7 @@
             tinfra/test.cpp
             tinfra/test_main.cpp
             tinfra/test_subprocess.cpp
+            tinfra/test_regexp.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
