@@ -23,6 +23,7 @@ using tinfra::aio::Channel;
 namespace AutoSH {
     namespace S {
         extern tinfra::symbol message_type;
+        extern tinfra::symbol message_length;
         
         extern tinfra::symbol request_id;
         extern tinfra::symbol command;
@@ -39,9 +40,11 @@ namespace AutoSH {
     
     struct MessageHeader {        
         int           message_type;
+        size_t        message_length;
         
         TINFRA_DECLARE_STRUCT {
             FIELD(message_type);
+            FIELD(message_length);
         }
     };
 
@@ -92,6 +95,7 @@ namespace AutoSH {
 
 namespace AutoSH { namespace S {
     tinfra::symbol message_type("message_type");
+    tinfra::symbol message_type("message_length");
     
     tinfra::symbol message_id("request_id");
     tinfra::symbol command("command");
@@ -107,24 +111,29 @@ namespace AutoSH { namespace S {
 } } // end namespace AutoSH::S
 
 namespace AutoSH {
-    
+
 class ProtocolHandler: public ::ProtocolHandler {
 public:
     enum {
-        BEFORE_REQUEST,
-        COMMAND,
-        READING_POST,
+        BEFORE_MESSAGE_HEADER,
+        READING_MESSAGE,
         FINISHED
     } state;
     
     ProtocolHandler()
-        : state(BEFORE_REQUEST) 
+        : state(BEFORE_MESSAGE_HEADER) 
     {
     }
     
+    MessageHeader received_message_header;
     virtual int  accept_bytes(const char* data, int length, tinfra::io::stream* channel)
     {        
-        return 0;
+        switch( state )  {
+        case BEFORE_MESSAGE_HEADER:
+            return 0;
+        case READING_MESSAGE:
+            return 0;
+        }
     }
     
     bool expect_line(const char* data, int length, std::string& dest)
