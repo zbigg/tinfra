@@ -158,7 +158,7 @@ protected:
             if( base.write_eof || base.closed || base.close_requested )
                 return 0;
             int written = 0;
-            if( to_send.size() == 0 ) {
+            if( base.to_send.size() == 0 ) {
                 try {
                     written = base.channel->write(data, size);
                     if( written == 0 ) {
@@ -166,7 +166,7 @@ protected:
                         base.handler->eof(Dispatcher::WRITE);
                         return 0;
                     }
-                    base.handler->write_completed(written, size-written + to_send.size() );
+                    base.handler->write_completed(written, size-written + base.to_send.size() );
                 } catch( tinfra::io::would_block& w) {
                     // ignore it, written = 0, so all will be buffered
                 }
@@ -303,44 +303,6 @@ protected:
 };
 
 std::string fake_response;
-
-namespace http {
-
-struct std_storage_traits {
-	typedef std::string string;
-	using std::vector;
-};
-
-template <typename M = std_storage_traits>
-struct HeaderEntry {
-	typedef M F;
-	F::string name;
-	typename M::string content;
-}; 
-
-template <typename M = std_storage_traits>
-struct Request {
-	(typename M)::string              method;
-	typename M::string              request_uri;
-	typename M::string              http_version;
-	
-	typename M::template vector<HeaderEntry<M> > header;
-	
-	typename M::string              content;
-};
-
-template <typename M = std_storage_traits>
-struct Response {
-	typename M::string              protocol;
-	int                             response_code;
-	typename M::string              response_text;
-	
-	//typename M::vector<HeaderEntry> header;
-	
-	typename M::string              content;
-};
-
-};
 
 class HTTPProtocolHandler: public ProtocolHandler {
 public:

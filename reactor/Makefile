@@ -6,12 +6,13 @@ CXXFLAGS=-O0 -g -Wall
 LDLIBS=-g -L$(HOME)/lib -ltinfra -lpthread
 CC=g++
 
-reactor: reactor.o	
+PROGS=reactor autosh
 
+all: $(PROGS)
 
-reader: reader.o
+reactor: reactor.o protocols.o aio.o
 
-stackstring: stackstring.o
+autosh: autosh.o protocols.o aio.o
 
 clean:
-	rm -rf *.o reactor
+	rm -rf *.o $(PROGS)
