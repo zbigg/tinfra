@@ -1,6 +1,8 @@
 #ifndef __tinfra_regex_h__
 #define __tinfra_regex_h__
 
+#include "tinfra/platform.h"
+
 #ifdef HAVE_PCRE
 #define TINFRA_REGEX_PCRE 1
 #include <pcre.h>

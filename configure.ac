@@ -44,7 +44,7 @@ AC_CHECK_LIB(nsl,gethostbyname)
 
 AC_CHECK_FUNC(hstrerror)
 
-AM_PATH_PCRE(7.0, 
+AM_PATH_PCRE(4.5,
 [
     LIBS="$LIBS $PCRE_LIBS"
     CPPFLAGS="$CPPFLAGS $PCRE_CFLAGS"

@@ -36,7 +36,7 @@ void regexp::compile(const char* pattern, int options)
     
     options = 0; //PCRE_NEWLINE_ANY;
     
-    re_ = pcre_compile(pattern, options, &err_ptr, &err_offset,0);
+    re_ = pcre_compile(pattern, options, &err_ptr, &err_offset, 0);
     if( re_ == 0 ) {
         if( err_ptr == 0 ) 
             err_ptr = "unknown error";
@@ -44,10 +44,20 @@ void regexp::compile(const char* pattern, int options)
     }
     extra_ = pcre_study(re_, 0,  &err_ptr);
     if( extra_ == 0 && err_ptr != 0 ) {
-        throw std::logic_error(fmt("pcre_study failed: %s") % err_ptr);
+        // TODO: this should be abort because according to pcreapi manual
+        //       it shouldn't fail with fresh and correct re_
+        throw std::runtime_error(fmt("pcre_study failed: %s") % err_ptr);
     }
-    
-    pcre_fullinfo(re_, extra_, PCRE_INFO_CAPTURECOUNT, &patterns_count_);
+    {
+        int cc = 0;
+        int rc = pcre_fullinfo(re_, extra_, PCRE_INFO_CAPTURECOUNT, &cc);
+        if( rc != 0 ) {
+            // TODO: this should be abort because according to pcreapi manual
+            //       it shouldn't fail with fresh and correct re_
+            throw std::runtime_error(fmt("pcre_fullinfo(PCRE_INFO_CAPTURECOUNT) failed: %i") % rc);
+        }
+        patterns_count_ = cc;
+    }
 }
 
 
