@@ -9,8 +9,11 @@
 #include "tinfra/io/socket.h"
 #include "tinfra/symbol.h"
 
+#include "tinfra/subprocess.h"
+#include "tinfra/fmt.h"
 #include "aio.h"
 //#include "tinfra/aio.h"
+
 
 #include "protocols.h"
 
@@ -72,7 +75,7 @@ namespace AutoSH {
             FIELD(task_id);
             FIELD(status);
             FIELD(description);
-            FIELD(channel_id);
+            FIELD(task_id);
         }
     };
     
@@ -112,6 +115,8 @@ namespace AutoSH { namespace S {
     
     tinfra::symbol description("description");
 } } // end namespace AutoSH::S
+
+using tinfra::fmt;
 
 namespace AutoSH {
 
@@ -174,17 +179,18 @@ class Processor {
         int id;
         tinfra::subprocess* process;
         
-        StreamChannel channel_in;
-        StreamChannel channel_out
-        StreamChannel channel_err;
-        StreamChannel channels[3];
+        StreamChannel  channel_in;
+        StreamChannel  channel_out;
+        StreamChannel  channel_err;
+        StreamChannel* channels[3];
+        
         int           channel_count;
         Task(int id, subprocess* pprocess):
             id(id),
             process(pprocess),
-            channel_in(pprocess.get_stdin(), false),
-            channel_out(pprocess.get_stdout(), false),
-            channel_err(pprocess.get_stderr(), false))
+            channel_in(pprocess->get_stdin(), false),
+            channel_out(pprocess->get_stdout(), false),
+            channel_err(pprocess->get_stderr(), false)
         {
             channel_count = 3;
             channels[0] = &channel_in;
@@ -241,27 +247,26 @@ void Processor::invoke_request(InvokeRequest const& request)
         sp->start(request.command);
         Task* new_task = new Task(get_next_task_id(), sp.release());
         
-        io_dispatcher.add_channel(new_task->channel_in);
+        io_dispatcher.add_channel(& new_task->channel_in);
+        io_dispatcher.add_channel(& new_task->channel_out);
+        io_dispatcher.add_channel(& new_task->channel_err);
         
-        io_dispatcher.add_channel(new_task->channel_out);
-        io_dispatcher.listen_channel(new_task->channel_out, Dispatcher::READ, true);
-        
-        io_dispatcher.add_channel(new_task->channel_err);
-        io_dispatcher.listen_channel(new_task->channel_err, Dispatcher::READ, true);
+        io_dispatcher.listen_channel(& new_task->channel_out, Dispatcher::READ, true);
+        io_dispatcher.listen_channel(& new_task->channel_err, Dispatcher::READ, true);
         
         // TODO: add task to pool of active tasks
         
         // fill in success reply
-        result.request_id = request.result_id;
+        result.request_id = request.request_id;
         result.status = 1; // RUNNING;
         result.description = "";
         result.task_id = new_task->id;
     } catch( std::exception const& e) {
         std::string error_text = e.what(); 
-        app.error(tinfra::fmt("invoke_request failed: %s" % error_text);
+        app.error(tinfra::fmt("invoke_request failed: %s") % error_text);
         
         // fill in error reply
-        result.request_id = request.result_id;
+        result.request_id = request.request_id;
         result.status = 0; // FAILED;
         result.description = error_text;
         result.task_id = 0;
@@ -271,14 +276,14 @@ void Processor::invoke_request(InvokeRequest const& request)
     
 void Processor::channel_event(ChannelEvent const& event)
 {
-    Task* task = get_task(event.task_id);
+    Task* task = 0; // get_task(event.task_id);
     if( task == 0 ) {
         app.warning(fmt("bad task=%i") % event.task_id );
         // TODO close this channel ?
         //    discussion: yes. it's an abuse
         //                no. because these could be delayed requests
         //                from queueing client
-        return
+        return;
     }
     
     if( event.stream_id < 0 || event.stream_id >= task->channel_count ) {
@@ -291,10 +296,10 @@ void Processor::channel_event(ChannelEvent const& event)
     StreamChannel* channel = task->channels[event.task_id];
     
     try {
-        channel->get_stream()->write(event.data.str(), event.data().size());
+        channel->get_stream()->write(event.data.data(), event.data.size());
     } catch( std::exception const& e) {
         std::string error_text = e.what(); 
-        app.error(tinfra::fmt("data forward to process failed: %s" % error_text);
+        app.error(tinfra::fmt("data forward to process failed: %s") % error_text);
         // abort_task(event.task_id)
     }
 }
@@ -310,13 +315,11 @@ void Processor::task_data(int task_id, int stream_id, const char* data, size_t l
 }
 
 template <typename T>
-void Processor::send(int type, T const&t)
+void Processor::send_reply(int type, T const&t)
 {
     app.error(tinfra::fmt("unable to send message type=%i, not implemented") % type);
     std::ostringstream builder_buffer;
     // TODO build message
-    
-    np->
 }
 
 class ServerChannel: public tinfra::aio::ListeningChannel {
@@ -365,8 +368,9 @@ int invoke(string const& address, string_list const& command)
 int autosh_main(int argc, char** argv)
 {
     app = &tinfra::cmd::app::get();
-    if( argc == 2 && std::strcmp(argv[1], "serve") == 0 )
+    if( argc == 2 && std::strcmp(argv[1], "serve") == 0 ) {
         return serve();
+    }
     
     if( argc < 3 ) {
         app->fail("bad usage");
@@ -380,5 +384,6 @@ int autosh_main(int argc, char** argv)
     return invoke(address, command);
 }
 
-TINFRA_MAIN(autosh_main);
+TINFRA_MAIN(autosh_main)
+
 
