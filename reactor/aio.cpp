@@ -29,21 +29,23 @@ namespace aio {
 // StreamChannel
 //
     
-StreamChannel::StreamChannel(tinfra::io::stream* stream)
-    : stream(stream) 
+StreamChannel::StreamChannel(tinfra::io::stream* stream, bool own): 
+    stream(stream),
+    own(own)
 {
 }
 
 StreamChannel::~StreamChannel()
 {
-    delete stream;
+    if( own )
+        delete stream;
 }
 
 int StreamChannel::file() { 
     return stream->native(); 
 }
 
-void StreamChannel::close() { 
+void StreamChannel::close() {
     stream->close(); 
 }
 

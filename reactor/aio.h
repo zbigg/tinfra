@@ -48,11 +48,11 @@ public:
 };
 
 class StreamChannel: public Channel {
-    
     tinfra::io::stream* stream;
-    
+    bool own;
+
 public:    
-    StreamChannel(tinfra::io::stream* stream);
+    StreamChannel(tinfra::io::stream* stream, bool own=true);
 
     ~StreamChannel();
         
