@@ -264,6 +264,11 @@ struct posix_subprocess: public subprocess {
 
 } // end namespace posix
 
+std::auto_ptr<subprocess> subprocess::create()
+{
+    return std::auto_ptr<subprocess>(new posix::posix_subprocess());
+}
+
 //
 // tinfra global stub for posix
 //
