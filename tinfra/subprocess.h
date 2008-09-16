@@ -1,3 +1,10 @@
+//
+// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
 #ifndef __tinfra_subprocess_h__
 #define __tinfra_subprocess_h__
 
@@ -7,6 +14,9 @@ namespace tinfra {
 
 class subprocess {
 public:
+    // create default platform implementation
+    static std::auto_ptr<subprocess> create();
+
     enum pipe_mode {
         INHERIT,
         REDIRECT, 
@@ -56,6 +66,7 @@ protected:
     std::string working_dir;
 };
 
+// deprecated
 subprocess* create_subprocess();
 
 /// $(command) or `command` subsitute

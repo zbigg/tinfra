@@ -1,3 +1,10 @@
+//
+// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
 #include "tinfra/subprocess.h"
 
 #include "tinfra/io/stream.h"
@@ -245,6 +252,11 @@ struct win32_subprocess: public subprocess {
 //
 // tinfra global stub for win32
 //
+
+std::auto_ptr<subprocess> subprocess::create()
+{
+    return std::auto_ptr<subprocess>(win32::win32_subprocess());
+}
 
 subprocess* create_subprocess() {
     return new win32::win32_subprocess();

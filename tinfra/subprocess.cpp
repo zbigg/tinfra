@@ -1,3 +1,10 @@
+//
+// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
 #include "tinfra/subprocess.h"
 #include "tinfra/fmt.h"
 
@@ -17,7 +24,7 @@ static void read_file(tinfra::io::stream* s, std::string& data)
 
 std::string capture_command(std::string const& command)
 {
-    std::auto_ptr<subprocess> p(tinfra::create_subprocess());
+    std::auto_ptr<subprocess> p = tinfra::subprocess::create();
                 
     p->set_stdout_mode(subprocess::REDIRECT);
     

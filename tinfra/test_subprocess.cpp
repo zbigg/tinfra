@@ -1,3 +1,10 @@
+//
+// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
 #include "tinfra/subprocess.h"
 
 #include <unittest++/UnitTest++.h>
@@ -25,7 +32,7 @@ static void read_file(stream* s, std::string& data)
 SUITE(tinfra_subprocess) {
     
     TEST(spawn_no_redirect) {
-        std::auto_ptr<subprocess> p(tinfra::create_subprocess());
+        std::auto_ptr<subprocess> p = tinfra::subprocess::create();
         
         p->set_stdout_mode(subprocess::NONE);
 #ifdef WIN32
@@ -38,7 +45,7 @@ SUITE(tinfra_subprocess) {
     }
     
     TEST(spawn_check_exit_code) {
-        std::auto_ptr<subprocess> p(tinfra::create_subprocess());
+        std::auto_ptr<subprocess> p = tinfra::subprocess::create();
         
         p->set_stderr_mode(subprocess::NONE);
 #ifdef WIN32
@@ -51,7 +58,7 @@ SUITE(tinfra_subprocess) {
     }
     
     TEST(read_stdin) {
-        std::auto_ptr<subprocess> p(tinfra::create_subprocess());
+        std::auto_ptr<subprocess> p = tinfra::subprocess::create();
                 
         p->set_stdout_mode(subprocess::REDIRECT);
         std::string result;
@@ -72,7 +79,7 @@ SUITE(tinfra_subprocess) {
     }
     
     TEST(read_write) {
-        std::auto_ptr<subprocess> p(tinfra::create_subprocess());
+        std::auto_ptr<subprocess> p = tinfra::subprocess::create();
         
         p->set_stdin_mode(subprocess::REDIRECT);
         p->set_stdout_mode(subprocess::REDIRECT);

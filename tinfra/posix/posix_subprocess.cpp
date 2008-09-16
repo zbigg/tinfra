@@ -1,3 +1,10 @@
+//
+// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
 
 #include <sys/types.h>
 #include <signal.h>
@@ -263,6 +270,11 @@ struct posix_subprocess: public subprocess {
 };
 
 } // end namespace posix
+
+std::auto_ptr<subprocess> subprocess::create()
+{
+    return std::auto_ptr<subprocess>(new posix::posix_subprocess());
+}
 
 //
 // tinfra global stub for posix
