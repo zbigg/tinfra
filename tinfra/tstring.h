@@ -31,7 +31,8 @@ namespace tinfra {
         
 class tstring  {
     const char* str_;
-    size_t      length_;
+    int         length_;
+    int         flags_;
 #if TINFRA_TSTING_CHECKS
     const void* stamp_;
 #endif    
@@ -39,7 +40,8 @@ public:
     template <int N>
     tstring(const char (&arr)[N]):
         str_((const char*)arr),
-        length_(std::strlen(arr))
+        length_(std::strlen(arr)),
+        flags_(1)
 #if TINFRA_TSTING_CHECKS
         ,stamp_(make_stamp(arr))
 #endif        
@@ -50,7 +52,8 @@ public:
     
     tstring(const char* str): 
         str_(str),
-        length_(std::strlen(str))
+        length_(std::strlen(str)),
+        flags_(1)
 #if TINFRA_TSTING_CHECKS
         ,stamp_(make_stamp(this))
 #endif
@@ -59,9 +62,10 @@ public:
     }
     
     
-    tstring(const char* str, size_t length): 
+    tstring(const char* str, size_t length, bool has_null_terminate = false): 
         str_(str),
-        length_(length)
+        length_(length),
+        flags_(has_null_terminate ? 1 : 0)
 #if TINFRA_TSTING_CHECKS
         ,stamp_(make_stamp(this))
 #endif        
@@ -72,7 +76,8 @@ public:
     
     tstring(std::string const& str): 
         str_(str.c_str()),
-        length_(str.size())
+        length_(str.size()),
+        flags_(1)
 #if TINFRA_TSTING_CHECKS
         ,stamp_(make_stamp(&str))
 #endif        
@@ -83,7 +88,8 @@ public:
     
     tstring(tstring const& other) : 
         str_(other.str_),
-        length_(other.length_)
+        length_(other.length_),
+        flags_(other.flags_)
 #if TINFRA_TSTING_CHECKS
         ,stamp_(other.stamp_)
 #endif
@@ -91,6 +97,8 @@ public:
         //cerr << "created TST tstring(" << this << ") stamp_: " << stamp_ << "\n";
         check_stamp(); 
     }
+    
+    bool is_null_terminated() const { return flags_ == 1; }
     
     char const*  data() const  { return str_; }
     
