@@ -44,6 +44,7 @@
             tinfra/threadcmn.cpp
             tinfra/runner.cpp
             tinfra/os_common.cpp
+            tinfra/vfs.cpp
             $(TINFRA_PLATFORM_SOURCES)
             
         </sources>
@@ -91,6 +92,7 @@
             tinfra/xml.h
             tinfra/platform.h
             tinfra/runtime.h
+            tinfra/vfs.h
             tinfra/posix/thread.h
             tinfra/win32/thread.h
         </files>

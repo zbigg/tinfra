@@ -113,6 +113,21 @@ void list_files(const char* dirname, std::vector<std::string>& result)
     list_files(dirname, visitor);
 }
 
+file_info stat(const char* name)
+{
+    struct stat st;
+    if( ::stat(name, &st) != 0 ) {
+        throw_errno_error(errno, fmt("unable stat file '%s'") % name);
+    }
+    
+    file_info result;
+    result.is_dir = (st.st_mode & S_IFDIR) == S_IFDIR;
+    result.modification_time = st.st_mtime;
+    result.access_time = st.st_atime;
+    result.size = st.st_size;
+    return result;
+}
+
 void recursive_copy(const char* src, const char* dest)
 {
     if( path::is_dir(dest) ) {
@@ -147,6 +162,14 @@ void recursive_rm(const char* name)
     } else {        
         rm(name);
     }
+}
+
+void mv(const char* src, const char* dest)
+{
+    int result = ::rename(src, dest);
+    if( result == -1 ) {
+        throw_errno_error(errno, fmt("unable to rename from '%s' to '%s' ") % src % dest);
+    }    
 }
 
 void rm(const char* name)

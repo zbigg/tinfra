@@ -73,4 +73,24 @@ void throw_system_error(std::string const& message)
     unsigned int error = ::GetLastError();
     throw_system_error(error, message);
 }
+
+void get_available_drives(std::vector<std::string>& result)
+{
+    TCHAR drives[1024];
+    DWORD len;
+    len = ::GetLogicalDriveStrings(sizeof(drives), drives);
+    
+    if( len == 0 || len > sizeof(drives)) {
+        throw_system_error("GetLogicalDriveStrings failed"); 
+    }
+    
+    TCHAR* p = drives;
+    while( *p && len > 0 ) {
+        int l2 = strlen(p);    
+        result.push_back(fmt("%s:/") % p[0]);
+        p += l2+1;
+        len -= l2;
+    }
+}
+
 } } // end namespace tinfra::win32
