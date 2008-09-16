@@ -14,6 +14,9 @@ namespace tinfra {
 
 class subprocess {
 public:
+    // create default platform implementation
+    static std::auto_ptr<subprocess> create();
+
     enum pipe_mode {
         INHERIT,
         REDIRECT, 
@@ -63,6 +66,7 @@ protected:
     std::string working_dir;
 };
 
+// deprecated
 subprocess* create_subprocess();
 
 /// $(command) or `command` subsitute

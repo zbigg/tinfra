@@ -24,7 +24,7 @@ static void read_file(tinfra::io::stream* s, std::string& data)
 
 std::string capture_command(std::string const& command)
 {
-    std::auto_ptr<subprocess> p(tinfra::create_subprocess());
+    std::auto_ptr<subprocess> p = tinfra::subprocess::create();
                 
     p->set_stdout_mode(subprocess::REDIRECT);
     
