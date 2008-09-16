@@ -24,10 +24,14 @@ using tinfra::io::stream;
 using tinfra::io::io_exception;
 using tinfra::io::open_native;
 
-static void throw_io_exception(const char* message)
+static HANDLE open_null_for_subprocess(std::ios::openmode mode)
 {
-    unsigned int error = ::GetLastError();
-    throw io_exception(fmt("%s: %s(%i)") % message % get_error_string(error) % error);
+    stream* stream = tinfra::io::open_file("NUL", mode);
+    HANDLE result = reinterpret_cast<HANDLE>(stream->native());
+    stream->release();
+    delete stream;
+    SetHandleInformation(result, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+    return result;
 }
 
 //
@@ -63,7 +67,7 @@ struct win32_subprocess: public subprocess {
     
     virtual void     wait() {
         if( WaitForSingleObject(process_handle, INFINITE) != WAIT_OBJECT_0 ) {
-            // TODO: win32_error
+            throw_system_error("WaitForSingleObject on subprocess failed");
         }
     }
     
@@ -71,8 +75,10 @@ struct win32_subprocess: public subprocess {
         if( process_handle != NULL ) {
             DWORD dwExitCode;
             if( !::GetExitCodeProcess(process_handle,&dwExitCode) ) {
-                // TODO: win32_error
+                throw_system_error("GetExitCodeProcess failed");
             }
+            if( dwExitCode == STILL_ACTIVE )
+                return -1;
             exit_code = dwExitCode;
         }
         return exit_code;
@@ -85,7 +91,7 @@ struct win32_subprocess: public subprocess {
     }
     virtual void     kill() { 
         if( !::TerminateProcess(process_handle, 10) ) {
-            // TODO: win32_error
+            throw_system_error("TerminateProcess failed");
         }
     }
     
@@ -98,24 +104,17 @@ struct win32_subprocess: public subprocess {
     void start(std::vector<std::string> const& args) {
         std::ostringstream cmd;
         for(std::vector<std::string>::const_iterator i = args.begin(); i != args.end(); ++i ) {
-            if( i != args.begin() ) cmd << " ";
+            if( i != args.begin() ) 
+                cmd << " ";
             if( i->find_first_of(" \t") )
                 cmd << "\"" << *i << "\"";
+            else
+                cmd << *i;
         }
         start(cmd.str().c_str());
     }
     
     void start(const char* command) {
-        /*
-        holder<HANDLE> out_here(0);     // writing HERE -> child
-        holder<HANDLE> out_remote(0);   // reading CHILD <- here
-        
-        holder<HANDLE> in_here(0);      // reading HERE <- child
-        holder<HANDLE> in_remote(0);    // writing CHILD -> here
-        
-        holder<HANDLE> err_here(0);     // reading HERE <- child (diagnostic)
-        holder<HANDLE> err_remote(0);   // writing CHILD -> here (diagnostic)
-        */
         HANDLE out_here(0);     // writing HERE -> child
         HANDLE out_remote(0);   // reading CHILD <- here
         
@@ -140,21 +139,21 @@ struct win32_subprocess: public subprocess {
             
             if( fwrite ) {            
                 if ( CreatePipe(&out_remote, &out_here, &saAttr, 0) == 0 ) {
-                    throw_io_exception("CreatePipe failed");
+                    throw_system_error("CreatePipe failed");
                 }
                 SetHandleInformation(out_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
                 SetHandleInformation(out_here,   HANDLE_FLAG_INHERIT, 0);
             }
             if( fread ) {
                 if ( CreatePipe(&in_here, &in_remote, &saAttr, 0) == 0 ) {
-                    throw_io_exception("CreatePipe failed");
+                    throw_system_error("CreatePipe failed");
                 }
                 SetHandleInformation(in_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
                 SetHandleInformation(in_here,   HANDLE_FLAG_INHERIT, 0);
             }
             if( ferr ) {
                 if ( CreatePipe(&err_here, &    err_remote, &saAttr, 0) == 0 ) {
-                    throw_io_exception("CreatePipe failed");
+                    throw_system_error("CreatePipe failed");
                 }
                 SetHandleInformation(err_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
                 SetHandleInformation(err_here,   HANDLE_FLAG_INHERIT, 0);
@@ -176,8 +175,9 @@ struct win32_subprocess: public subprocess {
                 stdin_ = open_native(reinterpret_cast<intptr_t>((HANDLE)out_here));
                 out_here = 0;
                 si.hStdInput = out_remote;
+            } else if( stdin_mode == NONE) {
+                si.hStdInput = out_remote = open_null_for_subprocess(std::ios::in);                
             } else {
-                stdin_ = 0;
                 si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
             }
             
@@ -185,8 +185,9 @@ struct win32_subprocess: public subprocess {
                 stdout_ = open_native(reinterpret_cast<intptr_t>((HANDLE)in_here));
                 in_here = 0;
                 si.hStdOutput = in_remote;
+            } else if( stdout_mode == NONE) {
+                si.hStdOutput = in_remote = open_null_for_subprocess(std::ios::out);
             } else {
-                stdout_ = 0;
                 si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
             }
             
@@ -197,16 +198,18 @@ struct win32_subprocess: public subprocess {
                 stderr_ = open_native(reinterpret_cast<intptr_t>((HANDLE)err_here));
                 err_here = 0;
                 si.hStdError = err_remote;
-            } else {
+            } else if( stderr_mode == NONE ) {
+                si.hStdError = err_remote = open_null_for_subprocess(std::ios::out);
+            } else{
                 stderr_ = NULL;
                 si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
             }
                         
             si.dwFlags |= STARTF_USESTDHANDLES;
             
-            //creationFlags |= DETACHED_PROCESS;
-            //si.dwFlags |= STARTF_USESHOWWINDOW;
-            //si.wShowWindow = SW_HIDE;
+            creationFlags |= DETACHED_PROCESS;
+            si.dwFlags |= STARTF_USESHOWWINDOW;
+            si.wShowWindow = SW_HIDE;
         
             if( CreateProcess(
                 NULL,
@@ -220,7 +223,7 @@ struct win32_subprocess: public subprocess {
                 &si,
                 &processi) == 0 )
             {
-                throw_io_exception("CreateProcess failed");
+                throw_system_error("CreateProcess failed");
             }
             process_handle = processi.hProcess;
             if( in_remote )

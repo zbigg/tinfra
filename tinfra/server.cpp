@@ -21,7 +21,8 @@ Server::Server(const char* address, int port)
 void Server::bind(const char* address, int port)
 {
     server_socket_ = std::auto_ptr<stream>(open_server_socket(address,port));
-    bound_address_ = address;
+    if( address ) 
+        bound_address_ = address;
     bound_port_ = port;
 }
 
@@ -40,7 +41,10 @@ void Server::stop()
     stopped_ = true;
     
     try {
-        stream* f = open_client_socket(bound_address_.c_str(), bound_port_);
+        std::string connect_address = bound_address_;
+        if( bound_address_.size() == 0 )
+            connect_address = "localhost";
+        stream* f = open_client_socket(connect_address.c_str(), bound_port_);
         if( f ) 
             delete f;
     } catch( io_exception& wtf)  {

@@ -2,6 +2,7 @@
 
 #include <unittest++/UnitTest++.h>
 
+#include "tinfra/string.h"
 #include <iostream>
 
 using tinfra::subprocess;
@@ -29,7 +30,7 @@ SUITE(tinfra_subprocess) {
         p->set_stdout_mode(subprocess::NONE);
         
 #ifdef WIN32
-        p->start("dir");
+        p->start("cmd /c ver");
 #else
         p->start("uname -a");
 #endif
@@ -42,7 +43,7 @@ SUITE(tinfra_subprocess) {
         
         p->set_stderr_mode(subprocess::NONE);
 #ifdef WIN32
-        p->start("dir /opopopopop");
+        p->start("cmd /c xecho hello");
 #else
         p->start("uname -lollo");
 #endif
@@ -55,7 +56,11 @@ SUITE(tinfra_subprocess) {
                 
         p->set_stdout_mode(subprocess::REDIRECT);
         std::string result;
+#ifdef WIN32
+        p->start("cmd /c ver");
+#else
         p->start("uname");
+#endif
         
         CHECK(p->get_stdin()  == 0);
         CHECK(p->get_stdout() != 0);
@@ -63,7 +68,7 @@ SUITE(tinfra_subprocess) {
         
         read_file(p->get_stdout(), result);        
         p->wait();
-        
+        CHECK( result.size() > 0);
         CHECK_EQUAL(0, p->get_exit_code());
     }
     
@@ -76,16 +81,17 @@ SUITE(tinfra_subprocess) {
         p->start("sort");
         
         CHECK(p->get_stdin()  != 0);
-        CHECK(p->get_stdout() != 0);        
+        CHECK(p->get_stdout() != 0);
         CHECK(p->get_stderr() == 0);
         
-        write_file(p->get_stdin(), "z\nc\nb\na\n");
+        write_file(p->get_stdin(), "zz\r\ncc\r\nbb\r\naa\r\n");
         p->get_stdin()->close();
 
         std::string result;
         read_file(p->get_stdout(), result);
         p->wait();
-        CHECK_EQUAL("a\nb\nc\nz\n", result.c_str());        
+        using tinfra::escape_c;
+        CHECK_EQUAL(escape_c("aa\r\nbb\r\ncc\r\nzz\r\n"), escape_c(result.c_str()));
     }
     
 }

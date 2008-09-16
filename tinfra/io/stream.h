@@ -14,6 +14,8 @@ public:
     io_exception(std::string const& message): generic_exception(message) {}
 };
 
+typedef std::ios::openmode openmode;
+
 class stream {
 public:
     virtual ~stream() { }
@@ -27,10 +29,37 @@ public:
     virtual int read(char* dest, int size) = 0;
     virtual int write(const char* data, int size) = 0;
     virtual void sync() = 0;
+    
+    virtual intptr_t native() const = 0;
+    virtual void release() = 0;
+};
+
+class dstream: public stream {
+    stream* input_;
+    stream* output_;        
+public:
+    dstream(stream* input, stream* output);
+    
+    virtual ~dstream();
+
+    virtual void close();
+    virtual int seek(int pos, seek_origin origin = start);
+    virtual int read(char* dest, int size);
+    virtual int write(const char* data, int size);
+
+    virtual void sync();
+    
+    virtual intptr_t native() const;
+    virtual void release();
 };
 
 stream* open_native(intptr_t handle);
-stream* open_file(const char* name, std::ios::openmode mode);
+stream* open_file(const char* name, openmode mode);
+
+stream* open_command_pipe(char const* command, std::ios::openmode mode);
+stream* open_anon_pipe();
+
+stream* create_dstream(stream* input, stream* output);
 
 //void    open_process(std::vector<std::string> args, process& result);
 

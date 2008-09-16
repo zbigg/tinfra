@@ -1,5 +1,8 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
+#include "tinfra/os_common.h"
+
+#include <stdexcept>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -26,6 +29,15 @@ public:
     int read(char* data, int size);
     int write(const char* data, int size);
     void sync();
+        
+    intptr_t native() const 
+    {
+        return handle_;
+    }
+    void release() 
+    {
+        handle_ = invalid_handle;
+    }
     handle_type get_native() const { return handle_; }
 private:
     int close_nothrow();
@@ -46,7 +58,7 @@ posix_stream::~posix_stream()
 void posix_stream::close()
 {
     if( close_nothrow() == -1 ) 
-        throw_io_exception("close failed");
+        throw_errno_error(errno, "close failed");
 }
 
 stream* open_native(int fd)
@@ -54,12 +66,7 @@ stream* open_native(int fd)
     return new posix_stream(fd);
 }
 
-static void throw_io_exception(const char* message)
-{
-    throw io_exception(fmt("%s: %s") % message % strerror(errno));
-}
-
-stream* open_file(const char* name, std::ios::openmode mode)
+stream* open_file(const char* name, openmode mode)
 {
     int flags = 0;
     {
@@ -72,12 +79,13 @@ stream* open_file(const char* name, std::ios::openmode mode)
 	else if ( fwrite )
 	    flags |= O_WRONLY | O_CREAT;
 	else
-	    throw_io_exception("bad openmode");
+	    throw std::invalid_argument("bad openmode");
 	if( (mode & std::ios::trunc) == std::ios::trunc) flags |= O_TRUNC;
 	if( (mode & std::ios::app) == std::ios::app) flags |= O_APPEND;
     }
     int fd = ::open(name, flags, 00644);
-    if( fd == -1 ) throw_io_exception(fmt("unable to open %s") % name);
+    if( fd == -1 ) 
+        throw_errno_error(errno, fmt("unable to open '%s'") % name);
     return new posix_stream(fd);
 }
 
@@ -104,22 +112,32 @@ int posix_stream::seek(int pos, stream::seek_origin origin)
     }
     off_t e = lseek(handle_, pos, whence);
     if( e == (off_t)-1 )
-	throw_io_exception("seek failed");
+	throw_errno_error(errno, "seek failed");
     return (int)e;
 }
 
 int posix_stream::read(char* data, int size)
 {
-    int r = ::read(handle_, data, size);
-    if( r < 0 ) throw_io_exception("read failed");
-    return r;
+    while( true ) {
+        int r = ::read(handle_, data, size);
+        if( r < 0 && errno == EINTR ) 
+            continue;
+        if( r < 0 ) 
+            throw_errno_error(errno, "read failed");
+        return r;
+    }
 }
 
 int posix_stream::write(char const* data, int size)
 {
-    int w = ::write(handle_, data, size);
-    if( w < 0 ) throw_io_exception("write failed");
-    return w;
+    while( true ) {
+        int w = ::write(handle_, data, size);
+        if( w < 0 && errno == EINTR )
+            continue;
+        if( w < 0 ) 
+            throw_errno_error(errno, "write failed");
+        return w;
+    }
 }
 
 void posix_stream::sync()
@@ -128,7 +146,7 @@ void posix_stream::sync()
 
 } // end namespace tinfra::io::posix
 
-stream* open_file(const char* name, std::ios::openmode mode)
+stream* open_file(const char* name, openmode mode)
 {
     return posix::open_file(name, mode);
 }

@@ -125,6 +125,8 @@ void Thread::sleep(long milliseconds)
 #elif defined(HAVE_USLEEP)
     // usleep accepts microseconds
     ::usleep(milliseconds/1000);
+#elif defined WIN32
+    ::Sleep(milliseconds);
 #else
     thread_error("sleep not implemented on this platform",0);
 #endif
