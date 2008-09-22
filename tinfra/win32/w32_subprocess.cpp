@@ -255,7 +255,7 @@ struct win32_subprocess: public subprocess {
 
 std::auto_ptr<subprocess> subprocess::create()
 {
-    return std::auto_ptr<subprocess>(win32::win32_subprocess());
+    return std::auto_ptr<subprocess>(new win32::win32_subprocess());
 }
 
 subprocess* create_subprocess() {
