@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cctype>
+#include <iostream>
 
 namespace tinfra {
  
@@ -46,7 +47,36 @@ std::string strip(const std::string& s)
     return std::string(s, start, last);
 }
 
+static const char* END_OF_LINE_CHARS = "\r\n";
 //
+// chop implementation
+//
+
+void        chop_inplace(std::string& s)
+{
+    std::size_t pos = s.find_last_not_of(END_OF_LINE_CHARS);
+    if( pos == std::string::npos ) {
+        s.clear();
+    } else {
+        s.erase(pos+1);
+    }
+}
+
+std::string chop(std::string const& s)
+{
+    std::size_t start = 0;
+    std::size_t last = s.find_last_not_of(END_OF_LINE_CHARS);
+    if( last == std::string::npos ) {
+        /* if(     s.size() > 0 
+            && (s[0] == '\r' || s[0] == '\n' ) )
+            return std::string();
+        return s; */
+        return std::string();
+    }
+    ++last;
+    return std::string(s, 0, last);
+}
+
 // escape_c
 //
 

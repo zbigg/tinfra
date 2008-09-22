@@ -28,60 +28,66 @@
 namespace tinfra {
 namespace path {
 
-std::string join(const std::string& a, const std::string& b) 
+std::string join(tstring const& a, tstring const& b) 
 {
-    if( a.size() > 0 && b.size() > 0 )
-        return a + '/' + b;
+    if( a.size() > 0 && b.size() > 0 ) {
+        std::string r;
+        r.reserve(a.size() + 1 + b.size());
+        r.append(a.data(), a.size());
+        r.append(1, '/');
+        r.append(b.data(), b.size());
+        return r;
+    }
     else if( a.size() > 0 ) 
-        return a;
+        return a.str();
     else if (b.size() > 0 )
-        return b;
+        return b.str();
     else
         return "";
 }
 
-bool exists(const char* name)
+bool exists(tstring const& name)
 {
     struct stat st;
-    return ::stat(name, &st) == 0;
+    return ::stat(name.c_str(), &st) == 0;
 }
 
-bool is_dir(const char* name)
+bool is_dir(tstring const& name)
 {
     struct stat st;
-    if( ::stat(name, &st) != 0 ) 
-		return false;
-	return (st.st_mode & S_IFDIR) == S_IFDIR;
+    if( ::stat(name.c_str(), &st) != 0 ) 
+        return false;
+    return (st.st_mode & S_IFDIR) == S_IFDIR;
 }
 
-bool is_file(const char* name)
+bool is_file(tstring const& name)
 {
     struct stat st;
-    if( ::stat(name, &st) != 0 ) 
-		return false;
-	return (st.st_mode & S_IFREG) == S_IFREG;
+    if( ::stat(name.c_str(), &st) != 0 ) 
+        return false;
+    return (st.st_mode & S_IFREG) == S_IFREG;
 }
 
-std::string basename(const std::string& name)
+std::string basename(tstring const& name)
 {
     std::string::size_type p = name.find_last_of("/\\");
-    if( p == std::string::npos ) {
-        return name;
+    if( p == tstring::npos ) {
+        return name.str();
     } else {
-        return name.substr(p+1);
+        return std::string(name.data()+p+1, name.size()-p-1);
     }
 }
 
-std::string dirname(const std::string& name)
+std::string dirname(tstring const& name)
 {
     if( name.size() == 0 ) return ".";
-    std::string::size_type p = name.find_last_of("/\\");
-    if( p == std::string::npos ) {
+    tstring::size_type p = name.find_last_of("/\\");
+    if( p == tstring::npos ) {
         return ".";
     } else if( p == 0 )  {
         return "/";
     } else {
-        return name.substr(0,p);
+        return std::string(name.data(), p);
     }
 }
 

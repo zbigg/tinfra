@@ -39,6 +39,7 @@
             tinfra/fmt.cpp
             tinfra/regexp.cpp
             tinfra/string.cpp
+            tinfra/tstring.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
             tinfra/threadcmn.cpp
@@ -72,6 +73,7 @@
             tinfra/fmt.h
             tinfra/regexp.h
             tinfra/string.h
+            tinfra/tstring.h
             tinfra/io/stream.h            
             tinfra/io/socket.h
             tinfra/subprocess.h
@@ -109,7 +111,8 @@
         <include>$(SRCDIR)</include>
         <sources>
             tinfra/test_string.cpp
-            tinfra/test_path.cpp            
+            tinfra/test_tstring.cpp
+            tinfra/test_path.cpp
             tinfra/test_fs.cpp
             tinfra/test_test.cpp
             tinfra/test_multitype_map.cpp

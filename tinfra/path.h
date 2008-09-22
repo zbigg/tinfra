@@ -9,29 +9,21 @@
 #define __tinfra_path__
 
 #include <string>
+#include "tinfra/tstring.h"
 
 namespace tinfra { 
 namespace path {
     
-std::string join(const std::string& a, const std::string& b);
+std::string join(tstring const& a, tstring const& b);
     
-bool exists(const char* name);
-    
-inline 
-bool exists(const std::string& name) { return exists(name.c_str()); }
+bool exists(tstring const& name);
 
+bool is_file(tstring const& name);
+bool is_dir(tstring const& name);
 
-bool is_file(const char* name);
-bool is_dir(const char* name);
+std::string basename(tstring const& name);
 
-inline
-bool is_dir(std::string const& name) { return is_dir(name.c_str()); }
-
-std::string basename(const std::string& name);
-inline std::string basename(const char* name) { return basename(std::string(name)); }
-
-std::string dirname(const std::string& name);
-inline std::string dirname(const char* name) { return dirname(std::string(name)); }
+std::string dirname(tstring const& name);
 
 std::string tmppath();
 
