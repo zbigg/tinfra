@@ -59,6 +59,12 @@
         <install-to>$(LIBDIR)</install-to> 
     </lib>
     
+    <using module="pkgconfig"/>
+    
+    <pkgconfig>
+        <src>tinfra.pc</src>
+    </pkgconfig>
+    
     <using module="datafiles"/>
     
     <data-files-tree id="headers">
