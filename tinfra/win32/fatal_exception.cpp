@@ -170,8 +170,8 @@ BOOL WINAPI ConsoleHandler(DWORD)
         break;
     }
     */
-    throw tinfra::generic_exception("interrupt");
-    //return FALSE;
+    tinfra::interrupt();
+    return TRUE;
 }
 
 static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
