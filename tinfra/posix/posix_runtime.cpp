@@ -26,6 +26,7 @@
 #endif
 
 extern "C" void tinfra_fatal_sighandler(int signo);
+extern "C" void tinfra_interrupt_sighandler(int);
 
 namespace tinfra {
 
