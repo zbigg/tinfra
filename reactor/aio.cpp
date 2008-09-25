@@ -25,71 +25,7 @@
 namespace tinfra {
 namespace aio {
 
-//
-// StreamChannel
-//
-    
-StreamChannel::StreamChannel(tinfra::io::stream* stream, bool own): 
-    stream(stream),
-    own(own)
-{
-}
 
-StreamChannel::~StreamChannel()
-{
-    if( own )
-        delete stream;
-}
-
-int StreamChannel::file() { 
-    return stream->native(); 
-}
-
-void StreamChannel::close() {
-    stream->close(); 
-}
-
-void StreamChannel::failure(Dispatcher& r)
-{
-    r.remove_channel(this);
-    close();
-}
-    
-void StreamChannel::hangup(Dispatcher& r)
-{
-    r.remove_channel(this);
-    close();
-}
-//
-// ListeningChannel
-//
-
-ListeningChannel::ListeningChannel()
-    : StreamChannel(0)
-{
-}
-ListeningChannel::ListeningChannel(int port)
-    : StreamChannel(tinfra::io::socket::open_server_socket(0, port))
-{
-}
-
-ListeningChannel::ListeningChannel(std::string const& address, int port)
-    : StreamChannel(tinfra::io::socket::open_server_socket(address.c_str(), port))
-{
-}
-
-void ListeningChannel::data_available(Dispatcher& r) 
-{
-    std::string peer_address;
-    
-    tinfra::io::stream* new_socket = tinfra::io::socket::accept_client_connection(get_stream(), &peer_address);
-    
-    on_accept(r, new_socket, peer_address);
-}
-
-//
-// GenericDispatcher
-//
 
 // TODO, move it to infra
 
@@ -107,43 +43,61 @@ static void set_buffers(int socket)
         std::cerr << "unable to set SO_SNFBUF=" << s << " on socket " << socket << std::endl;
     }
 }
+//
+// ChannelContainer
+//
 
-void GenericDispatcher::remove_channel(Channel* c) 
-{
-    to_remove.push_back(c);
-}
+struct ChannelEntry {
+    Channel*  channel;
+    int       flags;
+    Listener* listener;
+    bool      removed;
+};
+typedef std::vector<ChannelEntry> ChannelsEntryList;
 
-void GenericDispatcher::add_channel(Channel* c) 
-{
-    channels.push_back(c);
-    channel_props[c] = 0;
+class ChannelContainer {
+public:
+    void    remove(Channel* c);
     
-    tinfra::io::socket::set_blocking(c->file(), false);
-    set_buffers(c->file());
+    void    add(Channel* c, Listener*l, int flags);
+    
+    ChannelEntry* get(Channel* c);
+
+    void cleanup();
+
+    ChannelsEntryList entries;
+};
+
+void ChannelContainer::remove(Channel* c) 
+{
+    ChannelEntry* e = get(c);
+    if( e ) 
+        e->removed = true;
 }
 
-void GenericDispatcher::listen_channel(Channel* c, int flags, bool enable) 
+void ChannelContainer::add(Channel* c, Listener*l, int flags) 
+{
+    ChannelData d = { c, flags, l, false };
+    entries.push_back(d);
+}
+
+ChannelEntry* ChannelContainer::get(Channel* c) 
 {    
-    if( enable ) {
-        channel_props[c] |=  flags;
-    } else {
-        channel_props[c] &= ~flags;
+    for( ChannelsEntryList::const_iterator i = entries.begin(); i != entries.end(); ++i ) {
+        if( i->channel == c ) 
+            return i;
     }
+    return 0;
 }
 
-void GenericDispatcher::cleanup() {
-    for(ChannelsList::const_iterator i = to_remove.begin(); i != to_remove.end(); ++i ) {
-        Channel* channel = *i;
-        channel_props.erase(channel);
-        
-        ChannelsList::iterator ic = std::find(channels.begin(), channels.end(), channel);
-        if( ic != channels.end() ) 
-            channels.erase(ic);
-        
-        //throw std::logic_error("test exit");
+void ChannelContainer::cleanup() {
+    for(ChannelsEntryList::iterator i = entries.begin(); i != entries.end();  ) {
+        if( i->removed ) {
+            i = channels->erase(i);
+        } else {
+            ++i;
+        }
     }
-    
-    to_remove.clear();
 }
 
 //
@@ -152,7 +106,7 @@ void GenericDispatcher::cleanup() {
 
 #include <poll.h>
 
-class PollDispatcher: public tinfra::aio::GenericDispatcher {
+class PollDispatcher: public tinfra::aio::Dispatcher {
 public:
     
     int timeout;
@@ -164,7 +118,7 @@ public:
 
     void step()
     {
-        make_fds(channels, pollfds);
+        make_fds(channels.entries, pollfds);
         
         int r = poll(pollfds.begin(), channels.size(), timeout);
         
@@ -181,50 +135,93 @@ public:
             if( pfd->revents == 0 ) 
                 continue;
             
-            Channel* channel = channels[i];
+            ChannelData& channel_data = channels.entries[i];
             
             
             if( (pfd->revents & POLLERR) == POLLERR ) {
-                channel->failure(*this);
+                channel_data.listener->failure(*this, channel_data->channel, 1);
                 continue;
             }
             
             if( (pfd->revents & POLLHUP) == POLLHUP ) {
-                channel->hangup(*this);
+                channel_data.listener->failure(*this, channel_data->channel, 0);
                 continue;
             }
             
             try {
                 if( (pfd->revents & POLLIN  ) == POLLIN ) {
-                    channel->data_available(*this);
+                    channel_data.listener->event(*this, channel_data->channel, READ);
                 }
                 if( (pfd->revents & POLLOUT ) == POLLOUT) {
-                    channel->write_possible(*this);
+                    channel_data.listener->event(*this, channel_data->channel, WRITE);
                 }
             } catch( std::exception& e) {
-                channel->close();
-                remove_channel(channel);
+                close(&channel_data);
                 
             } catch(...) {
-                channel->close();
-                remove_channel(channel);
+                close(&channel_data);
             }
         }
         
         cleanup();
     }
     
+    virtual Channel* create(int type, std::string const& address, Listener* l)
+    {        
+        Channel* r;
+        std::string host = address;
+        int port = 80;
+        switch( type ) {
+        case CLIENT:
+            r = tinfra::io::socket::open_tcp_connection(host);
+            break;
+        case SERVICE:
+            r = tinfra::io::socket::open_server_socket(host.c_str(), port);
+            break;
+        default:
+            return 0;
+        }
+        
+        channels.
+    }
+    
+    virtual void close(Channel* c)
+    {
+        close(channels.get(c));
+    }
+    
+    virtual void wait(Channel* c, Listener* listener, int flags, bool enable)
+    {
+        ChannelContainer::ChannelData* cd = channels.get(c);
+        cd->listener = listener;
+        
+        if( enable ) {
+            cd->flags |=  flags;
+        } else {
+            cd->flags &=  ~ flags;
+        }        
+    }
+    
 private:
-    void make_fds(PollDispatcher::ChannelsList const& channels, array<pollfd>& result)
+    ChannelContainer channels;
+
+    void close(ChannelContainer::ChannelData* cd)
+    {
+        cd->channel->close();
+        delete cd->channel;
+        cd->removed = true;
+    }
+    
+    void make_fds(ChannelsEntryList const& channels, array<pollfd>& result)
     {    
         result.size(channels.size());
         
         int k = 0;
-        for(PollDispatcher::ChannelsList::const_iterator i = channels.begin(); i != channels.end(); ++i,k++ )
+        for(ChannelsEntryList::const_iterator i = channels.begin(); i != channels.end(); ++i,k++ )
         {
-            Channel* c = *i;
-            result[k].fd = c->file();
-            int props = channel_props[c];
+            ChannelData const cd& = *i;
+            result[k].fd = cd->native();
+            int flags =  cd->flags;
             int events = 0;            
             if( (props & Dispatcher::READ) == Dispatcher::READ )
                 events |= POLLIN;
@@ -236,7 +233,7 @@ private:
     }
 };
 
-std::auto_ptr<Dispatcher> createDispatcher()
+std::auto_ptr<Dispatcher> create_network_dispatcher()
 {
     return std::auto_ptr<Dispatcher>(new PollDispatcher());
 }
