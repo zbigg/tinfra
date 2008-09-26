@@ -1,3 +1,9 @@
+//
+// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
 
 #include <vector>
 #include <algorithm>
@@ -13,6 +19,8 @@
 #include "tinfra/cmd.h"
 #include "tinfra/io/stream.h"
 #include "tinfra/io/socket.h"
+#include "tinfra/regexp.h"
+#include "tinfra/fmt.h"
 
 #include "array.h"
 
@@ -26,74 +34,70 @@ namespace tinfra {
 namespace aio {
 
 
-
-// TODO, move it to infra
-
-static void set_buffers(int socket)
-{
-    int r = (1 << 15);
-    if( setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (void*)&r, sizeof(r)) ) {
-        // TODO: it should be warning
-        std::cerr << "unable to set SO_RCVBUF=" << r << " on socket " << socket << std::endl;
-    }
-    
-    int s = (1 << 17);
-    if( setsockopt(socket, SOL_SOCKET, SO_SNDBUF, (void*)&s, sizeof(s)) ) {
-        // TODO: it should be warning
-        std::cerr << "unable to set SO_SNFBUF=" << s << " on socket " << socket << std::endl;
-    }
-}
 //
 // ChannelContainer
 //
 
 struct ChannelEntry {
-    Channel*  channel;
+    Channel   channel;
+        
     int       flags;
     Listener* listener;
+    
     bool      removed;
 };
+
 typedef std::vector<ChannelEntry> ChannelsEntryList;
 
 class ChannelContainer {
 public:
-    void    remove(Channel* c);
+    void    remove(Channel c);
     
-    void    add(Channel* c, Listener*l, int flags);
+    void    add(Channel c, Listener*l, int flags);
     
-    ChannelEntry* get(Channel* c);
+    ChannelEntry* get(Channel c);
 
+    void markAllClosed();
+    
     void cleanup();
 
     ChannelsEntryList entries;
 };
 
-void ChannelContainer::remove(Channel* c) 
+void ChannelContainer::remove(Channel c) 
 {
     ChannelEntry* e = get(c);
     if( e ) 
         e->removed = true;
 }
 
-void ChannelContainer::add(Channel* c, Listener*l, int flags) 
+void ChannelContainer::add(Channel c, Listener*l, int flags) 
 {
-    ChannelData d = { c, flags, l, false };
+    ChannelEntry d = { c, flags, l, false };
     entries.push_back(d);
 }
 
-ChannelEntry* ChannelContainer::get(Channel* c) 
+ChannelEntry* ChannelContainer::get(Channel c) 
 {    
-    for( ChannelsEntryList::const_iterator i = entries.begin(); i != entries.end(); ++i ) {
+    for( ChannelsEntryList::iterator i = entries.begin(); i != entries.end(); ++i ) {
         if( i->channel == c ) 
-            return i;
+            return & (*i);
     }
     return 0;
 }
 
+void ChannelContainer::markAllClosed()
+{
+    for(ChannelsEntryList::iterator i = entries.begin(); i != entries.end(); ++i ) {
+        i->removed = true;
+    }
+}
+    
 void ChannelContainer::cleanup() {
     for(ChannelsEntryList::iterator i = entries.begin(); i != entries.end();  ) {
         if( i->removed ) {
-            i = channels->erase(i);
+            delete i->channel;
+            i = entries.erase(i);
         } else {
             ++i;
         }
@@ -115,12 +119,16 @@ public:
 public:
     
     PollDispatcher(): timeout(-1) {}
-
+    ~PollDispatcher()
+    {
+        channels.markAllClosed();
+        channels.cleanup();
+    }
     void step()
     {
         make_fds(channels.entries, pollfds);
         
-        int r = poll(pollfds.begin(), channels.size(), timeout);
+        int r = poll(pollfds.begin(), pollfds.size(), timeout);
         
         if( r == 0 ) {
             return;
@@ -135,80 +143,94 @@ public:
             if( pfd->revents == 0 ) 
                 continue;
             
-            ChannelData& channel_data = channels.entries[i];
+            ChannelEntry& ce = channels.entries[i];
             
             
             if( (pfd->revents & POLLERR) == POLLERR ) {
-                channel_data.listener->failure(*this, channel_data->channel, 1);
+                ce.listener->failure(*this, ce.channel, 1);
+                close(&ce);
                 continue;
             }
             
             if( (pfd->revents & POLLHUP) == POLLHUP ) {
-                channel_data.listener->failure(*this, channel_data->channel, 0);
+                ce.listener->failure(*this, ce.channel, 0);
+                close(&ce);
                 continue;
             }
             
             try {
                 if( (pfd->revents & POLLIN  ) == POLLIN ) {
-                    channel_data.listener->event(*this, channel_data->channel, READ);
+                    ce.listener->event(*this, ce.channel, READ);
                 }
                 if( (pfd->revents & POLLOUT ) == POLLOUT) {
-                    channel_data.listener->event(*this, channel_data->channel, WRITE);
+                    ce.listener->event(*this, ce.channel, WRITE);
                 }
             } catch( std::exception& e) {
-                close(&channel_data);
+                close(&ce);
                 
             } catch(...) {
-                close(&channel_data);
+                close(&ce);
             }
         }
         
-        cleanup();
+        channels.cleanup();
     }
     
-    virtual Channel* create(int type, std::string const& address, Listener* l)
-    {        
-        Channel* r;
-        std::string host = address;
-        int port = 80;
+    virtual Channel create(int type, std::string const& address, Listener* listener, int initial_flags)
+    {
+        static tinfra::regexp parse_ip_address("([^:]*):([0-9]+)");        
+        Channel channel;
+        std::string host = "";
+        int port = 0; 
+        if( !(tinfra::scanner(parse_ip_address, address.c_str()) % host % port ) )
+            throw std::logic_error(tinfra::fmt("malformed network address: %s") % address);
+        
         switch( type ) {
         case CLIENT:
-            r = tinfra::io::socket::open_tcp_connection(host);
+            channel = tinfra::io::socket::open_client_socket(host.c_str(), port);
             break;
         case SERVICE:
-            r = tinfra::io::socket::open_server_socket(host.c_str(), port);
+            channel = tinfra::io::socket::open_server_socket(host.c_str(), port);
             break;
         default:
             return 0;
         }
         
-        channels.
+        put(channel, listener, initial_flags);
+        return channel;
     }
     
-    virtual void close(Channel* c)
+    virtual void put(Channel channel, Listener* listener, int initial_flags)
     {
-        close(channels.get(c));
+        channels.add(channel, listener, initial_flags);
     }
     
-    virtual void wait(Channel* c, Listener* listener, int flags, bool enable)
+    virtual void close(Channel c)
     {
-        ChannelContainer::ChannelData* cd = channels.get(c);
-        cd->listener = listener;
-        
+        ChannelEntry* cd = channels.get(c);
+        assert(cd != 0);
+        close(cd);
+    }
+    
+    virtual void wait(Channel c, int flags, bool enable)
+    {
+        ChannelEntry* cd = channels.get(c);
+        assert(cd != 0);
         if( enable ) {
             cd->flags |=  flags;
         } else {
-            cd->flags &=  ~ flags;
+            cd->flags &=  ~flags;
         }        
     }
     
 private:
     ChannelContainer channels;
 
-    void close(ChannelContainer::ChannelData* cd)
+    void close(ChannelEntry* cd)
     {
+        if( cd->removed )
+            return;
         cd->channel->close();
-        delete cd->channel;
         cd->removed = true;
     }
     
@@ -219,13 +241,13 @@ private:
         int k = 0;
         for(ChannelsEntryList::const_iterator i = channels.begin(); i != channels.end(); ++i,k++ )
         {
-            ChannelData const cd& = *i;
-            result[k].fd = cd->native();
-            int flags =  cd->flags;
+            ChannelEntry const& ce = *i;
+            result[k].fd = ce.channel->native();
+            int flags =  ce.flags;
             int events = 0;            
-            if( (props & Dispatcher::READ) == Dispatcher::READ )
+            if( (flags & Dispatcher::READ) == Dispatcher::READ )
                 events |= POLLIN;
-            if( (props & Dispatcher::WRITE) == Dispatcher::WRITE )
+            if( (flags & Dispatcher::WRITE) == Dispatcher::WRITE )
                 events |= POLLOUT;
             result[k].events = events;
             result[k].revents = 0;
@@ -239,3 +261,5 @@ std::auto_ptr<Dispatcher> create_network_dispatcher()
 }
 
 } } // end namespace tinfra::aio
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:

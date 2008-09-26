@@ -3,7 +3,7 @@
 CXXFLAGS=-O0 -g -Wall
 #CFLAGS=-O3 -g
 #LDLIBS=-g -pg -L$(HOME)/lib -ltinfra
-LDLIBS=-g -L$(HOME)/lib -ltinfra -lpthread
+LDLIBS=-g -L$(HOME)/lib -ltinfra -lpthread -lpcre
 CC=g++
 
 PROGS=reactor autosh

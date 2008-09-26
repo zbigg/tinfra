@@ -1,3 +1,13 @@
+//
+// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
+#ifndef __tinfra_protocols_h__
+#define __tinfra_protocols_h__
+
 #include <stdexcept>
 #include <string>
 
@@ -38,17 +48,22 @@ public:
 };
 
 
-
-class ProtocolWrapperChannel: public tinfra::aio::Channel {
+class ProtocolListener: public tinfra::aio::Listener {
 public:
-    ProtocolWrapperChannel(tinfra::io::stream* channel, ProtocolHandler* handler);
+    ProtocolListener(tinfra::io::stream* channel, ProtocolHandler* handler);
     
-    virtual ~ProtocolWrapperChannel();
+    virtual ~ProtocolListener();
     
     tinfra::io::stream* get_input_stream() { return &public_stream; }
     tinfra::io::stream* get_output_stream() { return &public_stream; }
     
 protected:
+    // Listener contract
+    virtual void failure(tinfra::aio::Dispatcher& dispatcher, tinfra::aio::Channel channel, int event);
+    
+    virtual void event(tinfra::aio::Dispatcher& dispatcher, tinfra::aio::Channel channel, int event);
+    
+private:
     tinfra::io::stream* channel; // base channel
     
     ProtocolHandler* handler;    
@@ -62,15 +77,7 @@ protected:
     bool   read_eof;        /// stream has reported EOF when reading
     bool   write_eof;       /// stream has reported EOF when writing 
 
-    // Channel contract
-    
-    virtual int  file();
-    
-    virtual void close();
-
-    virtual void failure(tinfra::aio::Dispatcher& r);
-    
-    virtual void hangup(tinfra::aio::Dispatcher& r);
+    void close();
     
     void data_available(tinfra::aio::Dispatcher& r);
     
@@ -78,10 +85,10 @@ protected:
     // implementation stream
     
     class BufferedNonBlockingStream: public tinfra::io::stream {
-        ProtocolWrapperChannel& base;
+        ProtocolListener& base;
     public:
         
-        BufferedNonBlockingStream(ProtocolWrapperChannel& b);
+        BufferedNonBlockingStream(ProtocolListener& b);
 
         virtual intptr_t native() const;
         
@@ -105,3 +112,6 @@ protected:
     void update_listen_status(tinfra::aio::Dispatcher& r);
 };
 
+#endif
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:

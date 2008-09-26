@@ -1,3 +1,10 @@
+//
+// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
 #include <stdexcept>
 #include <string>
 
@@ -16,10 +23,10 @@
 using tinfra::aio::Dispatcher;
 using tinfra::aio::Channel;
 //
-// ProtocolWrapperChannel
+// ProtocolListener
 //
 
-ProtocolWrapperChannel::ProtocolWrapperChannel(tinfra::io::stream* channel, ProtocolHandler* handler)
+ProtocolListener::ProtocolListener(tinfra::io::stream* channel, ProtocolHandler* handler)
     : channel(channel), 
       handler(handler),
       closed(false),
@@ -30,41 +37,37 @@ ProtocolWrapperChannel::ProtocolWrapperChannel(tinfra::io::stream* channel, Prot
 {
 }
 
-ProtocolWrapperChannel::~ProtocolWrapperChannel()
+ProtocolListener::~ProtocolListener()
 {
     delete handler;
-    delete channel;
 }
 
-int  ProtocolWrapperChannel::file() { 
-    return channel->native(); 
-}
-
-void ProtocolWrapperChannel::close() {
+void ProtocolListener::close() {
     if( to_send.size() > 0 ) {
         close_requested = true;
     } else { 
         closed = true;
-        channel->close();
     }
 }
-void ProtocolWrapperChannel::failure(Dispatcher& r) { 
-    r.remove_channel(this); 
-    channel->close();
+
+void ProtocolListener::failure(Dispatcher& dispatcher, Channel channel, int error) { 
     delete this;
 }
 
-void ProtocolWrapperChannel::hangup(Dispatcher& r) { 
-    r.remove_channel(this);
-    delete this;
+void ProtocolListener::event(Dispatcher& dispatcher, Channel channel, int event) {
+    this->channel = channel;
+    if( event == Dispatcher::READ) 
+        data_available(dispatcher);
+    else if( event == Dispatcher::WRITE )
+        write_possible(dispatcher);
+    else
+        assert(false);
+    
+    update_listen_status(dispatcher);
 }
 
-void ProtocolWrapperChannel::data_available(Dispatcher& r)
+void ProtocolListener::data_available(Dispatcher& r)
 {
-    if( closed ) {
-        update_listen_status(r);
-        return;
-    }
     // general idea
     //  - read till end of buffer
     //  - while possible consume using protocol handler
@@ -81,10 +84,9 @@ void ProtocolWrapperChannel::data_available(Dispatcher& r)
             break;
         // something read, retry with protocol
     }
-    update_listen_status(r);
 }
 
-int ProtocolWrapperChannel::read_next_chunk()
+int ProtocolListener::read_next_chunk()
 {
     if( closed || close_requested ) 
         return 0;
@@ -104,12 +106,8 @@ int ProtocolWrapperChannel::read_next_chunk()
     }
 }
     
-void ProtocolWrapperChannel::write_possible(Dispatcher& r)
+void ProtocolListener::write_possible(Dispatcher& r)
 {
-    if( closed ) {
-        update_listen_status(r);
-        return;
-    }
     try {
         if( ! write_eof && to_send.size() > 0 ) {
             int written = channel->write(to_send.data(), to_send.size());
@@ -126,61 +124,60 @@ void ProtocolWrapperChannel::write_possible(Dispatcher& r)
         // ignore it!
     }
     if( close_requested && to_send.size() == 0 ) {
-        close();
+        closed = true;
     }
-    update_listen_status(r);
 }
     
-void ProtocolWrapperChannel::update_listen_status(Dispatcher& r)
+void ProtocolListener::update_listen_status(Dispatcher& dispatcher)
 {
     if( closed ) {
-        r.remove_channel(this);
+        dispatcher.close(channel);
         delete this;
         return;
     }
     if( read_eof || handler->is_finished() ) {
-        r.listen_channel(this, Dispatcher::READ, false);
+        dispatcher.wait(channel, Dispatcher::READ, false);
     } else {
-        r.listen_channel(this, Dispatcher::READ, true);
+        dispatcher.wait(channel, Dispatcher::READ, true);
     }
     
     if( write_eof || to_send.size() == 0 ) {
-        r.listen_channel(this, Dispatcher::WRITE, false);
+        dispatcher.wait(channel, Dispatcher::WRITE, false);
     } else {
-        r.listen_channel(this, Dispatcher::WRITE, true);
+        dispatcher.wait(channel, Dispatcher::WRITE, true);
     }
 }
 
 //
-// ProtocolWrapperChannel::BufferedNonBlockingStream
+// ProtocolListener::BufferedNonBlockingStream
 //
 
     
-ProtocolWrapperChannel::BufferedNonBlockingStream::BufferedNonBlockingStream(ProtocolWrapperChannel& b)
+ProtocolListener::BufferedNonBlockingStream::BufferedNonBlockingStream(ProtocolListener& b)
     : base(b) 
 {}
 
-intptr_t ProtocolWrapperChannel::BufferedNonBlockingStream::native() const 
+intptr_t ProtocolListener::BufferedNonBlockingStream::native() const 
 {
     return base.channel->native();
 }
 
-void ProtocolWrapperChannel::BufferedNonBlockingStream::release()
+void ProtocolListener::BufferedNonBlockingStream::release()
 {
-    throw std::logic_error("ProtocolWrapperChannel::BufferedNonBlockingStream: release() not supported");
+    throw std::logic_error("ProtocolListener::BufferedNonBlockingStream: release() not supported");
 }
 
-void ProtocolWrapperChannel::BufferedNonBlockingStream::close()
+void ProtocolListener::BufferedNonBlockingStream::close()
 {
     base.close();
 }
 
-int ProtocolWrapperChannel::BufferedNonBlockingStream::seek(int pos, seek_origin origin)
+int ProtocolListener::BufferedNonBlockingStream::seek(int pos, seek_origin origin)
 {
-    throw std::logic_error("ProtocolWrapperChannel::BufferedNonBlockingStream: seek() not supported");
+    throw std::logic_error("ProtocolListener::BufferedNonBlockingStream: seek() not supported");
 }
 
-int ProtocolWrapperChannel::BufferedNonBlockingStream::read(char* dest, int size)
+int ProtocolListener::BufferedNonBlockingStream::read(char* dest, int size)
 {
     int readed = 0;
     while( readed < size ) {
@@ -199,7 +196,7 @@ int ProtocolWrapperChannel::BufferedNonBlockingStream::read(char* dest, int size
     return readed;
 }
 
-int ProtocolWrapperChannel::BufferedNonBlockingStream::write(const char* data, int size)
+int ProtocolListener::BufferedNonBlockingStream::write(const char* data, int size)
 {
     if( base.write_eof || base.closed || base.close_requested )
         return 0;
@@ -223,8 +220,9 @@ int ProtocolWrapperChannel::BufferedNonBlockingStream::write(const char* data, i
     }
     return written;
 }
-void ProtocolWrapperChannel::BufferedNonBlockingStream::sync() 
+void ProtocolListener::BufferedNonBlockingStream::sync() 
 {
     // not supported
 }
 
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
