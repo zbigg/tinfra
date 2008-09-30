@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cassert>
 
 #include "tinfra/cmd.h"
 #include "tinfra/io/stream.h"

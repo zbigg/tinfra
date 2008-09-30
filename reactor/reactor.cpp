@@ -39,47 +39,7 @@
 
 using tinfra::aio::Dispatcher;
 using tinfra::aio::Channel;
-
- 
-
-static void initialize_async_socket(tinfra::io::stream* socket_)
-{
-    int socket = socket_->native();
-    
-    tinfra::io::socket::set_blocking(socket, false);
-    
-    /*
-    int r = (1 << 15);
-    if( setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (void*)&r, sizeof(r)) ) {
-        // TODO: it should be warning
-        std::cerr << "unable to set SO_RCVBUF=" << r << " on socket " << socket << std::endl;
-    }
-    
-    int s = (1 << 17);
-    if( setsockopt(socket, SOL_SOCKET, SO_SNDBUF, (void*)&s, sizeof(s)) ) {
-        // TODO: it should be warning
-        std::cerr << "unable to set SO_SNFBUF=" << s << " on socket " << socket << std::endl;
-    }
-    */
-} 
-
-class Acceptor: public tinfra::aio::Listener {
-public:
-    virtual void event(tinfra::aio::Dispatcher& d, tinfra::aio::Channel listener_stream, int event)
-    {
-        using tinfra::io::socket::accept_client_connection;
-        using tinfra::io::stream;
-        
-        std::string client_address;
-        
-        std::auto_ptr<stream> client_conn(accept_client_connection(listener_stream, &client_address));
-        
-        initialize_async_socket(client_conn.get());
-        
-        accept_connection(d, client_conn, client_address);
-    }
-    virtual void accept_connection(Dispatcher& dispatcher, std::auto_ptr<tinfra::io::stream>& client_conn, std::string client_address) = 0;
-};
+using tinfra::aio::Acceptor;
 
 class HelloServerAcceptor: public Acceptor {
 public:

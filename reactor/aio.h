@@ -54,8 +54,20 @@ public:
     virtual ~Dispatcher() {}
 };
 
+// TODO following network stuff it should in kinda aio_net.h or stg
+
 std::auto_ptr<Dispatcher> create_network_dispatcher();
 
+class Acceptor: public tinfra::aio::Listener {
+public:
+    virtual void event(tinfra::aio::Dispatcher& d, 
+                       tinfra::aio::Channel listener_stream, 
+                       int event);
+
+    virtual void accept_connection(Dispatcher& dispatcher, 
+                                   std::auto_ptr<tinfra::io::stream>& client_conn, 
+                                   std::string client_address) = 0;
+}; 
 }}
 
 #endif // __tinfra_aio_h__
