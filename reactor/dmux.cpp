@@ -64,9 +64,6 @@ public:
             tinfra::process(h, r);
             
             switch( h.message_type ) {
-            case INFO:
-                handle_info(h, channel);
-                break;
             case CONNECT:
                 {
                     connect c;
@@ -91,7 +88,6 @@ public:
     
     
     // protocol events
-    virtual void handle_info(message_header const& h, tinfra::io::stream* channel) = 0;
     virtual void handle_connect(message_header const& h, connect& c, tinfra::io::stream* channel) = 0;
     virtual void handle_event(message_header const& h, event& c, tinfra::io::stream* channel) = 0;
     
@@ -106,45 +102,37 @@ public:
         reply_buffer.reserve(1024);
         network_serializer::writer w(reply_buffer);
         
-        message_header reply_header;
-        reply_header.message_type = message_type;
-        reply_header.request_id = get_next_request_id()
-        reply_header.last_response_id = in_reply_to.request_id;
-        reply_header.status = status;
+        message_header header;
+        header.message_type = message_type;
+        header.request_id = get_next_request_id()
+        header.last_response_id = in_reply_to.request_id;
+        header.status = status;
         
-        tinfra::process(reply_header, w);
+        tinfra::process(header, w);
         tinfra::process(message, w);
         
         send_message(channel, reply_buffer);
     }
     
     template <typename T>
-    virtual void reply(message_header const& in_reply_to,
-                       message_type_t message_type,
-                       int status)
+    void send(message_type_t message, int status, T const& message, tinfra::io::stream* channel)
     {
-        std::string reply_buffer;
-        reply_buffer.reserve(1024);
-        network_serializer::writer w(reply_buffer);
+        message_header header;
+        header.message_type = message_type;
+        header.request_id = get_next_request_id()
+        header.last_response_id = last_accepted_request_id;
+        header.status = status;
         
-        message_header reply_header = prepare_reply_header(in_reply_to, message_type, status);
+        std::string message_buffer;
+        message_buffer.reserve(1024);
         
-        tinfra::process(reply_header, w);
+        network_serializer::writer w(message_buffer);
+        tinfra::process(header, w);
+        tinfra::process(message, w);
         
-        send_message(channel, reply_buffer);
+        send_message(channel, message_buffer);
     }
     
-    message_header prepare_reply_header(message_header const& in_reply_to,
-                                        message_type_t message_type,
-                                        int status)
-    {
-        message_header r;
-        r.message_type = message_type;
-        r.request_id = get_next_request_id()
-        r.last_response_id = in_reply_to.request_id;
-        r.status = status;
-        return r;
-    }
     // transport events
     virtual void write_completed(size_t bytes_sent, size_t bytes_queued)
     {
@@ -153,6 +141,8 @@ public:
     
     virtual void eof(int direction)
     {
+        // TODO: eof on main stream
+        // inform ALL listeners that their channels are closed
     }
 
     /// check if this protocol handler has finished reading
@@ -184,6 +174,7 @@ public:
         
         bool is_close_requested() const {
             return close_requested;
+            
         }
         int seek(int , seek_origin)
         {
@@ -195,6 +186,16 @@ public:
         }
         int write(const char* data, int size)
         {
+            if( close_requested )
+                throw tinfra::logic_error("trying to write to closed stream");
+            event ev;
+            ev.flags = DATA;
+            ev.connection_id = this->connection_id;
+            ev.data.assign(data, size);
+            
+            this->parent.send(EVENT, 0, ev, this->channel);
+            
+            return size;
         }
         void sync()
         {
@@ -212,6 +213,7 @@ protected:
         else
             return 0;
     }
+    
     void add_listener(int connection_id, Listener* listener) {
         listsner.insert(connection_id, listener);
     }
@@ -219,6 +221,8 @@ protected:
     {
         connections.erase(connection_id);
     }
+    
+    int last_accepted_request_id; // id of last accepted request
     
     typedef std::map<unsigned int, Listener*> ConnectionHandlerMap;
     ConnectionHandlerMap connections;
@@ -342,6 +346,10 @@ class ServerProtocolHandler: public CommonProtocolHandler {
             size_t      buffer_size = 0;
             int bytes_accepted = listener->accept_bytes(buffer, buffer_size, &s);
             // TODO: remove accepted data from buffer
+            
+            if( s.is_close_requested() ) {
+                // TODO listener to remove, should flush buffers and reject
+            }
         }
         if( closed ) {
             listener->eof(Dispatcher::READ | Dispatcher::WRITE);

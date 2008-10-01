@@ -34,7 +34,6 @@ namespace dmux {
     }
     
     enum message_type_t {
-        INFO,
         CONNECT,
         EVENT
     };
