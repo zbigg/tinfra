@@ -24,78 +24,11 @@
 
 #include "protocols.h"
 #include "message_raw.h"
+#include "dmux.h"
 
 using tinfra::aio::Dispatcher;
 using tinfra::aio::Channel;
 
-#define TINFRA_DECLARE_STRUCT template <typename F> void apply(F& field) const
-#define FIELD(a) field(S::a, a)
-
-namespace dmux {
-    namespace S {
-        extern tinfra::symbol message_type;
-        
-        extern tinfra::symbol request_id;
-        extern tinfra::symbol last_response_id;
-        extern tinfra::symbol status;
-        
-        extern tinfra::symbol address;
-        
-        extern tinfra::symbol connection_id;
-        extern tinfra::symbol connection_status;
-        
-        extern tinfra::symbol data;
-    }
-    
-    enum message_type_t {
-        INFO,
-        CONNECT,
-        EVENT
-    };
-    
-    struct message_header {        
-        unsigned short message_type;
-        unsigned int   request_id;
-        unsigned int   last_response_id;
-        unsigned int   status;
-        
-        TINFRA_DECLARE_STRUCT {
-            FIELD(message_type);
-            FIELD(request_id);
-            FIELD(last_response_id);
-            FIELD(status);
-        }
-    };
-
-    struct connect {
-        std::string address;
-        
-        TINFRA_DECLARE_STRUCT {
-            FIELD(address);
-        }
-    };
-    
-    enum connection_status_bits {
-        DATA        = 1
-        ESTABLISHED = 2,
-        CLOSED      = 4,
-        FAILED      = 8
-    };
-    struct event {
-        unsigned int  connection_id;
-        unsigned int  connection_status;
-        std::string   data;
-        
-        TINFRA_DECLARE_STRUCT {
-            FIELD(connection_id);
-            FIELD(connection_status);
-            FIELD(data);
-        }
-    };
-
-}
-
-// begin IMPL
 #include "tinfra/tinfra.h"
 #include "network_serializer.h"
 
@@ -112,14 +45,15 @@ namespace dmux { namespace S {
     tinfra::symbol connection_status("connection_status")
     
     tinfra::symbol data("data");
-} } // end namespace AutoSH::S
+} } // end namespace dmux::S
 
 
 using tinfra::fmt;
 
 namespace dmux {
 
-class ProtocolHandler: public message_raw::ProtocolHandler {
+
+class CommonProtocolHandler: public message_raw::ProtocolHandler {
 public:
     // protocol dispatcher
     virtual void accept_message(const std::string& message, tinfra::io::stream* channel)
@@ -157,10 +91,60 @@ public:
     
     
     // protocol events
-    virtual void handle_info(message_header const& h, tinfra::io::stream* channel);
-    virtual void handle_connect(message_header const& h, connect& c, tinfra::io::stream* channel);
-    virtual void handle_event(message_header const& h, event& c, tinfra::io::stream* channel);
+    virtual void handle_info(message_header const& h, tinfra::io::stream* channel) = 0;
+    virtual void handle_connect(message_header const& h, connect& c, tinfra::io::stream* channel) = 0;
+    virtual void handle_event(message_header const& h, event& c, tinfra::io::stream* channel) = 0;
     
+    template <typename T>
+    virtual void reply(message_header const& in_reply_to,
+                       message_type_t message_type,
+                       int status,
+                       T const& message,
+                       tinfra::io::stream* channel)
+    {
+        std::string reply_buffer;
+        reply_buffer.reserve(1024);
+        network_serializer::writer w(reply_buffer);
+        
+        message_header reply_header;
+        reply_header.message_type = message_type;
+        reply_header.request_id = get_next_request_id()
+        reply_header.last_response_id = in_reply_to.request_id;
+        reply_header.status = status;
+        
+        tinfra::process(reply_header, w);
+        tinfra::process(message, w);
+        
+        send_message(channel, reply_buffer);
+    }
+    
+    template <typename T>
+    virtual void reply(message_header const& in_reply_to,
+                       message_type_t message_type,
+                       int status)
+    {
+        std::string reply_buffer;
+        reply_buffer.reserve(1024);
+        network_serializer::writer w(reply_buffer);
+        
+        message_header reply_header = prepare_reply_header(in_reply_to, message_type, status);
+        
+        tinfra::process(reply_header, w);
+        
+        send_message(channel, reply_buffer);
+    }
+    
+    message_header prepare_reply_header(message_header const& in_reply_to,
+                                        message_type_t message_type,
+                                        int status)
+    {
+        message_header r;
+        r.message_type = message_type;
+        r.request_id = get_next_request_id()
+        r.last_response_id = in_reply_to.request_id;
+        r.status = status;
+        return r;
+    }
     // transport events
     virtual void write_completed(size_t bytes_sent, size_t bytes_queued)
     {
@@ -176,8 +160,67 @@ public:
     {
         return false;
     }
+    
+    class ConnectionOutputStream: public tinfra::io::stream {
+        CommonProtocolHandler& parent;
+        int connection_id;
+        tinfra::io::stream* channel;
+        bool closed_requested;
+    public:
+        ConnectionOutputStream(CommonProtocolHandler& parent,
+                                int connection_id, 
+                                tinfra::io::stream* channel) :
+            parent(parent), 
+            connection_id(connection_id),
+            channel(channel),
+            close_requested(false)
+        {}
+            
+        
+        void close()
+        {
+            close_requested = true;
+        }
+        
+        bool is_close_requested() const {
+            return close_requested;
+        }
+        int seek(int , seek_origin)
+        {
+            throw std::logic_error("protocols::CommonProtocolHandler::ConnectionOutputStream::seek not available");
+        }
+        int read(char*, int)
+        {
+            throw std::logic_error("protocols::CommonProtocolHandler::ConnectionOutputStream::read not available");
+        }
+        int write(const char* data, int size)
+        {
+        }
+        void sync()
+        {
+        }
+    
+        intptr_t native() const { return -1; }
+        void release() {}
+    };
 protected:
-    typedef std::map<unsigned int, Listener*> ConnectionHandlerMap
+    
+    Listener* get_listener(int connection_id) const{
+        ConnectionHandlerMap::const_iterator i = connections.find(connection_id);
+        if( i != connections.end() )
+            return *i;
+        else
+            return 0;
+    }
+    void add_listener(int connection_id, Listener* listener) {
+        listsner.insert(connection_id, listener);
+    }
+    void remove_listener(int connection_id)
+    {
+        connections.erase(connection_id);
+    }
+    
+    typedef std::map<unsigned int, Listener*> ConnectionHandlerMap;
     ConnectionHandlerMap connections;
 };
 
@@ -232,15 +275,23 @@ class ClientProtocolHandler: public ProtocolHandler {
 */
 
 class ServiceManager {
+    /// Open a service.
+    ///
+    /// Throws std::domain_error if service given by address cannot be opened.
     Listener* open(std::string const& address);
+    
+    /// Close the service.
     void      close(Listener*);
 };
 
-class ServerProtocolHandler: public ProtocolHandler {
+class ServerProtocolHandler: public CommonProtocolHandler {
     
     ServiceManager& service_manager;
-    
-    ServerProtocolHandler(ServiceManager& sm): service_manager(sm) {}
+    int next_connection_id;
+    ServerProtocolHandler(ServiceManager& sm): 
+        service_manager(sm),
+        next_connection_id(0)
+    {}
         
     // protocol events
     virtual void handle_info(message_header const& h, tinfra::io::stream* channel)
@@ -248,8 +299,22 @@ class ServerProtocolHandler: public ProtocolHandler {
     }
     virtual void handle_connect(message_header const& h, connect& c, tinfra::io::stream* channel)
     {
-        // CLIENT doesn't accept connect request
-        channel->close();
+        event result;
+        try {
+            Listener* listener = service_manager->open(c.address());
+            int connection_id = ++next_connection_id;
+            add_listener(connection_id, listener);
+
+            result.connection_id = connection_id;
+            result.connection_status = ESTABLISHED;
+            
+            reply(h, EVENT, 0, result, channel);
+        } catch( std::domain_error& de) {
+            result.connection_status = FAILED;
+            result.connection_id = 0;
+            
+            reply(h, EVENT, 0, result, channel);
+        }
     }
     virtual void handle_event(message_header const& h, event& c, tinfra::io::stream* channel)
     {
@@ -271,10 +336,15 @@ class ServerProtocolHandler: public ProtocolHandler {
             return;
         }
         if( data ) {
-            // have data, forward to client
+            ConnectionOutputStream s(*this, c.connection_id, channel);
+            // TODO: buffer data and then provide to listener
+            const char* buffer = 0;
+            size_t      buffer_size = 0;
+            int bytes_accepted = listener->accept_bytes(buffer, buffer_size, &s);
+            // TODO: remove accepted data from buffer
         }
         if( closed ) {
-            // inform that connection is closed
+            listener->eof(Dispatcher::READ | Dispatcher::WRITE);
         }
     }
 
