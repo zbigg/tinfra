@@ -12,6 +12,8 @@
 #include "tinfra/win32.h"
 #include "tinfra/holder.h"
 
+#include <iostream>
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -218,7 +220,10 @@ struct win32_subprocess: public subprocess {
                         
             si.dwFlags |= STARTF_USESTDHANDLES;
             
-            creationFlags |= DETACHED_PROCESS;
+            // TODO: decide what to do
+            // When DETACHED_PROCESS is in use child doesn't inherit console handles
+            // even if they were explicitly given in STARTUPINFO.hStdXXX.            
+            //creationFlags |= DETACHED_PROCESS;
             si.dwFlags |= STARTF_USESHOWWINDOW;
             si.wShowWindow = SW_HIDE;
         
