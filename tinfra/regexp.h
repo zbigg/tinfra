@@ -12,7 +12,6 @@
 
 #ifdef HAVE_PCRE
 #define TINFRA_REGEX_PCRE 1
-#include <pcre.h>
 #else
 #endif
 
@@ -26,11 +25,11 @@ namespace tinfra {
 class regexp {
     
 #ifdef TINFRA_REGEX_PCRE
-    ::pcre*       re_;
-    ::pcre_extra* extra_;
+    void*  re_;
+    void*  extra_;
 #endif
-    
-    size_t     patterns_count_;
+
+    size_t patterns_count_;
 public:
     typedef std::vector<std::string> match_result;
     

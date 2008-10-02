@@ -290,7 +290,7 @@ stream* open_server_socket(char const* listening_host, int port)
     ::sockaddr_in sock_addr;
     std::memset(&sock_addr,0,sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;
-    if( listening_host ) {
+    if( listening_host && *listening_host ) {
         get_inet_address(listening_host, port, &sock_addr);
     } else {
         listening_host = "0.0.0.0";

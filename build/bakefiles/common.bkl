@@ -66,6 +66,7 @@
     </template>
     
     <set var="VARS_DONT_ELIMINATE" append="1">top_srcdir</set> 
+<!--
     <fragment format='autoconf'> 
 #
 # Keep Makefiles recent
@@ -81,10 +82,11 @@ ${top_srcdir}/configure: ${top_srcdir}/configure.ac
 
 $(top_builddir)./config.status : ${top_srcdir}/configure
 	@echo "::: Recheking configuration ..."
-	(cd $(top_builddir)./ ; ./config.status --recheck ; )
+	(cd $(top_builddir)./ ; ./config.status -x-recheck ; )
 
 Makefile: $(srcdir)/Makefile.in $(top_builddir)./config.status
 	@echo "::: Rebuilding autoconf generated  files ..."
 	(cd $(top_builddir)./ ; ./config.status ; )
     </fragment>
+-->
 </makefile>

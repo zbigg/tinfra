@@ -12,6 +12,11 @@
 
 #include "regexp.h"
 
+#ifdef HAVE_PCRE
+#define TINFRA_REGEX_PCRE 1
+#include <pcre.h>
+#else
+#endif
 //
 // regexp
 //
@@ -19,6 +24,10 @@
 namespace tinfra {
 
 #ifdef TINFRA_REGEX_PCRE
+
+#define TT_PCRE(a)        (pcre*)(a)
+#define TT_PCRE_EXTRA(a)  (pcre_extra*)(a)
+
 regexp::regexp(const char* pattern):
 
     re_(0),
@@ -31,9 +40,9 @@ regexp::regexp(const char* pattern):
 regexp::~regexp()
 {
     if( extra_ )
-        pcre_free(extra_);
+    	pcre_free(TT_PCRE_EXTRA(extra_));
     if( re_ )
-        pcre_free(re_);
+        pcre_free(TT_PCRE(re_));
 }
 
 void regexp::compile(const char* pattern, int options)
@@ -49,7 +58,7 @@ void regexp::compile(const char* pattern, int options)
             err_ptr = "unknown error";
         throw std::logic_error(fmt("bad regular expression '%s': %s") % pattern % err_ptr);
     }
-    extra_ = pcre_study(re_, 0,  &err_ptr);
+    extra_ = pcre_study(TT_PCRE(re_), 0,  &err_ptr);
     if( extra_ == 0 && err_ptr != 0 ) {
         // TODO: this should be abort because according to pcreapi manual
         //       it shouldn't fail with fresh and correct re_
@@ -57,7 +66,7 @@ void regexp::compile(const char* pattern, int options)
     }
     {
         int cc = 0;
-        int rc = pcre_fullinfo(re_, extra_, PCRE_INFO_CAPTURECOUNT, &cc);
+        int rc = pcre_fullinfo(TT_PCRE(re_), TT_PCRE_EXTRA(extra_), PCRE_INFO_CAPTURECOUNT, &cc);
         if( rc != 0 ) {
             // TODO: this should be abort because according to pcreapi manual
             //       it shouldn't fail with fresh and correct re_
@@ -73,7 +82,8 @@ bool regexp::do_match(match_result* result, const char* str, size_t length, size
     const int offsets_size = (patterns_count_+1)*3; // see manual, pcre_exec def
     int offsets[offsets_size]; 
     int options = 0;
-    int rc = pcre_exec(re_, extra_, str, length, 0, options, 
+    int rc = pcre_exec(TT_PCRE(re_), TT_PCRE_EXTRA(extra_), 
+	               str, length, 0, options, 
                        offsets, offsets_size);
     if( rc == -1 )
         return false;

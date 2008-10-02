@@ -68,12 +68,12 @@ void terminate_handler()
 
 void fatal_exit(const char* message, stacktrace_t& stacktrace)
 {
-    std::cerr << get_exepath() << ": message" << std::endl;
-    if( stacktrace.size() > 0 ) 
-        print_stacktrace(stacktrace, std::cerr);
     if( fatal_exception_handler ) {
 	fatal_exception_handler();
     }
+    std::cerr << get_exepath() << ": " << message << std::endl;
+    if( stacktrace.size() > 0 ) 
+        print_stacktrace(stacktrace, std::cerr);    
     std::cerr << "aborting" << std::endl;
     abort();
 }
@@ -86,6 +86,39 @@ void fatal_exit(const char* message)
     }
     
     fatal_exit(message, stacktrace);
+}
+
+void interrupt_exit(const char* message)
+{
+    std::cerr << get_exepath() << ": " << message << std::endl;
+    exit(1);
+}
+
+interrupted_exception::interrupted_exception()
+    : std::runtime_error("interrupted")
+{}
+
+interrupt_policy current_interrupt_policy = IMMEDIATE_ABORT;
+bool interrupted = false;
+
+void interrupt()
+{
+    if( current_interrupt_policy == IMMEDIATE_ABORT ) {
+        interrupt_exit("interrupted");
+    } else {
+        interrupted = true;
+    }
+}
+
+void test_interrupt()
+{
+    if( interrupted )
+        throw interrupted_exception();
+}
+
+void set_interrupt_policy(interrupt_policy p)
+{
+    current_interrupt_policy = p;
 }
 
 } // end of namespace tinfra
