@@ -28,7 +28,20 @@ using tinfra::aio::Channel;
 //
 
 ProtocolListener::ProtocolListener(tinfra::io::stream* channel, ProtocolHandler* handler)
-    : channel(channel), 
+    : in(channel), 
+      out(channel),
+      handler(handler),
+      closed(false),
+      close_requested(false),
+      read_eof(false),
+      write_eof(false),
+      public_stream(*this)
+{
+}
+
+ProtocolListener::ProtocolListener(tinfra::io::stream* in, tinfra::io::stream* out, ProtocolHandler* handler)
+    : in(in), 
+      out(out),
       handler(handler),
       closed(false),
       close_requested(false),
@@ -40,7 +53,8 @@ ProtocolListener::ProtocolListener(tinfra::io::stream* channel, ProtocolHandler*
 
 ProtocolListener::~ProtocolListener()
 {
-    delete handler;
+    // TODO: it mustn't be here
+    //delete handler;
 }
 
 void ProtocolListener::close() {
@@ -52,7 +66,7 @@ void ProtocolListener::close() {
 }
 
 void ProtocolListener::failure(Dispatcher& dispatcher, Channel channel, int error) { 
-    delete this;
+    // delete this;
 }
 
 void ProtocolListener::event(Dispatcher& dispatcher, Channel channel, int event) {
@@ -93,7 +107,7 @@ int ProtocolListener::read_next_chunk()
         return 0;
     try {
         char buffer[1024];
-        int readed = channel->read(buffer, sizeof(buffer));
+        int readed = in->read(buffer, sizeof(buffer));
         if( readed == 0 ) {
             handler->eof(Dispatcher::READ);
             read_eof = true;
@@ -110,8 +124,9 @@ int ProtocolListener::read_next_chunk()
 void ProtocolListener::write_possible(Dispatcher& r)
 {
     try {
+        // TODO: it should go to try_write
         if( ! write_eof && to_send.size() > 0 ) {
-            int written = channel->write(to_send.data(), to_send.size());
+            int written = out->write(to_send.data(), to_send.size());
             if( written == 0 ) {
                 handler->eof(Dispatcher::WRITE);
                 write_eof = true;
@@ -137,15 +152,15 @@ void ProtocolListener::update_listen_status(Dispatcher& dispatcher)
         return;
     }
     if( read_eof || handler->is_finished() ) {
-        dispatcher.wait(channel, Dispatcher::READ, false);
+        dispatcher.wait(in, Dispatcher::READ, false);
     } else {
-        dispatcher.wait(channel, Dispatcher::READ, true);
+        dispatcher.wait(in, Dispatcher::READ, true);
     }
     
     if( write_eof || to_send.size() == 0 ) {
-        dispatcher.wait(channel, Dispatcher::WRITE, false);
+        dispatcher.wait(out, Dispatcher::WRITE, false);
     } else {
-        dispatcher.wait(channel, Dispatcher::WRITE, true);
+        dispatcher.wait(out, Dispatcher::WRITE, true);
     }
 }
 
@@ -160,7 +175,7 @@ ProtocolListener::BufferedNonBlockingStream::BufferedNonBlockingStream(ProtocolL
 
 intptr_t ProtocolListener::BufferedNonBlockingStream::native() const 
 {
-    return base.channel->native();
+    return -1;
 }
 
 void ProtocolListener::BufferedNonBlockingStream::release()
@@ -202,9 +217,10 @@ int ProtocolListener::BufferedNonBlockingStream::write(const char* data, int siz
     if( base.write_eof || base.closed || base.close_requested )
         return 0;
     int written = 0;
+    // TODO: it should go to try_write
     if( base.to_send.size() == 0 ) {
         try {
-            written = base.channel->write(data, size);
+            written = base.out->write(data, size);
             if( written == 0 ) {
                 base.write_eof = true;
                 base.handler->eof(Dispatcher::WRITE);

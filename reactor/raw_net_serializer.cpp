@@ -5,15 +5,19 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#include <stdexcept>
 #include <string>
 
 #include "tinfra/io/stream.h"
 #include "tinfra/symbol.h"
 
-#include "message_raw.h"
+#ifdef WIN32
+#include <winsock.h>
+#else
+#include <arpa/inet.h>
+#endif
 
-namespace network_serializer {
+namespace tinfra {
+namespace raw_net_serializer {
 
 class reader {
     const char* data;
@@ -90,14 +94,10 @@ private:
             //    here normal is that due to network property we have received
             //    partial message
             // but how often you'll receive broken packets ?
-            // TODO should create option to have reader reporting error
-            //      - namely std::logic_error with something like expecting 4 bytes
-            //        or message lengh should be at least next + bytes
             throw tinfra::would_block("not enough information to assemble message");
         }
     }
 };
-
 
 class writer {
     std::string& out;
@@ -153,23 +153,4 @@ protected:
     }
 };
 
-template <typename T>
-std::string serialize(T const& v)
-{
-    string buffer;
-    tinfra::raw_net_serializer::reader writer(buffer);
-    
-    tinfra::process(v, writer);
-    
-    return buffer;
-}
-
-template <typename T>
-void deserialize(std::string const& buffer, T& dest)
-{
-    tinfra::raw_net_serializer::reader reader(buffer.data(), buffer.size());
-    
-    tinfra::process(dest, writer);
-}
-
-} // end namespace network_serializer
+} } // end namespace tinfra::raw_net_serializer
