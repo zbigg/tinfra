@@ -33,6 +33,15 @@ public:
 	bool operator == (const symbol& other) const { return symbolId == other.symbolId; } 
 	bool operator != (const symbol& other) const { return symbolId != other.symbolId; } 
 	bool operator < (const symbol& other)  const { return symbolId < other.symbolId; }
+        
+        bool operator == (int other) const { return symbolId == other; } 
+	bool operator != (int other) const { return symbolId != other; } 
+	bool operator <  (int other)  const { return symbolId < other; }
+        
+        // TODO: add string equivalents
+        //bool operator == (int other) const { return symbolId == other; } 
+	//bool operator != (int other) const { return symbolId != other; } 
+	//bool operator <  (int other)  const { return symbolId < other; }
 	
 	// getters and cast operators
 	
@@ -44,10 +53,14 @@ public:
 	operator const char* () const      { return c_str(); }
 	operator id_type  () const         { return symbolId; }
 
+        static const int null = 0;
+        
 	// symbol registry
 	static symbol	get(id_type id);
 	static symbol	get(const string& name);
 	static symbol	get(const char* name);
+        static symbol	find(const string& name);
+	static symbol	find(const char* name);
 	
 private:
 	// the only member
@@ -70,9 +83,10 @@ private:
 	static int             nextFreeSymbolId;
 };
 
+std::ostream& operator <<(std::ostream& dest, symbol const& s);
 
 };
 
-std::ostream& operator <<(std::ostream& dest, tinfra::symbol const& s);
+
 
 #endif

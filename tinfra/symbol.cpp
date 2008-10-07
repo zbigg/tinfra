@@ -68,10 +68,25 @@ symbol	symbol::get(const char* name)
 	return symbol(getIdForName(name));
 }
 
+symbol	symbol::find(const string& name)
+{
+    return find(name.c_str());
+}
+
+symbol	symbol::find(const char* name)
+{
+    Name2IdMap::iterator i =  symbolMapString->find(name);
+    if( i == symbolMapString->end() ) 
+        return null;
+    else
+        return i->second;
+}
+
+std::ostream& operator <<(std::ostream& dest, symbol const& s)
+{
+    return dest << s.str();
+}
+
 } // end namespace tinfra
 
 
-std::ostream& operator <<(std::ostream& dest, tinfra::symbol const& s)
-{
-    return dest << s.c_str();
-}
