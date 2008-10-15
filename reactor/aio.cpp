@@ -40,7 +40,7 @@ namespace aio {
 //
 
 struct ChannelEntry {
-    Channel   channel;
+    stream*   channel;
         
     int       flags;
     Listener* listener;
@@ -52,33 +52,32 @@ typedef std::vector<ChannelEntry> ChannelsEntryList;
 
 class ChannelContainer {
 public:
-    void    remove(Channel c);
+    void    remove(stream* c);
     
-    void    add(Channel c, Listener*l, int flags);
+    void    add(stream* c, Listener*l, int flags);
     
-    ChannelEntry* get(Channel c);
+    ChannelEntry* get(stream* c);
 
-    void markAllClosed();
     
     void cleanup();
 
     ChannelsEntryList entries;
 };
 
-void ChannelContainer::remove(Channel c) 
+void ChannelContainer::remove(stream* c) 
 {
     ChannelEntry* e = get(c);
     if( e ) 
         e->removed = true;
 }
 
-void ChannelContainer::add(Channel c, Listener*l, int flags) 
+void ChannelContainer::add(stream* c, Listener*l, int flags) 
 {
     ChannelEntry d = { c, flags, l, false };
     entries.push_back(d);
 }
 
-ChannelEntry* ChannelContainer::get(Channel c) 
+ChannelEntry* ChannelContainer::get(stream* c) 
 {    
     for( ChannelsEntryList::iterator i = entries.begin(); i != entries.end(); ++i ) {
         if( i->channel == c ) 
@@ -86,18 +85,10 @@ ChannelEntry* ChannelContainer::get(Channel c)
     }
     return 0;
 }
-
-void ChannelContainer::markAllClosed()
-{
-    for(ChannelsEntryList::iterator i = entries.begin(); i != entries.end(); ++i ) {
-        i->removed = true;
-    }
-}
     
 void ChannelContainer::cleanup() {
     for(ChannelsEntryList::iterator i = entries.begin(); i != entries.end();  ) {
         if( i->removed ) {
-            delete i->channel;
             i = entries.erase(i);
         } else {
             ++i;
@@ -119,11 +110,13 @@ public:
 
 public:
     
-    PollDispatcher(): timeout(-1) {}
+    PollDispatcher(): 
+        timeout(-1) 
+    {
+    }
+    
     ~PollDispatcher()
     {
-        channels.markAllClosed();
-        channels.cleanup();
     }
     void step()
     {
@@ -177,43 +170,20 @@ public:
         channels.cleanup();
     }
     
-    virtual Channel create(int type, std::string const& address, Listener* listener, int initial_flags)
-    {
-        static tinfra::regexp parse_ip_address("([^:]*):([0-9]+)");        
-        Channel channel;
-        std::string host = "";
-        int port = 0; 
-        if( !(tinfra::scanner(parse_ip_address, address.c_str()) % host % port ) )
-            throw std::logic_error(tinfra::fmt("malformed network address: %s") % address);
-        
-        switch( type ) {
-        case CLIENT:
-            channel = tinfra::io::socket::open_client_socket(host.c_str(), port);
-            break;
-        case SERVICE:
-            channel = tinfra::io::socket::open_server_socket(host.c_str(), port);
-            break;
-        default:
-            return 0;
-        }
-        
-        put(channel, listener, initial_flags);
-        return channel;
-    }
     
-    virtual void put(Channel channel, Listener* listener, int initial_flags)
+    virtual void add(stream* channel, Listener* listener, int initial_flags)
     {
         channels.add(channel, listener, initial_flags);
     }
     
-    virtual void close(Channel c)
+    virtual void remove(stream* c)
     {
         ChannelEntry* cd = channels.get(c);
         assert(cd != 0);
         close(cd);
     }
     
-    virtual void wait(Channel c, int flags, bool enable)
+    virtual void wait(stream* c, int flags, bool enable)
     {
         ChannelEntry* cd = channels.get(c);
         assert(cd != 0);
@@ -256,30 +226,16 @@ private:
     }
 };
 
-std::auto_ptr<Dispatcher> create_network_dispatcher()
+
+std::auto_ptr<Dispatcher> Dispatcher::create()
 {
     return std::auto_ptr<Dispatcher>(new PollDispatcher());
 }
 
-static void initialize_async_socket(tinfra::io::stream* socket_)
+//deprecated
+std::auto_ptr<Dispatcher> create_network_dispatcher()
 {
-    int socket = socket_->native();
-    
-    tinfra::io::socket::set_blocking(socket, false);
-} 
-
-void Acceptor::event(tinfra::aio::Dispatcher& d, tinfra::aio::Channel listener_stream, int event)
-{
-    using tinfra::io::socket::accept_client_connection;
-    using tinfra::io::stream;
-    
-    std::string client_address;
-    
-    std::auto_ptr<stream> client_conn(accept_client_connection(listener_stream, &client_address));
-    
-    initialize_async_socket(client_conn.get());
-    
-    accept_connection(d, client_conn, client_address);
+    Dispatcher::create();
 }
 
 } } // end namespace tinfra::aio

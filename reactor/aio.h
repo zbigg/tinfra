@@ -18,57 +18,95 @@
 namespace tinfra {
 namespace aio {
     
-typedef tinfra::io::stream* Channel;
+typedef tinfra::io::stream stream;
 
 class Dispatcher;
     
 class Listener {
 public:
-    virtual void event(Dispatcher& d, Channel c, int event) = 0;
-    virtual void failure(Dispatcher& d, Channel c, int error) = 0;
+    /// Normal operation event.
+    ///
+    /// Information about normal operation event. 
+    ///
+    /// @param event type of event ( Dispatcher::event_type )
+    virtual void event(Dispatcher& d, stream* c, int event) = 0;
+
+    /// Failure notification.
+    /// 
+    /// Called by dispatcher gives an error.
+    ///
+    /// TODO: describe/remove/specify what @param error means
+    /// Memory:
+    /// Dispatcher removes stream after this ntification.
+    ///
+    /// Stream lifecycle becomes user responsiblity.
+    virtual void failure(Dispatcher& d, stream* c, int error) = 0;
     
     virtual ~Listener() {}
 };
 
 class Dispatcher {
 public:
-    enum {
+    enum event_type {
         READ = 1, 
         WRITE = 2
     };
-    enum {
-        CLIENT = 0,
-        SERVICE = 1
-    };
     
-    virtual Channel create(int type, std::string const& address, Listener* l, int initial_flags) = 0;
+    /// Create instance.
+    ///
+    /// Create new independent from others instance of Dispatcher.
+    ///
+    /// Thread: 
+    ///    - safe to call concurently
+    ///    - created instance are independent but not thread safe
+    static  std::auto_ptr<Dispatcher> create();
     
-    virtual void put(Channel c, Listener* l, int initial_flags) = 0;
+    /// Add a stream 
+    ///
+    /// The new stream is added or it's parameters are replaced (listener, flags)
+    ///
+    /// In the following invocations of step() Dispatcher will wait 
+    /// for events specified in flags.
+    /// 
+    /// Stream and Listener instances must be available up to
+    /// Dispatcher destruction or call to remove()
+    virtual void add(stream* c, Listener* l, int initial_flags) = 0;
     
-    virtual void close(Channel c) = 0;
+    /// Remove a stream
+    ///
+    /// Remove stream from set of managed streams.
+    ///
+    /// Memory:
+    /// Called can freely destroy stream after this call.
+    ///
+    /// Dispatcher MUST NOT dereference stream pointer after this call as 
+    /// it's storage and object may be destroyed.
+    ///
+    /// Stream lifecycle becomes user responsiblity.
+    virtual void remove(stream* c) = 0;
     
-    virtual void wait(Channel c, int mask, bool enable) = 0;
+    /// Change wait state.
+    ///
+    /// Change wait state of stream. flags given by mask parameter
+    /// are disabled/enabled according to enable parameter.
+    virtual void wait(stream* c, int mask, bool enable) = 0;
 
+    /// Perform on dispatching step.
+    ///
+    /// This call will wait until at least one event occurs.
+    /// 
+    /// TODO. There should be timeout parameter.
+    /// TODO. There should be feedback about what dispatcher has
+    ///       done during this one step.
     virtual void step() = 0;
     
     virtual ~Dispatcher() {}
 };
 
-// TODO following network stuff it should in kinda aio_net.h or stg
+//deprecated, use Dispatcher::create()
+std::auto_ptr<Dispatcher> create_dispatcher();
 
-std::auto_ptr<Dispatcher> create_network_dispatcher();
-
-class Acceptor: public tinfra::aio::Listener {
-public:
-    virtual void event(tinfra::aio::Dispatcher& d, 
-                       tinfra::aio::Channel listener_stream, 
-                       int event);
-
-    virtual void accept_connection(Dispatcher& dispatcher, 
-                                   std::auto_ptr<tinfra::io::stream>& client_conn, 
-                                   std::string client_address) = 0;
-}; 
-}}
+}} // end namespace tinfra::aio
 
 #endif // __tinfra_aio_h__
 
