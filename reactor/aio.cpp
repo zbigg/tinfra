@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <list>
 #include <map>
+#include <cassert>
 
 #include <iostream>
 
@@ -258,6 +259,27 @@ private:
 std::auto_ptr<Dispatcher> create_network_dispatcher()
 {
     return std::auto_ptr<Dispatcher>(new PollDispatcher());
+}
+
+static void initialize_async_socket(tinfra::io::stream* socket_)
+{
+    int socket = socket_->native();
+    
+    tinfra::io::socket::set_blocking(socket, false);
+} 
+
+void Acceptor::event(tinfra::aio::Dispatcher& d, tinfra::aio::Channel listener_stream, int event)
+{
+    using tinfra::io::socket::accept_client_connection;
+    using tinfra::io::stream;
+    
+    std::string client_address;
+    
+    std::auto_ptr<stream> client_conn(accept_client_connection(listener_stream, &client_address));
+    
+    initialize_async_socket(client_conn.get());
+    
+    accept_connection(d, client_conn, client_address);
 }
 
 } } // end namespace tinfra::aio

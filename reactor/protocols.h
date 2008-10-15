@@ -21,6 +21,8 @@
 #include "aio.h"
 //#include "tinfra/aio.h"
 
+// TODO: ProtocolHandler should renamed to protocol_handler
+
 class ProtocolHandler {
 public:
     virtual ~ProtocolHandler() {}
@@ -47,10 +49,12 @@ public:
     virtual bool is_finished() = 0;
 };
 
+// TODO: ProtocolListener should renamed to protocol_aio_adaptor
 
 class ProtocolListener: public tinfra::aio::Listener {
 public:
-    ProtocolListener(tinfra::io::stream* channel, ProtocolHandler* handler);
+    ProtocolListener(tinfra::io::stream* io, ProtocolHandler* handler);
+    ProtocolListener(tinfra::io::stream* in, tinfra::io::stream* out, ProtocolHandler* handler);
     
     virtual ~ProtocolListener();
     
@@ -64,7 +68,8 @@ protected:
     virtual void event(tinfra::aio::Dispatcher& dispatcher, tinfra::aio::Channel channel, int event);
     
 private:
-    tinfra::io::stream* channel; // base channel
+    tinfra::io::stream* in;  // input channel
+    tinfra::io::stream* out; // output channel, may be the same as in
     
     ProtocolHandler* handler;    
     typedef std::string buffer;
