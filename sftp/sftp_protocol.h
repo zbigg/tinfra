@@ -11,11 +11,12 @@ namespace sftp {
 using rfc4251::byte;
 using rfc4251::boolean;
 using rfc4251::uint32;
+using rfc4251::uint64;
 using rfc4251::string;
     
 // specific SFTP types    
-typedef uint16_t  uint16;
-typedef int64_t   int64;
+typedef unsigned short   uint16;
+typedef signed long long int64;
     
 struct extension_pair {
     string name;
@@ -40,8 +41,6 @@ public:
         std::vector<T>(other) 
     {}
 };
-
-using rfc4251 name_list;
 
 //
 // enums
@@ -138,7 +137,7 @@ enum access_disposition {
 // symbol definitions
 //
 
-#define DECL_SYMBOL(a) extern tinfra::symbol a;
+#define DECL_SYMBOL(a) extern const tinfra::symbol a;
 
 namespace S {    
     DECL_SYMBOL(length);
@@ -181,6 +180,7 @@ namespace S {
     DECL_SYMBOL(offset);
     DECL_SYMBOL(data);
     
+    DECL_SYMBOL(name);
     DECL_SYMBOL(oldpath);
     DECL_SYMBOL(newpath);
     
@@ -190,7 +190,7 @@ namespace S {
     
     DECL_SYMBOL(end_of_file);
     DECL_SYMBOL(elements);
-}
+};
 
 //
 // compund types
@@ -257,7 +257,7 @@ struct attr {
     bool present(fileattr field) {
         return (valid_attribute_flags & field) != 0;
     }
-}
+};
 
 //
 // requests packets
@@ -288,7 +288,7 @@ struct init_packet {
 struct version_packet {
     static const packet_type type = SSH_FXP_VERSION;
     
-    uint32 version
+    uint32 version;
     fill_list<extension_pair> extensions;
     
     TINFRA_DECLARE_STRUCT {
@@ -477,7 +477,7 @@ struct data_packet {
                         //      this
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(handle);
+        FIELD(data);
         FIELD(end_of_file);
     }
 };
@@ -487,7 +487,7 @@ struct name_element {
     attr   attrs;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(name);
+        FIELD(filename);
         FIELD(attrs);
     }
 };
@@ -496,7 +496,7 @@ struct name_packet {
     static const packet_type type = SSH_FXP_NAME;
     
     // WARNING custom encoding see 9.4 for encoding
-    std::vector<name_entry> elements; 
+    std::vector<name_element> elements; 
     
     bool   end_of_file; // WARNING: optional
     
@@ -516,6 +516,81 @@ struct attrs_element {
     }
 };
 
+//
+// readers and writers
+//
+
+class reader: public rfc4251::reader {
+public:
+    reader(const char* data, int length):
+        rfc4251::reader(data, length)
+    {
+    }
+    
+    using rfc4251::reader::operator();
+    
+    void operator()(tinfra::symbol const&, uint16& r) { 
+        uint16 const* tnext = reinterpret_cast<uint16 const*>(next);
+        advance(2);
+        r = ntohs( tnext[0] );
+    }
+    
+    void operator()(tinfra::symbol const&, int64& r) { 
+        uint32 ur = read_uint64();
+        r = static_cast<int64>(ur);
+    }
+    
+    void operator()(tinfra::symbol const&, extension_pair& r) {
+        read_string(r.name);
+        read_string(r.data);
+    }
+    
+    template <typename T>
+    void operator()(tinfra::symbol const&, fill_list<T> & r) {
+        while( true ) {
+            try {
+                T instance;
+                (*this)(tinfra::symbol::null, instance);
+                r.push_back(instance);
+            } catch( tinfra::io::would_block& e) {
+                break;
+            }
+        }
+    }
+};
+
+class writer: public rfc4251::writer {
+public:
+    writer(std::string& buffer):
+        rfc4251::writer(buffer)
+    {
+    }
+    
+    using rfc4251::writer::operator();
+    
+    void operator()(tinfra::symbol const&, uint16 v) { 
+        unsigned short nv = htons(v);
+        write(nv);
+    }
+    
+    void operator()(tinfra::symbol const&, int64 v)    { 
+        write_uint64(static_cast<uint64>(v));
+    }
+    
+    void operator()(tinfra::symbol const&, extension_pair const& v) {
+        write_string(v.name);
+        write_string(v.data);
+    }
+
+    template <typename T>
+    void operator()(tinfra::symbol const&, fill_list<T> const& v) {
+        for( typename fill_list<T>::const_iterator i = v.begin(); i != v.end(); ++i ) {
+            (*this)(tinfra::symbol::null, *i);
+        }
+    }
+};
+
+
 }
 
-#endif
+#endif // end __sftp_protocol_h__

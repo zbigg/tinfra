@@ -9,6 +9,8 @@
 #include <string>
 #include "tinfra/io/stream.h"
 #include "tinfra/symbol.h"
+#include "tinfra/tinfra.h"
+#include "winsock.h"
 
 namespace rfc4251 {
     
@@ -16,12 +18,12 @@ namespace rfc4251 {
 // types defined in RFC
 //
     
-typedef unsigned char  byte;
-typedef unsigned char  boolean;
-typedef uint32_t       uint32;
-typedef uint64_t       uint64;
+typedef unsigned char      byte;
+typedef unsigned char      boolean;
+typedef unsigned int       uint32;
+typedef unsigned long long uint64;
 
-typedef std::string    string;
+typedef std::string        string;
 
 
 typedef std::vector<std::string> name_list;
@@ -39,10 +41,6 @@ typedef std::vector<std::string> name_list;
 //
 
 class reader {
-    const char* data;
-    size_t      length;
-    const char* next;
-    const char* end;
 public:
     reader(const char* data, int length):
         data(data),
@@ -51,31 +49,35 @@ public:
         end(data+length)
     {}
     
-    void operator(tinfra::symbol const&, byte& v)      { v = read_octet<byte>(); }    
-    void operator(tinfra::symbol const&, boolean& v)   { v = read_octet<boolean>(); }
-    void operator(tinfra::symbol const&, uint32& v)    { v = read_uint32(); }
+    void operator()(tinfra::symbol const&, byte& v)      { v = read_octet(); }    
+    //void operator()(tinfra::symbol const&, boolean& v)   { v = read_octet<boolean>(); }
+    void operator()(tinfra::symbol const&, uint32& v)    { v = read_uint32(); }
     
-    void operator(tinfra::symbol const&, uint64& v)    { v = read_uint64(); }
-    void operator(tinfra::symbol const&, string& v)    { v = read_string(v); }
+    void operator()(tinfra::symbol const&, uint64& v)    { v = read_uint64(); }
+    void operator()(tinfra::symbol const&, string& v)    { read_string(v); }
     
-    void operator(tinfra::symbol const&, name_list& v) { v = read_name_list(v); }    
+    void operator()(tinfra::symbol const&, name_list& v) { read_name_list(v); }    
+    
 protected:
-    template <typename T>
-    T read_octet() {
-        T const* tnext = static_cast<T const*>(next);
+    const char* data;
+    size_t      length;
+    const char* next;
+    const char* end;
+
+    byte read_octet() {
+        byte const* tnext = reinterpret_cast<byte const*>(next);
         advance(1);
         return *(tnext);
     }
     
-    template <typename T>
     uint32   read_uint32() {
-        unsigned int const* tnext = static_cast<const unsigned int*>(next);
+        uint32 const* tnext = reinterpret_cast<uint32 const*>(next);
         advance(4);
         return ntohl( tnext[0] );
     }
     
     uint64   read_uint64() {
-        unsigned int const* tnext = static_cast<const unsigned int*>(next);
+        uint32 const* tnext = reinterpret_cast<uint32 const*>(next);
         advance(8);
         uint64_t hi = ntohl( tnext[0] );
         uint64_t lo = ntohl( tnext[1] );
@@ -85,14 +87,14 @@ protected:
     void read_string(string& r)
     {
         size_t size = read_uint32();
-        return string(size, r);
+        read_string(size, r);
     }
     
     void read_string(size_t length, string& r)
     {
         const char* tnext = next;
         advance(length);
-        return r.assign(tnext, length);
+        r.assign(tnext, length);
     }
     
     void read_name_list(name_list& r)
@@ -103,11 +105,11 @@ protected:
         r = tinfra::split(bytes, ","); // TODO: this could be optimized
     }
     
-    size_t readed() const
-        return (next - begin);
+    size_t readed() const 
+    {
+        return (next - data);
     }
     
-protected:
     void advance(int n)
     {
         if( next + n <= end ) {
@@ -122,7 +124,7 @@ protected:
             // TODO should create option to have reader reporting error
             //      - namely std::logic_error with something like expecting 4 bytes
             //        or message lengh should be at least next + bytes
-            throw tinfra::would_block("not enough information to assemble message");
+            throw tinfra::io::would_block("not enough information to assemble message");
         }
     }
 };
@@ -134,14 +136,14 @@ class writer {
 public:    
     writer(std::string& out): out(out) {}
     
-    void operator(tinfra::symbol const&, byte v)             { write_octet<byte>(v); }    
-    void operator(tinfra::symbol const&, boolean v)          { v = write_octet<boolean>(v); }
-    void operator(tinfra::symbol const&, uint32 v)           { v = write_uint32(v); }
+    void operator()(tinfra::symbol const&, byte v)             { write_octet<byte>(v); }    
+    //void operator()(tinfra::symbol const&, boolean v)          { v = write_octet<boolean>(v); }
+    void operator()(tinfra::symbol const&, uint32 v)           { write_uint32(v); }
     
-    void operator(tinfra::symbol const&, uint64 v)           { v = write_uint64(v); }
-    void operator(tinfra::symbol const&, string const& v)    { v = write_string(v); }
+    void operator()(tinfra::symbol const&, uint64 v)           { write_uint64(v); }
+    void operator()(tinfra::symbol const&, string const& v)    { write_string(v); }
     
-    void operator(tinfra::symbol const&, name_list const& v) { v = write_name_list(v); }  
+    void operator()(tinfra::symbol const&, name_list const& v) { write_name_list(v); }  
         
     const std::string& str() { return out; }
     
@@ -172,16 +174,16 @@ protected:
     void write_name_list(name_list const& nl)
     {
         size_t len = 0;
-        for( name_list::const_iterator& i = nl.begin(); i != nl.end(); ++i ) {
+        for( name_list::const_iterator i = nl.begin(); i != nl.end(); ++i ) {
             if( i != nl.begin() )
-                nl += 1;
+                len += 1;
             
-            nl += i->size();            
+            len += i->size();            
         }
         
         std::string tmp;
         tmp.reserve(len);
-        for( name_list::const_iterator& i = nl.begin(); i != nl.end(); ++i ) {
+        for( name_list::const_iterator i = nl.begin(); i != nl.end(); ++i ) {
             if( i != nl.begin() )
                 tmp.append(1, ',');
             
@@ -193,7 +195,7 @@ protected:
     
     template <typename T>
     void write(T const& v) {
-        write(static_cast<const char*)(&v), sizeof(v));
+        write(reinterpret_cast<const char*>(&v), sizeof(v));
     }
     
     void write(const char* data, size_t size)
