@@ -265,13 +265,11 @@ struct attr {
 
 struct packet_header {
     uint32  length;
-    byte    type;
-    uint32  request_id;
+    byte    type;    
     
     TINFRA_DECLARE_STRUCT {
         FIELD(length);
         FIELD(type);
-        FIELD(request_id);
     }
 };
 
@@ -300,12 +298,14 @@ struct version_packet {
 struct open_packet {
     static const packet_type type = SSH_FXP_OPEN;
     
+    uint32 request_id;
     string filename; // UTF
     uint32 desired_access;
     uint32 flags;
     attr   attrs;  // ???
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(filename);
         FIELD(desired_access);
         FIELD(flags);
@@ -316,9 +316,11 @@ struct open_packet {
 struct open_dir_packet {
     static const packet_type type = SSH_FXP_OPENDIR;
     
+    uint32 request_id;
     string path; // UTF
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(path);
     }
 };
@@ -326,20 +328,25 @@ struct open_dir_packet {
 struct close_packet {
     static const packet_type type = SSH_FXP_CLOSE;
     
+    uint32 request_id;
     string handle;
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(handle);
     }
 };
 
 struct read_packet {
     static const packet_type type = SSH_FXP_READ;
+    
+    uint32 request_id;
     string handle;
     uint64 offset;
     uint32 length;
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(handle);
         FIELD(offset);
         FIELD(length);
@@ -349,9 +356,11 @@ struct read_packet {
 struct read_dir_packet {
     static const packet_type type = SSH_FXP_READDIR;
     
+    uint32 request_id;
     string handle;
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(handle);
     }
 };
@@ -359,11 +368,13 @@ struct read_dir_packet {
 struct write_packet {
     static const packet_type type = SSH_FXP_WRITE;
     
+    uint32 request_id;
     string handle;
     uint64 offset;
     string data;
 
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(handle);
         FIELD(offset);
         FIELD(data);
@@ -373,9 +384,11 @@ struct write_packet {
 struct remove_packet {
     static const packet_type type = SSH_FXP_REMOVE;
     
+    uint32 request_id;
     string filename;
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(filename);
     }
 };
@@ -383,11 +396,13 @@ struct remove_packet {
 struct rename_packet {
     static const packet_type type = SSH_FXP_RENAME;
     
+    uint32 request_id;
     string oldpath;
     string newpath;
     uint32 flags;
 
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(oldpath);
         FIELD(newpath);
         FIELD(flags);
@@ -397,10 +412,12 @@ struct rename_packet {
 struct mkdir_packet {
     static const packet_type type = SSH_FXP_MKDIR;
     
+    uint32 request_id;
     string path;
     attr   attrs;
 
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(path);
         FIELD(attrs);
     }
@@ -409,9 +426,11 @@ struct mkdir_packet {
 struct rmdir_packet {
     static const packet_type type = SSH_FXP_RMDIR;
     
+    uint32 request_id;
     string path;
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(path);
     }
 };
@@ -419,10 +438,12 @@ struct rmdir_packet {
 struct stat_packet {
     static const packet_type type = SSH_FXP_STAT;
     
+    uint32 request_id;
     string path;
     uint32 flags;
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(path);
         FIELD(flags);
     }
@@ -431,10 +452,12 @@ struct stat_packet {
 struct set_stat_packet {
     static const packet_type type = SSH_FXP_SETSTAT;
     
+    uint32 request_id;
     string path;
     attr   attrs;
 
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(path);
         FIELD(attrs);
     }
@@ -447,11 +470,13 @@ struct set_stat_packet {
 struct status_packet {    
     static const packet_type type = SSH_FXP_STATUS;
     
+    uint32 request_id;
     uint32 status_code;
     string error_message;
     string language_tag;
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(status_code);
         FIELD(error_message);
         FIELD(language_tag);
@@ -461,9 +486,11 @@ struct status_packet {
 struct handle_packet {
     static const packet_type type = SSH_FXP_HANDLE;
     
+    uint32 request_id;
     string handle;
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(handle);
     }
 };
@@ -471,12 +498,14 @@ struct handle_packet {
 struct data_packet {
     static const packet_type type = SSH_FXP_DATA;
     
+    uint32 request_id;
     string data;
     bool   end_of_file; // TODO this is optional, current
                         //      infra has no idea how to support
                         //      this
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(data);
         FIELD(end_of_file);
     }
@@ -495,12 +524,14 @@ struct name_element {
 struct name_packet {
     static const packet_type type = SSH_FXP_NAME;
     
+    uint32 request_id;
     // WARNING custom encoding see 9.4 for encoding
     std::vector<name_element> elements; 
     
     bool   end_of_file; // WARNING: optional
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(elements);
         FIELD(end_of_file);
     }
@@ -509,9 +540,11 @@ struct name_packet {
 struct attrs_element {
     static const packet_type type = SSH_FXP_ATTRS;
     
+    uint32 request_id;
     attr   attrs;
     
     TINFRA_DECLARE_STRUCT {
+        FIELD(request_id);
         FIELD(attrs);
     }
 };
@@ -589,7 +622,12 @@ public:
         }
     }
 };
+#include <ostream>
 
+inline std::ostream& operator << (std::ostream& s, byte const& b)
+{
+    return s << (unsigned int)b;
+}
 
 }
 

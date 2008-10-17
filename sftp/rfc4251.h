@@ -10,7 +10,11 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/symbol.h"
 #include "tinfra/tinfra.h"
+#ifdef _WINSOCK
 #include "winsock.h"
+#else
+#include <arpa/inet.h>
+#endif
 
 namespace rfc4251 {
     
@@ -155,7 +159,7 @@ protected:
     }
     
     void write_uint32(uint32 v) {
-        write<uint32>(htons(v));
+        write<uint32>(htonl(v));
     }
     
     void write_uint64(uint64 v) {
