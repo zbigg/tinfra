@@ -40,6 +40,7 @@ namespace S {
     IMPL_SYMBOL(extended_count);
     
     IMPL_SYMBOL(filename);
+    IMPL_SYMBOL(longname);
     IMPL_SYMBOL(desired_access);
     IMPL_SYMBOL(flags);
     IMPL_SYMBOL(attrs);
@@ -57,6 +58,7 @@ namespace S {
     
     IMPL_SYMBOL(end_of_file);
     IMPL_SYMBOL(elements);
+    IMPL_SYMBOL(name);
 }
 
 

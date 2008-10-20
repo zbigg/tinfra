@@ -19,16 +19,79 @@ int request_id = 0;
 using namespace sftp;
 using tinfra::fmt;
 
+class field_printer {
+    std::ostream& out;
+    bool need_separator;
+public:
+    field_printer(std::ostream& o) : out(o), need_separator(false) {}
+    
+    template <class T>
+    void operator () (const tinfra::symbol& s, T const& t) 
+        {
+        if( need_separator ) {
+            out << ", ";            
+        }
+        out << s.str() << " = " << t;
+        need_separator = true;
+    }
+    
+    template <typename T>
+    void managed_struct(T const& v, tinfra::symbol const& s)
+    {
+        if( need_separator ) 
+            out << ", ";
+        out << "{ ";
+        need_separator = false;
+        tinfra::tt_process<T>(v, *this);
+        out << " } ";
+        need_separator = true;
+    }
+};
+
+template<typename T>
+std::string struct_to_string(T const& v)
+{
+    std::ostringstream s;
+    field_printer printer(s);
+    
+    s << "{ ";
+    tinfra::tt_process(v, printer);
+    s << "}";
+    return s.str();
+}
+
 #define DOUT(a) do { std::cerr << __FILE__ << ":" << __LINE__ << ": " << a << std::endl; } while(false)
 
 namespace sftp {
     
     std::ostream& operator<<(std::ostream& s, extension_pair const& l)
     {
+        return s << struct_to_string(l);
+    }
+    
+    std::ostream& operator<<(std::ostream& s, name_element const& l)
+    {
+        return s << struct_to_string(l);
+    }
+    
+    /*
+    std::ostream& operator<<(std::ostream& s, extension_pair const& l)
+    {
         return s << "{ name = " << l.name << ", " << l.data << " = " << tinfra::escape_c(l.data) << " }";
     }
+    */
+    
     template <typename T>
     std::ostream& operator<<(std::ostream& s, fill_list<T> const& l)
+    {
+        s << "[ ";
+        std::copy(l.begin(), l.end(), std::ostream_iterator<T>(s, ", "));
+        s << "]";
+        return s;
+    }
+    
+    template <typename T>
+    std::ostream& operator<<(std::ostream& s, prefixed_list<T> const& l)
     {
         s << "[ ";
         std::copy(l.begin(), l.end(), std::ostream_iterator<T>(s, ", "));
@@ -46,40 +109,6 @@ std::string hexify(const char* buf, size_t length)
         r << std::setw(2) << std::setfill('0') << std::hex << (int)(unsigned char)(buf[i]);
     }
     return r.str();
-}
-
-class field_printer {
-    std::ostream& out;
-    int i;
-public:
-    field_printer(std::ostream& o) : out(o), i(0) {}
-    
-    template <class T>
-    void operator () (const tinfra::symbol& s, T const& t) 
-        {
-        if( i++ > 0 ) 
-            out << ", ";
-        out << s.str() << " = " << t;
-    }
-    
-    template <typename T>
-    void managed_struct(T const& v, tinfra::symbol const& s)
-    {
-        out << "{ ";
-        tinfra::tt_process<T>(v, *this);
-        out << " }";
-    }
-};
-
-template<typename T>
-std::string struct_to_string(T const& v)
-{
-    std::ostringstream s;
-    field_printer printer(s);
-    s << "{ ";
-    tinfra::tt_process(v, printer);
-    s << "}";
-    return s.str();
 }
 
 
@@ -165,7 +194,7 @@ int sftp_main(int argc, char** argv)
     
     {
         init_packet init;
-        init.version = 3;
+        init.version = 2;
         
         send(sp.get(), init);
         
@@ -183,6 +212,27 @@ int sftp_main(int argc, char** argv)
         
         attrs_packet response;
         expect(sp.get(), response);
+    }
+    
+    {
+        open_dir_packet request;
+        request.request_id = ++request_id;
+        request.path = ".";
+        
+        send(sp.get(), request);
+        
+        handle_packet response;
+        expect(sp.get(), response);
+        
+        std::string handle = response.handle;
+        
+        read_dir_packet request2;
+        request2.request_id = ++request_id;
+        request2.handle = handle;
+        send(sp.get(), request2);
+        
+        name_packet response2;
+        expect(sp.get(), response2);        
     }
     sp->terminate();
     

@@ -2,8 +2,9 @@
 #define __sftp_protocol_h__
 
 #include "tinfra/symbol.h"
-
+#include "tinfra/tinfra.h"
 #include "rfc4251.h"
+
 
 namespace sftp {
 
@@ -17,11 +18,9 @@ using rfc4251::string;
 // specific SFTP types    
 typedef unsigned short   uint16;
 typedef signed long long int64;
-    
-struct extension_pair {
-    string name;
-    string data;
-};
+
+struct extension_pair;
+
 
 // TODO: fill_list
 // is a list that fills up remaining message area
@@ -38,6 +37,20 @@ public:
     {}
         
     fill_list(std::vector<T> const& other): 
+        std::vector<T>(other) 
+    {}
+};
+
+template <typename T>
+class prefixed_list: public std::vector<T> {
+public:
+    typedef uint32 serialized_size_type;
+
+    prefixed_list(): 
+        std::vector<T>() 
+    {}
+        
+    prefixed_list(std::vector<T> const& other): 
         std::vector<T>(other) 
     {}
 };
@@ -163,6 +176,7 @@ namespace S {
     DECL_SYMBOL(extended_count);
     
     DECL_SYMBOL(filename);
+    DECL_SYMBOL(longname);
     DECL_SYMBOL(desired_access);
     DECL_SYMBOL(flags);
     DECL_SYMBOL(attrs);
@@ -190,6 +204,16 @@ namespace S {
 #define TINFRA_DECLARE_STRUCT template <typename F> void apply(F& field) const
 #define FIELD(a) field(S::a, a)
 
+struct extension_pair {
+    string name;
+    string data;
+    
+    TINFRA_DECLARE_STRUCT {
+        FIELD(name);
+        FIELD(data);
+    }
+};
+
 struct attr {
     uint32 valid_attribute_flags;
     //byte   type;
@@ -215,8 +239,7 @@ struct attr {
     //string mime_type;
     //uint32 link_count;
     //string untranslated_name;
-    uint32 extended_count;
-    fill_list<extension_pair> extensions;
+    prefixed_list<extension_pair> extensions;
     
     TINFRA_DECLARE_STRUCT {
                                                          FIELD(valid_attribute_flags);
@@ -244,9 +267,9 @@ struct attr {
         //if ( present(SSH_FILEXFER_ATTR_MIME_TYPE) )      FIELD(mime_type);
         //if ( present(SSH_FILEXFER_ATTR_LINK_COUNT) )     FIELD(link_count);
         //if ( present(SSH_FILEXFER_ATTR_UNTRANSLATED_NAME) )     FIELD(untranslated_name);
-        if ( present(SSH_FILEXFER_ATTR_EXTENDED) )       FIELD(extended_count);
+        if ( present(SSH_FILEXFER_ATTR_EXTENDED) )       FIELD(extensions);
 
-                                                         FIELD(extensions);
+                                                         
     }
     
     bool present(fileattr field) const {
@@ -508,10 +531,12 @@ struct data_packet {
 
 struct name_element {
     string filename;
+    string longname;
     attr   attrs;
     
     TINFRA_DECLARE_STRUCT {
         FIELD(filename);
+        FIELD(longname);
         FIELD(attrs);
     }
 };
@@ -521,14 +546,14 @@ struct name_packet {
     
     uint32 request_id;
     // WARNING custom encoding see 9.4 for encoding
-    std::vector<name_element> elements; 
+    prefixed_list<name_element> elements; 
     
-    bool   end_of_file; // WARNING: optional
+    //bool   end_of_file; // WARNING: optional
     
     TINFRA_DECLARE_STRUCT {
         FIELD(request_id);
         FIELD(elements);
-        FIELD(end_of_file);
+        //FIELD(end_of_file);
     }
 };
 
@@ -578,11 +603,21 @@ public:
         while( true ) {
             try {
                 T instance;
-                (*this)(tinfra::symbol::null, instance);
+                tinfra::tt_mutate(instance, *this);
                 r.push_back(instance);
             } catch( tinfra::io::would_block& e) {
                 break;
             }
+        }
+    }
+    template <typename T>
+    void operator()(tinfra::symbol const&, prefixed_list<T> & r) {
+        uint32 size = read_uint32();        
+        r.reserve(size);
+        for( uint32 i = 0; i != size; ++i ) {
+            T instance;
+            tinfra::tt_mutate(instance, *this);
+            r.push_back(instance);
         }
     }
     template <typename T>
@@ -618,9 +653,19 @@ public:
     template <typename T>
     void operator()(tinfra::symbol const&, fill_list<T> const& v) {
         for( typename fill_list<T>::const_iterator i = v.begin(); i != v.end(); ++i ) {
-            (*this)(tinfra::symbol::null, *i);
+            tinfra::tt_process(*i, *this);
         }
     }
+    
+    template <typename T>
+    void operator()(tinfra::symbol const&, prefixed_list<T> const& v) {    
+        write_uint32(v.size());
+        
+        for( typename fill_list<T>::const_iterator i = v.begin(); i != v.end(); ++i ) {
+            tinfra::tt_process(*i, *this);
+        }
+    }
+    
     template <typename T>
     void managed_struct(T const& v, tinfra::symbol const& s)
     {    
@@ -628,15 +673,8 @@ public:
     }
 };
 
-#include <ostream>
-
-inline std::ostream& operator << (std::ostream& s, byte const& b)
-{
-    return s << (unsigned int)b;
-}
 
 }
-#include <tinfra/tinfra.h>
 
 #define TINFRA_STRUCT(a) namespace tinfra { template <> class TypeTraits<a>: public tinfra::ManagedStruct<a> {}; }
 
@@ -645,6 +683,7 @@ TINFRA_STRUCT(sftp::init_packet);
 TINFRA_STRUCT(sftp::version_packet);
 TINFRA_STRUCT(sftp::status_packet);
 TINFRA_STRUCT(sftp::attrs_packet);
+TINFRA_STRUCT(sftp::name_element);
 
 TINFRA_STRUCT(sftp::attr);
 #endif // end __sftp_protocol_h__

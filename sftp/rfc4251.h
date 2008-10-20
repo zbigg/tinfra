@@ -229,4 +229,17 @@ void deserialize(std::string const& buffer, T& dest)
     tinfra::mutate(dest, processor);
 }
 
+// helpers for debugging
+#include <ostream>
+
+inline std::ostream& operator << (std::ostream& s, byte const& b)
+{
+    return s << (unsigned int)b;
+}
+
+inline std::ostream& operator << (std::ostream& s, string const& b)
+{
+    return s << tinfra::escape_c(b).c_str();
+}
+
 } // end namespace rfc4251
