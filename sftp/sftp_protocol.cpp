@@ -16,6 +16,9 @@ namespace S {
     IMPL_SYMBOL(valid_attribute_flags);
     IMPL_SYMBOL(size);
     IMPL_SYMBOL(allocation_size);
+    IMPL_SYMBOL(uid);
+    IMPL_SYMBOL(gid);
+
     IMPL_SYMBOL(owner);
     IMPL_SYMBOL(group);
     IMPL_SYMBOL(permissions);

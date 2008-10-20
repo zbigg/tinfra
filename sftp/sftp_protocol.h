@@ -82,8 +82,10 @@ enum packet_type {
 
 enum fileattr {
     SSH_FILEXFER_ATTR_SIZE             =  0x00000001,
+    SSH_FILEXFER_ATTR_UIDGID           =  0x00000002,
     SSH_FILEXFER_ATTR_PERMISSIONS      =  0x00000004,
     SSH_FILEXFER_ATTR_ACCESSTIME       =  0x00000008,
+    SSH_FILEXFER_ATTR_ACMODTIME        =  0x00000008,
     SSH_FILEXFER_ATTR_CREATETIME       =  0x00000010,
     SSH_FILEXFER_ATTR_MODIFYTIME       =  0x00000020,
     SSH_FILEXFER_ATTR_ACL              =  0x00000040,
@@ -111,26 +113,13 @@ enum filetype {
     SSH_FILEXFER_TYPE_FIFO         =  9
 };
 
-enum access_disposition {
-    SSH_FXF_ACCESS_DISPOSITION      = 0x00000007,
-        SSH_FXF_CREATE_NEW          = 0x00000000,
-        SSH_FXF_CREATE_TRUNCATE     = 0x00000001,
-        SSH_FXF_OPEN_EXISTING       = 0x00000002,
-        SSH_FXF_OPEN_OR_CREATE      = 0x00000003,
-        SSH_FXF_TRUNCATE_EXISTING   = 0x00000004,
-    SSH_FXF_APPEND_DATA             = 0x00000008,
-    SSH_FXF_APPEND_DATA_ATOMIC      = 0x00000010,
-    SSH_FXF_TEXT_MODE               = 0x00000020,
-    SSH_FXF_BLOCK_READ              = 0x00000040,
-    SSH_FXF_BLOCK_WRITE             = 0x00000080,
-    SSH_FXF_BLOCK_DELETE            = 0x00000100,
-    SSH_FXF_BLOCK_ADVISORY          = 0x00000200,
-    SSH_FXF_NOFOLLOW                = 0x00000400,
-    SSH_FXF_DELETE_ON_CLOSE         = 0x00000800,
-    SSH_FXF_ACCESS_AUDIT_ALARM_INFO = 0x00001000,
-    SSH_FXF_ACCESS_BACKUP           = 0x00002000,
-    SSH_FXF_BACKUP_STREAM           = 0x00004000,
-    SSH_FXF_OVERRIDE_OWNER          = 0x00008000
+enum open_flags {
+  SSH_FXF_READ                     = 0x00000001,
+  SSH_FXF_WRITE                    = 0x00000002,
+  SSH_FXF_APPEND                   = 0x00000004,
+  SSH_FXF_CREAT                    = 0x00000008,
+  SSH_FXF_TRUNC                    = 0x00000010,
+  SSH_FXF_EXCL                     = 0x00000020
 };
 
 //
@@ -151,6 +140,8 @@ namespace S {
     DECL_SYMBOL(type);
     DECL_SYMBOL(size);
     DECL_SYMBOL(allocation_size);
+    DECL_SYMBOL(uid);
+    DECL_SYMBOL(gid);
     DECL_SYMBOL(owner);
     DECL_SYMBOL(group);
     DECL_SYMBOL(permissions);
@@ -201,60 +192,64 @@ namespace S {
 
 struct attr {
     uint32 valid_attribute_flags;
-    byte   type;
+    //byte   type;
     uint64 size;
-    uint64 allocation_size;
-    string owner;
-    string group;
+    //uint64 allocation_size;
+    uint32 uid;
+    uint32 gid;
+    //string owner;
+    //string group;
     uint32 permissions;
-    int64  atime;
-    uint32 atime_nseconds;
-    int64  createtime;
-    uint32 createtime_nseconds;
-    int64  mtime;
-    uint32 mtime_nseconds;
-    int64  ctime;
-    uint32 ctime_nseconds;
-    string acl;
-    uint32 attrib_bits;
-    uint32 attrib_bits_valid;
-    byte   text_hint;
-    string mime_type;
-    uint32 link_count;
-    string untranslated_name;
+    uint32  atime;
+    //uint32 atime_nseconds;
+    //int64  createtime;
+    //uint32 createtime_nseconds;
+    uint32  mtime;
+    //uint32 mtime_nseconds;
+    //int64  ctime;
+    //uint32 ctime_nseconds;
+    //string acl;
+    //uint32 attrib_bits;
+    //uint32 attrib_bits_valid;
+    //byte   text_hint;
+    //string mime_type;
+    //uint32 link_count;
+    //string untranslated_name;
     uint32 extended_count;
     fill_list<extension_pair> extensions;
     
     TINFRA_DECLARE_STRUCT {
                                                          FIELD(valid_attribute_flags);
-                                                         FIELD(type);
+        //                                                 FIELD(type);
 
         if ( present(SSH_FILEXFER_ATTR_SIZE) )           FIELD(size);
-        if ( present(SSH_FILEXFER_ATTR_ALLOCATION_SIZE)) FIELD(allocation_size);
-        if ( present(SSH_FILEXFER_ATTR_OWNERGROUP) )     FIELD(owner);
-        if ( present(SSH_FILEXFER_ATTR_OWNERGROUP) )     FIELD(group);
+        //if ( present(SSH_FILEXFER_ATTR_ALLOCATION_SIZE)) FIELD(allocation_size);
+        if ( present(SSH_FILEXFER_ATTR_UIDGID) )         FIELD(uid);
+        if ( present(SSH_FILEXFER_ATTR_UIDGID) )         FIELD(gid);
+        //if ( present(SSH_FILEXFER_ATTR_OWNERGROUP) )     FIELD(owner);
+        //if ( present(SSH_FILEXFER_ATTR_OWNERGROUP) )     FIELD(group);
         if ( present(SSH_FILEXFER_ATTR_PERMISSIONS) )    FIELD(permissions);
-        if ( present(SSH_FILEXFER_ATTR_ACCESSTIME) )     FIELD(atime);
-        if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES)) FIELD(atime_nseconds);
-        if ( present(SSH_FILEXFER_ATTR_CREATETIME) )     FIELD(createtime);
-        if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )FIELD(createtime_nseconds);
-        if ( present(SSH_FILEXFER_ATTR_MODIFYTIME) )     FIELD(mtime);
-        if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )FIELD(mtime_nseconds);
-        if ( present(SSH_FILEXFER_ATTR_CTIME) )          FIELD(ctime);
-        if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )FIELD(ctime_nseconds);
-        if ( present(SSH_FILEXFER_ATTR_ACL) )            FIELD(acl);
-        if ( present(SSH_FILEXFER_ATTR_BITS) )           FIELD(attrib_bits);
-        if ( present(SSH_FILEXFER_ATTR_BITS) )           FIELD(attrib_bits_valid);
-        if ( present(SSH_FILEXFER_ATTR_TEXT_HINT) )      FIELD(text_hint);
-        if ( present(SSH_FILEXFER_ATTR_MIME_TYPE) )      FIELD(mime_type);
-        if ( present(SSH_FILEXFER_ATTR_LINK_COUNT) )     FIELD(link_count);
-        if ( present(SSH_FILEXFER_ATTR_UNTRANSLATED_NAME) )     FIELD(untranslated_name);
+        if ( present(SSH_FILEXFER_ATTR_ACMODTIME) )     FIELD(atime);
+        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES)) FIELD(atime_nseconds);
+        //if ( present(SSH_FILEXFER_ATTR_CREATETIME) )     FIELD(createtime);
+        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )FIELD(createtime_nseconds);
+        if ( present(SSH_FILEXFER_ATTR_ACMODTIME) )     FIELD(mtime);
+        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )FIELD(mtime_nseconds);
+        //if ( present(SSH_FILEXFER_ATTR_CTIME) )          FIELD(ctime);
+        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )FIELD(ctime_nseconds);
+        //if ( present(SSH_FILEXFER_ATTR_ACL) )            FIELD(acl);
+        //if ( present(SSH_FILEXFER_ATTR_BITS) )           FIELD(attrib_bits);
+        //if ( present(SSH_FILEXFER_ATTR_BITS) )           FIELD(attrib_bits_valid);
+        //if ( present(SSH_FILEXFER_ATTR_TEXT_HINT) )      FIELD(text_hint);
+        //if ( present(SSH_FILEXFER_ATTR_MIME_TYPE) )      FIELD(mime_type);
+        //if ( present(SSH_FILEXFER_ATTR_LINK_COUNT) )     FIELD(link_count);
+        //if ( present(SSH_FILEXFER_ATTR_UNTRANSLATED_NAME) )     FIELD(untranslated_name);
         if ( present(SSH_FILEXFER_ATTR_EXTENDED) )       FIELD(extended_count);
 
                                                          FIELD(extensions);
     }
     
-    bool present(fileattr field) {
+    bool present(fileattr field) const {
         return (valid_attribute_flags & field) != 0;
     }
 };
@@ -300,14 +295,14 @@ struct open_packet {
     
     uint32 request_id;
     string filename; // UTF
-    uint32 desired_access;
+    //uint32 desired_access;
     uint32 flags;
     attr   attrs;  // ???
     
     TINFRA_DECLARE_STRUCT {
         FIELD(request_id);
         FIELD(filename);
-        FIELD(desired_access);
+        //FIELD(desired_access);
         FIELD(flags);
         FIELD(attrs);
     }
@@ -399,13 +394,13 @@ struct rename_packet {
     uint32 request_id;
     string oldpath;
     string newpath;
-    uint32 flags;
+    //uint32 flags;
 
     TINFRA_DECLARE_STRUCT {
         FIELD(request_id);
         FIELD(oldpath);
         FIELD(newpath);
-        FIELD(flags);
+        //FIELD(flags);
     }
 };
 
@@ -414,12 +409,12 @@ struct mkdir_packet {
     
     uint32 request_id;
     string path;
-    attr   attrs;
+    //attr   attrs;
 
     TINFRA_DECLARE_STRUCT {
         FIELD(request_id);
         FIELD(path);
-        FIELD(attrs);
+        //FIELD(attrs);
     }
 };
 
@@ -440,12 +435,12 @@ struct stat_packet {
     
     uint32 request_id;
     string path;
-    uint32 flags;
+    //uint32 flags;
     
     TINFRA_DECLARE_STRUCT {
         FIELD(request_id);
         FIELD(path);
-        FIELD(flags);
+        //FIELD(flags);
     }
 };
 
@@ -472,14 +467,14 @@ struct status_packet {
     
     uint32 request_id;
     uint32 status_code;
-    string error_message;
-    string language_tag;
+    //string error_message;
+    //string language_tag;
     
     TINFRA_DECLARE_STRUCT {
         FIELD(request_id);
         FIELD(status_code);
-        FIELD(error_message);
-        FIELD(language_tag);
+        //FIELD(error_message);
+        //FIELD(language_tag);
     }
 };
 
@@ -500,14 +495,14 @@ struct data_packet {
     
     uint32 request_id;
     string data;
-    bool   end_of_file; // TODO this is optional, current
+    //bool   end_of_file; // TODO this is optional, current
                         //      infra has no idea how to support
                         //      this
     
     TINFRA_DECLARE_STRUCT {
         FIELD(request_id);
         FIELD(data);
-        FIELD(end_of_file);
+        //FIELD(end_of_file);
     }
 };
 
@@ -537,7 +532,7 @@ struct name_packet {
     }
 };
 
-struct attrs_element {
+struct attrs_packet {
     static const packet_type type = SSH_FXP_ATTRS;
     
     uint32 request_id;
@@ -564,7 +559,7 @@ public:
     
     void operator()(tinfra::symbol const&, uint16& r) { 
         uint16 const* tnext = reinterpret_cast<uint16 const*>(next);
-        advance(2);
+        advance(2,"uint16");
         r = ntohs( tnext[0] );
     }
     
@@ -589,6 +584,11 @@ public:
                 break;
             }
         }
+    }
+    template <typename T>
+    void managed_struct(T& v, tinfra::symbol const& s)
+    {    
+        tinfra::tt_mutate<T>(v, *this);
     }
 };
 
@@ -621,7 +621,13 @@ public:
             (*this)(tinfra::symbol::null, *i);
         }
     }
+    template <typename T>
+    void managed_struct(T const& v, tinfra::symbol const& s)
+    {    
+        tinfra::tt_process<T>(v, *this);
+    }
 };
+
 #include <ostream>
 
 inline std::ostream& operator << (std::ostream& s, byte const& b)
@@ -630,5 +636,15 @@ inline std::ostream& operator << (std::ostream& s, byte const& b)
 }
 
 }
+#include <tinfra/tinfra.h>
 
+#define TINFRA_STRUCT(a) namespace tinfra { template <> class TypeTraits<a>: public tinfra::ManagedStruct<a> {}; }
+
+TINFRA_STRUCT(sftp::packet_header);
+TINFRA_STRUCT(sftp::init_packet);
+TINFRA_STRUCT(sftp::version_packet);
+TINFRA_STRUCT(sftp::status_packet);
+TINFRA_STRUCT(sftp::attrs_packet);
+
+TINFRA_STRUCT(sftp::attr);
 #endif // end __sftp_protocol_h__

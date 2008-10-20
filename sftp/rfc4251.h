@@ -10,6 +10,7 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/symbol.h"
 #include "tinfra/tinfra.h"
+#include "tinfra/fmt.h"
 #ifdef _WINSOCK
 #include "winsock.h"
 #else
@@ -70,19 +71,19 @@ protected:
 
     byte read_octet() {
         byte const* tnext = reinterpret_cast<byte const*>(next);
-        advance(1);
+        advance(1, "byte");
         return *(tnext);
     }
     
     uint32   read_uint32() {
         uint32 const* tnext = reinterpret_cast<uint32 const*>(next);
-        advance(4);
+        advance(4, "unit32");
         return ntohl( tnext[0] );
     }
     
     uint64   read_uint64() {
         uint32 const* tnext = reinterpret_cast<uint32 const*>(next);
-        advance(8);
+        advance(8, "unit64");
         uint64_t hi = ntohl( tnext[0] );
         uint64_t lo = ntohl( tnext[1] );
         return  (hi << 32) | lo ;
@@ -97,7 +98,7 @@ protected:
     void read_string(size_t length, string& r)
     {
         const char* tnext = next;
-        advance(length);
+        advance(length, "string length");
         r.assign(tnext, length);
     }
     
@@ -114,7 +115,7 @@ protected:
         return (next - data);
     }
     
-    void advance(int n)
+    void advance(int n, const char* what)
     {
         if( next + n <= end ) {
             next += n;
@@ -128,7 +129,9 @@ protected:
             // TODO should create option to have reader reporting error
             //      - namely std::logic_error with something like expecting 4 bytes
             //        or message lengh should be at least next + bytes
-            throw tinfra::io::would_block("not enough information to assemble message");
+            throw tinfra::io::would_block(tinfra::fmt(
+                "not enough information to assemble message, wanted %i bytes for %s at position %i")
+                % n % what % (next-data));
         }
     }
 };

@@ -61,6 +61,14 @@ public:
             out << ", ";
         out << s.str() << " = " << t;
     }
+    
+    template <typename T>
+    void managed_struct(T const& v, tinfra::symbol const& s)
+    {
+        out << "{ ";
+        tinfra::tt_process<T>(v, *this);
+        out << " }";
+    }
 };
 
 template<typename T>
@@ -69,7 +77,7 @@ std::string struct_to_string(T const& v)
     std::ostringstream s;
     field_printer printer(s);
     s << "{ ";
-    tinfra::process(v, printer);
+    tinfra::tt_process(v, printer);
     s << "}";
     return s.str();
 }
@@ -123,7 +131,7 @@ void expect(tinfra::subprocess* p, T& packet)
         DOUT( "readed  header: " << hexify(packet_header_buf, PACKET_HEADER_SIZE) );
         
         reader rrr(packet_header_buf, PACKET_HEADER_SIZE);
-        tinfra::mutate(header, rrr);
+        tinfra::tt_mutate(header, rrr);
         
         DOUT( "decoded header: " << struct_to_string(header) );
         
@@ -140,7 +148,7 @@ void expect(tinfra::subprocess* p, T& packet)
         DOUT( "readed  packet: " << hexify(packet_buf, packet_length) );
         
         reader rrr(packet_buf, packet_length);
-        tinfra::mutate(packet, rrr);
+        tinfra::tt_mutate(packet, rrr);
         DOUT( "decoded packet: " << struct_to_string(packet));
     }
 }
@@ -163,6 +171,18 @@ int sftp_main(int argc, char** argv)
         
         version_packet version;
         expect(sp.get(), version);
+    }
+    
+    {
+        stat_packet request;
+        request.request_id = ++request_id;
+        request.path = ".zbiggrc";
+        //request.flags = 0xffff & ~(0x2);
+        
+        send(sp.get(), request);
+        
+        attrs_packet response;
+        expect(sp.get(), response);
     }
     sp->terminate();
     
