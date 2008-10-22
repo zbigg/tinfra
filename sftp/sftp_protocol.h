@@ -3,16 +3,15 @@
 
 #include "tinfra/symbol.h"
 #include "tinfra/tinfra.h"
-#include "rfc4251.h"
-#include "primitive_wrapper.h"
+#include "tinfra/standards/rfc4251.h"
 
 namespace sftp {
 
 // types from rfc4251
-using rfc4251::byte;
-using rfc4251::uint32;
-using rfc4251::uint64;
-using rfc4251::string;
+using tinfra::rfc4251::byte;
+using tinfra::rfc4251::uint32;
+using tinfra::rfc4251::uint64;
+using tinfra::rfc4251::string;
     
 // specific SFTP types
     
@@ -570,14 +569,14 @@ struct attrs_packet {
 // readers and writers
 //
 
-class reader: public rfc4251::reader {
+class reader: public tinfra::rfc4251::reader {
 public:
     reader(const char* data, int length):
-        rfc4251::reader(data, length)
+        tinfra::rfc4251::reader(data, length)
     {
     }
     
-    using rfc4251::reader::operator();
+    using tinfra::rfc4251::reader::operator();
     
     /*
     void operator()(tinfra::symbol const&, uint16& r) { 
@@ -626,14 +625,14 @@ public:
     }
 };
 
-class writer: public rfc4251::writer {
+class writer: public tinfra::rfc4251::writer {
 public:
     writer(std::string& buffer):
-        rfc4251::writer(buffer)
+        tinfra::rfc4251::writer(buffer)
     {
     }
     
-    using rfc4251::writer::operator();
+    using tinfra::rfc4251::writer::operator();
     
     /*
     void operator()(tinfra::symbol const&, uint16 v) { 
