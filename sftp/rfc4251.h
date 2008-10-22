@@ -17,16 +17,18 @@
 #include <arpa/inet.h>
 #endif
 
+#include "primitive_wrapper.h"
+
 namespace rfc4251 {
     
 //
 // types defined in RFC
 //
     
-typedef unsigned char      byte;
-typedef unsigned char      boolean;
-typedef unsigned int       uint32;
-typedef unsigned long long uint64;
+typedef primitive_wrapper::uint8  byte;
+typedef primitive_wrapper::uint8  boolean;
+typedef primitive_wrapper::uint32 uint32;
+typedef primitive_wrapper::uint64 uint64;
 
 typedef std::string        string;
 

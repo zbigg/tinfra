@@ -27,9 +27,9 @@ public:
     
     template <class T>
     void operator () (const tinfra::symbol& s, T const& t) 
-        {
+    {
         if( need_separator ) {
-            out << ", ";            
+            out << ", ";
         }
         out << s.str() << " = " << t;
         need_separator = true;
@@ -43,7 +43,7 @@ public:
         out << "{ ";
         need_separator = false;
         tinfra::tt_process<T>(v, *this);
-        out << " } ";
+        out << " }";
         need_separator = true;
     }
 };
@@ -73,13 +73,6 @@ namespace sftp {
     {
         return s << struct_to_string(l);
     }
-    
-    /*
-    std::ostream& operator<<(std::ostream& s, extension_pair const& l)
-    {
-        return s << "{ name = " << l.name << ", " << l.data << " = " << tinfra::escape_c(l.data) << " }";
-    }
-    */
     
     template <typename T>
     std::ostream& operator<<(std::ostream& s, fill_list<T> const& l)
@@ -148,43 +141,46 @@ void read_for_sure(tinfra::io::stream* s, char* buffer, size_t size)
     }
 }
 
+void expect_header(tinfra::io::stream* s, packet_header& result, byte expected_type)
+{
+    const int PACKET_HEADER_SIZE = 5;
+    char packet_header_buf[PACKET_HEADER_SIZE];
+    
+    read_for_sure(s, packet_header_buf, PACKET_HEADER_SIZE);
+    DOUT( "readed  header: " << hexify(packet_header_buf, PACKET_HEADER_SIZE) );
+    
+    reader rrr(packet_header_buf, PACKET_HEADER_SIZE);
+    tinfra::tt_mutate(result, rrr);
+    
+    DOUT( "decoded header: " << struct_to_string(result) );
+    
+    if( result.type != expected_type ) {
+        throw std::runtime_error(fmt("expected packet=%i, actual=%i") % expected_type % (int)result.type);
+    }
+}
+
 template <typename T>
 void expect(tinfra::subprocess* p, T& packet)
 {
     packet_header header;
-    {
-        const int PACKET_HEADER_SIZE = 5;
-        char packet_header_buf[PACKET_HEADER_SIZE];
-        
-        read_for_sure(p->get_stdout(), packet_header_buf, PACKET_HEADER_SIZE);
-        DOUT( "readed  header: " << hexify(packet_header_buf, PACKET_HEADER_SIZE) );
-        
-        reader rrr(packet_header_buf, PACKET_HEADER_SIZE);
-        tinfra::tt_mutate(header, rrr);
-        
-        DOUT( "decoded header: " << struct_to_string(header) );
-        
-        if( header.type != T::type ) {
-            throw std::runtime_error(fmt("expected packet=%i, actual=%i") % (int)T::type % (int)header.type);
-        }
-    }
-    {
-        const int packet_length = header.length - 1;
-        char packet_buf[packet_length];
-        
-        read_for_sure(p->get_stdout(), packet_buf, packet_length);
-        
-        DOUT( "readed  packet: " << hexify(packet_buf, packet_length) );
-        
-        reader rrr(packet_buf, packet_length);
-        tinfra::tt_mutate(packet, rrr);
-        DOUT( "decoded packet: " << struct_to_string(packet));
-    }
+    expect_header(p->get_stdout(), header, T::type);
+    
+    const int packet_length = header.length - sizeof(sftp::byte);
+    char packet_buf[packet_length];
+    
+    read_for_sure(p->get_stdout(), packet_buf, packet_length);
+    
+    DOUT( "readed  packet: " << hexify(packet_buf, packet_length) );
+    
+    reader rrr(packet_buf, packet_length);
+    tinfra::tt_mutate(packet, rrr);
+    DOUT( "decoded packet: " << struct_to_string(packet));
 }
 
 
 int sftp_main(int argc, char** argv)
 {
+    tinfra::set_interrupt_policy(tinfra::DEFERRED_SIGNAL);
     std::auto_ptr<tinfra::subprocess> sp = tinfra::subprocess::create();
     
     sp->set_stdout_mode(tinfra::subprocess::REDIRECT);
@@ -234,7 +230,8 @@ int sftp_main(int argc, char** argv)
         name_packet response2;
         expect(sp.get(), response2);        
     }
-    sp->terminate();
+    sp->get_stdin()->close();
+    //sp->terminate();
     
     sp->wait();
     return sp->get_exit_code();

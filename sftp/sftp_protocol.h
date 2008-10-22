@@ -4,21 +4,18 @@
 #include "tinfra/symbol.h"
 #include "tinfra/tinfra.h"
 #include "rfc4251.h"
-
+#include "primitive_wrapper.h"
 
 namespace sftp {
 
 // types from rfc4251
 using rfc4251::byte;
-using rfc4251::boolean;
 using rfc4251::uint32;
 using rfc4251::uint64;
 using rfc4251::string;
     
-// specific SFTP types    
-typedef unsigned short   uint16;
-typedef signed long long int64;
-
+// specific SFTP types
+    
 struct extension_pair;
 
 
@@ -582,6 +579,7 @@ public:
     
     using rfc4251::reader::operator();
     
+    /*
     void operator()(tinfra::symbol const&, uint16& r) { 
         uint16 const* tnext = reinterpret_cast<uint16 const*>(next);
         advance(2,"uint16");
@@ -589,14 +587,15 @@ public:
     }
     
     void operator()(tinfra::symbol const&, int64& r) { 
-        uint32 ur = read_uint64();
+        uint64 ur = read_uint64();
         r = static_cast<int64>(ur);
     }
+    */
     
     void operator()(tinfra::symbol const&, extension_pair& r) {
         read_string(r.name);
         read_string(r.data);
-    }
+    }    
     
     template <typename T>
     void operator()(tinfra::symbol const&, fill_list<T> & r) {
@@ -636,6 +635,7 @@ public:
     
     using rfc4251::writer::operator();
     
+    /*
     void operator()(tinfra::symbol const&, uint16 v) { 
         unsigned short nv = htons(v);
         write(nv);
@@ -644,7 +644,7 @@ public:
     void operator()(tinfra::symbol const&, int64 v)    { 
         write_uint64(static_cast<uint64>(v));
     }
-    
+    */
     void operator()(tinfra::symbol const&, extension_pair const& v) {
         write_string(v.name);
         write_string(v.data);
