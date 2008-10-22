@@ -9,6 +9,9 @@
 #include "tinfra/exception.h"
 #include <string>
 #include <cctype>
+#include <iterator>
+#include <algorithm>
+
 namespace tinfra {
 
 struct fmt_command {
@@ -34,7 +37,7 @@ size_t process_fmt(std::string fmt, size_t start, fmt_command& result, T& output
             if( *c == '%' ) {
                 ++c;
                 istart = c;
-                output.append("%");
+                output.append(1,'%');
                 continue; // %% sequence is an escape
             } else if( std::isalpha(*c) ) {
                 result.command = *c;
@@ -53,6 +56,29 @@ size_t process_fmt(std::string fmt, size_t start, fmt_command& result, T& output
     return (size_t)-1;
 }
 
+class ostream_string_output {
+    std::ostream& out;
+    
+public:
+    ostream_string_output(std::ostream& out): out(out) {}
+        
+    void append(int n, char c)
+    {
+        for( int i = 0; i < n; ++i ) {
+            out << c;
+        }
+    }
+    void append(std::string::const_iterator begin, std::string::const_iterator end)
+    {
+        /*if( end != begin ) {
+            const char* pb = & (*begin);
+            size_t size = distance(begin,end);
+            out.write(pb, size);
+        }*/
+        std::copy(begin, end, std::ostream_iterator<char>(out));
+    }
+};
+
 ///
 /// simple_fmt
 ///
@@ -63,7 +89,9 @@ void simple_fmt::reset() {
 size_t simple_fmt::check_command()
 {
     fmt_command cmd;
-	size_t cmd_pos = process_fmt(fmt_, pos_, cmd, output_);
+    ostream_string_output output(formatter_);
+    
+    size_t cmd_pos = process_fmt(fmt_, pos_, cmd, output);
     if( cmd_pos == (size_t)-1 ) throw format_exception("simple_fmt: too many actual arguments");        
     switch( cmd.command ) {
     case 's':
@@ -77,9 +105,11 @@ size_t simple_fmt::check_command()
 }
 void simple_fmt::realize()
 {
-    fmt_command cmd;        
-    if( process_fmt(fmt_, pos_, cmd, output_) != (size_t)-1 ) 
-        throw format_exception("simple_fmt: not all arguments realized");        
+    fmt_command cmd;
+    ostream_string_output output(formatter_);
+    if( process_fmt(fmt_, pos_, cmd, output) != (size_t)-1 ) 
+        throw format_exception("simple_fmt: not all arguments realized");
+    output_ = formatter_.str();
     pos_ = fmt_.size();
 }
 
