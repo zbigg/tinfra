@@ -101,6 +101,8 @@
             tinfra/vfs.h
             tinfra/posix/thread.h
             tinfra/win32/thread.h
+            tinfra/primitive_wrapper.h
+            tinfra/standards/rfc4251.h
         </files>
     </data-files-tree>
     

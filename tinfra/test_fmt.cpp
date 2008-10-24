@@ -16,10 +16,10 @@ using tinfra::simple_fmt;
 SUITE(tinfra_fmt) {
     TEST(fmt_basic)
     {
-        CHECK( fmt("").str() == "");
-        CHECK( fmt("a").str() == "a");
-        CHECK( fmt("%%").str() == "%");
-        CHECK( fmt("a%%b").str() == "a%b");
+        CHECK_EQUAL("",    fmt("").str());
+        CHECK_EQUAL("a",   fmt("a").str());
+        CHECK_EQUAL("%",   fmt("%%").str());
+        CHECK_EQUAL("a%b", fmt("a%%b").str());
     }
 
     TEST(fmt_str)
