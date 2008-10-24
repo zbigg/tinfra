@@ -1,3 +1,10 @@
+//
+// Copyright (C) 2008 Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
 #ifndef __tinfra_vfs_h__
 #define __tinfra_vfs_h__
 
@@ -10,7 +17,7 @@ class vfs {
 public:
     virtual ~vfs() {}
     
-    virtual tinfra::fs::file_name_list roots() const = 0;
+    virtual tinfra::fs::file_name_list roots() = 0;
     
     virtual void list_files(const char* path, tinfra::fs::file_list_visitor& visitor) = 0;
     

@@ -1,3 +1,10 @@
+//
+// Copyright (C) 2008 Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
 #include "tinfra/vfs.h"
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
@@ -126,7 +133,7 @@ bool generic_vfs::exists(const char* name)
 
 class basic_local_fs: public generic_vfs {
 public:
-    tinfra::fs::file_name_list roots() const {
+    tinfra::fs::file_name_list roots() {
         tinfra::fs::file_name_list result;
 #ifdef WIN32
         tinfra::win32::get_available_drives(result);

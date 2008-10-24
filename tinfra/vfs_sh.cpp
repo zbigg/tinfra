@@ -1,3 +1,10 @@
+//
+// Copyright (C) 2008 Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
 #include "tinfra/vfs.h"
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
@@ -105,7 +112,7 @@ class vfs_sh: public generic_vfs {
         shell::result r;
         s.execute(c,r);
         
-        // TOD api for reading lines
+        // TODO api for reading lines
     }
     
     tinfra::fs::file_info stat(const char* path)
