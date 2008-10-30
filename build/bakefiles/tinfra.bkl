@@ -60,6 +60,12 @@
         <install-to>$(LIBDIR)</install-to> 
     </lib>
     
+    <using module="pkgconfig"/>
+    
+    <pkgconfig>
+        <src>tinfra.pc</src>
+    </pkgconfig>
+    
     <using module="datafiles"/>
     
     <data-files-tree id="headers">
@@ -95,6 +101,8 @@
             tinfra/runtime.h
             tinfra/posix/thread.h
             tinfra/win32/thread.h
+            tinfra/primitive_wrapper.h
+            tinfra/standards/rfc4251.h
         </files>
     </data-files-tree>
     

@@ -54,7 +54,7 @@ AM_PATH_PCRE(4.5,
     AC_MSG_ERROR([pcre library not found, where is your pcre-config ?])
 ])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile  tinfra.pc])
 AC_OUTPUT
 
 cat << EOF

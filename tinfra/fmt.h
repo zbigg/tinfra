@@ -12,6 +12,7 @@
 #include "tinfra/tinfra_lex.h"
 #include <string>
 #include <ostream>
+#include <sstream>
 
 namespace tinfra {
     
@@ -34,10 +35,8 @@ public:
     template <typename T>
     simple_fmt& push(T const& value) {
         std::size_t cmd_pos = check_command();
-        std::string tmp;
-        to_string<T>(value, tmp);
-        output_.append(tmp);
-        pos_= cmd_pos;        
+        formatter_ << value;
+        pos_= cmd_pos;
         return *this;
     }
     
@@ -71,8 +70,9 @@ private:
     void realize();
 
     std::string fmt_;
-	std::size_t pos_;
+    std::size_t pos_;
     std::string output_;
+    std::ostringstream formatter_;
 };
 
 ///

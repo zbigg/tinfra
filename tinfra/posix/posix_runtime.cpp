@@ -26,6 +26,7 @@
 #endif
 
 extern "C" void tinfra_fatal_sighandler(int signo);
+extern "C" void tinfra_interrupt_sighandler(int);
 
 namespace tinfra {
 
@@ -92,7 +93,10 @@ void initialize_platform_runtime()
 {
     ::signal(SIGSEGV, &tinfra_fatal_sighandler);
     ::signal(SIGBUS,  &tinfra_fatal_sighandler);
-    ::signal(SIGABRT, &tinfra_fatal_sighandler);    
+    ::signal(SIGABRT, &tinfra_fatal_sighandler);
+    
+    ::signal(SIGINT,  &tinfra_interrupt_sighandler);
+    ::signal(SIGTERM, &tinfra_interrupt_sighandler);
 }
 
 } // end of namespace tinfra
@@ -104,6 +108,11 @@ extern "C" void tinfra_fatal_sighandler(int signo)
     snprintf(buf, sizeof(buf), "fatal signal %i received", signo);
     
     tinfra::fatal_exit(buf);
+}
+
+extern "C" void tinfra_interrupt_sighandler(int)
+{
+    tinfra::interrupt();
 }
 
 

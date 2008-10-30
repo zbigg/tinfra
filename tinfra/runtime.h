@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 #include "tinfra/exeinfo.h"
 
@@ -77,6 +78,34 @@ void fatal_exit(const char* message);
 /// Prints message, stacktrace (if not empty) and aborts.
 /// Used internally.
 void fatal_exit(const char* message, stacktrace_t& stacktrace);
+
+
+/// Provoke keyboard interrupt.
+///
+/// Sets interrupted flag or aborts program depending on interrup settings.
+///
+/// Used internally by platform specific interrupt handler to singal handler.
+void interrupt();
+
+/// Interruption point.
+///
+/// May generate tinfra::interrupted_exception is program or thread was 
+/// interrupted.
+void test_interrupt();
+
+enum interrupt_policy {
+    IMMEDIATE_ABORT,
+    DEFERRED_SIGNAL
+};
+/// Set interrupt policy.
+///
+/// Default interrupt policy is IMMEDIATE_ABORT
+void set_interrupt_policy(interrupt_policy p);
+
+class interrupted_exception: public std::runtime_error {
+public:
+    interrupted_exception();
+};
 
 }
 
