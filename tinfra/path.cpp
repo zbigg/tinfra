@@ -46,59 +46,6 @@ std::string join(tstring const& a, tstring const& b)
         return "";
 }
 
-bool exists(tstring const& name)
-{
-    string_pool temporary_context;
-    struct stat st;
-    return ::stat(name.c_str(temporary_context), &st) == 0;
-}
-
-static bool is_dir_sep(char a)
-{
-    return    a == '/' 
-           || a == '\\';
-}
-
-bool is_dir(tstring const& name)
-{
-    size_t len = name.size();
-    
-    if( len == 1 && name[0] == '.' )      // current directory
-        return true;
-    
-    if( len == 1 && is_dir_sep(name[0]) ) // single backslash 
-        return true;
-    
-#ifdef _WIN32
-    if( len >= 2 && std::isalpha(name[0]) && name[1] == ':' ) {
-        if( len == 2 )
-            return true; // A:
-        if( len == 3 && is_dir_sep(name[2]) )
-            return true; // A:\ and A:/
-    }
-    // NOTE: win32 stat doesn't accept trailing slash/back 
-    // slash in folder name
-    if( len > 1 && is_dir_sep(name[len-1]) ) {
-        tstring tmp(name.data(), len-1);
-        return is_dir(name);
-    }
-#endif
-    string_pool temporary_context;
-    struct stat st;
-    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
-        return false;
-    return (st.st_mode & S_IFDIR) == S_IFDIR;
-}
-
-bool is_file(tstring const& name)
-{
-    string_pool temporary_context;
-    struct stat st;
-    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
-        return false;
-    return (st.st_mode & S_IFREG) == S_IFREG;
-}
-
 std::string basename(tstring const& name)
 {
     std::string::size_type p = name.find_last_of("/\\");

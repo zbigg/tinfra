@@ -38,6 +38,9 @@ struct file_info {
 };
 
 file_info stat(tstring const& name);
+bool exists(tstring const& name);
+bool is_file(tstring const& name);
+bool is_dir(tstring const& name);
 
 void cd(tstring const& dirname);
 std::string pwd();

@@ -37,7 +37,7 @@ void TempTestLocation::init()
     fs::mkdir(tmp_path_.c_str());
     if( name_.size() > 0 ) {
         string real_path = path::join(top_srcdir, name_);
-        if( !path::exists(real_path) ) {
+        if( !fs::exists(real_path) ) {
             throw tinfra::generic_exception(fmt("unable to find test resource %s (%s)") % name_ % real_path);
         }
         string name_in_tmp_ = path::join(tmp_path_, name_);
@@ -49,7 +49,7 @@ void TempTestLocation::init()
 TempTestLocation::~TempTestLocation()
 {
     fs::cd(orig_pwd_.c_str());
-    if( path::exists(tmp_path_) ) {
+    if( fs::exists(tmp_path_) ) {
         fs::recursive_rm(tmp_path_.c_str());
     }
 }

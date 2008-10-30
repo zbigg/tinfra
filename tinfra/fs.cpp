@@ -130,12 +130,65 @@ file_info stat(tstring const& name)
     return result;
 }
 
+bool exists(tstring const& name)
+{
+    string_pool temporary_context;
+    struct stat st;
+    return ::stat(name.c_str(temporary_context), &st) == 0;
+}
+
+static bool is_dir_sep(char a)
+{
+    return    a == '/' 
+           || a == '\\';
+}
+
+bool is_dir(tstring const& name)
+{
+    size_t len = name.size();
+    
+    if( len == 1 && name[0] == '.' )      // current directory
+        return true;
+    
+    if( len == 1 && is_dir_sep(name[0]) ) // single backslash 
+        return true;
+    
+#ifdef _WIN32
+    if( len >= 2 && std::isalpha(name[0]) && name[1] == ':' ) {
+        if( len == 2 )
+            return true; // A:
+        if( len == 3 && is_dir_sep(name[2]) )
+            return true; // A:\ and A:/
+    }
+    // NOTE: win32 stat doesn't accept trailing slash/back 
+    // slash in folder name
+    if( len > 1 && is_dir_sep(name[len-1]) ) {
+        tstring tmp(name.data(), len-1);
+        return is_dir(name);
+    }
+#endif
+    string_pool temporary_context;
+    struct stat st;
+    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
+        return false;
+    return (st.st_mode & S_IFDIR) == S_IFDIR;
+}
+
+bool is_file(tstring const& name)
+{
+    string_pool temporary_context;
+    struct stat st;
+    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
+        return false;
+    return (st.st_mode & S_IFREG) == S_IFREG;
+}
+
 void recursive_copy(tstring const& src, tstring const& dest)
 {
-    if( path::is_dir(dest) ) {
+    if( is_dir(dest) ) {
         std::string new_dest = path::join(dest, path::basename(src));
         return recursive_copy(src, new_dest);
-    } else if( path::is_dir(src) ) {
+    } else if( is_dir(src) ) {
         mkdir(dest);
         std::vector<std::string> files;
         list_files(src, files);
@@ -152,7 +205,7 @@ void recursive_copy(tstring const& src, tstring const& dest)
 
 void recursive_rm(tstring const& name)
 {
-    if( path::is_dir(name) ) {
+    if( is_dir(name) ) {
         std::vector<std::string> files;
         list_files(name, files);
         
@@ -196,7 +249,7 @@ void rmdir(tstring const& name)
 void mkdir(tstring const& name, bool create_parents)
 {
     std::string parent = path::dirname(name);
-    if( !path::is_dir(parent) ) {
+    if( !is_dir(parent) ) {
         if( create_parents )
             mkdir(parent);
         else
@@ -215,9 +268,9 @@ void mkdir(tstring const& name, bool create_parents)
 
 void copy(tstring const& src, tstring const& dest)
 {
-    if( path::is_dir(src) ) 
+    if( is_dir(src) ) 
         throw std::invalid_argument("tinfra::fs::copy supports only generic files");
-    if( path::is_dir(dest) ) {
+    if( is_dir(dest) ) {
         copy(src, path::join(dest, path::basename(src) ));
         return;
     }
@@ -263,9 +316,9 @@ struct walker_file_visitor: public tinfra::fs::file_list_visitor {
     void accept(tstring const& name)
     {
         std::string file_path(tinfra::path::join(parent_, name));
-        bool is_dir = tinfra::path::is_dir(file_path);
-        bool dig_further = walker_.accept(name,  parent_, is_dir);
-        if( is_dir && dig_further ) {
+        bool dir = is_dir(file_path);
+        bool dig_further = walker_.accept(name,  parent_, dir);
+        if( dir && dig_further ) {
             walk_(file_path, walker_);
         }
     }

@@ -182,9 +182,9 @@ public:
     // void recursive_copy(const char* src, const char* dest);    
     // void recursive_rm(const char* src) = 0;
         
-    virtual bool is_file(const char* name) { return tinfra::path::is_file(name); }
-    virtual bool is_dir(const char* name)  { return tinfra::path::is_dir(name); }
-    virtual bool exists(const char* name)  { return tinfra::path::exists(name); }
+    virtual bool is_file(const char* name) { return tinfra::fs::is_file(name); }
+    virtual bool is_dir(const char* name)  { return tinfra::fs::is_dir(name); }
+    virtual bool exists(const char* name)  { return tinfra::fs::exists(name); }
 };
 
 tinfra::vfs& local_fs()

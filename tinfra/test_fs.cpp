@@ -24,11 +24,30 @@ using namespace tinfra;
 
 SUITE(tinfra_fs)
 {
+    TEST(test_is_dir)
+    {
+        using tinfra::fs::is_dir;
+        CHECK( is_dir("/") );
+        CHECK( is_dir("\\") );
+        
+        CHECK( is_dir(".") );
+        CHECK( is_dir("./") );
+        
+#ifdef _WIN32
+        
+        CHECK( is_dir(".\\") );
+        CHECK( is_dir("C:") );
+        CHECK( is_dir("C:/") );
+        CHECK( is_dir("C:\\") );
+        
+#endif
+    }
+
     TEST(test_copy)
     {
         test::TempTestLocation testLocation("testtest_file");
         fs::copy("testtest_file", "boo.test");
-        CHECK( path::is_file("boo.test") );
+        CHECK( fs::is_file("boo.test") );
         
         // check if source doesn't exist
         CHECK_THROW( fs::copy("testtest_fileXX", "foo"), std::logic_error);
@@ -50,25 +69,25 @@ SUITE(tinfra_fs)
         test::TempTestLocation tmp_location;
         {
             const char* name = "kukkuryku";
-            CHECK( !path::exists(name));
+            CHECK( !fs::exists(name));
             fs::mkdir(name);
-            CHECK( path::exists(name));
-            CHECK( path::is_dir(name));
+            CHECK( fs::exists(name));
+            CHECK( fs::is_dir(name));
             fs::rmdir(name);
-            CHECK( !path::is_dir(name));
+            CHECK( !fs::is_dir(name));
         }
         
         {
             const char* name = "huzia/c/f/e";
-            CHECK( !path::exists(name));
+            CHECK( !fs::exists(name));
             fs::mkdir(name,true);
-            CHECK( path::exists(name));
-            CHECK( path::is_dir(name));
+            CHECK( fs::exists(name));
+            CHECK( fs::is_dir(name));
             fs::rmdir("huzia/c/f/e");
             fs::rmdir("huzia/c/f");
             fs::rmdir("huzia/c");
             fs::rmdir("huzia");
-            CHECK( !path::exists("a"));
+            CHECK( !fs::exists("a"));
         }
     }
     TEST(test_recursive)
@@ -122,3 +141,6 @@ SUITE(tinfra_fs)
     }
 #endif
 }
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+
