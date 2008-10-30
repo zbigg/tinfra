@@ -27,9 +27,9 @@ struct vector_sink_file_visitor2: public tinfra::fs::file_list_visitor {
     std::vector<std::string>& result;
     vector_sink_file_visitor2(std::vector<std::string>& result): result(result) {}
         
-    virtual void accept(const char* name)
+    virtual void accept(tstring const& name)
     {
-        result.push_back(name);
+        result.push_back(name.str());
     }
 };
 

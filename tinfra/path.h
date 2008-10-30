@@ -25,7 +25,7 @@ std::string basename(tstring const& name);
 
 std::string dirname(tstring const& name);
 
-std::string tmppath();
+std::string tmppath(const char* prefix = 0, const char* tmpdir = 0);
 
 } } // end namespace tinfra::path
 

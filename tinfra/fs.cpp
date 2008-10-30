@@ -114,10 +114,11 @@ void list_files(tstring const& dirname, std::vector<std::string>& result)
     list_files(dirname, visitor);
 }
 
-file_info stat(const char* name)
+file_info stat(tstring const& name)
 {
+    string_pool temporary_context;
     struct stat st;
-    if( ::stat(name, &st) != 0 ) {
+    if( ::stat(name.c_str(temporary_context), &st) != 0 ) {
         throw_errno_error(errno, fmt("unable stat file '%s'") % name);
     }
     
@@ -165,9 +166,10 @@ void recursive_rm(tstring const& name)
     }
 }
 
-void mv(const char* src, const char* dest)
+void mv(tstring const& src, tstring const& dest)
 {
-    int result = ::rename(src, dest);
+    string_pool tmp_pool;
+    int result = ::rename(src.c_str(tmp_pool), dest.c_str(tmp_pool));
     if( result == -1 ) {
         throw_errno_error(errno, fmt("unable to rename from '%s' to '%s' ") % src % dest);
     }    
@@ -276,7 +278,7 @@ static void walk_(tstring const& start, walker& w)
 }
 }
 
-void walk(const char* start, walker& w)
+void walk(tstring const& start, walker& w)
 {
     try 
     {

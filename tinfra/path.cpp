@@ -1,3 +1,14 @@
+//
+// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
+#include "tinfra/fmt.h"
+#include "tinfra/exeinfo.h"
+
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 
@@ -48,9 +59,9 @@ static bool is_dir_sep(char a)
            || a == '\\';
 }
 
-bool is_dir(const char* name)
+bool is_dir(tstring const& name)
 {
-    int len = strlen(name);
+    size_t len = name.size();
     
     if( len == 1 && name[0] == '.' )      // current directory
         return true;

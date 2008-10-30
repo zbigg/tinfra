@@ -37,18 +37,20 @@ struct file_info {
     time_t    access_time;
 };
 
-file_info stat(const char* name);
-void copy(const char* src, const char* dest);
+file_info stat(tstring const& name);
 
-void cd(const char* dirname);
+void cd(tstring const& dirname);
 std::string pwd();
 
 void mkdir(tstring const& name, bool create_parents = true);
 
-void rm(tstring const& name);
-void rmdir(tstring const& name);
+void copy(tstring const& src, tstring const& dest);
+void mv(tstring const& src, tstring const& dest);
 
 void recursive_copy(tstring const& src, tstring const& dest);
+
+void rm(tstring const& name);
+void rmdir(tstring const& name);
 void recursive_rm(tstring const& src);
 
 struct walker 
@@ -69,10 +71,9 @@ struct walker
 /** Walk through filesystem hierarchy.
 
 */
-void walk(const char* start, walker& w);
-
-inline 
-void walk(std::string const& start, walker& w) { walk(start.c_str(), w); }
+void walk(tstring const& start, walker& w);
 
 } }
+
+#endif
 
