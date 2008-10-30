@@ -48,22 +48,25 @@ std::string join(tstring const& a, tstring const& b)
 
 bool exists(tstring const& name)
 {
+    string_pool temporary_context;
     struct stat st;
-    return ::stat(name.c_str(), &st) == 0;
+    return ::stat(name.c_str(temporary_context), &st) == 0;
 }
 
 bool is_dir(tstring const& name)
 {
+    string_pool temporary_context;
     struct stat st;
-    if( ::stat(name.c_str(), &st) != 0 ) 
+    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
         return false;
     return (st.st_mode & S_IFDIR) == S_IFDIR;
 }
 
 bool is_file(tstring const& name)
 {
+    string_pool temporary_context;
     struct stat st;
-    if( ::stat(name.c_str(), &st) != 0 ) 
+    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
         return false;
     return (st.st_mode & S_IFREG) == S_IFREG;
 }

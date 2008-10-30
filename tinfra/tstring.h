@@ -9,6 +9,8 @@
 #define __tinfra_tstring_h__
 
 #include <string>
+#include <stdexcept>
+#include <vector>
 
 namespace tinfra {
 
@@ -35,7 +37,8 @@ namespace tinfra {
 // is probably screwed up
 
 #define TINFRA_TSTING_CHECKS 0
-        
+class string_pool;
+
 class tstring  {
     const char* str_;
     int         length_;
@@ -108,8 +111,20 @@ public:
     bool is_null_terminated() const { return flags_ == 1; }
     
     char const*  data() const  { return str_; }
-    
-    char const*  c_str() const  { return str_; }
+    /*
+    char const*  c_str() const
+    { 
+        if( is_null_terminated() )
+	    return str_;
+        throw std::runtime_error("c_str() called on non null-terminated string"); 
+    }
+    */
+    char const*  c_str(string_pool& pool) const
+    {
+        if( is_null_terminated() ) 
+            return str_;
+        return temporary_alloc(pool, *this);
+    }
     
     std::string  str()   const  { return std::string(tstring::data(), tstring::size()); }
     
@@ -197,15 +212,33 @@ private:
     void check_stamp() {}
     static const void* make_stamp(const void* v) { return 0; }
 #endif
+    static const char* temporary_alloc(string_pool& pool, tstring const& s);
 };
 
 namespace tstring_detail {
     void tstring_set_bad_abort(bool a);
 }
 
+std::ostream& operator<<(std::ostream& out, tstring const& s);
+
+/// String pool
+///
+/// tstring class doesn't guarantee that it's string is ended with 0
+/// Use this utility in contexts when you need null-terminated strings
+/// like system calls.
+
+class string_pool {
+	std::vector<char*> strings;
+public:
+	const char* create(tstring const& s);
+	string_pool(size_t initial_size = 128);
+	~string_pool();
+};
+
 } // end of namespace tinfra
 
-std::ostream& operator<<(std::ostream& out, tinfra::tstring const& s);
 
 #endif
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
 

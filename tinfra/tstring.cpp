@@ -7,9 +7,11 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <cstdlib>
 
 #include "tinfra/thread.h"
 #include "tinfra/cmd.h"
+#include <cstdlib>
 
 #include "tstring.h"
 
@@ -193,10 +195,43 @@ tstring::find_last_not_of(char_type c, size_type pos) const
     return npos;
 }
     
-} // end namespace tinfra
 
-std::ostream& operator<<(std::ostream& out, tinfra::tstring const& s)
+std::ostream& operator<<(std::ostream& out, tstring const& s)
 {
     return out.write(s.data(), s.size());
 }
+
+const char* tstring::temporary_alloc(string_pool& pool, tstring const& s)
+{
+    return pool.create(s);
+}
+
+const char* string_pool::create(tstring const& src)
+{
+    strings.push_back(0);
+    size_t len = src.size();
+    char* result = reinterpret_cast<char*>( std::malloc(len+1) );
+    strings[len-1] = result;
+    
+    std::memcpy(result, src.data(), len);
+    result[len] = 0;
+    return result;
+}
+
+string_pool::string_pool(size_t initial_size)
+{
+}
+
+string_pool::~string_pool()
+{
+    for( size_t i = 0; i < strings.size(); ++i ) {
+        std::free(strings[i]);
+        strings[i] = 0;
+    }  
+}
+
+} // end namespace tinfra
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+
 

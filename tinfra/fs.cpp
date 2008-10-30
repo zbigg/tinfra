@@ -67,8 +67,9 @@ void holder<intptr_t>::dispose(intptr_t i)
 
 void list_files(tstring const& dirname, file_list_visitor& visitor)
 {
+    string_pool temporary_context;
 #ifdef HAVE_OPENDIR
-    DIR* dir = ::opendir(dirname.c_str());
+    DIR* dir = ::opendir(dirname.c_str(temporary_context));
     if( !dir ) {
         throw_errno_error(errno, fmt("unable to read dir '%s'") % dirname);
     }
@@ -117,7 +118,7 @@ void recursive_copy(tstring const& src, tstring const& dest)
 {
     if( path::is_dir(dest) ) {
         std::string new_dest = path::join(dest, path::basename(src));
-        return recursive_copy(src, new_dest.c_str());
+        return recursive_copy(src, new_dest);
     } else if( path::is_dir(src) ) {
         mkdir(dest);
         std::vector<std::string> files;
@@ -151,7 +152,8 @@ void recursive_rm(tstring const& name)
 
 void rm(tstring const& name)
 {
-    int result = ::unlink(name.c_str());
+    string_pool temporary_context;
+    int result = ::unlink(name.c_str(temporary_context));
     if( result == -1 ) {
         throw_errno_error(errno, fmt("unable to remove file '%s'") % name);
     }
@@ -159,7 +161,8 @@ void rm(tstring const& name)
 
 void rmdir(tstring const& name)
 {
-    int result = ::rmdir(name.c_str());
+    string_pool temporary_context;
+    int result = ::rmdir(name.c_str(temporary_context));
     if( result == -1 ) {
         throw_errno_error(errno, fmt("unable to remove folder '%s'") % name);
     }
@@ -168,15 +171,17 @@ void rmdir(tstring const& name)
 void mkdir(tstring const& name, bool create_parents)
 {
     std::string parent = path::dirname(name);
-    if( !path::is_dir(parent) )
+    if( !path::is_dir(parent) ) {
         if( create_parents )
             mkdir(parent);
         else
             throw std::logic_error(fmt("unable to create dir '%s': %s") % name % "parent folder doesn't exist");
+    }
+    string_pool temporary_context;
 #ifdef _WIN32
-    int result = ::mkdir(name.c_str());
+    int result = ::mkdir(name.c_str(temporary_context));
 #else
-    int result = ::mkdir(name.c_str(), 0777);
+    int result = ::mkdir(name.c_str(temporary_context), 0777);
 #endif
     if( result == -1 ) {
         throw_errno_error(errno, fmt("unable to create dir '%s'") % name);
@@ -193,9 +198,10 @@ void copy(tstring const& src, tstring const& dest)
     }
 
     typedef std::auto_ptr<tinfra::io::stream> stream_ptr;
+    string_pool temporary_context;
     
-    stream_ptr in(tinfra::io::open_file(src.c_str(), std::ios::in | std::ios::binary));
-    stream_ptr out(tinfra::io::open_file(dest.c_str(), std::ios::out | std::ios::trunc | std::ios::binary));
+    stream_ptr in(tinfra::io::open_file(src.c_str(temporary_context), std::ios::in | std::ios::binary));
+    stream_ptr out(tinfra::io::open_file(dest.c_str(temporary_context), std::ios::out | std::ios::trunc | std::ios::binary));
     
     tinfra::io::copy(in.get(), out.get());
     out->close();
@@ -203,7 +209,8 @@ void copy(tstring const& src, tstring const& dest)
 
 void cd(tstring const& dirname)
 {
-    int result = ::chdir(dirname.c_str());
+    string_pool temporary_context;
+    int result = ::chdir(dirname.c_str(temporary_context));
     if( result == -1 ) {
         throw_errno_error(errno, fmt("unable to open output '%s'") % dirname);
     }
@@ -256,4 +263,6 @@ void walk(const char* start, walker& w)
 }
 
 } }
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
 
