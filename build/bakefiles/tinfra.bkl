@@ -45,8 +45,10 @@
             tinfra/threadcmn.cpp
             tinfra/runner.cpp
             tinfra/os_common.cpp
+            tinfra/vfs.cpp
+            tinfra/sftp/sftp_protocol.cpp
+            tinfra/sftp/sftp_vfs.cpp
             $(TINFRA_PLATFORM_SOURCES)
-            
         </sources>
         <install-to>$(LIBDIR)</install-to> 
     </lib>
@@ -99,10 +101,12 @@
             tinfra/xml.h
             tinfra/platform.h
             tinfra/runtime.h
+            tinfra/vfs.h
             tinfra/posix/thread.h
             tinfra/win32/thread.h
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
+            tinfra/sftp/sftp_protocol.h
         </files>
     </data-files-tree>
     

@@ -1,14 +1,3 @@
-//
-// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
-// licensed to the public under the terms of the GNU GPL (>= 2)
-// see the file COPYING for details
-// I.e., do what you like, but keep copyright and there's NO WARRANTY.
-//
-
-#include "tinfra/fmt.h"
-#include "tinfra/exeinfo.h"
-
-#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 
@@ -53,8 +42,36 @@ bool exists(tstring const& name)
     return ::stat(name.c_str(temporary_context), &st) == 0;
 }
 
-bool is_dir(tstring const& name)
+static bool is_dir_sep(char a)
 {
+    return    a == '/' 
+           || a == '\\';
+}
+
+bool is_dir(const char* name)
+{
+    int len = strlen(name);
+    
+    if( len == 1 && name[0] == '.' )      // current directory
+        return true;
+    
+    if( len == 1 && is_dir_sep(name[0]) ) // single backslash 
+        return true;
+    
+#ifdef _WIN32
+    if( len >= 2 && std::isalpha(name[0]) && name[1] == ':' ) {
+        if( len == 2 )
+            return true; // A:
+        if( len == 3 && is_dir_sep(name[2]) )
+            return true; // A:\ and A:/
+    }
+    // NOTE: win32 stat doesn't accept trailing slash/back 
+    // slash in folder name
+    if( len > 1 && is_dir_sep(name[len-1]) ) {
+        tstring tmp(name.data(), len-1);
+        return is_dir(name);
+    }
+#endif
     string_pool temporary_context;
     struct stat st;
     if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
@@ -94,16 +111,20 @@ std::string dirname(tstring const& name)
     }
 }
 
-std::string tmppath()
+std::string tmppath(const char* prefix, const char* tmpdir)
 {
-    std::string result;    
-    const char* tmpdir  = ::getenv("TMP");
-    if( !tmpdir) tmpdir = ::getenv("TEMP");
-#ifdef _WIN32
-    if( !tmpdir) tmpdir = "/Temp";
-#else
-    if( !tmpdir) tmpdir = "/tmp";
-#endif
+    if( tmpdir == 0 || strlen(tmpdir) == 0 ) {
+        tmpdir  = ::getenv("TMP");
+        if( !tmpdir) 
+            tmpdir = ::getenv("TEMP");
+        #ifdef _WIN32
+            if( !tmpdir) 
+                tmpdir = "/Temp";
+        #else
+            if( !tmpdir) 
+                tmpdir = "/tmp";
+        #endif
+    }       
     // TODO: it's somewhat weak radnomization strategy
     //       invent something better
     time_t t;
@@ -115,7 +136,13 @@ std::string tmppath()
     }
     int stamp = ::rand() % 104729; // 104729 is some arbitrary prime number
     
-    return fmt("%s/%s_%s_%s") % tmpdir % basename(get_exepath()) % t % stamp;
+    std::string sprefix;
+    if( prefix == 0 || strlen(prefix) == 0) {
+        sprefix = basename(get_exepath()).c_str();
+    } else {
+        sprefix = prefix;
+    }
+    return fmt("%s/%s_%s_%s") % tmpdir % sprefix % t % stamp;
 }
 
 } }

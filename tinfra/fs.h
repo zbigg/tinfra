@@ -5,6 +5,9 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
+#ifndef __tinfra_fs_h__
+#define __tinfra_fs_h__
+
 #include <string>
 #include <vector>
 
@@ -13,6 +16,8 @@
 namespace tinfra {
 namespace fs {
 
+typedef std::vector<std::string> file_name_list;
+    
 struct file_list_visitor {
     virtual void accept(tstring const& name) =0;
 };
@@ -24,11 +29,18 @@ inline std::vector<std::string> list_files(const char* path) {
     list_files(path, r);
     return r;
 }
-    
-void copy(tstring const& src, tstring const& dest);
 
-void cd(tstring const& dirname);
+struct file_info {
+    size_t    size;
+    bool      is_dir;   
+    time_t    modification_time;
+    time_t    access_time;
+};
 
+file_info stat(const char* name);
+void copy(const char* src, const char* dest);
+
+void cd(const char* dirname);
 std::string pwd();
 
 void mkdir(tstring const& name, bool create_parents = true);

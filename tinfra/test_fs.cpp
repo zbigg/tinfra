@@ -6,6 +6,7 @@
 //
 
 #include "tinfra/fs.h"
+#include "tinfra/vfs.h"
 #include "tinfra/path.h"
 #include "tinfra/test.h"
 #include <iostream>
@@ -14,6 +15,11 @@
 
 #include <unittest++/UnitTest++.h>
 
+#define TEST_SFTP 1
+
+#if TEST_SFTP
+#include "tinfra/sftp/sftp_vfs.h"
+#endif
 using namespace tinfra;
 
 SUITE(tinfra_fs)
@@ -84,4 +90,35 @@ SUITE(tinfra_fs)
         foo_walker foo;
         fs::walk(".", foo);
     }
+    
+    void test_vfs(UnitTest::TestResults& testResults_, UnitTest::TestDetails const& m_details, tinfra::vfs& fs)
+    {
+        using tinfra::fs::file_name_list;
+        // check if the roots are available
+        file_name_list roots = fs.roots();
+        for( file_name_list::const_iterator r = roots.begin(); r != roots.end(); ++r)
+            CHECK( fs.is_dir(r->c_str()) );
+        
+        
+    }
+    
+    TEST(test_local_vfs)
+    {
+        test_vfs(testResults_, m_details, tinfra::local_fs());
+    }
+    
+#if TEST_SFTP
+    TEST(test_sftp_vfs)
+    {
+        std::string base_command;
+        std::string target;
+        base_command = "ssh -s";
+        target = "localhost";
+        std::auto_ptr<tinfra::vfs> fs;
+        if( base_command.size() > 0 ) {
+            fs = std::auto_ptr<tinfra::vfs>(tinfra::sftp::create(target, base_command));
+            test_vfs(testResults_, m_details, * fs.get() );
+        }        
+    }
+#endif
 }
