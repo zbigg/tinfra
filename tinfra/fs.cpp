@@ -12,7 +12,7 @@
 #include "tinfra/fmt.h"
 #include "tinfra/io/stream.h"
 #include "tinfra/os_common.h"
-
+#include "tinfra/vfs.h"
 #include <streambuf>
 #include <fstream>
 #include <stdexcept>
@@ -81,18 +81,18 @@ void list_files(tstring const& dirname, file_list_visitor& visitor)
         visitor.accept(entry->d_name);
     }    
 #elif defined HAVE_FINDFIRST
-	std::string a = dirname.str();
-	a += "\\*";
-	_finddata_t finddata;
-	intptr_t nonce = _findfirst(a.c_str(), &finddata);
-	if( nonce == -1 ) 
-		return;
-        holder<intptr_t> nonce_closer(nonce);
-	do {
-		if( std::strcmp(finddata.name,"..") != 0 && std::strcmp(finddata.name, ".") != 0 ) {
-			visitor.accept(finddata.name);
-		}
-	} while( _findnext(nonce, &finddata) == 0);	
+    std::string a = dirname.str();
+    a += "\\*";
+    _finddata_t finddata;
+    intptr_t nonce = _findfirst(a.c_str(), &finddata);
+    if( nonce == -1 ) 
+            return;
+    holder<intptr_t> nonce_closer(nonce);
+    do {
+        if( std::strcmp(finddata.name,"..") != 0 && std::strcmp(finddata.name, ".") != 0 ) {
+            visitor.accept(finddata.name);
+        }
+    } while( _findnext(nonce, &finddata) == 0);	
 #else
     throw generic_exception("tinfra::fs::list_files not implemented on this platform");
 #endif  
@@ -183,42 +183,6 @@ bool is_file(tstring const& name)
     return (st.st_mode & S_IFREG) == S_IFREG;
 }
 
-void recursive_copy(tstring const& src, tstring const& dest)
-{
-    if( is_dir(dest) ) {
-        std::string new_dest = path::join(dest, path::basename(src));
-        return recursive_copy(src, new_dest);
-    } else if( is_dir(src) ) {
-        mkdir(dest);
-        std::vector<std::string> files;
-        list_files(src, files);
-        for( std::vector<std::string>::const_iterator i = files.begin(); i!=files.end(); ++i )
-        {
-            std::string new_src = path::join(src, *i);
-            std::string new_dest = path::join(dest, *i);
-            recursive_copy(new_src, new_dest);
-        }
-    } else {
-        copy(src, dest);
-    }
-}
-
-void recursive_rm(tstring const& name)
-{
-    if( is_dir(name) ) {
-        std::vector<std::string> files;
-        list_files(name, files);
-        
-        for( std::vector<std::string>::const_iterator i = files.begin(); i!=files.end(); ++i ) 
-        {
-            recursive_rm( path::join(name, *i) );
-        }
-        rmdir(name);
-    } else {        
-        rm(name);
-    }
-}
-
 void mv(tstring const& src, tstring const& dest)
 {
     string_pool tmp_pool;
@@ -266,23 +230,22 @@ void mkdir(tstring const& name, bool create_parents)
     }
 }
 
+void recursive_copy(tstring const& src, tstring const& dest)
+{
+    tinfra::vfs& fs = tinfra::local_fs();
+    tinfra::default_recursive_copy(fs, src, fs, dest);
+}
+
+void recursive_rm(tstring const& name)
+{
+    tinfra::vfs& fs = tinfra::local_fs();
+    return tinfra::default_recursive_rm(fs, name);
+}
+
 void copy(tstring const& src, tstring const& dest)
 {
-    if( is_dir(src) ) 
-        throw std::invalid_argument("tinfra::fs::copy supports only generic files");
-    if( is_dir(dest) ) {
-        copy(src, path::join(dest, path::basename(src) ));
-        return;
-    }
-
-    typedef std::auto_ptr<tinfra::io::stream> stream_ptr;
-    string_pool temporary_context;
-    
-    stream_ptr in(tinfra::io::open_file(src.c_str(temporary_context), std::ios::in | std::ios::binary));
-    stream_ptr out(tinfra::io::open_file(dest.c_str(temporary_context), std::ios::out | std::ios::trunc | std::ios::binary));
-    
-    tinfra::io::copy(in.get(), out.get());
-    out->close();
+    tinfra::vfs& fs = tinfra::local_fs();
+    return tinfra::default_copy(fs, src, fs, dest);
 }
 
 void cd(tstring const& dirname)
