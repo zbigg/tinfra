@@ -45,7 +45,8 @@ SUITE(tinfra_fs)
 
     TEST(test_copy)
     {
-        test::TempTestLocation testLocation("testtest_file");
+        test_fs_sandbox sandbox("testtest_file");
+	
         fs::copy("testtest_file", "boo.test");
         CHECK( fs::is_file("boo.test") );
         
