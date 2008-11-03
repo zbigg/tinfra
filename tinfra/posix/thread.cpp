@@ -19,6 +19,7 @@
 
 #ifdef HAVE_NANOSLEEP
 #include <time.h>
+#include <cerrno>
 #elif defined HAVE_USLEEP
 #include <unistd.h>
 #endif
@@ -127,13 +128,26 @@ void Thread::sleep(long milliseconds)
     ::Sleep(milliseconds);
 #elif defined(HAVE_NANOSLEEP)
     // nanosleep accepts nanoseconds
-    timespec req,rem;
-    req.tv_sec  = milliseconds / 1000000000;
-    rem.tv_nsec = milliseconds % 1000000000;
-    ::nanosleep(&req, &rem);
+    timespec req;
+    timespec rem;
+    req.tv_sec  = milliseconds / 1000;
+    req.tv_nsec = (milliseconds % 1000) * 1000000;
+    while( true ) {
+        int r = ::nanosleep(&req, &rem);
+        if( r < 0 ) {
+            if( errno == EINTR ) {
+                tinfra::test_interrupt();
+            }
+            req = rem;
+            continue;
+        }
+        break;
+    }
 #elif defined(HAVE_USLEEP)
     // usleep accepts microseconds
-    ::usleep(milliseconds/1000);
+    int r = ::usleep(milliseconds/1000);
+    if( r == -1 && errno == EINTR )
+        tinfra::test_interrupt();
 #else
     thread_error("sleep not implemented on this platform",0);
 #endif
