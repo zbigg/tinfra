@@ -13,6 +13,13 @@
 #include "tinfra/fmt.h"
 #include "tinfra/runtime.h"
 
+#if 0 // TODO woe32 part of this
+#include <csignal>
+using std::sigatomic_t;
+#else
+typedef int sigatomic_t;
+#endif
+
 namespace tinfra {
     
 void print_stacktrace(stacktrace_t const& st, std::ostream& out)
@@ -88,6 +95,12 @@ void fatal_exit(const char* message)
     fatal_exit(message, stacktrace);
 }
 
+//
+// *interrupt* here is about high level user interrupt
+// it's not about interrupt by ANY signal it's about
+// interrupt caused by closing program or reqursting termination
+// by Ctrl+C, Ctrl+Break, SIGINT, SIGTERN
+//
 void interrupt_exit(const char* message)
 {
     std::cerr << get_exepath() << ": " << message << std::endl;
@@ -98,22 +111,26 @@ interrupted_exception::interrupted_exception()
     : std::runtime_error("interrupted")
 {}
 
+// TODO:    interrupt should be thread local somehow
+         // ???
 interrupt_policy current_interrupt_policy = IMMEDIATE_ABORT;
-bool interrupted = false;
+static volatile sigatomic_t interrupted = 0;
 
 void interrupt()
 {
     if( current_interrupt_policy == IMMEDIATE_ABORT ) {
         interrupt_exit("interrupted");
     } else {
-        interrupted = true;
+        interrupted = 1;
     }
 }
 
 void test_interrupt()
 {
-    if( interrupted )
+    if( interrupted ) {
+        interrupted = 0;
         throw interrupted_exception();
+    }
 }
 
 void set_interrupt_policy(interrupt_policy p)
