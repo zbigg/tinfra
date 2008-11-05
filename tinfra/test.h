@@ -13,20 +13,18 @@
 namespace tinfra {
 namespace test {
 
-class TempTestLocation {
+class test_fs_sandbox: public fs_sandbox {
 public:
-    explicit TempTestLocation(std::string const& name = "");
-    ~TempTestLocation();
+    explicit test_fs_sandbox(std::string const& name = "");
+    explicit test_fs_sandbox(tinfra::vfs& vfs, std::string const& name = "");
     
-    std::string getPath() const;
-        
-    static void setTestResourcesDir(std::string const& x);
+    ~test_fs_sandbox();
+    
 private:
-    void init();
-    std::string name_;
-    std::string orig_pwd_;
-    std::string tmp_path_;
+    std::string name_;    
 };
+
+void set_test_resources_dir(std::string const& d);
 
 void user_wait(const char* prompt = 0);
 
