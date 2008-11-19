@@ -5,6 +5,6 @@
         tickedit.bkl
     </input>
     <add-formats>
-        gnu,msvc,msvs2003prj,autoconf
+        msvc,msvs2003prj,autoconf
     </add-formats>
 </bakefile-gen>

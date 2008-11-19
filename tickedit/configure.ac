@@ -25,7 +25,7 @@ AC_BAKEFILE([m4_include(autoconf_inc.m4)])
 
 AM_OPTIONS_WXCONFIG
 
-AM_PATH_WXCONFIG(2.8.0, WXFOUND=1)
+AM_PATH_WXCONFIG(2.8.0, [WXFOUND=1], [WXFOUND=0], [core,aui,stc])
 
 if test "$WXFOUND" != 1; then
     AC_MSG_ERROR([
