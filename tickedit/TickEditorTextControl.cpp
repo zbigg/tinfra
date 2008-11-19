@@ -1,4 +1,4 @@
-#include <wx/wxprec.h>
+#include "allpch.h"
 
 #include "TickEditorTextControl.h"
 

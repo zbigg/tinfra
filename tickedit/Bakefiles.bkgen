@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<bakefile-gen>
+    <disable-formats>dmars,dmars_smake,cbx_unix,cbuilderx,msvc4prj</disable-formats>
+    <input>
+        tickedit.bkl
+    </input>
+    <add-formats>
+        gnu,msvc,msvs2003prj,autoconf
+    </add-formats>
+</bakefile-gen>

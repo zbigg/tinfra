@@ -1,16 +1,11 @@
-#include <wx/app.h>
-#include <wx/frame.h>
-
+#include <allpch.h>
 
 #include <wx/aui/aui.h>
-
 #include <wx/toolbar.h>
-
 #include <wx/artprov.h>
 
 #include <wx/recguard.h>
-
-#include <tinfra/cmd.h>
+//#include <tinfra/cmd.h>
 
 #include <map>
 #include <iostream>
@@ -18,147 +13,37 @@
 
 #include "TickEditorTextControl.h"
 #include "common.h"
+#include "auto_loader.h"
+#include "action.h"
 
-struct ActionInfo {
-    int id;
-    std::string name;
-    std::string label;
-    std::string icon_resource;
-    std::string shortcut;
-};
-
-class ActionManager {
-public:
-    static ActionManager* getInstance();
-
-    ActionInfo* registerAction(int id,
-                               std::string const& name, 
-                               std::string const& label, 
-                               std::string const& icon_resource = "",
-                               std::string const& shortcut = "");
-
-    ActionInfo* registerAction(std::string const& name, 
-                               std::string const& label, 
-                               std::string const& icon_resource = "",
-                               std::string const& shortcut = "");
-    
-    ActionInfo* getActionInfo(int id);
-    ActionInfo* getActionInfo(std::string const& name);
-protected:
-    ~ActionManager();
-    ActionManager();
-
-private:
-    typedef std::map<std::string, ActionInfo*> ActionNameMap;
-    typedef std::map<int, ActionInfo*>         ActionIdMap;
-
-    ActionNameMap byNames;
-    ActionIdMap   byIds;
-};
-
-ActionManager* ActionManager::getInstance()
+WX_AUTO_LOADER(common_editor_commands)
 {
-    static ActionManager instance;
-    return &instance;
-}
-
-ActionManager::ActionManager()
-{
-}
-
-ActionManager::~ActionManager()
-{
-    for( ActionIdMap::const_iterator i = byIds.begin(); i != byIds.end(); ++i ) 
-    {
-        delete i->second;
-    }
-}
-
-
-ActionInfo* ActionManager::registerAction(int id,
-                         std::string const& name, 
-                         std::string const& label, 
-                         std::string const& icon_resource,
-                         std::string const& shortcut)
-{
-    ActionInfo* ai = new ActionInfo();
-    ai->id = id;
-    ai->name = name;
-    ai->label = label;
-    ai->icon_resource = icon_resource;
-    ai->shortcut = shortcut;
-    
-    byIds[id] = ai;
-    byNames[name] = ai;
-    return ai;
-}
-
-ActionInfo* ActionManager::registerAction(std::string const& name, 
-                         std::string const& label, 
-                         std::string const& icon_resource,
-                         std::string const& shortcut)
-{
-    return registerAction(wxNewId(), name, label, icon_resource, shortcut);
-}
-    
-ActionInfo* ActionManager::getActionInfo(int id)
-{
-    ActionIdMap::const_iterator a = byIds.find(id);
-    if( a != byIds.end() )
-        return a->second;
-    else
-        return 0;
-}
-
-ActionInfo* ActionManager::getActionInfo(std::string const& name)
-{
-    ActionNameMap::const_iterator a = byNames.find(name);
-    if( a != byNames.end() )
-        return a->second;
-    else
-        return 0;
-}
-
-#define AM_ACTION(id, name, label, icon_resource, shortcut) ActionManager::getInstance()->registerAction(id, name, label, icon_resource, shortcut)
-#define AM_ACTION_AUTO(name, label, icon_resource, shortcut) ActionManager::getInstance()->registerAction(name, label, icon_resource, shortcut)
-
-
-#define AUTO_LOADER(name)                       \
-class name##Loader: public wxModule {           \
-    public: virtual bool OnInit();              \
-    public: virtual void OnExit() {}            \
-    private:                                    \
-    DECLARE_DYNAMIC_CLASS(name##Loader); };     \
-IMPLEMENT_DYNAMIC_CLASS(name##Loader, wxModule); \
-bool name##Loader::OnInit() 
-
-AUTO_LOADER(EditorCommands)
-{
-    AM_ACTION(wxID_CUT,     "cut",    "Cu&t",     "edit-cut",     "CTRL+X");
-    AM_ACTION(wxID_COPY,    "copy",   "&Copy",    "edit-copy",    "CTRL+C");
-    AM_ACTION(wxID_PASTE,   "paste",  "&Paste",   "edit-paste",   "CTRL+V");
-    AM_ACTION(wxID_DELETE,  "delete", "&Delete",  "edit-delete",  "DEL");
-    AM_ACTION(wxID_FIND,    "find",   "&Find",    "edit-find",    "CTRL+F");
-    AM_ACTION(wxID_REPLACE, "replace", "R&eplace","edit-find-replace", "CTRL+H");  
+    AM_ACTION(wxID_CUT,     "cut",    "Cu&t",     wxART_CUT ,     "CTRL+X");
+    AM_ACTION(wxID_COPY,    "copy",   "&Copy",    wxART_COPY ,    "CTRL+C");
+    AM_ACTION(wxID_PASTE,   "paste",  "&Paste",   wxART_PASTE,   "CTRL+V");
+    AM_ACTION(wxID_DELETE,  "delete", "&Delete",  wxART_DELETE,  "DEL");
+    AM_ACTION(wxID_FIND,    "find",   "&Find",    wxART_FIND,    "CTRL+F");
+    AM_ACTION(wxID_REPLACE, "replace", "R&eplace",wxART_FIND_AND_REPLACE , "CTRL+H");  
 
     return true;
 }
 
-AUTO_LOADER(DocumentCommands)
+WX_AUTO_LOADER(common_document_commands)
 {
-    AM_ACTION(wxID_NEW,   "new",     "&New",    "filenew",     "CTRL+N");
-    AM_ACTION(wxID_OPEN,  "open",    "&Open",   "fileopen",    "CTRL+O");
+    AM_ACTION(wxID_NEW,   "new",     "&New",    wxART_NEW ,     "CTRL+N");
+    AM_ACTION(wxID_OPEN,  "open",    "&Open",   wxART_FILE_OPEN ,    "CTRL+O");
     AM_ACTION(wxID_REVERT,"revert",  "&Revert", "revert",      "CTRL+R");
     AM_ACTION(wxID_CLOSE, "close",   "&Close",  "fileclose",   "CTRL+W");
-    AM_ACTION(wxID_SAVE,  "save",    "&Save",   "filesave",    "CTRL+S");
-    AM_ACTION(wxID_SAVEAS,"save-as", "Save &as","filesaveas",  "CTRL+SHIFT+S");
-    AM_ACTION(wxID_PRINT, "print",   "&Print",  "fileprint",   "CTRL+P");
+    AM_ACTION(wxID_SAVE,  "save",    "&Save",   wxART_FILE_SAVE,    "CTRL+S");
+    AM_ACTION(wxID_SAVEAS,"save-as", "Save &as",wxART_FILE_SAVE_AS,  "CTRL+SHIFT+S");
+    AM_ACTION(wxID_PRINT, "print",   "&Print",  wxART_PRINT ,   "CTRL+P");
     
     return true;
 }
 
 class TickEditApp: public wxApp {
 public:
+	/*
     void OnKeyEvent(wxKeyEvent& ev)
     {
         // don't care about keyp
@@ -188,15 +73,24 @@ public:
         }
         return wxApp::ProcessEvent(ev);
     }
+	*/
+
+	virtual bool OnInit();
 protected:
     DECLARE_DYNAMIC_CLASS(TickEditApp);
     DECLARE_EVENT_TABLE();
 };
 IMPLEMENT_DYNAMIC_CLASS(TickEditApp,wxApp);
+
+#ifdef TINFRA_MAIN
 IMPLEMENT_APP_NO_MAIN(TickEditApp);
+#else
+IMPLEMENT_APP(TickEditApp);
+#endif
+
 
 BEGIN_EVENT_TABLE(TickEditApp, wxApp)
-    EVT_KEY_DOWN(TickEditApp::OnKeyEvent)    
+    //EVT_KEY_DOWN(TickEditApp::OnKeyEvent)    
 END_EVENT_TABLE()
 
 //
@@ -209,6 +103,8 @@ void addAction(wxToolBar* t, int id)
         return;
     
     wxBitmap bmp = wxArtProvider::GetBitmap(ai->icon_resource, wxART_TOOLBAR);
+	if( !bmp.IsOk() )
+		bmp = wxArtProvider::GetBitmap(wxART_ERROR , wxART_TOOLBAR);
     t->AddTool(ai->id, ai->label, bmp);
 }
 
@@ -220,7 +116,7 @@ wxToolBar* buildDocumentToolbar(wxWindow* parent)
     addAction(t, wxID_OPEN);
     addAction(t, wxID_SAVE);
     addAction(t, wxID_CLOSE);
-    
+    t->Realize();
     return t;
 }
 
@@ -234,7 +130,7 @@ wxToolBar* buildEditorToolbar(wxWindow* parent)
     t->AddSeparator();
     addAction(t, wxID_FIND);
     addAction(t, wxID_REPLACE);
-    
+    t->Realize();
     return t;
 }
 
@@ -294,42 +190,62 @@ public:
     }
 };
 
-int tickedit_main(int argc, char** argv)
+wxFrame* tickedit_init(wxWindow* parent)
 {
-    wxEntryStart(argc, argv);
-    
-    wxFrame* frame = new wxFrame(NULL, -1, "Tickedit", 
+	wxFrame* frame = new wxFrame(parent, -1, "Tickedit", 
             wxDefaultPosition, wxDefaultSize, 
             wxDEFAULT_FRAME_STYLE | wxRESIZE_BORDER | wxMAXIMIZE_BOX | wxMINIMIZE_BOX);
     {
         frame->PushEventHandler(new ControlCommandForwarder(frame));
         
-        wxAuiManager mgr(frame,   wxAUI_MGR_ALLOW_ACTIVE_PANE | wxAUI_MGR_ALLOW_FLOATING | wxAUI_MGR_RECTANGLE_HINT );
+        wxAuiManager* mgr = new wxAuiManager(frame,   wxAUI_MGR_ALLOW_ACTIVE_PANE | wxAUI_MGR_ALLOW_FLOATING | wxAUI_MGR_RECTANGLE_HINT );
         
         wxAuiNotebook* editorHost = new wxAuiNotebook(frame);        
         TickEditorTextControl* notepad = new TickEditorTextControl(frame);
         
-        mgr.AddPane(buildDocumentToolbar(frame), wxAuiPaneInfo().ToolbarPane().Top() );
-        mgr.AddPane(buildEditorToolbar(frame), wxAuiPaneInfo().ToolbarPane().Top() );
+        mgr->AddPane(buildDocumentToolbar(frame), wxAuiPaneInfo().ToolbarPane().Top() );
+        mgr->AddPane(buildEditorToolbar(frame), wxAuiPaneInfo().ToolbarPane().Top() );
         
-        mgr.AddPane(editorHost,  wxAuiPaneInfo().CaptionVisible(false).Centre().Dockable(false).CloseButton(false) );        
-        mgr.AddPane(notepad, wxAuiPaneInfo().Caption("Notepad").Bottom().CloseButton(false) );
+        mgr->AddPane(editorHost,  wxAuiPaneInfo().CaptionVisible(false).Centre().Dockable(false).CloseButton(false) );        
+        mgr->AddPane(notepad, wxAuiPaneInfo().Caption("Notepad").Bottom().CloseButton(false) );
         
         editorHost->AddPage(new TickEditorTextControl(editorHost),"Editor1");
         editorHost->AddPage(new TickEditorTextControl(editorHost),"Editor2");
         
         frame->Show(true);
         
-        mgr.Update();
-        //wxTextCtrl* editor = new wxTextCtrl(frame,-1, "", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
-        wxGetApp().SetExitOnFrameDelete(true);
-        wxGetApp().SetTopWindow(frame);
-        wxGetApp().MainLoop();
-        
-        frame->PopEventHandler(); // AUICommandHelper
-    }
+        mgr->Update();
+	}
+	
+	return frame;
+}
+
+bool TickEditApp::OnInit()
+{
+	wxFrame* f = tickedit_init(0);
+	SetExitOnFrameDelete(true);
+    SetTopWindow(f);
+	f->Show(true);
+	return true;
+}
+#ifdef TINFRA_MAIN
+int tickedit_main(int argc, char** argv)
+{
+    wxEntryStart(argc, argv);
+    
+	wxFrame* f = tickedit_init(0);
+	
+    //wxTextCtrl* editor = new wxTextCtrl(frame,-1, "", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+    wxGetApp().SetExitOnFrameDelete(true);
+    wxGetApp().SetTopWindow(frame);
+	frame->Show(true);
+    wxGetApp().MainLoop();
+       
+    frame->PopEventHandler(); // AUICommandHelper
+    
     wxEntryCleanup();
     return 0;
 }
 
 TINFRA_MAIN(tickedit_main);
+#endif
