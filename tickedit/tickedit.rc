@@ -1,0 +1,4 @@
+
+0            ICON       "tickedit.ico"
+
+#include <wx/msw/wx.rc>
