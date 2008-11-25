@@ -67,6 +67,7 @@ include(CheckFunctionExists)
 check_include_files(io.h HAVE_IO_H)
 check_function_exists(opendir HAVE_OPENDIR)
 check_function_exists(nanosleep HAVE_NANOSLEEP)
+check_function_exists(findfirst HAVE_FINDFIRST)
 
 find_package(Threads REQUIRED)
 find_package(Pcre REQUIRED)
@@ -93,7 +94,7 @@ add_test(tinfra_test unittests)
 find_path (PTHREAD_H pthread.h)
 
 target_link_libraries(unittests unittest++)
-target_link_libraries(tinfra ${PCRE_LIBRARY})
+target_link_libraries(tinfra ${PCRE_LIBRARIES})
 target_link_libraries(tinfra pthread)
 target_link_libraries(unittests tinfra)
 
