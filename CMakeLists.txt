@@ -32,6 +32,16 @@ SET(tinfra_posix_sources
     tinfra/posix/thread.cpp
     )
 
+SET(tinfra_win32_sources
+    tinfra/win32/fatal_exception.cpp
+    #tinfra/win32/thread.cpp
+    tinfra/posix/thread.cpp
+    tinfra/win32/w32_common.cpp
+    tinfra/win32/w32_io.cpp
+    tinfra/win32/w32_runtime.cpp
+    tinfra/win32/w32_subprocess.cpp
+    )
+
 SET(tinfra_xml_sources
     tinfra/xml/XMLStream.cpp
     tinfra/xml/XMLStreamReader.cpp
@@ -74,10 +84,17 @@ find_package(Pcre REQUIRED)
 
 configure_file(tinfra/config.h.in tinfra/config.h)
 include_directories(
-    ${TINFRA_SOURCE_DIR} 
+    ${CMAKE_SOURCE_DIR}
     ${PCRE_INCLUDE_DIR}
-    ) 
-add_library (tinfra ${tinfra_basic_sources} ${tinfra_posix_sources}) 
+    )
+IF(WIN32)
+    SET(tinfra_platform_sources ${tinfra_win32_sources})
+    
+ELSE(WIN32)
+    SET(tinfra_platform_sources ${tinfra_posix_sources})
+ENDIF(WIN32)
+
+add_library (tinfra ${tinfra_basic_sources} ${tinfra_platform_sources}) 
 add_library (tinfra_xml ${tinfra_xml_sources}) 
 
 add_executable (unittests ${tinfra_test_sources}) 
@@ -88,13 +105,12 @@ add_test(tinfra_test unittests)
 #       search for unittest++
 #       search for expat
 #       search for pthread
-#include(FindPkgConfig)
-#pkg_check_modules(PCRE pcre)
-
-find_path (PTHREAD_H pthread.h)
 
 target_link_libraries(unittests unittest++)
 target_link_libraries(tinfra ${PCRE_LIBRARIES})
 target_link_libraries(tinfra pthread)
+IF(WIN32)
+    target_link_libraries(tinfra wsock32)
+ENDIF(WIN32)
 target_link_libraries(unittests tinfra)
 
