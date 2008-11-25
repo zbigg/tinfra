@@ -22,7 +22,7 @@
 // on win32 we must use pthread-win32 because we need condition variables
 // #       include <tinfra/win32/thread.h>
 #include <tinfra/posix/thread.h>
-#elif defined(HAVE_PTHREAD_H)
+#elif defined(HAVE_PTHREAD_H) || defined(CMAKE_HAVE_PTHREAD_H)
 #       include <tinfra/posix/thread.h>
 #else
 #error "tinfra: no threading support on this platform"
