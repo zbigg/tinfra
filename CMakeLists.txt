@@ -97,4 +97,3 @@ target_link_libraries(tinfra ${PCRE_LIBRARY})
 target_link_libraries(tinfra pthread)
 target_link_libraries(unittests tinfra)
 
-include(SystemInformation)
