@@ -1,0 +1,11 @@
+
+#cmakedefine HAVE_PCRE
+#cmakedefine HAVE_PCRE_H
+
+#cmakedefine HAVE_PTHREAD_H
+#cmakedefine CMAKE_HAVE_PTHREAD_H
+
+#cmakedefine HAVE_FINDFIRST
+#cmakedefine HAVE_OPENDIR
+#cmakedefine HAVE_NANOSLEEP
+#cmakedefine HAVE_IO_H

@@ -20,7 +20,6 @@ autoconf_inc.m4
 ^aclocal.m4$
 ^test_result
 ^tinfra/config.h$
-^tinfra/config.h.in$
 ^test_fatal_exception
 ^unittests
 ^tinfra.pc
