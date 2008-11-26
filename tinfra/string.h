@@ -10,20 +10,22 @@
 
 #include <string>
 #include <vector>
+#include "tinfra/tstring.h"
 
 namespace tinfra {
 
+    
 void        escape_c_inplace(std::string& a);
-std::string escape_c(const std::string& a);
+std::string escape_c(tstring const& a);
     
 void        strip_inplace(std::string& s);
-std::string strip(const std::string& s);
+std::string strip(tstring const& s);
 
 void        chop_inplace(std::string& s);
-std::string chop(std::string const& s);
+std::string chop(tstring const& s);
 
-std::vector<std::string> split(std::string const& in, const char* delimiters);
-std::vector<std::string> split_lines(std::string const& in);
+std::vector<std::string> split(tstring const& in, tstring const& delimiters);
+std::vector<std::string> split_lines(tstring const& in);
     
 }
 

@@ -6,6 +6,7 @@
 //
 
 #include "tinfra/string.h"
+#include "tinfra/tstring.h"
 
 #include <cstdio>
 #include <cstring>
@@ -34,7 +35,7 @@ void strip_inplace(std::string& s)
     }
 }
 
-std::string strip(const std::string& s)
+std::string strip(tstring const& s)
 {
     
     std::size_t start = s.find_first_not_of(whitespace);
@@ -44,7 +45,7 @@ std::string strip(const std::string& s)
     if( last != std::string::npos )
         last = last-start+1;
         
-    return std::string(s, start, last);
+    return std::string(s.begin(), start, last);
 }
 
 static const char* END_OF_LINE_CHARS = "\r\n";
@@ -62,7 +63,7 @@ void        chop_inplace(std::string& s)
     }
 }
 
-std::string chop(std::string const& s)
+std::string chop(tstring const& s)
 {
     std::size_t start = 0;
     std::size_t last = s.find_last_not_of(END_OF_LINE_CHARS);
@@ -74,7 +75,7 @@ std::string chop(std::string const& s)
         return std::string();
     }
     ++last;
-    return std::string(s, 0, last);
+    return std::string(s.begin(), 0, last);
 }
 
 // escape_c
@@ -101,20 +102,20 @@ void escape_c_inplace(std::string& a)
     }
 }
 
-std::string escape_c(const std::string& a)
+std::string escape_c(tstring const& a)
 {
-    std::string result(a);
+    std::string result(a.begin(), a.size());
     escape_c_inplace(result);
     return result;
 }
 
-std::vector<std::string> split(std::string const& in, const char* delimiters)
+std::vector<std::string> split(tstring const& in, tstring const& delimiters)
 {
     std::vector<std::string> result;
     std::size_t start = 0;
     do {
         std::size_t pos = in.find_first_of(delimiters, start);
-        result.push_back(in.substr(start, pos-start));
+        result.push_back(std::string(in.begin(), start, pos-start));
         
         start = pos;
         
@@ -126,7 +127,7 @@ std::vector<std::string> split(std::string const& in, const char* delimiters)
     return result;
 }
 
-std::vector<std::string> split_lines(std::string const& in)
+std::vector<std::string> split_lines(tstring const& in)
 {
     return split(in, "\r\n");
 }
