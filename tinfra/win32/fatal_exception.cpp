@@ -109,8 +109,9 @@ struct ModuleEntry
 typedef std::vector< ModuleEntry > ModuleList;
 typedef ModuleList::iterator ModuleListIter;
 
-static void show_stack(  ); // dump a stack of current thread
-static void show_stack( HANDLE hThread, CONTEXT& c ); // dump a stack
+static void show_stack(tinfra::stacktrace_t& dest); // dump a stack of current thread
+static void show_stack(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_t& dest ); // dump a stack
+
 static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep );
 static void enumAndLoadModuleSymbols( HANDLE hProcess, DWORD pid );
 static bool fillModuleList( ModuleList& modules, DWORD pid, HANDLE hProcess );
@@ -178,12 +179,13 @@ static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
 {
     // TODO: this should be removed and stacktrace should be collected
     //       not printed
-    printf( "%s[%i]: Fatal exception occurred.\n", tinfra::get_exepath().c_str(), tinfra::Thread::current().to_number());
-    printf( "Call stack:\n");
-    show_stack( GetCurrentThread(), *(ep->ContextRecord) );    
+    //printf( "%s[%i]: Fatal exception occurred.\n", tinfra::get_exepath().c_str(), tinfra::Thread::current().to_number());
+    //printf( "Call stack:\n");
+    
     
     tinfra::stacktrace_t trace;
     // TODO: trace should be filled and passed to fatal_exit
+    show_stack( GetCurrentThread(), *(ep->ContextRecord), trace );
     
     // TODO: abort() or return here ?
     tinfra::fatal_exit("fatal exception",trace);
@@ -280,6 +282,7 @@ cleanup:
 struct  thread_callstack_dumper_args {
     HANDLE hThread;
     bool finished;
+    tinfra::stacktrace_t* trace_result;
 };
 static DWORD __stdcall thread_callstack_dumper( void * arg)
 {
@@ -293,14 +296,14 @@ static DWORD __stdcall thread_callstack_dumper( void * arg)
     if ( ! ::GetThreadContext( args->hThread, &context ) ) {
         printf("unable to read thread context, call stack dump failed");
     } else {
-        show_stack( args->hThread, context);
+        show_stack( args->hThread, context, *(args->trace_result) );
     }
     ::ResumeThread(args->hThread);
     args->finished = true;
     return 0;
 }
 
-static void show_stack()
+static void show_stack(tinfra::stacktrace_t& dest)
 {
     thread_callstack_dumper_args args;
     
@@ -314,6 +317,7 @@ static void show_stack()
         return;
     }
     args.finished = 0;
+    args.trace_result = &dest;
     
     //DWORD hDumpThreadId;
     HANDLE hDumpThread = ::CreateThread( NULL, 5*524288, thread_callstack_dumper,  &args, 0, 0 );
@@ -340,7 +344,7 @@ static void show_stack()
     }
 }
 
-static void show_stack(HANDLE hThread, CONTEXT& c )
+static void show_stack(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_t& dest )
 {
     // normally, call ImageNtHeader() and use machine info from PE header
     DWORD imageType = IMAGE_FILE_MACHINE_I386;
@@ -447,6 +451,8 @@ static void show_stack(HANDLE hThread, CONTEXT& c )
 	    module_base = Module.BaseOfImage;
 	}
 	
+        dest.push_back((void*)address);
+        /*
 	printf("0x%08x", (unsigned int)address);
 
 	if( module_name ) {
@@ -462,6 +468,7 @@ static void show_stack(HANDLE hThread, CONTEXT& c )
 	    printf("(%s:%i)", file_name, line_number);
 	}
 	printf("\n");
+        */
 
     } // for ( frameNum )
 
