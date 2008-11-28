@@ -8,6 +8,8 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
 #include "tinfra/os_common.h"
+#include "tinfra/fs.h"
+#include "tinfra/path.h"
 
 #include <stdexcept>
 
@@ -16,6 +18,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 namespace tinfra {
 namespace io {
@@ -161,6 +165,80 @@ stream* open_file(const char* name, openmode mode)
 stream* open_native(intptr_t handle)
 {
     return posix::open_native(static_cast<int>(handle));
+}
+
+// unix socket server/accepted/client socket creator
+// http://www.cs.cf.ac.uk/Dave/C/node28.html#SECTION002810000000000000000
+
+stream* accept_unix_socket_connection(tinfra::io::stream* server_socket);
+stream* open_unix_socket_server(const char* name, bool fail_if_exists);
+stream* connect_unix_socket_server(const char* name);
+
+stream* accept_unix_socket_connection(tinfra::io::stream* server_socket)
+{
+    
+    int server_fd = server_socket->native();
+    struct sockaddr_un client_address;
+    socklen_t address_len;
+    int client_fd = accept(server_fd, reinterpret_cast<sockaddr*>(&client_address), &address_len);
+    if (client_fd < 0) {
+        throw_errno_error(errno, "accept(AF_UNIX) failed");
+    }
+    
+    return open_native(static_cast<int>(client_fd));
+}
+
+stream* open_unix_socket_server(const char* name, bool fail_if_exists)
+{
+    int fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    if( fd == -1 ) {
+        throw_errno_error(errno, "socket(AF_UNIX) failed");
+    }
+    struct sockaddr_un address;
+
+    address.sun_family = AF_UNIX;
+    strcpy(address.sun_path, name);
+    
+    if( tinfra::path::exists(name)) {
+        if( fail_if_exists ) {
+            ::close(fd);
+            return 0;
+        }
+        ::unlink(name);
+    }
+    
+    
+    int address_len = sizeof(address.sun_family) + strlen(address.sun_path);
+    
+    if (::bind(fd, reinterpret_cast<sockaddr*>(&address), address_len) < 0) {
+        ::close(fd);
+        throw_errno_error(errno, "bind failed");
+    }
+    
+    if (listen(fd, 5) < 0) {
+        ::close(fd);
+        throw_errno_error(errno, "listen failed");
+    }
+    
+    return open_native(static_cast<int>(fd));
+}
+
+stream* connect_unix_socket_server(const char* name)
+{
+    int fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    if( fd == -1 ) {
+        throw_errno_error(errno, "socket(AF_UNIX) failed");
+    }
+    struct sockaddr_un address;
+    address.sun_family = AF_UNIX;
+    strcpy(address.sun_path, name);
+    int address_len = sizeof(address.sun_family) + strlen(address.sun_path);
+    
+    if( connect(fd, reinterpret_cast<sockaddr*>(&address), address_len) < 0 ) {
+        ::close(fd);
+        throw_errno_error(errno, "connect failed");
+    }
+    return open_native(static_cast<int>(fd));
 }
 
 } }
