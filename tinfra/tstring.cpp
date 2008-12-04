@@ -125,6 +125,7 @@ tstring::find_first_not_of(char_type const* s, size_type pos, size_type n) const
                 return i - begin();
         }
     }
+    return npos;
 }
 
 tstring::size_type

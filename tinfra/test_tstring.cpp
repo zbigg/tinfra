@@ -18,6 +18,16 @@ SUITE(tinfra_tstring)
 {
     TEST(find_first_of_char)
     {
+        /*struct {
+            size_t expected;
+            const char* victim;
+            char param;
+        } dataset = { 
+            { 0, "abc", 'a'},
+            { 1, "abc", 'b'},
+            { 2, "abc", 'c'},
+        */    
+            
         CHECK_EQUAL(0, tstring("abc").find_first_of('a'));
         CHECK_EQUAL(1, tstring("abc").find_first_of('b'));
         CHECK_EQUAL(2, tstring("abc").find_first_of('c'));
@@ -41,5 +51,29 @@ SUITE(tinfra_tstring)
         CHECK_EQUAL(1, tstring(" abc ").find_first_of("ab"));
         CHECK_EQUAL(3, tstring(" abc ").find_first_of("cd"));
         CHECK_EQUAL(tstring::npos, tstring("abc").find_first_of("def"));
+    }
+    
+    TEST(find_first_not_of_str)
+    {
+        struct {
+            size_t      expected;
+            const char* victim;
+            const char* param;
+        } dataset[] = { 
+            { tstring::npos, "", ""},
+            { 0,             "abc", ""},
+            { tstring::npos, "", "a"},
+            { 1,             "abc", "a"},
+            { 2,             "abc", "ab"},
+            { tstring::npos, "abc", "abc"},
+            { 0,             "abc", "x"}
+        };
+        const int N = sizeof(dataset)/sizeof(dataset[0]);
+        
+        for( int i = 0; i < N; ++i ) {
+            CHECK_EQUAL(dataset[i].expected, tstring(dataset[i].victim).find_first_not_of(dataset[i].param));
+            CHECK_EQUAL(dataset[i].expected, std::string(dataset[i].victim).find_first_not_of(dataset[i].param));
+        }
+        
     }
 }
