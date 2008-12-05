@@ -8,4 +8,4 @@ Description: tinfra library
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -ltinfra
 Cflags: -I${includedir}
-Requires: pcre expat
+Requires: libpcre 
