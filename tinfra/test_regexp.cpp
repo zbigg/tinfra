@@ -38,4 +38,18 @@ SUITE(tinfra_regexp)  {
     {
         // TODO: write matcher test
     }
+    TEST(static_tstring_match_result)
+    {
+        using tinfra::static_tstring_match_result;
+        static_tstring_match_result<2> foo;
+        const char* seached_text = "abcdef";
+        CHECK( regexp("abc(.*)").matches(seached_text, foo) );
+        CHECK_EQUAL( foo.groups[0], "abcdef");
+        CHECK_EQUAL( foo.groups[1], "def");
+        
+        // tstring should reuse original string, so 
+        // it should point to original contents
+        CHECK_EQUAL( foo.groups[0].data(), seached_text);
+        CHECK_EQUAL( foo.groups[1].data(), seached_text+3);
+    }
 }

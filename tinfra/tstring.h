@@ -47,6 +47,12 @@ class tstring  {
     const void* stamp_;
 #endif    
 public:
+    tstring():
+        str_(0),
+        length_(0),
+        flags_(0)
+    {}
+
     template <int N>
     tstring(const char (&arr)[N]):
         str_((const char*)arr),

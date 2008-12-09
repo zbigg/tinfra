@@ -17,11 +17,40 @@
 
 #include <string>
 #include <vector>
+#include <cassert>
 
+#include "tinfra/tstring.h"
 #include "tinfra/tinfra_lex.h"
 
 namespace tinfra {
+
+struct match_result_processor {
+    virtual void prepare(int groups) = 0;
+    virtual void match_group(int group_no, const char* str, size_t pos, size_t len) = 0;
     
+    virtual ~match_result_processor() {}
+};
+
+struct std_match_result: public match_result_processor {
+    void prepare(int groups);
+    void match_group(int group_no, const char* str, size_t pos, size_t len);
+    
+    std::vector<std::string> groups;
+};
+
+template <int N>
+struct static_tstring_match_result: public match_result_processor {
+    void prepare(int groups) {
+        assert(groups == N);
+    }
+    void match_group(int group_no, const char* str, size_t pos, size_t len) {
+        const char* begin = str+pos;
+        groups[group_no] = tstring(begin, len);
+    }
+    
+    tstring groups[N];
+};
+
 class regexp {
     
 #ifdef TINFRA_REGEX_PCRE
@@ -31,7 +60,7 @@ class regexp {
 
     size_t patterns_count_;
 public:
-    typedef std::vector<std::string> match_result;
+    //typedef std_match_result match_result; // deprecated
     
     regexp(const char* pattern);
     ~regexp();
@@ -39,7 +68,7 @@ public:
     bool matches(const char* str, size_t length) const {
         return do_match(0, str, length, 0);
     }
-    bool matches(const char* str, size_t length, match_result& result) const {
+    bool matches(const char* str, size_t length, match_result_processor& result) const {
         return do_match(&result, str, length, 0);
     }
     
@@ -47,11 +76,13 @@ public:
         return do_match(0, str, std::strlen(str),0 );
     }
     
-    bool matches(const char* str, match_result& result) const  {
+    bool matches(const char* str, match_result_processor& result) const  {
         return do_match(&result, str, std::strlen(str), 0 );
     }
     
-    bool do_match(match_result* result, const char* str, size_t length, size_t* finish_offset) const;
+    bool do_match(match_result_processor* result, const char* str, size_t length, size_t* finish_offset) const;
+    
+    size_t groups_count() const { return patterns_count_; }
     
 private:
     void compile(const char* pattern, int options);
@@ -64,12 +95,12 @@ class matcher {
     size_t position_;
     bool have_result_;
     bool have_match_;
-    regexp::match_result match_;
+    std_match_result match_;
 public:
     matcher(regexp const& re, const char* str, size_t length);
     matcher(regexp const& re, const char* str);
     
-    regexp::match_result const& next();
+    std_match_result const& next();
     
     bool has_next();
 
@@ -82,7 +113,7 @@ private:
 //
 
 class scanner {
-    regexp::match_result match_;
+    std_match_result match_;
     size_t  current_param_;
     bool    have_match_;
 public:
@@ -116,7 +147,7 @@ private:
 template <typename T>
 scanner& scanner::parse(T& value) {
     if( check_and_forward() ) {
-        tinfra::from_string<T>(match_[current_param_], value);
+        tinfra::from_string<T>(match_.groups[current_param_], value);
     }
     return *this;
 }

@@ -77,14 +77,14 @@ void regexp::compile(const char* pattern, int options)
 }
 
 
-bool regexp::do_match(match_result* result, const char* str, size_t length, size_t* finish_offset) const
+bool regexp::do_match(match_result_processor* result, const char* str, size_t length, size_t* finish_offset) const
 {
     const int offsets_size = (patterns_count_+1)*3; // see manual, pcre_exec def
-    int offsets[offsets_size]; 
+    std::vector<int> offsets(offsets_size);
     int options = 0;
     int rc = pcre_exec(TT_PCRE(re_), TT_PCRE_EXTRA(extra_), 
 	               str, length, 0, options, 
-                       offsets, offsets_size);
+                       &(offsets[0]), offsets_size);
     if( rc == -1 )
         return false;
     
@@ -93,13 +93,12 @@ bool regexp::do_match(match_result* result, const char* str, size_t length, size
         throw std::logic_error(fmt("PCRE match failed: %s") % err_ptr);
     }
     if( result != 0 ) {
-        match_result& r = *result;
-        r.resize(patterns_count_+1);
+        result->prepare(groups_count()+1);
         for( size_t i = 0; i <= patterns_count_; ++i ) {
-            const char* p = str + offsets[i*2];
-            const char* e = str + offsets[i*2 +1];
+            const size_t p = offsets[i*2];
+            const size_t e = offsets[i*2 +1];
             const size_t len = e-p;
-            r[i].assign(p, len);
+            result->match_group(i, str, p, len);
         }
     }
     if( finish_offset != 0 ) {
@@ -132,7 +131,7 @@ matcher::matcher(regexp const& re, const char* str):
     have_match_(false)
 {}
 
-regexp::match_result const& matcher::next() {
+std_match_result const& matcher::next() {
     if( ! have_result_ ) 
         try_match();
     if( have_match_ ) {
@@ -174,10 +173,25 @@ bool scanner::check_and_forward()
     if( !have_match_ ) 
         return false; 
     current_param_++;
-    if( current_param_ == match_.size() ) {
+    if( current_param_ == match_.groups.size() ) {
         throw std::logic_error("scanner: too many arguments");
     }
     return true;
+}
+
+//
+// std_match_result
+//
+
+void std_match_result::prepare(int g)
+{
+    groups.resize(g);
+}
+
+void std_match_result::match_group(int group_no, const char* str, size_t pos, size_t len)
+{
+    const char* begin = str + pos;
+    groups[group_no].assign(begin, len);
 }
 
 } // end namespace tinfra
