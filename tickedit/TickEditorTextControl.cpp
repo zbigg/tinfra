@@ -65,7 +65,7 @@ class TickEditorTextControl::Implementation: public wxEvtHandler {
     TickEditorTextControl* ctrl;
 public:
     Implementation(): ctrl(0) {}
-    Implementation(TickEditorTextControl* ctrl): ctrl(ctrl) {}
+    Implementation(TickEditorTextControl* ctrl): ctrl(ctrl) { init_handlers(); }
         
         
     void onEditorCommand(wxCommandEvent& ev)
@@ -81,7 +81,7 @@ public:
                 std::string open_folder = ".";
                 std::string default_filename = "";
                 std::string default_extension = "";
-                wxString filename = wxFileSelector("Open a file", 
+                wxString filename = wxFileSelector("Save a file", 
                                                    open_folder.c_str(), 
                                                    default_filename.c_str(), 
                                                    default_extension.c_str(), "*.*", 
@@ -130,6 +130,20 @@ public:
             pos += 1;
         }
     }
+    void init_handlers()
+    {
+        command(wxID_COPY);
+        command(wxID_CUT);
+        command(wxID_PASTE);
+        command(wxID_DELETE);
+        command(wxID_SAVE);
+    }
+    
+    void command(int id)
+    {
+        Connect(id, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(Implementation::onEditorCommand));
+        Connect(id, wxEVT_UPDATE_UI, wxUpdateUIEventHandler(Implementation::onEditorCommandUI));
+    }
 private:
     DECLARE_EVENT_TABLE();
     DECLARE_DYNAMIC_CLASS(TickEditorTextControl::Implementation);
@@ -137,22 +151,11 @@ private:
 
 IMPLEMENT_DYNAMIC_CLASS(TickEditorTextControl::Implementation, wxEvtHandler);
 
-BEGIN_EVENT_TABLE(TickEditorTextControl::Implementation, wxEvtHandler)
-    EVT_MENU(wxID_COPY, TickEditorTextControl::Implementation::onEditorCommand)
-    EVT_MENU(wxID_CUT, TickEditorTextControl::Implementation::onEditorCommand)
-    EVT_MENU(wxID_PASTE, TickEditorTextControl::Implementation::onEditorCommand)
-    EVT_MENU(wxID_DELETE, TickEditorTextControl::Implementation::onEditorCommand)
-    EVT_MENU(wxID_SAVE, TickEditorTextControl::Implementation::onEditorCommand)
-
-    EVT_UPDATE_UI(wxID_COPY, TickEditorTextControl::Implementation::onEditorCommandUI)
-    EVT_UPDATE_UI(wxID_CUT, TickEditorTextControl::Implementation::onEditorCommandUI)
-    EVT_UPDATE_UI(wxID_PASTE, TickEditorTextControl::Implementation::onEditorCommandUI)
-    EVT_UPDATE_UI(wxID_DELETE, TickEditorTextControl::Implementation::onEditorCommandUI)
-    EVT_UPDATE_UI(wxID_SAVE, TickEditorTextControl::Implementation::onEditorCommandUI)
-
+ 
+BEGIN_EVENT_TABLE(TickEditorTextControl::Implementation, wxEvtHandler) 
     EVT_STC_STYLENEEDED(-1, TickEditorTextControl::Implementation::onStyleNeeded)
 END_EVENT_TABLE()
-
+ 
 // this is at the end to know implementation of TickEditorTextControl::Implementation
 void TickEditorTextControl::init()
 {
