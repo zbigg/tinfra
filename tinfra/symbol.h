@@ -85,7 +85,7 @@ private:
 
 std::ostream& operator <<(std::ostream& dest, symbol const& s);
 
-};
+}
 
 
 
