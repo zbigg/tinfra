@@ -41,7 +41,7 @@ namespace detail {
 			//std::cerr << "from_string<" << TypeTraits<T>::name() << ">(" << v << ") -> " << dest << std::endl;
 		}
 	};
-};
+}
 
 // default implementation to catch all default casts
 template <typename T>

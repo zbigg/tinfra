@@ -94,7 +94,7 @@ const OffsetMap& getOffsetMap()
 		offsetMap.setInitialized();
 	}
 	return offsetMap;
-};
+}
 
 template<typename T>
 struct SymbolsGetter {
@@ -246,6 +246,7 @@ public:
     {}
     virtual ~field_error() throw() {}
 };
+
 namespace detail {
     template<typename FieldType, typename MSType>
     int get_symbol_offset(symbol const& key)
@@ -255,7 +256,8 @@ namespace detail {
         if( i == om.end() ) throw field_error(TypeTraits<MSType>::name(), key.c_str());
         return i->second;
     }
-};
+}
+
 template<typename FieldType, typename MSType>
 void set(MSType& x, const symbol& key, const FieldType& value)
 {
