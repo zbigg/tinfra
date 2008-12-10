@@ -65,6 +65,13 @@ public:
     regexp(const char* pattern);
     ~regexp();
     
+    bool matches(tstring const& str) const {
+        return do_match(0, str.data(), str.size(), 0);
+    }
+    bool matches(tstring const& str, match_result_processor& result) const {
+        return do_match(&result, str.data(), str.size(), 0);
+    }
+    
     bool matches(const char* str, size_t length) const {
         return do_match(0, str, length, 0);
     }
