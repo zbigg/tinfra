@@ -14,5 +14,7 @@ reactor: reactor.o protocols.o aio.o
 
 autosh: autosh.o protocols.o aio.o
 
+marking_allocator: marking_allocator.cpp
+
 clean:
 	rm -rf *.o $(PROGS)
