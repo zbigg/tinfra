@@ -14,6 +14,13 @@
 #include "exception.h"
 #include "tinfra/tstring.h"
 
+// TODO:
+//      In general this module is flawed.
+//        - bad naming - make it stl-naming compatible
+//        - usage of ostream/ostringstream
+//        - lack of tstring (!?) ... WIP
+//        - no exceptions for default (istringstream based parsers)
+
 namespace tinfra {
 
 class bad_lexical_cast: public generic_exception {
@@ -34,8 +41,9 @@ namespace detail {
 		static void to_string(T const& v, std::ostream& dest) { 
 			dest << v;
 		}
-		static void from_string(const char* v, T& dest) { 
-			std::istringstream in(v);
+		static void from_string(tstring const& v, T& dest) { 
+                        // TODO: istringstream doesn't have (ptr, len) constructor
+			std::istringstream in(v.str());
 			in >> dest; // TODO: catch IO, format failures
 			
 			//std::cerr << "from_string<" << TypeTraits<T>::name() << ">(" << v << ") -> " << dest << std::endl;
@@ -48,7 +56,7 @@ template <typename T>
 struct LexicalInterpreter {
 	static void to_string(T const&, std::string&);
 	static void to_string(T const&, std::ostream&);
-	static void from_string(const char*, T&);
+	static void from_string(tstring const&, T&);
 };
 
 // default implementation provided by default stream bases string IO
@@ -77,7 +85,10 @@ struct LexicalInterpreter<std::string> {
 	static void to_string(std::string const& v, std::ostream& dest) {
 		dest << v;
 	}
-	static void from_string(const char* v, std::string& dest) {
+	static void from_string(tstring const& v, std::string& dest) {
+		dest.assign(v.data(), v.size());
+	}
+        static void from_string(std::string& v, std::string& dest) {
 		dest = v;
 	}
 };
@@ -121,12 +132,13 @@ struct LexicalInterpreter<char[N]> {
 	static void to_string(const char v[N], std::ostream& dest) {
 		dest << v;
 	}
-	static void from_string(const char* v, char dest[N]) {
-		if( ::strlen(v) <= N-1 ) {
-		    ::strcpy(dest,v);
-		} else {
-            throw bad_lexical_cast(TypeTraits<const char*>::name(), TypeTraits<char[N]>::name());
-		}
+	static void from_string(tstring const& v, char dest[N]) {
+            if( v.size() <= N-1 ) {
+                std::memcpy(dest,v.data(), v.size());
+                dest[v.size()] = 0;
+            } else {
+                throw bad_lexical_cast(TypeTraits<const char*>::name(), TypeTraits<char[N]>::name());
+            }
 	}
 };
 
@@ -148,8 +160,10 @@ struct LexicalInterpreter<symbol> {
 	static void to_string(symbol const& v, std::ostream& dest) {
 	    dest << v.c_str();
 	}
-	static void from_string(const char* v, symbol& dest) {	    
-	    dest = symbol(v);
+	static void from_string(tstring const& v, symbol& dest) {	    
+            // TODO: this is uwfull in performance
+            // TODO: symbol must have tstring based no-alloc constructor
+	    dest = symbol(v.str());
 	}	
 };
 //
@@ -158,10 +172,10 @@ struct LexicalInterpreter<symbol> {
 
 namespace detail {    
 	class LexicalSetter {
-		symbol      _field;
-		char const* _value;
+		symbol         _field;
+		tstring const& _value;
 	public:		
-		LexicalSetter(symbol field,char const* value): _field(field), _value(value) {}
+		LexicalSetter(symbol field, tstring const& value): _field(field), _value(value) {}
 		
 		template <typename F>
 		void operator ()(symbol const& symbol, F& v) {
@@ -218,15 +232,9 @@ std::string lexical_get(T const& obj, symbol field)
 }
 
 template<typename F>
-void from_string(char const* str, F& dest) {
+void from_string(tstring const& str, F& dest) {
         LexicalInterpreter<F>::from_string(str, dest);
 }
-
-template<typename F>
-void from_string(std::string const& str, F& dest) {
-        LexicalInterpreter<F>::from_string(str.c_str(), dest);
-}
-
 
 template <typename F>
 void to_string(F const& value, std::string& dest) {
