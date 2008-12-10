@@ -2,7 +2,7 @@
 #include <tinfra/regexp.h>
 #include <tinfra/tinfra_lex.h>
 
-#include "lazy_protocol.h"
+#include "tinfra/lazy_protocol.h"
 
 using tinfra::tstring;
 using tinfra::regexp;

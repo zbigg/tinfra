@@ -14,8 +14,7 @@
 
 #include <iostream>
 
-//#include "tinfra/aio.h"
-#include "aio.h"
+#include "tinfra/aio.h"
 
 #include "tinfra/cmd.h"
 #include "tinfra/io/stream.h"
@@ -235,7 +234,7 @@ std::auto_ptr<Dispatcher> Dispatcher::create()
 //deprecated
 std::auto_ptr<Dispatcher> create_network_dispatcher()
 {
-    Dispatcher::create();
+    return Dispatcher::create();
 }
 
 } } // end namespace tinfra::aio

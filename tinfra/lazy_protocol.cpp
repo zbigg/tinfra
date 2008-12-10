@@ -5,7 +5,7 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#include "lazy_protocol.h"
+#include "tinfra/lazy_protocol.h"
 
 namespace tinfra {
 

@@ -17,7 +17,7 @@
 namespace tinfra {
 namespace aio {
 
-using tinfra::io::socket;
+using namespace tinfra::io::socket;
 using std::string;
 using std::auto_ptr;
         
@@ -28,19 +28,19 @@ static void initialize_async_socket(stream* socket_)
     set_blocking(socket, false);
 } 
 
-std::auto_ptr<stream>     create_service_stream(:string const& address, int port)
+std::auto_ptr<stream>     create_service_stream(std::string const& host, int port)
 {
     
-    auto_ptr<stream> result(open_server_socket(host.c_str(), port);
+    auto_ptr<stream> result(open_server_socket(host.c_str(), port) );
     
     initialize_async_socket(result.get());
     
     return result;
 }
 
-std::auto_ptr<stream>     create_client_stream(std::string const& address, int port)
+std::auto_ptr<stream>     create_client_stream(std::string const& host, int port)
 {
-    auto_ptr<stream> result(open_client_socket(host.c_str(), port);
+    auto_ptr<stream> result(open_client_socket(host.c_str(), port) );
     
     initialize_async_socket(result.get());
     
