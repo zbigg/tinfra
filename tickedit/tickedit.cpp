@@ -6,6 +6,7 @@
 
 #include <wx/recguard.h>
 //#include <tinfra/cmd.h>
+#include <wx/mimetype.h>
 
 #include <map>
 #include <iostream>
@@ -190,6 +191,8 @@ public:
     }
 };
 
+#define LOG_INSPECT(a) do { std::cerr << __FILE__ << ":" << __LINE__ << ": " << #a << " -> " << a << std::endl; } while(0)
+
 wxFrame* tickedit_init(wxWindow* parent)
 {
 	wxFrame* frame = new wxFrame(parent, -1, "Tickedit", 
@@ -200,7 +203,8 @@ wxFrame* tickedit_init(wxWindow* parent)
         
         wxAuiManager* mgr = new wxAuiManager(frame,   wxAUI_MGR_ALLOW_ACTIVE_PANE | wxAUI_MGR_ALLOW_FLOATING | wxAUI_MGR_RECTANGLE_HINT );
         
-        wxAuiNotebook* editorHost = new wxAuiNotebook(frame);        
+        //wxAuiNotebook* editorHost = new wxAuiNotebook(frame);
+        TickEditorTextControl* editorHost = new TickEditorTextControl(frame);
         TickEditorTextControl* notepad = new TickEditorTextControl(frame);
         
         mgr->AddPane(buildDocumentToolbar(frame), wxAuiPaneInfo().ToolbarPane().Top() );
@@ -209,24 +213,37 @@ wxFrame* tickedit_init(wxWindow* parent)
         mgr->AddPane(editorHost,  wxAuiPaneInfo().CaptionVisible(false).Centre().Dockable(false).CloseButton(false) );        
         mgr->AddPane(notepad, wxAuiPaneInfo().Caption("Notepad").Bottom().CloseButton(false) );
         
-        editorHost->AddPage(new TickEditorTextControl(editorHost),"Editor1");
-        editorHost->AddPage(new TickEditorTextControl(editorHost),"Editor2");
+        //editorHost->AddPage(new TickEditorTextControl(editorHost),"Editor1");
+        //editorHost->AddPage(new TickEditorTextControl(editorHost),"Editor2");
         
         frame->Show(true);
         
         mgr->Update();
-	}
-	
-	return frame;
+    }
+    {
+        wxMimeTypesManager m;
+        wxFileType* ft = m.GetFileTypeFromExtension("svg");
+        wxString description;
+        if( ft->GetDescription(&description) )
+            LOG_INSPECT(description);
+        wxString mime_type;
+        if( ft->GetMimeType(&mime_type) )
+            LOG_INSPECT(mime_type);
+        
+        LOG_INSPECT(ft->GetOpenCommand("a.h"));
+    }
+    return frame;
 }
 
 bool TickEditApp::OnInit()
 {
-	wxFrame* f = tickedit_init(0);
-	SetExitOnFrameDelete(true);
+    wxFrame* f = tickedit_init(0);
+    SetExitOnFrameDelete(true);
     SetTopWindow(f);
-	f->Show(true);
-	return true;
+    f->Show(true);
+    
+    
+    return true;
 }
 #ifdef TINFRA_MAIN
 int tickedit_main(int argc, char** argv)
