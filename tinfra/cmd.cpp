@@ -8,6 +8,8 @@
 #include "tinfra/cmd.h"
 #include "tinfra/exception.h"
 #include "tinfra/exeinfo.h"
+#include "tinfra/trace.h"
+
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -115,11 +117,15 @@ app& app::get()
 int main(int argc, char* argv[],int (*real_main)(int,char*[]))
 {
     set_exepath(argv[0]);
+        
+    
     app::get().program_name(argv[0]);
     
-    initialize_fatal_exception_handler();
+    initialize_fatal_exception_handler();    
     
     try {
+        tinfra::trace::process_params(argc, argv);
+        
         return real_main(argc, argv);
     } catch( std::exception& e) {
         app::get().fail(e.what());
@@ -132,4 +138,5 @@ int main(int argc, char* argv[],int (*real_main)(int,char*[]))
     }
     return 1;
 }
+
 } } // end of namespace tinfra::cmd
