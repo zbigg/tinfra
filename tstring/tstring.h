@@ -1,6 +1,7 @@
 #ifndef __tinfra_tstring_h__
 #define __tinfra_tstring_h__
 
+#include <iostream>
 
 namespace tinfra {
 template <typename IMPL>
@@ -58,7 +59,7 @@ public:
 	length_(std::strlen(arr)),
 	stamp_(make_stamp(arr))
     {
-        //std::cerr << "created ARR tstring(" << this << ") stamp_: " << stamp_ << "\n";
+        std::cerr << "created ARR tstring(" << this << ", " << N <<") stamp_: " << stamp_ << "\n";
         check_stamp();
     }
     
@@ -67,7 +68,8 @@ public:
 	length_(std::strlen(str)),
 	stamp_(make_stamp(this))
     {
-        //std::cerr << "created PTR tstring(" << this << ") stamp_: " << stamp_ << "\n";
+        std::cerr << "created PTR tstring(" << this << ") stamp_: " << stamp_ << "\n";
+        check_stamp(); 
     }
     
     
@@ -76,7 +78,8 @@ public:
 	length_(length),
 	stamp_(make_stamp(this))
     {
-        //cerr << "created PTR tstring(" << this << ") stamp_: " << stamp_ << "\n";
+        std::cerr << "created PTR tstring(" << this << ") stamp_: " << stamp_ << "\n";
+        check_stamp(); 
     }
     
     tstring(std::string const& str): 
@@ -84,7 +87,7 @@ public:
 	length_(str.size()),
 	stamp_(make_stamp(&str))
     {
-        //cerr << "created STD tstring(" << this << ") stamp_: " << stamp_ << "\n";
+        std::cerr << "created STD tstring(" << this << ") stamp_: " << stamp_ << "\n";
         check_stamp();
     }
     
@@ -93,7 +96,7 @@ public:
 	length_(other.length_),
 	stamp_(other.stamp_)
     { 
-        //cerr << "created TST tstring(" << this << ") stamp_: " << stamp_ << "\n";
+        std::cerr << "created TST tstring(" << this << ") stamp_: " << stamp_ << "\n";
         check_stamp(); 
     }
         
@@ -107,7 +110,7 @@ private:
     {
 	 return v;
     }
-    void check_stamp();
+    void check_stamp() {}
 };
 
 } // end of namespace tinfra

@@ -4,7 +4,7 @@ CC=g++
 
 tstring: tstring.o
 
-#tstring.cpp: tstring.h
+tstring.o: tstring.h
 
 regex_pcre: regex_pcre.o regexp.o
 
