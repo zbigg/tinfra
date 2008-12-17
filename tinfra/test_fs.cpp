@@ -24,6 +24,8 @@ using namespace tinfra;
 
 SUITE(tinfra_fs)
 {
+    using tinfra::test::test_fs_sandbox;
+    
     TEST(test_is_dir)
     {
         using tinfra::fs::is_dir;
@@ -45,7 +47,7 @@ SUITE(tinfra_fs)
 
     TEST(test_copy)
     {
-        test_fs_sandbox sandbox("testtest_file");
+        tinfra::test::test_fs_sandbox sandbox("testtest_file");
 	
         fs::copy("testtest_file", "boo.test");
         CHECK( fs::is_file("boo.test") );
@@ -59,7 +61,7 @@ SUITE(tinfra_fs)
     
     TEST(test_list_files)
     {
-        test::TempTestLocation tmp_location("testtest_dir");
+        test_fs_sandbox tmp_location("testtest_dir");
         std::vector<std::string> files = fs::list_files(".");
 		CHECK_EQUAL(1, int(files.size()));
         CHECK_EQUAL("testtest_dir", files[0]);        
@@ -67,7 +69,7 @@ SUITE(tinfra_fs)
     
     TEST(test_mkdir_rmdir)
     {
-        test::TempTestLocation tmp_location;
+        test_fs_sandbox tmp_location;
         {
             const char* name = "kukkuryku";
             CHECK( !fs::exists(name));
@@ -93,14 +95,14 @@ SUITE(tinfra_fs)
     }
     TEST(test_recursive)
     {
-        test::TempTestLocation tmp_location("testtest_dir");
+        test_fs_sandbox tmp_location("testtest_dir");
         fs::recursive_copy("testtest_dir", "boo");
         fs::recursive_rm("boo");
     }
     
     TEST(test_walk)
     {
-        test::TempTestLocation tmp_location("testtest_dir");
+        test_fs_sandbox tmp_location("testtest_dir");
         struct foo_walker: public fs::walker {
             virtual bool accept(tstring const& name, tstring const& parent, bool is_dir)
             {

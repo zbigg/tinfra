@@ -42,6 +42,7 @@
             tinfra/tstring.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
+            tinfra/fs_sandbox.cpp
             tinfra/threadcmn.cpp
             tinfra/runner.cpp
             tinfra/os_common.cpp
@@ -96,6 +97,7 @@
             tinfra/tinfra_lex.h
             tinfra/path.h
             tinfra/fs.h
+            tinfra/fs_sandbox.h
             tinfra/runner.h
             tinfra/thread.h
             tinfra/queue.h

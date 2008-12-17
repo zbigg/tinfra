@@ -1,16 +1,17 @@
 //
-// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// Copyright (C) 2008 Zbigniew Zagorski <z.zagorski@gmail.com>,
 // licensed to the public under the terms of the GNU GPL (>= 2)
 // see the file COPYING for details
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#include "tinfra/fs_sandbox"
+#include "tinfra/fs_sandbox.h"
 
 #include "tinfra/vfs.h"
 
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
+#include "tinfra/cmd.h"
 
 #include <iostream>
 
@@ -21,16 +22,16 @@ using std::cout;
 using std::cin;
 using std::endl;
  
-fs_sandbox::fs_sandbox(tinfra::vfs& fs, string const& path): 
+fs_sandbox::fs_sandbox(tinfra::vfs& fs, tstring const& path): 
 	_fs(fs),
-	_orig_path(path)
+	_orig_path(path.str())
 {
     prepare();
 }
 
 fs_sandbox::~fs_sandbox()
 {
-    cleanup_no_throw();
+    cleanup_nothrow();
 }
 
 void fs_sandbox::prepare()
@@ -59,8 +60,7 @@ void fs_sandbox::cleanup_nothrow()
     try {
         cleanup();
     } catch( std::exception& e ) {
-        // TODO: silent warning 
-        cerr << fmt("WARNING: unable to cleanup sandbox at '%s': %s") % tmp_path % e.what()) << endl;
+        get_app().silent_exception(fmt("unable to cleanup sandbox at '%s': %s") % tmp_path % e.what());;
     }
 }
 

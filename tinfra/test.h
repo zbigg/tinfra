@@ -8,25 +8,28 @@
 #ifndef __tinfra_test_h__
 #define __tinfra_test_h__
 
-#include <string>
+#include "tinfra/tstring.h"
+#include "tinfra/fs_sandbox.h"
+#include "tinfra/vfs.h"
 
 namespace tinfra {
 namespace test {
 
 class test_fs_sandbox: public fs_sandbox {
 public:
-    explicit test_fs_sandbox(std::string const& name = "");
-    explicit test_fs_sandbox(tinfra::vfs& vfs, std::string const& name = "");
+    explicit test_fs_sandbox(tstring const& name = "");
+    explicit test_fs_sandbox(tinfra::vfs& vfs, tstring const& name = "");
     
     ~test_fs_sandbox();
     
 private:
-    std::string name_;    
+    std::string name_;
+    std::string orig_pwd_;
 };
 
-void set_test_resources_dir(std::string const& d);
+void set_test_resources_dir(tstring const& d);
 
-void user_wait(const char* prompt = 0);
+void user_wait(tstring const& prompt = "");
 
 } } // end namespace tinfra::test
 

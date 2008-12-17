@@ -27,7 +27,7 @@ SUITE(tinfra_exeinfo) {
     
     TEST(symbol_map)
     {
-        tinfra::test::TempTestLocation testLocation("sample.exe.map");        
+        tinfra::test::test_fs_sandbox testLocation("sample.exe.map");        
         string mappath = "sample.exe.map";
         std::ifstream input(mappath.c_str());
         CHECK( !!input );

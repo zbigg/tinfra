@@ -10,28 +10,29 @@
 
 #include <string>
 
+#include "tinfra/tstring.h"
 #include "tinfra/vfs.h"
 
 namespace tinfra {
 
 class fs_sandbox {
 public:
-    explicit fs_sandbox(tinfra::vfs& fs, std::string const& name = "");
+    explicit fs_sandbox(tinfra::vfs& fs, tstring const& path = "");
     
     ~fs_sandbox();
     
-    fs&         fs() { return _fs; }
-    std::string path() { return _path; }
+    vfs&        fs()   const { return _fs; }
+    std::string path() const { return _path; }
     
     void prepare();
     void cleanup();
     
 private:
-    void cleanup_nothrow();    
+    void cleanup_nothrow();
+
     tinfra::vfs& _fs;
     std::string  _path;
     std::string  _orig_path;
-    std::string  _name;
 };
 
 } // end namespace tinfra

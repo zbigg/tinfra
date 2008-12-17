@@ -10,6 +10,8 @@
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
+#include "tinfra/trace.h"
+
 #include <iostream>
 namespace tinfra {
 namespace test {
@@ -20,46 +22,47 @@ using std::cin;
 using std::endl;
     
 #ifdef SRCDIR
-static std::string top_srcdir = SRCDIR;
+    #define DEFAULT_TOP_SRCDIR SRCDIR
 #else
-static std::string top_srcdir = ".";
+    #define DEFAULT_TOP_SRCDIR "."
 #endif
 
-test_fs_sandbox::test_fs_sandbox(std::string const& name):
+static std::string top_srcdir = DEFAULT_TOP_SRCDIR;
+
+TINFRA_MODULE_TRACER(tinfra_test_fs_sandbox);
+
+test_fs_sandbox::test_fs_sandbox(tstring const& name):
 	fs_sandbox(tinfra::local_fs()),
-	_name(name) 
+	name_(name.str()) 
 {
-    if( _name.size() > 0 ) {
+    TINFRA_USE_TRACER(tinfra_test_fs_sandbox);
+    if( name_.size() > 0 ) {
         string real_path = path::join(top_srcdir, name_);
         if( !fs::exists(real_path) ) {
             throw tinfra::generic_exception(fmt("unable to find test resource %s (%s)") % name_ % real_path);
         }
-        string name_in_tmp_ = path::join(tmp_path_, name_);
-        fs::recursive_copy(real_path, name_in_tmp_);
+        
+        fs::recursive_copy(real_path, fs_sandbox::path());
     } 
     orig_pwd_ = fs::pwd();
-    fs::cd(tmp_path_.c_str());
+    fs::cd(fs_sandbox::path());
+    TINFRA_TRACE_MSG(fmt("entering sandbox pwd='%s'") % fs_sandbox::path());
 }
-TempTestLocation::~TempTestLocation()
-{
-    fs::cd(orig_pwd_.c_str());
-    if( fs::exists(tmp_path_) ) {
-        fs::recursive_rm(tmp_path_.c_str());
-    }
-}
-
 test_fs_sandbox::~test_fs_sandbox()
 {
+    TINFRA_USE_TRACER(tinfra_test_fs_sandbox);
+    TINFRA_TRACE_MSG(fmt("leaving sandbox pwd='%s'") % orig_pwd_);
+    fs::cd(orig_pwd_);    
 }
 
-void set_test_resources_dir(std::string const& x)
+void set_test_resources_dir(tstring const& x)
 {
-    top_srcdir = x;
+    top_srcdir.assign(x.data(), x.size());
 }
 
-void user_wait(const char* prompt)
+void user_wait(tstring const& prompt)
 {
-    if( prompt ) {
+    if( prompt.size() != 0 ) {
         cout << prompt << " ";
     }
     cout << "(waiting for enter)";
