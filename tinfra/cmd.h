@@ -23,6 +23,7 @@ public:
     unsigned error_count() const;
     void fail(std::string const& msg);
     void warning(std::string const& msg);
+    void silent_exception(std::string const& msg);
     void inform(std::string const& msg);
     void error(std::string const& msg);
 
@@ -36,9 +37,14 @@ private:
 
 int main(int argc, char* argv[],int (*real_main)(int,char*[]));
 
+
+} // end of namespace cmd
+
+inline tinfra::cmd::app& get_app() { return tinfra::cmd::app::get(); }
+    
 #define TINFRA_MAIN(a) int main(int argc, char** argv) \
     { return tinfra::cmd::main(argc, argv, a); }
 
-} } // end of namespace tinfra::cmd
+} // end of namespace tinfra
 
 #endif

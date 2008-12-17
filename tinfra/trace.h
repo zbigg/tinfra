@@ -121,7 +121,7 @@ extern tinfra::trace::auto_register_tracer __tinfra_global_tracer;
   s << #name << " = '" << (name) << "'";  \
   TINFRA_TRACE_MSG(s.str().c_str());  } while(false)
 
-#define TINFRA_USE_TRACER(name) tracer const& __tinfra_tracer_adaptable(name)
+#define TINFRA_USE_TRACER(name) tinfra::trace::tracer& __tinfra_tracer_adaptable(name)
 
 
 #define TINFRA_CALL_TRACE() \
