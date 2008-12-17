@@ -25,19 +25,13 @@ static std::string top_srcdir = SRCDIR;
 static std::string top_srcdir = ".";
 #endif
 
-TempTestLocation::TempTestLocation(std::string const& name)
-    : name_(name), orig_pwd_(""), tmp_path_("") 
+test_fs_sandbox::test_fs_sandbox(std::string const& name):
+	fs_sandbox(tinfra::local_fs()),
+	_name(name) 
 {
-    init();
-}
-
-void TempTestLocation::init()
-{
-    tmp_path_ = path::tmppath();
-    fs::mkdir(tmp_path_.c_str());
-    if( name_.size() > 0 ) {
+    if( _name.size() > 0 ) {
         string real_path = path::join(top_srcdir, name_);
-        if( !path::exists(real_path) ) {
+        if( !fs::exists(real_path) ) {
             throw tinfra::generic_exception(fmt("unable to find test resource %s (%s)") % name_ % real_path);
         }
         string name_in_tmp_ = path::join(tmp_path_, name_);
@@ -49,19 +43,16 @@ void TempTestLocation::init()
 TempTestLocation::~TempTestLocation()
 {
     fs::cd(orig_pwd_.c_str());
-    if( path::exists(tmp_path_) ) {
+    if( fs::exists(tmp_path_) ) {
         fs::recursive_rm(tmp_path_.c_str());
     }
 }
 
-std::string TempTestLocation::getPath() const { 
-    if( name_.size() > 0 )
-        return name_;
-    else
-        return ".";
+test_fs_sandbox::~test_fs_sandbox()
+{
 }
 
-void TempTestLocation::setTestResourcesDir(std::string const& x)
+void set_test_resources_dir(std::string const& x)
 {
     top_srcdir = x;
 }
@@ -76,5 +67,8 @@ void user_wait(const char* prompt)
     std::string s;
     std::getline(cin, s);
 }
+
 } } // end namespace tinfra::test
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
 

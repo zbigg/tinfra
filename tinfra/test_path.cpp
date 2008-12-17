@@ -13,7 +13,6 @@ using std::string;
 
 SUITE(tinfra_path)
 {
-
     TEST(test_basename)
     {
 	using tinfra::path::basename;

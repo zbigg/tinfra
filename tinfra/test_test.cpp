@@ -50,10 +50,10 @@ SUITE(test_test) {
             std::vector<std::string> files = fs::list_files(".");
             CHECK_EQUAL(1, int(files.size()));
             CHECK_EQUAL("testtest_dir", files[0]);
-            CHECK( path::is_dir("testtest_dir"));
-            CHECK( path::is_dir("testtest_dir/a"));        
-            CHECK( path::is_file("testtest_dir/file1"));
-            CHECK( path::is_file("testtest_dir/a/file2"));
+            CHECK( fs::is_dir("testtest_dir"));
+            CHECK( fs::is_dir("testtest_dir/a"));        
+            CHECK( fs::is_file("testtest_dir/file1"));
+            CHECK( fs::is_file("testtest_dir/a/file2"));
         }
         CHECK_EQUAL(cwd, fs::pwd());
     }

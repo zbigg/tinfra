@@ -5,6 +5,9 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
+#ifndef __tinfra_fs_h__
+#define __tinfra_fs_h__
+
 #include <string>
 #include <vector>
 
@@ -13,6 +16,8 @@
 namespace tinfra {
 namespace fs {
 
+typedef std::vector<std::string> file_name_list;
+    
 struct file_list_visitor {
     virtual void accept(tstring const& name) =0;
 };
@@ -24,19 +29,31 @@ inline std::vector<std::string> list_files(const char* path) {
     list_files(path, r);
     return r;
 }
-    
-void copy(tstring const& src, tstring const& dest);
+
+struct file_info {
+    size_t    size;
+    bool      is_dir;   
+    time_t    modification_time;
+    time_t    access_time;
+};
+
+file_info stat(tstring const& name);
+bool exists(tstring const& name);
+bool is_file(tstring const& name);
+bool is_dir(tstring const& name);
 
 void cd(tstring const& dirname);
-
 std::string pwd();
 
 void mkdir(tstring const& name, bool create_parents = true);
 
-void rm(tstring const& name);
-void rmdir(tstring const& name);
+void copy(tstring const& src, tstring const& dest);
+void mv(tstring const& src, tstring const& dest);
 
 void recursive_copy(tstring const& src, tstring const& dest);
+
+void rm(tstring const& name);
+void rmdir(tstring const& name);
 void recursive_rm(tstring const& src);
 
 struct walker 
@@ -57,10 +74,9 @@ struct walker
 /** Walk through filesystem hierarchy.
 
 */
-void walk(const char* start, walker& w);
-
-inline 
-void walk(std::string const& start, walker& w) { walk(start.c_str(), w); }
+void walk(tstring const& start, walker& w);
 
 } }
+
+#endif
 

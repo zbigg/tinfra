@@ -15,17 +15,12 @@ namespace tinfra {
 namespace path {
     
 std::string join(tstring const& a, tstring const& b);
-    
-bool exists(tstring const& name);
-
-bool is_file(tstring const& name);
-bool is_dir(tstring const& name);
 
 std::string basename(tstring const& name);
 
 std::string dirname(tstring const& name);
 
-std::string tmppath();
+std::string tmppath(const char* prefix = 0, const char* tmpdir = 0);
 
 } } // end namespace tinfra::path
 

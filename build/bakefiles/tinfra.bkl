@@ -47,8 +47,11 @@
             tinfra/os_common.cpp
             tinfra/trace.cpp
             tinfra/lazy_protocol.cpp
-            $(TINFRA_PLATFORM_SOURCES)
+            tinfra/vfs.cpp
+            tinfra/sftp/sftp_protocol.cpp
+            tinfra/sftp/sftp_vfs.cpp
             
+            $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
     </lib>
@@ -102,6 +105,7 @@
             tinfra/platform.h
             tinfra/runtime.h
             tinfra/trace.h
+            tinfra/vfs.h
             tinfra/generator.h
             tinfra/interruptible.h
             tinfra/lazy_protocol.h
@@ -109,6 +113,7 @@
             tinfra/win32/thread.h
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
+            tinfra/sftp/sftp_protocol.h
         </files>
     </data-files-tree>
     
