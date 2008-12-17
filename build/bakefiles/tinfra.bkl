@@ -46,6 +46,7 @@
             tinfra/runner.cpp
             tinfra/os_common.cpp
             tinfra/trace.cpp
+            tinfra/lazy_protocol.cpp
             $(TINFRA_PLATFORM_SOURCES)
             
         </sources>
@@ -101,6 +102,9 @@
             tinfra/platform.h
             tinfra/runtime.h
             tinfra/trace.h
+            tinfra/generator.h
+            tinfra/interruptible.h
+            tinfra/lazy_protocol.h
             tinfra/posix/thread.h
             tinfra/win32/thread.h
             tinfra/primitive_wrapper.h
