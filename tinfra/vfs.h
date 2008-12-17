@@ -83,6 +83,7 @@ void copy(tinfra::vfs& sfs, tstring const& source,
           tinfra::vfs& dfs, tstring const& dest);
 
 
+void list_files(tinfra::vfs& fs, tstring const& path, tinfra::fs::file_name_list& result);
 
 /// Recursive copy file or folder
 ///
@@ -102,7 +103,7 @@ void default_recursive_copy(tinfra::vfs& sfs, tstring const& src,
 /// Works only for regular files.
 /// Uses only FS primitives: is_file and open_file.
 void default_copy(tinfra::vfs& sfs, tstring const& src,
-                  tinfra::vfs& dfs, tstring const& dest)
+                  tinfra::vfs& dfs, tstring const& dest);
 
 /// recursively remove file/folder
 ///
@@ -115,3 +116,6 @@ void default_recursive_rm(tinfra::vfs& fs, tstring const& name);
 } // end namespace tinfra
 
 #endif
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+

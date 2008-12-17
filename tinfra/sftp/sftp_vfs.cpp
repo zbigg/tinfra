@@ -262,11 +262,11 @@ class sftp_vfs: public tinfra::generic_vfs {
         
         operator std::string const&() const { return _handle; }
         
-        void open_file(std::string const& name, int flags)
+        void open_file(tstring const& name, int flags)
         {
             open_packet request;
             request.request_id = _fs.get_next_request_id();
-            request.filename = name;
+            request.filename = name.str();
             request.flags = flags;
             
             send(_fs.to_server, request);
@@ -278,11 +278,11 @@ class sftp_vfs: public tinfra::generic_vfs {
             _opened = true;
         }
         
-        void open_dir(std::string const& path)
+        void open_dir(tstring const& path)
         {
             open_dir_packet request;
             request.request_id = _fs.get_next_request_id();
-            request.path = path;
+            request.path = path.str();
             
             send(_fs.to_server, request);
             
@@ -416,7 +416,7 @@ public:
         return result;
     }
     
-    virtual void list_files(const char* path, tinfra::fs::file_list_visitor& visitor)
+    virtual void list_files(tstring const& path, tinfra::fs::file_list_visitor& visitor)
     {
         remote_handle handle(*this);
         
@@ -441,11 +441,11 @@ public:
         }
     }
     
-    virtual tinfra::fs::file_info stat(const char* path)
+    virtual tinfra::fs::file_info stat(tstring const& path)
     {
         stat_packet request;
         request.request_id = get_next_request_id();
-        request.path = path;
+        request.path = path.str();
         
         send(to_server, request);
         
@@ -461,7 +461,7 @@ public:
         return result;
     }
     
-    virtual tinfra::io::stream* open(const char* path, tinfra::io::openmode mode)
+    virtual tinfra::io::stream* open(tstring const& path, tinfra::io::openmode mode)
     {
         std::auto_ptr<remote_file> result(new remote_file(*this));
         
@@ -487,11 +487,11 @@ public:
         return result;
     }
     
-    virtual void rm(const char* name)
+    virtual void rm(tstring const& name)
     {
         remove_packet request;
         request.request_id = get_next_request_id();
-        request.filename = name;
+        request.filename = name.str();
         
         send(to_server, request);
         
@@ -501,11 +501,11 @@ public:
         check_status(response);
     }
 
-    virtual void rmdir(const char* name)
+    virtual void rmdir(tstring const& name)
     {
         rmdir_packet request;
         request.request_id = get_next_request_id();
-        request.path = name;
+        request.path = name.str();
         
         send(to_server, request);
         
@@ -515,11 +515,11 @@ public:
         check_status(response);
     }
     
-    virtual void mkdir(const char* name)
+    virtual void mkdir(tstring const& name)
     {
         mkdir_packet request;
         request.request_id = get_next_request_id();
-        request.path = name;
+        request.path = name.str();
         
         send(to_server, request);
         
@@ -531,12 +531,12 @@ public:
         
     
 
-    virtual void mv(const char* src, const char* dst)
+    virtual void mv(tstring const& src, tstring const& dst)
     {
         rename_packet request;
         request.request_id = get_next_request_id();
-        request.oldpath = src;
-        request.newpath = dst;
+        request.oldpath = src.str();
+        request.newpath = dst.str();
         
         send(to_server, request);
         

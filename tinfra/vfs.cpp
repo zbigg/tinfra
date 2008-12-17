@@ -156,31 +156,31 @@ tinfra::vfs& local_fs()
 
 // generic folder algroithms
 
-void ensure_dir_exists(tinfra::vfs& fs, tstring const& name);
+void ensure_dir_exists(tinfra::vfs& fs, tstring const& name)
 {
-    if( fs.is_dir(name) {
+    if( fs.is_dir(name) ) {
          return;
     }
     
-    std::string parent = path::dirname(name);    
+    std::string parent = path::dirname(name);
     if( ! fs.is_dir(parent) ) {
         ensure_dir_exists(fs, parent);        
     }
     fs.mkdir(name);
 }
 
-void recursive_copy(tinfra::vfs& sfs, tstring const& src,
-                    tinfra::vfs& dfs, tstring const& dest)
+void recursive_copy(vfs& sfs, tstring const& src,
+                    vfs& dfs, tstring const& dest)
 {
     if( &sfs == &dfs ) {
         sfs.recursive_copy(src, dest);
         return;
     } 
-    recursive_copy_impl(sfs, src, dfs, dest);
+    default_recursive_copy(sfs, src, dfs, dest);
 }
 
-void copy(tinfra::vfs& sfs, tstring const& src,
-          tinfra::vfs& dfs, tstring const& dest)
+void copy(vfs& sfs, tstring const& src,
+          vfs& dfs, tstring const& dest)
 {
     if( &sfs == &dfs ) {
         sfs.copy(src, dest);
@@ -189,8 +189,14 @@ void copy(tinfra::vfs& sfs, tstring const& src,
     default_copy(sfs, src, dfs, dest);
 }
 
-void default_recursive_copy(tinfra::vfs& sfs, tstring const& src,
-                            tinfra::vfs& dfs, tstring const& dest)
+void list_files(tinfra::vfs& fs, tstring const& path, tinfra::fs::file_name_list& result)
+{
+    vector_sink_file_visitor2 visitor(result);
+    fs.list_files(path, visitor);
+}
+
+void default_recursive_copy(vfs& sfs, tstring const& src,
+                            vfs& dfs, tstring const& dest)
 {
     if( dfs.is_dir(dest ) ) {
         std::string new_dest = path::join(dest, path::basename(src));
@@ -198,7 +204,7 @@ void default_recursive_copy(tinfra::vfs& sfs, tstring const& src,
     } else if( sfs.is_dir(src) ) {
         dfs.mkdir(dest);
         std::vector<std::string> files;
-        src.list_files(src, files);
+        list_files(sfs, src, files);
         for( std::vector<std::string>::const_iterator i = files.begin(); i!=files.end(); ++i )
         {
             std::string const& entry_name = *i;
@@ -211,8 +217,8 @@ void default_recursive_copy(tinfra::vfs& sfs, tstring const& src,
     }
 }
 
-void default_copy(tinfra::vfs& sfs, tstring const& src,
-                  tinfra::vfs& dfs, tstring const& dest)
+void default_copy(vfs& sfs, tstring const& src,
+                  vfs& dfs, tstring const& dest)
 {
     if( sfs.is_dir(src) ) 
         throw std::invalid_argument("tinfra::default_copy supports only regular files");
@@ -225,8 +231,8 @@ void default_copy(tinfra::vfs& sfs, tstring const& src,
 
     typedef std::auto_ptr<tinfra::io::stream> stream_ptr;
     
-    stream_ptr in(sfs.open_file(src, std::ios::in | std::ios::binary));
-    stream_ptr out(dfs.open_file(dest, std::ios::out | std::ios::trunc | std::ios::binary));
+    stream_ptr in(sfs.open(src, std::ios::in | std::ios::binary));
+    stream_ptr out(dfs.open(dest, std::ios::out | std::ios::trunc | std::ios::binary));
     
     tinfra::io::copy(in.get(), out.get());
     
@@ -239,7 +245,7 @@ void default_recursive_rm(tinfra::vfs& fs, tstring const& name)
 {
     if( fs.is_dir(name) ) {
         std::vector<std::string> files;
-        fs.list_files(name, files);
+        list_files(fs, name, files);
         
         for( std::vector<std::string>::const_iterator i = files.begin(); i!=files.end(); ++i ) 
         {
