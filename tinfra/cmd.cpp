@@ -95,6 +95,12 @@ void app::warning(std::string const& msg)
     warning_count_ += 1;
 }
 
+void app::silent_exception(std::string const& msg)
+{
+    print_maybe_multiline(program_name() + ": warning, ignored exception: ", msg,cerr);
+    warning_count_ += 1;
+}
+
 void app::error(std::string const& msg)
 {
     print_maybe_multiline(program_name() + ": error: ", msg,cerr);
