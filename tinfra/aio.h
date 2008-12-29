@@ -38,9 +38,16 @@ public:
     /// TODO: describe/remove/specify what @param error means
     /// Memory:
     /// dispatcher removes stream after this ntification.
-    ///
-    /// Stream lifecycle becomes user responsiblity.
     virtual void failure(dispatcher& d, stream* c, int error) = 0;
+    
+    /// Removed from dispatching
+    ///
+    /// Stream is removed from dispatcher. Reasons:
+    ///   - called dispatcher::remove(s)    
+    /// Stream lifecycle becomes user responsiblity.
+    ///
+    /// Default empty implementation.
+    virtual void removed(dispatcher&, stream*) {}
     
     virtual ~listener() {}
 };

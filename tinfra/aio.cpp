@@ -42,7 +42,7 @@ struct ChannelEntry {
     stream*   channel;
         
     int       flags;
-    Listener* listener;
+    listener* the_listener;
     
     bool      removed;
 };
@@ -53,7 +53,7 @@ class ChannelContainer {
 public:
     void    remove(stream* c);
     
-    void    add(stream* c, Listener*l, int flags);
+    void    add(stream* c, listener*l, int flags);
     
     ChannelEntry* get(stream* c);
 
@@ -70,7 +70,7 @@ void ChannelContainer::remove(stream* c)
         e->removed = true;
 }
 
-void ChannelContainer::add(stream* c, Listener*l, int flags) 
+void ChannelContainer::add(stream* c, listener*l, int flags) 
 {
     ChannelEntry d = { c, flags, l, false };
     entries.push_back(d);
@@ -101,7 +101,7 @@ void ChannelContainer::cleanup() {
 
 #include <poll.h>
 
-class PollDispatcher: public tinfra::aio::Dispatcher {
+class PollDispatcher: public tinfra::aio::dispatcher {
 public:
     
     int timeout;
@@ -140,23 +140,23 @@ public:
             
             
             if( (pfd->revents & POLLERR) == POLLERR ) {
-                ce.listener->failure(*this, ce.channel, 1);
+                ce.the_listener->failure(*this, ce.channel, 1);
                 close(&ce);
                 continue;
             }
             
             if( (pfd->revents & POLLHUP) == POLLHUP ) {
-                ce.listener->failure(*this, ce.channel, 0);
+                ce.the_listener->failure(*this, ce.channel, 0);
                 close(&ce);
                 continue;
             }
             
             try {
                 if( (pfd->revents & POLLIN  ) == POLLIN ) {
-                    ce.listener->event(*this, ce.channel, READ);
+                    ce.the_listener->event(*this, ce.channel, READ);
                 }
                 if( (pfd->revents & POLLOUT ) == POLLOUT) {
-                    ce.listener->event(*this, ce.channel, WRITE);
+                    ce.the_listener->event(*this, ce.channel, WRITE);
                 }
             } catch( std::exception& e) {
                 close(&ce);
@@ -170,7 +170,7 @@ public:
     }
     
     
-    virtual void add(stream* channel, Listener* listener, int initial_flags)
+    virtual void add(stream* channel, listener* listener, int initial_flags)
     {
         channels.add(channel, listener, initial_flags);
     }
@@ -200,7 +200,7 @@ private:
     {
         if( cd->removed )
             return;
-        cd->channel->close();
+        cd->the_listener->removed(*this, cd->channel);
         cd->removed = true;
     }
     
@@ -215,9 +215,9 @@ private:
             result[k].fd = ce.channel->native();
             int flags =  ce.flags;
             int events = 0;            
-            if( (flags & Dispatcher::READ) == Dispatcher::READ )
+            if( (flags & dispatcher::READ) == dispatcher::READ )
                 events |= POLLIN;
-            if( (flags & Dispatcher::WRITE) == Dispatcher::WRITE )
+            if( (flags & dispatcher::WRITE) == dispatcher::WRITE )
                 events |= POLLOUT;
             result[k].events = events;
             result[k].revents = 0;
@@ -226,15 +226,15 @@ private:
 };
 
 
-std::auto_ptr<Dispatcher> Dispatcher::create()
+std::auto_ptr<dispatcher> dispatcher::create()
 {
-    return std::auto_ptr<Dispatcher>(new PollDispatcher());
+    return std::auto_ptr<dispatcher>(new PollDispatcher());
 }
 
 //deprecated
-std::auto_ptr<Dispatcher> create_network_dispatcher()
+std::auto_ptr<dispatcher> create_network_dispatcher()
 {
-    return Dispatcher::create();
+    return dispatcher::create();
 }
 
 } } // end namespace tinfra::aio
