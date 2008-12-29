@@ -6,15 +6,11 @@ CXXFLAGS=-O0 -g -Wall -I..
 LDLIBS=-g -L$(HOME)/lib -ltinfra -lpthread -lpcre
 CC=g++
 
-PROGS=reactor autosh
+PROGS=https
 
 all: $(PROGS)
 
-reactor: reactor.o protocols.o aio.o
-
-autosh: autosh.o protocols.o aio.o
-
-marking_allocator: marking_allocator.cpp
+https: reactor.o protocols.o aio.o
 
 clean:
 	rm -rf *.o $(PROGS)

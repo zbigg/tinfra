@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra__lazy_protocol_h__
-#define __tinfra__lazy_protocol_h__
+#ifndef __tinfra_lazy_byte_consumer_h__
+#define __tinfra_lazy_byte_consumer_h__
 
 #include <stdexcept>
 #include <string>
@@ -18,7 +18,7 @@
 
 namespace tinfra {
 
-class lazy_protocol: public interruptible<int, tstring> {
+class lazy_byte_consumer: public interruptible<int, tstring> {
 protected:    
     void wait_for_bytes(size_t count, step_method method);
     
@@ -35,5 +35,5 @@ private:
 
 } // end namespace tinfra
 
-#endif // __tinfra__lazy_protocol_h__
+#endif // __tinfra__lazy_byte_consumer_h__
 

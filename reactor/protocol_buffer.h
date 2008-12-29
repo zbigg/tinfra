@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_protocols_h__
-#define __tinfra_protocols_h__
+#ifndef __tinfra_protocol_buffer_h__
+#define __tinfra_protocol_buffer_h__
 
 #include <stdexcept>
 #include <string>
@@ -18,10 +18,8 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/io/socket.h"
 
-//#include "aio.h"
-#include "tinfra/aio.h"
 
-// TODO: ProtocolHandler should renamed to protocol_handler
+#include "tinfra/aio.h"
 
 class ProtocolHandler {
 public:
@@ -51,10 +49,10 @@ public:
 
 // TODO: ProtocolListener should renamed to protocol_aio_adaptor
 
-class ProtocolListener: public tinfra::aio::Listener {
+class lazy_protocol_listener: public tinfra::aio::Listener {
 public:
-    ProtocolListener(tinfra::io::stream* io, ProtocolHandler* handler);
-    ProtocolListener(tinfra::io::stream* in, tinfra::io::stream* out, ProtocolHandler* handler);
+    lazy_protocol_listener(tinfra::io::stream* io, ProtocolHandler* handler);
+    lazy_protocol_listener(tinfra::io::stream* in, tinfra::io::stream* out, ProtocolHandler* handler);
     
     virtual ~ProtocolListener();
     

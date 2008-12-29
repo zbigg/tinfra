@@ -22,7 +22,6 @@
 #include "protocols.h"
 
 using tinfra::aio::Dispatcher;
-using tinfra::aio::Channel;
 //
 // ProtocolListener
 //
@@ -65,11 +64,11 @@ void ProtocolListener::close() {
     }
 }
 
-void ProtocolListener::failure(Dispatcher& dispatcher, Channel channel, int error) { 
+void ProtocolListener::failure(Dispatcher& dispatcher, tinfra::io::stream* channel, int error) { 
     // delete this;
 }
 
-void ProtocolListener::event(Dispatcher& dispatcher, Channel channel, int event) {
+void ProtocolListener::event(Dispatcher& dispatcher, tinfra::io::stream* channel, int event) {
     this->channel = channel;
     if( event == Dispatcher::READ) 
         data_available(dispatcher);
