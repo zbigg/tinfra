@@ -2,9 +2,14 @@
 #include "tinfra/symbol.h"
 
 #include "tinfra/io/stream.h"
+#include "tinfra/io/socket.h"
+#include "tinfra/string.h"
+#include "tinfra/fmt.h"
 
 #include <sstream>
+#include <iomanip>
 #include <stdexcept>
+#include <iostream>
 
 // TODO: move to specific utility module
 class field_printer {
@@ -51,7 +56,7 @@ std::string struct_to_string(T const& v)
 std::string hexify(const char* buf, size_t length)
 {
     std::ostringstream r;
-    for(int i = 0; i < length; ++i ) {
+    for(size_t i = 0; i < length; ++i ) {
         if( i > 0 )
             r << " ";
         r << std::setw(2) << std::setfill('0') << std::hex << (int)(unsigned char)(buf[i]);
@@ -79,7 +84,7 @@ void read_for_sure(stream* s, char* buffer, size_t size)
     }
 }
 
-void read_until(stream* s, std::string& result, std::string const& delim)
+void read_until(stream* s, std::string& result, std::string const& delim, size_t max_length=32768)
 {
 	while( true ) {
 		char c;
@@ -88,7 +93,14 @@ void read_until(stream* s, std::string& result, std::string const& delim)
 			throw std::runtime_error("EOF");
 		}
 		result.append(1, c);
-		if( result.length() > 0 ) 
+		if( result.length() >= delim.size() ) {
+			if( result.find(delim) == result.size()-delim.size() ) {
+				return;
+			}
+		}
+		if( result.length() >= max_length ) {
+			throw std::runtime_error("too long input line");
+		}
 	}
 }
 
@@ -102,33 +114,50 @@ namespace ssh {
 
 namespace ssh {
 
-void perform_invitation(stream* stream)
+enum protocol_version {
+	V199,
+	V200
+};
+
+struct protocol_state {
+	protocol_version version;
+};
+
+void perform_invitation(stream* stream, protocol_state& ps)
 {
-	const std::string line_delimiter = "\r\n";
-	const std::string expected_begining = "SSH-2.0-";
+	const std::string line_delimiter = "\n";
+	const std::string expected_begining = "SSH-";	
 	while( true ) {
-		std::string line;
-		read_until(stream, line, line_delimiter);
-		if( line.size() >= expected_begining &&
+		std::string line;		
+		utils::read_until(stream, line, line_delimiter);
+		tinfra::strip_inplace(line);
+		if( line.size() >= expected_begining.size() &&
 		    line.find(expected_begining) == 0) 
 		{
-			INFORM("version string", line);
+			INFORM("version string", line);			
+			if( line.compare(expected_begining.length(), 4, "1.99") == 0 ) {
+				ps.version = V199;
+			} else if( line.compare(expected_begining.length(), 3, "2.0") == 0 ) {
+				ps.version = V200;
+			} else {
+				throw std::runtime_error(tinfra::fmt("unsupported protocol version '%s'") % line);
+			}
 			break;
 		} else {
 			INFORM("user info", line);
 		}
-	    
 	}
 }
 
 }
 
+#include "tinfra/cmd.h"
 
 int ssh_main(int argc, char** argv)
 {
-	auto_ptr<stream> connection = tinfra::io::socket::open_client_socket("localhost",22);
-	
-	ssh::pefrorm_invitation()
+	auto_ptr<stream> connection( tinfra::io::socket::open_client_socket(argv[1],22) );
+	ssh::protocol_state ps;
+	ssh::perform_invitation(connection.get(), ps);
 	return 0;
 }
 TINFRA_MAIN(ssh_main);
