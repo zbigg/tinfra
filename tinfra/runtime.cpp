@@ -108,8 +108,12 @@ void interrupt_exit(const char* message)
 }
 
 interrupted_exception::interrupted_exception()
-    : std::runtime_error("interrupted")
 {}
+
+const char* interrupted_exception::what() const throw()
+{
+	return "interrupted";
+}
 
 // TODO:    interrupt should be thread local somehow
          // ???

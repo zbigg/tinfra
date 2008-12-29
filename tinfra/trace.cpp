@@ -17,9 +17,13 @@
 
 namespace tinfra { 
 namespace trace {
-    
-auto_register_tracer __tinfra_global_tracer("global");
-tracer& __tinfra_tracer_adaptable = __tinfra_global_tracer;
+    auto_register_tracer __tinfra_global_tracer("global");
+}}
+
+tinfra::trace::tracer& __tinfra_tracer_adaptable = tinfra::trace::__tinfra_global_tracer;
+
+namespace tinfra { 
+namespace trace {
 
 //
 // tracer implementation

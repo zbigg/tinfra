@@ -102,9 +102,11 @@ enum interrupt_policy {
 /// Default interrupt policy is IMMEDIATE_ABORT
 void set_interrupt_policy(interrupt_policy p);
 
-class interrupted_exception: public std::runtime_error {
+class interrupted_exception: public std::exception {
 public:
     interrupted_exception();
+    
+    const char* what() const throw ();
 };
 
 }
