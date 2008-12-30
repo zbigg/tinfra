@@ -32,7 +32,7 @@ public:
 	
 	/** EOF occurred.
 	
-	Framework informs that channel has reached EOF when reading.
+	    Framework informs that channel has reached EOF when reading.
 	*/
 	virtual void  eof(tinfra::io::stream*) = 0;
 };
