@@ -17,9 +17,13 @@
 #include "tinfra/aio.h"
 #include "tinfra/aio_net.h"
 #include "tinfra/connection_handler.h"
+
 #include "tinfra/trace.h"
 
+#include "protocol_aio_adapter.h"
+
 std::string fake_response;
+
 static void build_fake_response()
 {
     std::string fake_str = "abcdefgh\r\n";
@@ -60,7 +64,6 @@ public:
 	
 	virtual void event(dispatcher& d, stream* c, int event)
 	{
-		
 		if( event == dispatcher::READ ) {
 			//TINFRA_TRACE_MSG("http_request_connection_handler: READ event");
 			char x;
