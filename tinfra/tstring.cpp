@@ -219,16 +219,20 @@ const char* string_pool::create(tstring const& src)
     return result;
 }
 
+void string_pool::clear()
+{
+    for( size_t i = 0; i < strings.size(); ++i ) {
+        std::free(strings[i]);
+        strings[i] = 0;
+    }  
+}
 string_pool::string_pool(size_t initial_size)
 {
 }
 
 string_pool::~string_pool()
 {
-    for( size_t i = 0; i < strings.size(); ++i ) {
-        std::free(strings[i]);
-        strings[i] = 0;
-    }  
+    clear();
 }
 
 } // end namespace tinfra

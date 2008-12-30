@@ -239,6 +239,8 @@ public:
 	const char* create(tstring const& s);
 	string_pool(size_t initial_size = 128);
 	~string_pool();
+        
+        void clear();
 };
 
 } // end of namespace tinfra
