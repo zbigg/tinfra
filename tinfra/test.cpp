@@ -10,7 +10,22 @@
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
+
 #include <iostream>
+
+#include <unittest++/UnitTest++.h>
+#include <unittest++/TestReporter.h>
+#include <unittest++/TestDetails.h>
+#include <unittest++/TestResults.h>
+#include <unittest++/TestReporter.h>
+
+#include <stdio.h> // screw cxxx headers because they are incompatible
+#include <stdarg.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace tinfra {
 namespace test {
 
@@ -76,5 +91,88 @@ void user_wait(const char* prompt)
     std::string s;
     std::getline(cin, s);
 }
+
+static void out(const char* message, ...)
+{
+    va_list ap;
+    va_start(ap, message);
+#ifdef _WIN32
+    char buf[2048];
+    vsprintf(buf,message, ap);
+    printf("%s",buf);
+    OutputDebugString(buf);
+#else
+    vprintf(message, ap);
+#endif
+    va_end(ap);
+}
+
+class TinfraTestReporter: public UnitTest::TestReporter {
+public:    
+    void ReportFailure(UnitTest::TestDetails const& details, char const* failure)
+    {
+
+#ifdef _MSC_VER 
+        char const* const errorFormat = "%s(%d): error: FAILURE in %s: %s\n";        
+#else   // only MSC has weird message format, rest use name:line: message (AFAIK)
+        char const* const errorFormat = "%s:%d: error: FAILURE in %s: %s\n";
+#endif
+        out(errorFormat, details.filename, details.lineNumber, details.testName, failure);
+    }
+
+    void ReportTestStart(UnitTest::TestDetails const& test)
+    {
+        if( strcmp("DefaultSuite",test.suiteName) != 0 ) {
+            out("TEST %s::%s\n", test.suiteName, test.testName);
+        } else {
+            out("TEST %s\n", test.testName);
+        }
+    }
+
+    void ReportTestFinish(UnitTest::TestDetails const& /*test*/, float)
+    {
+    }
+
+    void ReportSummary(int totalTestCount, int failedTestCount,
+                       int failureCount, float secondsElapsed)
+    {
+        if (failureCount > 0)
+            out("FAILURE: %d out of %d tests failed (%d failures).\n", failedTestCount, totalTestCount, failureCount);
+        else
+            out("Success: %d tests passed.\n", totalTestCount);
+        out("Test time: %.2f seconds.\n", secondsElapsed);
+    }
+};
+
+typedef std::vector<std::string> test_name_list;
+
+class test_name_matcher {
+    test_name_list& names_;
+public:
+    test_name_matcher(test_name_list& n): names_(n) {}
+    
+    bool operator()(const UnitTest::Test* const test) const
+    {
+        std::string test_name = test->m_details.testName;
+        return find(names_.begin(), names_.end(), test_name) != names_.end();
+    }
+};
+
+int test_main(int argc, char** argv)
+{
+    TinfraTestReporter reporter;
+    UnitTest::TestRunner runner(reporter);
+    if( argc > 1 ) {
+        test_name_list test_names(argv+1, argv+argc);
+        test_name_matcher predicate(test_names);
+        
+        return runner.RunTestsIf(UnitTest::Test::GetTestList(), 0, predicate, 0);
+    } else {
+        return runner.RunTestsIf(UnitTest::Test::GetTestList(), 0, UnitTest::True(), 0);
+    }
+}
+
 } } // end namespace tinfra::test
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
 

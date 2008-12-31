@@ -47,6 +47,7 @@
             tinfra/os_common.cpp
             tinfra/trace.cpp
             tinfra/lazy_protocol.cpp
+	    tinfra/test.cpp
             $(TINFRA_PLATFORM_SOURCES)
             
         </sources>
@@ -101,6 +102,7 @@
             tinfra/xml.h
             tinfra/platform.h
             tinfra/runtime.h
+	    tinfra/test.h
             tinfra/trace.h
             tinfra/generator.h
             tinfra/interruptible.h
@@ -137,7 +139,7 @@
             tinfra/test_exeinfo.cpp            
             tinfra/test_thread.cpp
             tinfra/test_queue.cpp
-            tinfra/test.cpp
+            
             tinfra/test_main.cpp
             tinfra/test_subprocess.cpp
             tinfra/test_regexp.cpp
