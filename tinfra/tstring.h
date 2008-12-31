@@ -146,6 +146,7 @@ public:
     typedef char_type const*  iterator;
     typedef char_type const*  const_iterator;
 
+    tstring substr(size_type pos, size_type n = npos) const;
     
     int cmp (tstring const& other) const {
         size_t common_length = std::min(size(), other.size());

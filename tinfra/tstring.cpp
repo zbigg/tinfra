@@ -92,6 +92,17 @@ namespace tinfra {
 
 const tstring::size_type tstring::npos;
 
+tstring tstring::substr(size_type pos, size_type n) const
+{
+    assert(pos <= size());
+    const size_t len = std::min(size()-pos, n);
+    const size_t last_character_pos = pos+len;
+    bool sub_is_null_terminated = 
+           ( last_character_pos == size() && this->is_null_terminated())
+        || ( last_character_pos <  size() && data()[last_character_pos] == '\0' );
+    return tstring(data() + pos, len, sub_is_null_terminated);
+}
+
 // find first of
 tstring::size_type 
 tstring::find_first_of(char_type const* s, size_type pos, size_type n) const

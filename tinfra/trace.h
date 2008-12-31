@@ -110,6 +110,8 @@ bool enable_tracer_by_name(tstring const& name);
 
 } } // end of namespace tinfra::trace
 
+#include <sstream>
+
 extern tinfra::trace::tracer&              __tinfra_tracer_adaptable;
 extern tinfra::trace::auto_register_tracer __tinfra_global_tracer;
 
