@@ -16,6 +16,8 @@ symbol::Name2IdMap*      symbol::symbolMapString;
 symbol::NamesContainer*  symbol::symbolNames;
 int                      symbol::nextFreeSymbolId;
 
+const int symbol::null;
+
 void symbol::initRegistry()
 {
 	static bool initialized = false;

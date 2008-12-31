@@ -90,6 +90,8 @@ namespace tinfra {
     }
 #endif
 
+const tstring::size_type tstring::npos;
+
 // find first of
 tstring::size_type 
 tstring::find_first_of(char_type const* s, size_type pos, size_type n) const
