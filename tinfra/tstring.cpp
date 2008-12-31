@@ -214,7 +214,7 @@ const char* string_pool::create(tstring const& src)
     strings.push_back(0);
     size_t len = src.size();
     char* result = reinterpret_cast<char*>( std::malloc(len+1) );
-    strings[len-1] = result;
+    strings[strings.size()-1] = result;
     
     std::memcpy(result, src.data(), len);
     result[len] = 0;
@@ -226,7 +226,8 @@ void string_pool::clear()
     for( size_t i = 0; i < strings.size(); ++i ) {
         std::free(strings[i]);
         strings[i] = 0;
-    }  
+    }
+    strings.clear();
 }
 string_pool::string_pool(size_t initial_size)
 {
