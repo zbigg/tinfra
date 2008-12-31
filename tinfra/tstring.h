@@ -237,6 +237,11 @@ class string_pool {
 	std::vector<char*> strings;
 public:
 	const char* create(tstring const& s);
+        tstring     alloc(tstring const& in) {
+            const char* s = create(in);
+            return tstring(s, in.size(), true);
+        }
+
 	string_pool(size_t initial_size = 128);
 	~string_pool();
         
