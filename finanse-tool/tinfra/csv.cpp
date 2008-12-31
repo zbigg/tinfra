@@ -1,8 +1,18 @@
+//
+// Copyright (C) 2008 Zbigniew Zagorski <z.zagorski@gmail.com>,
+// licensed to the public under the terms of the GNU GPL (>= 2)
+// see the file COPYING for details
+// I.e., do what you like, but keep copyright and there's NO WARRANTY.
+//
+
 #include "csv.h"
 
 #include "tinfra/string.h"
+#include "tinfra/trace.h"
 
 namespace tinfra {
+
+//TINFRA_MODULE_TRACER(tinfra_csv);
 
 raw_csv_reader::raw_csv_reader(std::istream& source, char sep)
     : byte_source_(source), separator_(sep)
@@ -11,6 +21,8 @@ raw_csv_reader::raw_csv_reader(std::istream& source, char sep)
 
 bool raw_csv_reader::fetch_next(csv_raw_entry& result)
 {
+    //TINFRA_USE_TRACER(tinfra_csv);
+    
     std::string current_line_;
     getline(byte_source_, current_line_);
     strip_inplace(current_line_);
@@ -32,7 +44,11 @@ bool raw_csv_reader::fetch_next(csv_raw_entry& result)
     memory_pool_.clear();
     
     std::string tmp;
-    while( current_pos <= current_line_.size() ) {
+    //TINFRA_TRACE_VAR(current_line_);
+    //TINFRA_TRACE_VAR(current_line_.size());
+    while( current_pos < current_line_.size() ) {
+        //TINFRA_TRACE_VAR(current_pos);
+        //TINFRA_TRACE_VAR(in_quotes);
         bool consume = false;
         if( ! in_quotes ) {
             pos_type entry_delim_pos = current_line_.find_first_of(DELIMITERS, current_pos, 2);
@@ -51,7 +67,8 @@ bool raw_csv_reader::fetch_next(csv_raw_entry& result)
             if( consume ) {
                 const size_t len = entry_delim_pos - current_pos;
                 const tstring entry = memory_pool_.alloc( tstring(current_line_.data() + current_pos, len));
-                result.push_back(entry);
+                //TINFRA_TRACE_VAR(entry);
+                result.push_back(entry );
                 current_pos = entry_delim_pos+1;
             }      
         } else { // we're in quotes
@@ -74,10 +91,14 @@ bool raw_csv_reader::fetch_next(csv_raw_entry& result)
                 } else {
                     const size_t len = quote_pos - current_pos;
                     tmp.append(current_line_.data() + current_pos, len);
-                    
-                    result.push_back(memory_pool_.alloc(tstring(tmp)) );
-                    current_pos = quote_pos+1;
+                    //TINFRA_TRACE_VAR(tmp);
+                    result.push_back(memory_pool_.alloc(tmp) );                    
                     in_quotes = false;
+                    tmp.clear();
+                    
+                    current_pos = quote_pos+1;
+                    if( current_line_[current_pos] == SEPARATOR_CHAR)
+                        current_pos++;
                     continue;
                 }
             }
@@ -117,6 +138,11 @@ SUITE(tinfra_csv) {
         return result;
     }
     
+    TEST(csv_empty) {
+        std::istringstream s("");
+        raw_csv_reader rrr(s);
+        CHECK(! rrr.has_next());
+    }
     TEST(csv_one1) {
         entry_type t = one_line_parse("a");
         CHECK_EQUAL( 1, t.size());
@@ -139,6 +165,20 @@ SUITE(tinfra_csv) {
         CHECK_EQUAL( "geh", t[2]);
         CHECK_EQUAL( "a",   t[3]);
     }
+    
+    TEST(csv_dbl_quotes) {
+        entry_type t = one_line_parse("\"\"\"\"");
+        CHECK_EQUAL( 1, t.size());
+        CHECK_EQUAL( "\"",    t[0]);
+    }
+    /*
+    TEST(csv_multiline) {
+        entry_type t = one_line_parse("\"abc\r\ndef\",xyz");
+        CHECK_EQUAL( 2, t.size());
+        CHECK_EQUAL( "abc\r\ndef",    t[0]);
+        CHECK_EQUAL( "xyz",    t[1]);
+    }
+    */
 }
 #endif
 
