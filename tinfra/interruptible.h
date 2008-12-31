@@ -24,7 +24,7 @@ public:
     {
     }
     
-    bool process(T const& input)
+    R process(T const& input)
     {
         if( finished_ ) {
             throw std::logic_error("already finished");

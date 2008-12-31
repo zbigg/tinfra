@@ -12,100 +12,135 @@
 
 namespace tinfra {
 
-//TINFRA_MODULE_TRACER(tinfra_csv);
+namespace {    
+const tstring LINE_DELIMITER = "\n";
+}
 
-raw_csv_reader::raw_csv_reader(std::istream& source, char sep)
-    : byte_source_(source), separator_(sep)
+TINFRA_MODULE_TRACER(tinfra_csv);
+TINFRA_USE_TRACER(tinfra_csv);
+
+csv_parser::csv_parser(char separator):
+    in_quotes(false),
+    SEPARATOR_CHAR(separator),
+    builder_(memory_pool_),
+    has_result_(false)
+{
+    wait_for_delimiter(LINE_DELIMITER, make_step_method(&csv_parser::have_full_line));
+}
+//
+// IO adaptor callbacks (parser interface)
+//
+int   csv_parser::process_input(tinfra::tstring const& input)
+{
+    
+    TINFRA_TRACE_MSG("bytes");
+    return process(input);
+}
+
+void  csv_parser::eof(tinfra::tstring const& unparsed_input)
+{
+    TINFRA_TRACE_MSG("eof");
+    process_line(unparsed_input);
+}
+
+bool  csv_parser::get_result(csv_raw_entry& r) 
+{
+    if( has_result_ ) {
+        r = entry_;
+        has_result_ = false;
+        return true;
+    }
+    return false;
+}
+
+//
+// implementation details
+//
+int csv_parser::have_full_line(tstring const& input)
+{
+    tstring::size_type eol = input.find_first_of(LINE_DELIMITER);
+    assert(eol != tstring::npos); 
+    tstring line = tstring(input.data(), eol+1);
+    process_line(line);
+    wait_for_delimiter(LINE_DELIMITER, make_step_method(&csv_parser::have_full_line));
+    return line.size();
+}
+
+void csv_parser::process_line(tstring const& line)
+{
+    typedef tstring::size_type pos_type;
+    const pos_type NPOS = tstring::npos;
+    const char QUOTE_CHAR = '"';
+    pos_type current_pos = 0;   
+    TINFRA_TRACE_VAR(line);
+    while( current_pos < line.size() ) {
+        if( in_quotes ) {
+            const pos_type quote_pos = line.find_first_of(QUOTE_CHAR, current_pos);
+            // no ending " until EOL
+            if( quote_pos == NPOS ) {
+                tstring ss = line.substr(current_pos);
+                builder_.append(ss);
+                return;
+            }
+            // the "" in quotes case
+            if( quote_pos < line.size()-1 && line[quote_pos+1] == QUOTE_CHAR ) {
+                tstring ps = line.substr(current_pos, quote_pos-current_pos + 1);
+                TINFRA_TRACE_VAR(ps);
+                builder_.append(ps);
+                current_pos = quote_pos + 2;
+                continue;
+            }
+            {
+                const tstring ps = line.substr(current_pos, quote_pos-current_pos);
+                TINFRA_TRACE_VAR(ps);
+                builder_.append(ps);
+            }
+            const tstring ss = builder_.str();
+            TINFRA_TRACE_VAR(ss);
+            entry_.push_back(ss);
+            
+            current_pos = quote_pos+1;
+            if( line[current_pos] == SEPARATOR_CHAR)
+                current_pos++;
+            in_quotes = false;
+        } else if( line[current_pos] == QUOTE_CHAR ) {
+            // the " at start of after SEPARATOR
+            current_pos += 1;
+            in_quotes = true;
+            builder_.reset();
+            continue;
+        } else {
+            // other case - find the end
+            const char DELIMITERS[] = { '\r', '\n', SEPARATOR_CHAR, 0 };
+            pos_type delim_pos = line.find_first_of(DELIMITERS, current_pos);
+            if( delim_pos == NPOS ) {
+                delim_pos = line.size();
+                has_result_ = true;
+            } else if( line[delim_pos] == '\r' || line[delim_pos] == '\n' ) {
+                has_result_ = true;
+            }
+            
+            const tstring ss = memory_pool_.alloc( line.substr(current_pos, delim_pos - current_pos) );
+            TINFRA_TRACE_VAR(ss);
+            entry_.push_back(ss);
+            
+            current_pos = delim_pos+1;
+        }
+    }
+    if( entry_.size() ) 
+        has_result_ = true;
+}
+
+
+raw_csv_reader::raw_csv_reader(std::istream& source, char sep) : 
+    parser_(sep), 
+    parser_adaptor_(* source.rdbuf(), parser_)
 {
 }
 
 bool raw_csv_reader::fetch_next(csv_raw_entry& result)
 {
-    //TINFRA_USE_TRACER(tinfra_csv);
-    
-    std::string current_line_;
-    getline(byte_source_, current_line_);
-    strip_inplace(current_line_);
-    if( current_line_.size() == 0 ) {
-        return false;
-    }
-    
-    const char QUOTE_CHAR = '"';
-    const char SEPARATOR_CHAR = separator_;
-    
-    const char DELIMITERS[2] = { SEPARATOR_CHAR, QUOTE_CHAR };
-    const tstring::size_type NPOS = tstring::npos;
-    typedef tstring::size_type pos_type;
-    result.clear();
-    
-    pos_type current_pos = 0;
-    bool in_quotes = false;
-    
-    memory_pool_.clear();
-    
-    std::string tmp;
-    //TINFRA_TRACE_VAR(current_line_);
-    //TINFRA_TRACE_VAR(current_line_.size());
-    while( current_pos < current_line_.size() ) {
-        //TINFRA_TRACE_VAR(current_pos);
-        //TINFRA_TRACE_VAR(in_quotes);
-        bool consume = false;
-        if( ! in_quotes ) {
-            pos_type entry_delim_pos = current_line_.find_first_of(DELIMITERS, current_pos, 2);
-            if( entry_delim_pos == NPOS ) {
-                entry_delim_pos = current_line_.size();
-                consume = true;
-            } else if( current_line_[entry_delim_pos] == QUOTE_CHAR ) {
-                in_quotes = true;
-                current_pos = entry_delim_pos+1;
-                continue;
-            } else if( current_line_[entry_delim_pos] == SEPARATOR_CHAR ) {
-                consume = true;
-            } else {
-                assert(false);
-            }
-            if( consume ) {
-                const size_t len = entry_delim_pos - current_pos;
-                const tstring entry = memory_pool_.alloc( tstring(current_line_.data() + current_pos, len));
-                //TINFRA_TRACE_VAR(entry);
-                result.push_back(entry );
-                current_pos = entry_delim_pos+1;
-            }      
-        } else { // we're in quotes
-            pos_type quote_pos = current_line_.find_first_of(QUOTE_CHAR, current_pos);
-            if( quote_pos == NPOS ) {
-                tmp.append( current_line_.data() + current_pos, NPOS);
-                getline(byte_source_, current_line_);
-                strip_inplace(current_line_);
-                current_pos = 0;
-                continue;
-            } else {
-                if( quote_pos < current_line_.size()-1 && current_line_[quote_pos+1] == QUOTE_CHAR ) {
-                    {
-                        const size_t len = quote_pos - current_pos;
-                        tmp.append(current_line_.data() + current_pos, len);
-                    }
-                    tmp.append(1, '"');
-                    current_pos = quote_pos+2;
-                    continue;
-                } else {
-                    const size_t len = quote_pos - current_pos;
-                    tmp.append(current_line_.data() + current_pos, len);
-                    //TINFRA_TRACE_VAR(tmp);
-                    result.push_back(memory_pool_.alloc(tmp) );                    
-                    in_quotes = false;
-                    tmp.clear();
-                    
-                    current_pos = quote_pos+1;
-                    if( current_line_[current_pos] == SEPARATOR_CHAR)
-                        current_pos++;
-                    continue;
-                }
-            }
-        }
-          
-    }
-    return true;
+    return parser_adaptor_.fetch_next(result);
 }
 
 } // end namespace tinfra
@@ -180,7 +215,8 @@ SUITE(tinfra_csv) {
     }
     */
 }
-#endif
 
+#endif // BUILD_UNITTEST
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
+
