@@ -162,10 +162,13 @@ int test_main(int argc, char** argv)
 {
     TinfraTestReporter reporter;
     UnitTest::TestRunner runner(reporter);
-    if( argc > 1 ) {
-        test_name_list test_names(argv+1, argv+argc);
-        test_name_matcher predicate(test_names);
-        
+    test_name_list test_names;
+    for(int i = 1; i < argc; ++i ) {
+        if( strncmp(argv[i],"-",1) != 0 ) 
+            test_names.push_back(argv[i]);
+    }
+    if( ! test_names.empty() ) {        
+        test_name_matcher predicate(test_names);        
         return runner.RunTestsIf(UnitTest::Test::GetTestList(), 0, predicate, 0);
     } else {
         return runner.RunTestsIf(UnitTest::Test::GetTestList(), 0, UnitTest::True(), 0);
