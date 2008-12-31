@@ -41,7 +41,7 @@ namespace foobar {
         }
     };
 }
-class csv_parser: public parser<csv_raw_entry>, public lazy_byte_consumer {
+class csv_parser: public parser<csv_raw_entry>, private lazy_byte_consumer {
 public:
     csv_parser(char separator = ',');
     virtual ~csv_parser() {}
@@ -63,7 +63,7 @@ private:
     void process_line(tstring const& line);
     
     bool           in_quotes;
-    char           SEPARATOR_CHAR;
+    const char     SEPARATOR_CHAR;
     csv_raw_entry  entry_;
     string_pool    memory_pool_;
     foobar::string_builder builder_;

@@ -39,7 +39,7 @@ int lazy_byte_consumer::maybe_have_delim(tstring const& input)
         again();
         return 0;
     }
-    return call(waiter_method_, tstring(input.data(), pos));
+    return call(waiter_method_, tstring(input.data(), pos+1));
 }
 
 int lazy_byte_consumer::maybe_have_enough_bytes(tstring const& input)

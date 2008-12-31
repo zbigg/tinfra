@@ -26,14 +26,16 @@ csv_parser::csv_parser(char separator):
     has_result_(false)
 {
     wait_for_delimiter(LINE_DELIMITER, make_step_method(&csv_parser::have_full_line));
+    TINFRA_TRACE_VAR(SEPARATOR_CHAR);
 }
 //
 // IO adaptor callbacks (parser interface)
 //
 int   csv_parser::process_input(tinfra::tstring const& input)
 {
-    
-    TINFRA_TRACE_VAR(input);
+    std::string inputc = tinfra::escape_c(input);
+    TINFRA_TRACE_VAR(inputc);
+    TINFRA_TRACE_VAR(SEPARATOR_CHAR);
     int r =  process(input);
     TINFRA_TRACE_VAR(r);
     return r;
@@ -61,6 +63,10 @@ bool  csv_parser::get_result(csv_raw_entry& r)
 int csv_parser::have_full_line(tstring const& input)
 {
     tstring::size_type eol = input.find_first_of(LINE_DELIMITER);
+    std::string inputc = tinfra::escape_c(input);
+    TINFRA_TRACE_VAR(inputc);
+    TINFRA_TRACE_VAR(eol);
+    TINFRA_TRACE_VAR(SEPARATOR_CHAR);
     assert(eol != tstring::npos); 
     tstring line = tstring(input.data(), eol+1);
     process_line(line);
@@ -73,7 +79,8 @@ void csv_parser::process_line(tstring const& line)
     typedef tstring::size_type pos_type;
     const pos_type NPOS = tstring::npos;
     const char QUOTE_CHAR = '"';
-    pos_type current_pos = 0;   
+    pos_type current_pos = 0;
+    TINFRA_TRACE_VAR(SEPARATOR_CHAR);    
     TINFRA_TRACE_VAR(line);
     while( current_pos < line.size() ) {
         if( in_quotes ) {
@@ -115,12 +122,14 @@ void csv_parser::process_line(tstring const& line)
             // other case - find the end
             const char DELIMITERS[] = { '\r', '\n', SEPARATOR_CHAR, 0 };
             pos_type delim_pos = line.find_first_of(DELIMITERS, current_pos);
+            TINFRA_TRACE_VAR(delim_pos);
             if( delim_pos == NPOS ) {
                 delim_pos = line.size();
                 has_result_ = true;
             } else if( line[delim_pos] == '\r' || line[delim_pos] == '\n' ) {
                 has_result_ = true;
             }
+            TINFRA_TRACE_VAR(current_pos);
             
             const tstring ss = memory_pool_.alloc( line.substr(current_pos, delim_pos - current_pos) );
             TINFRA_TRACE_VAR(ss);
