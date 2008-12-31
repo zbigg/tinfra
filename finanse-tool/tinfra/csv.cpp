@@ -33,13 +33,15 @@ csv_parser::csv_parser(char separator):
 int   csv_parser::process_input(tinfra::tstring const& input)
 {
     
-    TINFRA_TRACE_MSG("bytes");
-    return process(input);
+    TINFRA_TRACE_VAR(input);
+    int r =  process(input);
+    TINFRA_TRACE_VAR(r);
+    return r;
 }
 
 void  csv_parser::eof(tinfra::tstring const& unparsed_input)
 {
-    TINFRA_TRACE_MSG("eof");
+    TINFRA_TRACE_VAR(unparsed_input);
     process_line(unparsed_input);
 }
 

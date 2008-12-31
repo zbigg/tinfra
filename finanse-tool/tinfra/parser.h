@@ -43,9 +43,10 @@ public:
             
             if( eof_readed_ ) {
                 parser_.eof(buffer_);
+                eof_signaled_ = true;
+                buffer_.clear();
                 if( parser_.get_result(r) )
                     return true;
-                eof_signaled_ = true;
             }
         } 
         return false;
