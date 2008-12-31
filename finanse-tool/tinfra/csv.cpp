@@ -1,9 +1,11 @@
 #include "csv.h"
 
+#include "tinfra/string.h"
+
 namespace tinfra {
 
 raw_csv_reader::raw_csv_reader(std::istream& source, char sep)
-    : byte_source(source), separator_(sep)
+    : byte_source_(source), separator_(sep)
 {
 }
 
@@ -12,14 +14,14 @@ bool raw_csv_reader::fetch_next(csv_raw_entry& result)
     std::string current_line_;
     getline(byte_source_, current_line_);
     strip_inplace(current_line_);
-    if( line.size() == 0 ) {
+    if( current_line_.size() == 0 ) {
         return false;
     }
     
     const char QUOTE_CHAR = '"';
     const char SEPARATOR_CHAR = separator_;
     
-    const char[3] delimiters = { SEPARATOR_CHAR, QUOTE_CHAR };
+    const char DELIMITERS[2] = { SEPARATOR_CHAR, QUOTE_CHAR };
     const tstring::size_type NPOS = tstring::npos;
     typedef tstring::size_type pos_type;
     result.clear();
@@ -27,13 +29,13 @@ bool raw_csv_reader::fetch_next(csv_raw_entry& result)
     pos_type current_pos = 0;
     bool in_quotes = false;
     
-    memory_pool_.reset();
+    memory_pool_.clear();
     
     std::string tmp;
     while( current_pos <= current_line_.size() ) {
         bool consume = false;
         if( ! in_quotes ) {
-            pos_type entry_delim_pos = current_line_.find_first_of(delimiters, current_pos, 2);
+            pos_type entry_delim_pos = current_line_.find_first_of(DELIMITERS, current_pos, 2);
             if( entry_delim_pos == NPOS ) {
                 entry_delim_pos = current_line_.size();
                 consume = true;
@@ -46,7 +48,12 @@ bool raw_csv_reader::fetch_next(csv_raw_entry& result)
             } else {
                 assert(false);
             }
-            
+            if( consume ) {
+                const size_t len = entry_delim_pos - current_pos;
+                const tstring entry = memory_pool_.alloc( tstring(current_line_.data() + current_pos, len));
+                result.push_back(entry);
+                current_pos = entry_delim_pos+1;
+            }      
         } else { // we're in quotes
             pos_type quote_pos = current_line_.find_first_of(QUOTE_CHAR, current_pos);
             if( quote_pos == NPOS ) {
@@ -68,26 +75,30 @@ bool raw_csv_reader::fetch_next(csv_raw_entry& result)
                     const size_t len = quote_pos - current_pos;
                     tmp.append(current_line_.data() + current_pos, len);
                     
-                    result.push_back(memory_pool_.alloc(tstring(tmp));
+                    result.push_back(memory_pool_.alloc(tstring(tmp)) );
                     current_pos = quote_pos+1;
                     in_quotes = false;
                     continue;
                 }
             }
         }
-        if( consume ) {
-            const size_t len = entry_delim_pos - current_pos;
-            const tstring entry = memory_pool_.alloc( tstring(current_line_.data() + current_pos, len));
-            result.push_back(entry);
-            current_pos + entry_delim_pos+1;
-        }        
+          
     }
+    return true;
 }
 
+} // end namespace tinfra
+
 #ifdef BUILD_UNITTEST
+
 #include <unittest++/UnitTest++.h>
+#include <vector>
 
 SUITE(tinfra_csv) {
+    using tinfra::tstring;
+    using tinfra::raw_csv_reader;
+    using tinfra::csv_raw_entry;
+    
     typedef std::vector<std::string> entry_type;
     entry_type one_line_parse(tstring const& csv)
     {
@@ -102,7 +113,7 @@ SUITE(tinfra_csv) {
             result.push_back(i->str());
         }
         
-        CHECK(!rrr.has_next));
+        CHECK(!rrr.has_next());
         return result;
     }
     
@@ -131,4 +142,5 @@ SUITE(tinfra_csv) {
 }
 #endif
 
-} // end namespace tinfra
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++

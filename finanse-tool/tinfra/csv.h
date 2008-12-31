@@ -17,14 +17,17 @@
 namespace tinfra {
 
 typedef std::vector<tstring> csv_raw_entry;
-class raw_csv_reader: public generator_impl<csv_reader, csv_raw_entry> {
+class raw_csv_reader: public generator_impl<raw_csv_reader, csv_raw_entry> {
+public:
     raw_csv_reader(std::istream& byte_source, char separator = ',');
-protected:
+    
+
     bool fetch_next(csv_raw_entry&);
+    
 private:
-    std::istream byte_source_;
-    string_pool  memory_pool_;
-    char separator_;
+    std::istream& byte_source_;
+    string_pool   memory_pool_;
+    char          separator_;
 };
     
 } // end namespace tinfra
