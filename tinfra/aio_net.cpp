@@ -47,8 +47,9 @@ std::auto_ptr<stream>     create_client_stream(std::string const& host, int port
     return result;
 }
 
-void acceptor_listener::event(Dispatcher& d, stream* listener_stream, int event)
+void connection_listener::event(dispatcher& d, stream* listener_stream, int event)
 {
+    using tinfra::io::socket::accept_client_connection;
     string client_address;
     
     auto_ptr<stream> client_conn(accept_client_connection(listener_stream, &client_address));

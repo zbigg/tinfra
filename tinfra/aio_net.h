@@ -20,13 +20,13 @@ namespace aio {
 std::auto_ptr<stream>     create_service_stream(std::string const& address, int port);
 std::auto_ptr<stream>     create_client_stream(std::string const& address, int port);
 
-class connection_listener: public Listener {
+class connection_listener: public listener {
 public:
-    virtual void event(Dispatcher& d, 
+    virtual void event(dispatcher& d, 
                        stream* listener_stream, 
                        int event);
 
-    virtual void accept_connection(Dispatcher& dispatcher, 
+    virtual void accept_connection(dispatcher& dispatcher, 
                                    std::auto_ptr<stream>& client_conn, 
                                    std::string const& client_address) = 0;
 }; 
