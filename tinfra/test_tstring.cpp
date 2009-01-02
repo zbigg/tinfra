@@ -73,7 +73,29 @@ SUITE(tinfra_tstring)
         for( int i = 0; i < N; ++i ) {
             CHECK_EQUAL(dataset[i].expected, tstring(dataset[i].victim).find_first_not_of(dataset[i].param));
             CHECK_EQUAL(dataset[i].expected, std::string(dataset[i].victim).find_first_not_of(dataset[i].param));
+        }        
+    }
+    
+    TEST(find)
+    {
+	struct {
+            size_t      expected;
+            const char* victim;
+            const char* param;
+        } dataset[] = { 
+            { 0,             "", ""},
+            { 0,             "abc", ""},
+            { tstring::npos, "", "a"},
+            { 0,             "abc", "a"},
+            { 0,             "abc", "ab"},
+            { 0,             "abc", "abc"},
+            { tstring::npos, "abc", "x"}
+        };
+        const int N = sizeof(dataset)/sizeof(dataset[0]);
+	
+	for( int i = 0; i < N; ++i ) {
+            CHECK_EQUAL(dataset[i].expected, tstring(dataset[i].victim).find(dataset[i].param));
+            CHECK_EQUAL(dataset[i].expected, std::string(dataset[i].victim).find(dataset[i].param));
         }
-        
     }
 }

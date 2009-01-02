@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <algorithm>
 
 #include "tinfra/thread.h"
 #include "tinfra/cmd.h"
@@ -101,6 +102,23 @@ tstring tstring::substr(size_type pos, size_type n) const
            ( last_character_pos == size() && this->is_null_terminated())
         || ( last_character_pos <  size() && data()[last_character_pos] == '\0' );
     return tstring(data() + pos, len, sub_is_null_terminated);
+}
+
+tstring::size_type
+tstring::find(char_type const* s, size_type pos, size_type n) const
+{    
+    if( size() == 0 && n == 0 )
+        return 0;
+    tstring const other = tstring(s, n, false);
+    const_iterator result = std::search(
+        begin()+pos,
+        end(),
+        other.begin(),
+        other.end());
+    if( result == end() )
+        return npos;
+    else
+        return result - begin(); 
 }
 
 // find first of

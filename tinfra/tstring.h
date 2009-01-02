@@ -174,6 +174,12 @@ public:
     const_iterator rbegin() const { return data() + size() - 1; }
     const_iterator rend()   const { return data() - 1; }
     
+    size_type find(tstring const& s, size_type pos = 0) const 
+    {
+        return this->find(s.data(), pos, s.size());
+    }
+    
+    size_type find(char_type const* s, size_type pos, size_type n) const;
     // find first of
     size_type find_first_of(tstring const& s, size_type pos = 0) const
     {
