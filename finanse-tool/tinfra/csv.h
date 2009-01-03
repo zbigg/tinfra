@@ -41,7 +41,8 @@ namespace foobar {
         }
     };
 }
-class csv_parser: public parser<csv_raw_entry>, private lazy_byte_consumer {
+class csv_parser: public parser<csv_raw_entry>, 
+                  public lazy_byte_consumer<csv_parser> {
 public:
     csv_parser(char separator = ',');
     virtual ~csv_parser() {}

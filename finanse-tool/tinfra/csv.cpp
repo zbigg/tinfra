@@ -10,6 +10,8 @@
 #include "tinfra/string.h"
 #include "tinfra/trace.h"
 
+#include <cassert>
+
 namespace tinfra {
 
 namespace {    
@@ -20,6 +22,7 @@ TINFRA_MODULE_TRACER(tinfra_csv);
 TINFRA_USE_TRACER(tinfra_csv);
 
 csv_parser::csv_parser(char separator):
+    lazy_byte_consumer<csv_parser>(*this),
     in_quotes(false),
     SEPARATOR_CHAR(separator),
     builder_(memory_pool_),

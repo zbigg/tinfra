@@ -12,12 +12,13 @@
 
 namespace tinfra {
     
-template<typename R, typename T>
+template<typename IMPL, typename R, typename T>
 class interruptible {
 public:
-    typedef R (interruptible::*step_method)(T const& e);
+    typedef R (IMPL::*step_method)(T const& e);
     
-    interruptible(step_method m = 0):
+    interruptible(IMPL& impl, step_method m = 0):
+    	implementation_(impl),
         next_method_(m),
         again_(false),
         finished_(false)
@@ -50,15 +51,15 @@ protected:
     
     R call(step_method m, T const& a)
     {
-        return (this->*m)(a);
+        return (implementation_.*m)(a);
     }
     void next(step_method s) {
         next_method_ = s;
     }
-    
-    template <typename F>
-    step_method make_step_method(R (F::*m)(T const&)) {
-        return reinterpret_cast<step_method>(m);
+        
+    // deprecated
+    step_method make_step_method(R (IMPL::*m)(T const&)) {
+        return m;
     }
     void again() {
         again_ = true;
@@ -68,6 +69,7 @@ protected:
         // nothing needed
     }
 private:
+    IMPL&       implementation_;
     step_method next_method_;
     bool        again_;
     bool        finished_;
