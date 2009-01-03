@@ -38,7 +38,6 @@ int   csv_parser::process_input(tinfra::tstring const& input)
 {
     std::string inputc = tinfra::escape_c(input);
     TINFRA_TRACE_VAR(inputc);
-    TINFRA_TRACE_VAR(SEPARATOR_CHAR);
     int r =  process(input);
     TINFRA_TRACE_VAR(r);
     return r;
@@ -69,7 +68,6 @@ int csv_parser::have_full_line(tstring const& input)
     std::string inputc = tinfra::escape_c(input);
     TINFRA_TRACE_VAR(inputc);
     TINFRA_TRACE_VAR(eol);
-    TINFRA_TRACE_VAR(SEPARATOR_CHAR);
     assert(eol != tstring::npos); 
     tstring line = tstring(input.data(), eol+1);
     process_line(line);
@@ -83,8 +81,9 @@ void csv_parser::process_line(tstring const& line)
     const pos_type NPOS = tstring::npos;
     const char QUOTE_CHAR = '"';
     pos_type current_pos = 0;
-    TINFRA_TRACE_VAR(SEPARATOR_CHAR);    
     TINFRA_TRACE_VAR(line);
+    if( !has_result_ )
+        entry_.clear();
     while( current_pos < line.size() ) {
         if( in_quotes ) {
             const pos_type quote_pos = line.find_first_of(QUOTE_CHAR, current_pos);
@@ -123,20 +122,18 @@ void csv_parser::process_line(tstring const& line)
             continue;
         } else {
             // other case - find the end
-            const char DELIMITERS[] = { '\r', '\n', SEPARATOR_CHAR, 0 };
-            pos_type delim_pos = line.find_first_of(DELIMITERS, current_pos);
+            const char DELIMITERS[] = { '\r', '\n', SEPARATOR_CHAR };
+            pos_type delim_pos = line.find_first_of(DELIMITERS, current_pos, 3);
             TINFRA_TRACE_VAR(delim_pos);
             if( delim_pos == NPOS ) {
                 delim_pos = line.size();
-                has_result_ = true;
-            } else if( line[delim_pos] == '\r' || line[delim_pos] == '\n' ) {
-                has_result_ = true;
             }
             TINFRA_TRACE_VAR(current_pos);
-            
-            const tstring ss = memory_pool_.alloc( line.substr(current_pos, delim_pos - current_pos) );
-            TINFRA_TRACE_VAR(ss);
-            entry_.push_back(ss);
+            if( delim_pos != 0 ) {
+                const tstring ss = memory_pool_.alloc( line.substr(current_pos, delim_pos - current_pos) );
+                TINFRA_TRACE_VAR(ss);
+                entry_.push_back(ss);
+            }
             
             current_pos = delim_pos+1;
         }
@@ -220,14 +217,14 @@ SUITE(tinfra_csv) {
         CHECK_EQUAL( 1, t.size());
         CHECK_EQUAL( "\"",    t[0]);
     }
-    /*
+    
     TEST(csv_multiline) {
         entry_type t = one_line_parse("\"abc\r\ndef\",xyz");
         CHECK_EQUAL( 2, t.size());
         CHECK_EQUAL( "abc\r\ndef",    t[0]);
         CHECK_EQUAL( "xyz",    t[1]);
     }
-    */
+    
 }
 
 #endif // BUILD_UNITTEST
