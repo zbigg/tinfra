@@ -22,25 +22,23 @@ TINFRA_MODULE_TRACER(tinfra_csv);
 TINFRA_USE_TRACER(tinfra_csv);
 
 csv_parser::csv_parser(char separator):
-    lazy_byte_consumer<csv_parser>(*this),
     in_quotes(false),
     SEPARATOR_CHAR(separator),
     builder_(memory_pool_),
     has_result_(false)
 {
-    wait_for_delimiter(LINE_DELIMITER, make_step_method(&csv_parser::have_full_line));
-    TINFRA_TRACE_VAR(SEPARATOR_CHAR);
 }
 //
 // IO adaptor callbacks (parser interface)
 //
 int   csv_parser::process_input(tinfra::tstring const& input)
 {
-    std::string inputc = tinfra::escape_c(input);
-    TINFRA_TRACE_VAR(inputc);
-    int r =  process(input);
-    TINFRA_TRACE_VAR(r);
-    return r;
+    const tstring::size_type eol = input.find_first_of(LINE_DELIMITER);
+    if( eol == tstring::npos )
+        return 0;
+    const tstring line = input.substr(0, eol+1);
+    process_line(line);
+    return line.size();
 }
 
 void  csv_parser::eof(tinfra::tstring const& unparsed_input)
@@ -62,18 +60,6 @@ bool  csv_parser::get_result(csv_raw_entry& r)
 //
 // implementation details
 //
-int csv_parser::have_full_line(tstring const& input)
-{
-    tstring::size_type eol = input.find_first_of(LINE_DELIMITER);
-    std::string inputc = tinfra::escape_c(input);
-    TINFRA_TRACE_VAR(inputc);
-    TINFRA_TRACE_VAR(eol);
-    assert(eol != tstring::npos); 
-    tstring line = tstring(input.data(), eol+1);
-    process_line(line);
-    wait_for_delimiter(LINE_DELIMITER, make_step_method(&csv_parser::have_full_line));
-    return line.size();
-}
 
 void csv_parser::process_line(tstring const& line)
 {
@@ -129,7 +115,7 @@ void csv_parser::process_line(tstring const& line)
                 delim_pos = line.size();
             }
             TINFRA_TRACE_VAR(current_pos);
-            if( delim_pos != 0 ) {
+            if( delim_pos != 0 && delim_pos != current_pos ) {
                 const tstring ss = memory_pool_.alloc( line.substr(current_pos, delim_pos - current_pos) );
                 TINFRA_TRACE_VAR(ss);
                 entry_.push_back(ss);
@@ -145,13 +131,56 @@ void csv_parser::process_line(tstring const& line)
 
 raw_csv_reader::raw_csv_reader(std::istream& source, char sep) : 
     parser_(sep), 
-    parser_adaptor_(* source.rdbuf(), parser_)
+    parser_adaptor_(source, parser_)
 {
 }
 
 bool raw_csv_reader::fetch_next(csv_raw_entry& result)
 {
     return parser_adaptor_.fetch_next(result);
+}
+
+std::string escape_csv(tstring const& value)
+{
+    std::ostringstream vvv;
+    escape_csv(value, vvv);
+    return vvv.str();
+}
+
+void escape_csv(tstring const& value, std::ostream& out)
+{
+    bool need_quote = false;
+    tstring::size_type quote_pos = value.find_first_of('"');
+    if( quote_pos != tstring::npos ) {
+        need_quote = true;
+    } else if( value.find_first_of(",\r\n") != tstring::npos ) {
+        need_quote = true;
+    }    
+    if( !need_quote ) {
+        out << value;
+        return;
+    }
+    if( quote_pos == tstring::npos ) {
+        out << '"' << value << '"';
+        return;
+    } else {
+        out << '"';
+        tstring input = value;
+        TINFRA_TRACE_VAR(input);
+        TINFRA_TRACE_VAR(quote_pos);
+        do {
+            size_t len = std::min(input.size(), quote_pos);
+            out.write(input.data(), len);            
+            if( quote_pos == tstring::npos )
+                break;
+            out << "\"\"";
+            input = input.substr(quote_pos+1);
+            quote_pos = input.find_first_of('"');
+            TINFRA_TRACE_VAR(input);
+            TINFRA_TRACE_VAR(quote_pos);
+        } while( true );
+        out << '"';
+    }
 }
 
 } // end namespace tinfra
@@ -225,6 +254,17 @@ SUITE(tinfra_csv) {
         CHECK_EQUAL( "xyz",    t[1]);
     }
     
+    
+    TEST(escape_csv) {
+        using tinfra::escape_csv;
+        CHECK_EQUAL( "",             escape_csv("") );
+        CHECK_EQUAL( "a",            escape_csv("a") );
+        CHECK_EQUAL( "\"\r\"",       escape_csv("\r") );
+        CHECK_EQUAL( "\"\r\n\"",     escape_csv("\r\n") );
+        CHECK_EQUAL( "\"\n\"",       escape_csv("\n") );
+        CHECK_EQUAL( "\"\"\"\"",     escape_csv("\"") );
+        CHECK_EQUAL( "\"a\"\"b\"",   escape_csv("a\"b") );
+    }
 }
 
 #endif // BUILD_UNITTEST

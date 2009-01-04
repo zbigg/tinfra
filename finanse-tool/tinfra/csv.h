@@ -11,10 +11,12 @@
 #include <vector>
 #include <string>
 #include <istream>
-#include "tinfra/generator.h"
+
 #include "tinfra/tstring.h"
-#include "parser.h"
-#include "tinfra/lazy_byte_consumer.h"
+
+#include "tinfra/sequence_parser.h"
+#include "tinfra/istream_sequence_parser.h"
+
 namespace tinfra {
 
 typedef std::vector<tstring> csv_raw_entry;
@@ -41,8 +43,7 @@ namespace foobar {
         }
     };
 }
-class csv_parser: public parser<csv_raw_entry>, 
-                  public lazy_byte_consumer<csv_parser> {
+class csv_parser: public sequence_parser<csv_raw_entry> {
 public:
     csv_parser(char separator = ',');
     virtual ~csv_parser() {}
@@ -55,12 +56,7 @@ public:
     
     virtual bool  get_result(csv_raw_entry& r) ;
     
-private:
-    //
-    // dispatcher
-    //
-    int have_full_line(tstring const& input);
-    
+private:    
     void process_line(tstring const& line);
     
     bool           in_quotes;
@@ -79,9 +75,12 @@ public:
     
 private:
     csv_parser parser_;
-    istream_parser_adaptor<csv_raw_entry> parser_adaptor_;    
+    istream_sequence_parser<csv_raw_entry> parser_adaptor_;    
 };
-    
+
+std::string escape_csv(tstring const& value);
+void escape_csv(tstring const& value, std::ostream& out);
+
 } // end namespace tinfra
 
 #endif // __tinfra_csv_h__
