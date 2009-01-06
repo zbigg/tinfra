@@ -276,12 +276,5 @@ std::auto_ptr<subprocess> subprocess::create()
     return std::auto_ptr<subprocess>(new posix::posix_subprocess());
 }
 
-//
-// tinfra global stub for posix
-//
-
-subprocess* create_subprocess() {
-    return new posix::posix_subprocess();
-}
 
 } // end namespace tinfra

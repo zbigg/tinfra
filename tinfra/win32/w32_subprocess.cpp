@@ -254,17 +254,9 @@ struct win32_subprocess: public subprocess {
 
 } // end namespace win32
 
-//
-// tinfra global stub for win32
-//
-
 std::auto_ptr<subprocess> subprocess::create()
 {
     return std::auto_ptr<subprocess>(new win32::win32_subprocess());
-}
-
-subprocess* create_subprocess() {
-    return new win32::win32_subprocess();
 }
 
 } // end namespace tinfra::win32

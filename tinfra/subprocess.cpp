@@ -43,4 +43,12 @@ std::string capture_command(std::string const& command)
     return result;
 }
 
+//
+// tinfra global stub for posix
+// @deprecated
+
+subprocess* create_subprocess() {
+    return subprocess::create().release();
+}
+
 }
