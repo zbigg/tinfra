@@ -12,7 +12,11 @@
 
 #ifdef HAVE_PCRE
 #define TINFRA_REGEX_PCRE 1
+#elif defined(HAVE_REGCOMP)
+#define TINFRA_REGEX_POSIX
+#include <regexp.h>
 #else
+#define TINFRA_REGEX_GENERIC
 #endif
 
 #include <string>
@@ -56,6 +60,10 @@ class regexp {
 #ifdef TINFRA_REGEX_PCRE
     void*  re_;
     void*  extra_;
+#endif
+
+#ifdef TINFRA_REGEX_POSIX
+    regex_t re_;
 #endif
 
     size_t patterns_count_;
