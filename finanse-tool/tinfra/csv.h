@@ -57,8 +57,12 @@ public:
     virtual bool  get_result(csv_raw_entry& r) ;
     
 private:    
-    void process_line(tstring const& line);
-    
+    void           process_line(tstring const&);
+    tstring        process(tstring, bool);
+
+    tstring        process_entry(tstring);
+    tstring        process_quoted_entry(tstring);
+
     bool           in_quotes;
     const char     SEPARATOR_CHAR;
     csv_raw_entry  entry_;

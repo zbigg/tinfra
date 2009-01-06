@@ -1,4 +1,4 @@
-CXXFLAGS=-O3 -g -Wall -I.. -DBUILD_UNITTEST
+CXXFLAGS=-O9 -g -Wall -I.. -DBUILD_UNITTEST
 LDLIBS=-g -ltinfra -lpthread -lpcre -lunittest++
 CC=g++
 
