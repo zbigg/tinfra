@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. $(basename $0)/tinfra-common/spawn-test-common.sh
+. $(dirname $0)/tinfra-support/spawn-test-common.sh
 
 generic_test unittests
 

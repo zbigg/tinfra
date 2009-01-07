@@ -1,0 +1,35 @@
+#!/bin/sh
+
+
+# bootstrap-project
+#
+# prepare project for build
+#
+# invokes
+#    bakefile
+#    aclocal
+#    autoconf
+#
+# checks if tinfra-support is installed
+#
+# TODO: it should be named tinfra-project
+# and contain few commands
+#   prepare - do what is in here
+#   clean   - clean all
+# actual implementation should go be in tinfra-support
+#
+# TODO tinfra-support should be renamed to tinfra-support
+set -e
+PNAME=$(basename $0)
+if ! [ -d tinfra-support ] ; then
+    echo "$PNAME: tinfra-support is missing, trying install one" >&2
+    if ! mtn -b pl.reddix.tinfra-support co tinfra-support ; then
+        echo "$PNAME: tinfra-support is hard requirement, get tinfra monotone database or" >&2
+        echo "$PNAME: place tinfra-support in folder ${PWD}/tinfra-support" >&2
+        exit 1
+    fi
+fi
+
+#AUTOCONF_CONFIG_FILE=tinfra/xml/config.h
+
+. tinfra-support/build-helper.sh

@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 
 <makefile>
-    <include file="tinfra-common/common.bkl"/>
+    <include file="tinfra-support/common.bkl"/>
         
     <lib id="tinfra-xml" template="default-workspace-settings">
         <include>$(SRCDIR)</include>

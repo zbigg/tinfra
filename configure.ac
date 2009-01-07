@@ -11,7 +11,7 @@ AC_INIT(
     [0.0.1],
     [z.zagorski@gmail.com])
 
-AC_CONFIG_AUX_DIR([tinfra-common/autoconf])
+AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
 AC_CONFIG_SRCDIR([tinfra-xml.bkl])
 dnl AC_CONFIG_HEADER([tinfra/xml/config.h])
 
