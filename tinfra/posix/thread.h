@@ -19,8 +19,22 @@
 
 #include <vector>
 #include <pthread.h>
+//#include <semaphore.h>
 
 namespace tinfra {
+/*
+class Semaphore {
+    sem_t sem_;        
+public:
+    Semaphore(int value) { ::sem_init(&sem_, 0, value); }
+    ~Semaphore()         { ::sem_destroy(&sem_); }
+        
+    void post()          { ::sem_post(&sem_); }    
+    void wait()          { ::sem_wait(&sem_); }
+    
+    sem_t* get_native() { return &mutex_; }
+};
+*/
 
 class Mutex {
     pthread_mutex_t mutex_;
