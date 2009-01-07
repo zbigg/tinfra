@@ -112,6 +112,7 @@
             tinfra/win32/thread.h
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
+	    tinfra/memory_pool.h
         </files>
     </data-files-tree>
     
@@ -144,6 +145,7 @@
             tinfra/test_main.cpp
             tinfra/test_subprocess.cpp
             tinfra/test_regexp.cpp
+	    tinfra/test_memory_pool.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
