@@ -11,7 +11,7 @@
 
 using tinfra::symbol;
 
-SUITE(tinfra_symbol)
+SUITE(tinfra)
 {
     TEST(symbol_basic)
     {

@@ -11,7 +11,7 @@
 
 using tinfra::fmt;
 
-SUITE(tinfra_string)
+SUITE(tinfra)
 {
     std::string strip(std::string const& s)
     {
@@ -24,7 +24,7 @@ SUITE(tinfra_string)
         return r1;
     }
     
-    TEST(strip)
+    TEST(string_strip)
     {
         CHECK_EQUAL("abc", strip("abc"));
         CHECK_EQUAL("abc", strip(" abc"));
@@ -44,7 +44,7 @@ SUITE(tinfra_string)
         return r1;
     }
     
-    TEST(escape_c)
+    TEST(string_escape_c)
     {
         CHECK_EQUAL("abc", escape_c("abc"));
         CHECK_EQUAL("a\\nc", escape_c("a\nc"));
@@ -64,7 +64,7 @@ SUITE(tinfra_string)
         return r1;
     }
     
-    TEST(chop)
+    TEST(string_chop)
     {
         CHECK_EQUAL(" ", chop(" "));
         CHECK_EQUAL("", chop(""));
@@ -78,7 +78,7 @@ SUITE(tinfra_string)
         CHECK_EQUAL("", chop("\r\n"));
     }
     
-    TEST(split_lines)
+    TEST(string_split_lines)
     {
         using tinfra::split_lines;
         using std::vector;

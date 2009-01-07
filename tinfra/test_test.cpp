@@ -14,7 +14,7 @@
 
 using namespace tinfra;
     
-SUITE(test_test) {
+SUITE(tinfra) {
     
     TEST(test_TempTestLocation_empty)
     {

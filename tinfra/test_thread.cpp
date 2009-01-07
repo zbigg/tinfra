@@ -14,16 +14,16 @@ using namespace tinfra;
 
 #if TINFRA_THREADS
 
-SUITE(test_thread)
+SUITE(tinfra)
 {
-    TEST(test_mutex)
+    TEST(thread_mutex_basic)
     {
         Mutex m;
         m.lock();
         m.unlock();
     }
     
-    TEST(test_condition)
+    TEST(thread_condition_basic)
     {
         Condition cond;
         cond.signal();
@@ -35,7 +35,7 @@ SUITE(test_thread)
     }
     
     
-    TEST(test_thread_simple)
+    TEST(thread_simple)
     {
         Thread t = Thread::start(nothing, 0);
         CHECK_EQUAL(0, (intptr_t) t.join() );
@@ -77,7 +77,7 @@ SUITE(test_thread)
         return 0;
     }
     
-    TEST(test_thread_cond)
+    TEST(thread_condition)
     {
         A* a = new A;
 	// TODO: this test is screwed up (seen on dual-core on win32)
@@ -99,7 +99,7 @@ SUITE(test_thread)
         }
     };
     
-    TEST(test_runnable)
+    TEST(thread_runnable)
     {
         TestRunnable runnable;
         runnable.i = 0;

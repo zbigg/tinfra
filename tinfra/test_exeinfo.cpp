@@ -18,14 +18,14 @@ using std::cout;
 using std::endl;
 
     
-SUITE(tinfra_exeinfo) {
+SUITE(tinfra) {
     
     
     static void boo(tinfra::symbol_info const&) {
         //cout << (unsigned int)syminfo.address << " " << syminfo.name << endl;
     }
     
-    TEST(symbol_map)
+    TEST(exeinfo_symbol_map)
     {
         tinfra::test::TempTestLocation testLocation("sample.exe.map");        
         string mappath = "sample.exe.map";

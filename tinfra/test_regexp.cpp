@@ -17,12 +17,12 @@ using tinfra::regexp;
 using tinfra::scanner;
 using tinfra::matcher;
 
-SUITE(tinfra_regexp)  {
+SUITE(tinfra)  {
     TEST(regexp_basic)
     {
         // TODO: write basic regexp test
     }
-    TEST(scanner)
+    TEST(regexp_scanner)
     {
         std::string name;
         int h,m,s;
@@ -34,11 +34,11 @@ SUITE(tinfra_regexp)  {
         CHECK_EQUAL(m, 22);
         CHECK_EQUAL(s, 333);
     }
-    TEST(matcher)
+    TEST(regexp_matcher)
     {
         // TODO: write matcher test
     }
-    TEST(static_tstring_match_result)
+    TEST(regexp_static_tstring_match_result)
     {
         using tinfra::static_tstring_match_result;
         static_tstring_match_result<2> foo;

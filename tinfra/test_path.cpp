@@ -11,10 +11,10 @@
 
 using std::string;
 
-SUITE(tinfra_path)
+SUITE(tinfra)
 {
 
-    TEST(test_basename)
+    TEST(path_basename)
     {
 	using tinfra::path::basename;
         CHECK_EQUAL( "",  basename(""));
@@ -25,7 +25,7 @@ SUITE(tinfra_path)
         CHECK_EQUAL( ".", basename("."));
     }
     
-    TEST(test_dirname)
+    TEST(path_dirname)
     {
 	using tinfra::path::dirname;
         CHECK_EQUAL( ".", dirname(""));
@@ -36,7 +36,7 @@ SUITE(tinfra_path)
         CHECK_EQUAL( ".", dirname("."));
     }
     
-    TEST(test_join)
+    TEST(path_join)
     {
 	using namespace tinfra::path;
         CHECK_EQUAL( "", join("",""));

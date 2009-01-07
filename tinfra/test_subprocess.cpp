@@ -29,9 +29,9 @@ static void read_file(stream* s, std::string& data)
     }
 }
 
-SUITE(tinfra_subprocess) {
+SUITE(tinfra) {
     
-    TEST(spawn_no_redirect) {
+    TEST(subprocess_spawn_no_redirect) {
         std::auto_ptr<subprocess> p = tinfra::subprocess::create();
         
         p->set_stdout_mode(subprocess::NONE);
@@ -44,7 +44,7 @@ SUITE(tinfra_subprocess) {
         CHECK_EQUAL(0, p->get_exit_code());
     }
     
-    TEST(spawn_check_exit_code) {
+    TEST(subprocess_spawn_check_exit_code) {
         std::auto_ptr<subprocess> p = tinfra::subprocess::create();
         
         p->set_stderr_mode(subprocess::NONE);
@@ -57,7 +57,7 @@ SUITE(tinfra_subprocess) {
         CHECK(p->get_exit_code() != 0);
     }
     
-    TEST(read_stdin) {
+    TEST(subprocess_read_stdin) {
         std::auto_ptr<subprocess> p = tinfra::subprocess::create();
                 
         p->set_stdout_mode(subprocess::REDIRECT);
@@ -78,7 +78,7 @@ SUITE(tinfra_subprocess) {
         CHECK_EQUAL(0, p->get_exit_code());
     }
     
-    TEST(read_write) {
+    TEST(subprocess_read_write) {
         std::auto_ptr<subprocess> p = tinfra::subprocess::create();
         
         p->set_stdin_mode(subprocess::REDIRECT);

@@ -13,7 +13,7 @@
 using tinfra::fmt;
 using tinfra::simple_fmt;
 
-SUITE(tinfra_fmt) {
+SUITE(tinfra) {
     TEST(fmt_basic)
     {
         CHECK_EQUAL("",    fmt("").str());

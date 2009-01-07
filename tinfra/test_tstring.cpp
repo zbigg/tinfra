@@ -14,9 +14,9 @@ using tinfra::tstring;
 
 static const size_t N = tstring::npos;
 
-SUITE(tinfra_tstring)
+SUITE(tinfra)
 {
-    TEST(find_first_of_char)
+    TEST(tstring_find_first_of_char)
     {
         /*struct {
             size_t expected;
@@ -39,7 +39,7 @@ SUITE(tinfra_tstring)
         CHECK_EQUAL(tstring::npos, tstring("aaa").find_first_of('a',3));
     }
     
-    TEST(find_first_of_str)
+    TEST(tstring_find_first_of_str)
     {
         CHECK_EQUAL(tstring::npos, tstring("").find_first_of(""));
         CHECK_EQUAL(tstring::npos, tstring("a").find_first_of(""));
@@ -53,7 +53,7 @@ SUITE(tinfra_tstring)
         CHECK_EQUAL(tstring::npos, tstring("abc").find_first_of("def"));
     }
     
-    TEST(find_first_not_of_str)
+    TEST(tstring_find_first_not_of_str)
     {
         struct {
             size_t      expected;
@@ -76,7 +76,7 @@ SUITE(tinfra_tstring)
         }        
     }
     
-    TEST(find)
+    TEST(tstring_find)
     {
 	struct {
             size_t      expected;

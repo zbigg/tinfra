@@ -13,7 +13,7 @@
 
 using namespace tinfra;
 
-SUITE(test_queue)
+SUITE(tinfra)
 {
     static void* produce(void* q_)
     {

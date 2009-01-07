@@ -16,9 +16,9 @@
 
 using namespace tinfra;
 
-SUITE(tinfra_fs)
+SUITE(tinfra)
 {
-    TEST(test_copy)
+    TEST(fs_copy)
     {
         test::TempTestLocation testLocation("testtest_file");
         fs::copy("testtest_file", "boo.test");
@@ -31,7 +31,7 @@ SUITE(tinfra_fs)
         CHECK_THROW( fs::copy("testtest_file", "fooFOOfoo/foo"), std::logic_error);
     }
     
-    TEST(test_list_files)
+    TEST(fs_list_files)
     {
         test::TempTestLocation tmp_location("testtest_dir");
         std::vector<std::string> files = fs::list_files(".");
@@ -39,7 +39,7 @@ SUITE(tinfra_fs)
         CHECK_EQUAL("testtest_dir", files[0]);        
     }
     
-    TEST(test_mkdir_rmdir)
+    TEST(fs_mkdir_rmdir)
     {
         test::TempTestLocation tmp_location;
         {
@@ -65,14 +65,14 @@ SUITE(tinfra_fs)
             CHECK( !path::exists("a"));
         }
     }
-    TEST(test_recursive)
+    TEST(fs_recursive)
     {
         test::TempTestLocation tmp_location("testtest_dir");
         fs::recursive_copy("testtest_dir", "boo");
         fs::recursive_rm("boo");
     }
     
-    TEST(test_walk)
+    TEST(fs_walk)
     {
         test::TempTestLocation tmp_location("testtest_dir");
         struct foo_walker: public fs::walker {

@@ -34,21 +34,21 @@ void read_file(const char* name, std::string& data)
     data = out.str();
 }
 
-SUITE(tinfra_io)
+SUITE(tinfra)
 {
-    TEST(open_bad_file)
+    TEST(io_open_bad_file)
     {
         tinfra::io::zstreambuf buf;
         CHECK_THROW( buf.open_file("this_file_doesn't_exist", std::ios_base::in), std::logic_error);
     }
 
-    TEST(open_bad_socket)
+    TEST(io_open_bad_socket)
     {
         tinfra::io::zstreambuf buf;
         CHECK_THROW( buf.open_socket("this_host_doesnt_exist", 80), std::logic_error);
     }
 
-    TEST(basic)
+    TEST(io_basic)
     {
         const char* text = "abc \ndef \r\ndef\a\t\xafgef";
         tinfra::test::TempTestLocation testLocation;

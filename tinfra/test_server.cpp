@@ -88,9 +88,9 @@ std::string invoke(std::istream& in, std::ostream& out, std::string const& msg)
     //std::cerr << "C<'" << tinfra::escape_c(tmp) << "'" << std::endl;
     return tmp;
 }
-SUITE(tinfra_server)
+SUITE(tinfra)
 {
-    TEST(test_server_generic)
+    TEST(server_generic)
     {
         TestServer server;
         server.bind("localhost", 10900);
@@ -126,7 +126,7 @@ SUITE(tinfra_server)
     }
 
     // check if Server::stop can abort blocking accept call
-    TEST(test_server_stop)
+    TEST(server_stop)
     {
         TestServer server;
         server.bind("localhost", 10901);

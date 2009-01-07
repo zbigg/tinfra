@@ -18,6 +18,7 @@ using namespace std;
         CHECK(m.contains<T>(k));      \
         CHECK_EQUAL(v, m.get<T>(k) )  
 
+SUITE(tinfra) {
 TEST(multitype_map)
 {
     tinfra::multitype_map<string> m;
@@ -44,4 +45,5 @@ TEST(multitype_map)
     CHECK( m.begin<int>() == m.end<int>() );
     CHECK( m.begin<double>() == m.end<double>() );
     CHECK( m.begin<string>() == m.end<string>() );
+}
 }
