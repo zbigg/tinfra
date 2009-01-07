@@ -11,6 +11,7 @@
 #include <string>
 #include <stdexcept>
 #include <vector>
+#include <cassert>
 
 namespace tinfra {
 
@@ -146,7 +147,12 @@ public:
     typedef char_type const*  iterator;
     typedef char_type const*  const_iterator;
 
-    tstring substr(size_type pos, size_type n = npos) const;
+    tstring substr(size_type pos) const
+    {
+        assert(pos <= size());
+        return tstring(data() + pos, size()-pos, is_null_terminated());
+    }
+    tstring substr(size_type pos, size_type n) const;
     
     int cmp (tstring const& other) const {
         size_t common_length = std::min(size(), other.size());
