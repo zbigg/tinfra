@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -x
+
 dist="$1"
 if [ ! -d "$dist" ] ; then
     echo "$0: output dir '$dist' doesn't exist, build the project" 1>&2  
@@ -18,7 +20,7 @@ success() {
     echo "-----------------" >> $test_log
     shift
     (
-        echo -e "${test_name}\t\t (success)"
+        echo "${test_name}\t\t (success)"
         if [ -n "$*" ] ; then
             echo "${test_name}: $*"
         fi
@@ -31,7 +33,7 @@ fail()
     echo "-----------------" >> $test_log
     shift
     (
-        echo -e "${test_name}\t\t (FAIL)"
+        echo "${test_name}\t\t (FAIL)"
         if [ -n "$*" ] ; then
             echo "${test_name}: $*"
         fi
@@ -43,7 +45,7 @@ generic_test()
 {
     test_name="$1"
     test_log="${test_log_dir}/${test_name}.log"
-    if $dist/${test_name} &> ${test_log} ; then
+    if $dist/${test_name} 2>&1 > ${test_log} ; then
         success ${test_name}
     else
         fail ${test_name}

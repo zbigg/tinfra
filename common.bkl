@@ -71,7 +71,7 @@
 # Keep Makefiles recent
 #
 
-${top_srcdir}/Makefile.in: ${top_srcdir}/tinfra-common/common.bkl ${top_srcdir}/*.bkl
+${top_srcdir}/Makefile.in: ${top_srcdir}/tinfra-support/common.bkl ${top_srcdir}/*.bkl
 	(cd $(top_srcdir); bakefile_gen -f autoconf )
 
 ${top_srcdir}/configure: ${top_srcdir}/configure.ac
