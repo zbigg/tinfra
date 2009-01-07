@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<bakefile-gen>
+    <disable-formats>dmars,dmars_smake,cbx_unix,cbuilderx,msvc4prj</disable-formats>
+    
+    <input>
+        tinfra-regexp.bkl
+    </input>
+    
+    <add-formats>
+        msvc,msvs2003prj,autoconf
+    </add-formats>
+    
+    <add-flags formats="autoconf">
+        -oMakefile.in
+    </add-flags>
+    <add-flags formats="msvc">
+        -omakefile.vc
+    </add-flags>    
+    <add-flags formats="msvs2003prj">
+        -otinfra.sln
+    </add-flags>
+</bakefile-gen>
