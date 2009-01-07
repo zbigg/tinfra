@@ -11,7 +11,7 @@ AC_INIT(
     tinfra,
     0.0.1 ,
     [z.zagorski@gmail.com])
-AC_CONFIG_AUX_DIR([build/autoconf])
+AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
 AC_CONFIG_SRCDIR([tinfra/tinfra.h])
 AC_CONFIG_HEADER([tinfra/config.h])
 
@@ -29,7 +29,7 @@ AC_CANONICAL_SYSTEM
 
 AC_BAKEFILE([m4_include(autoconf_inc.m4)])
 
-m4_include([build/autoconf/pcre.m4])
+m4_include([pcre.m4])
 AC_CHECK_HEADERS([pthread.h])
 
 AC_CHECK_FUNCS([opendir nanosleep usleep])

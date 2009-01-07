@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 
 <makefile>
-    <include file="common.bkl"/>
+    <include file="tinfra-support/common.bkl"/>
     
     <set var="TINFRA_PLATFORM_SOURCES" hints="files">
         <if cond="PLATFORM_WIN32=='1'">

@@ -62,7 +62,7 @@ public:
     void trace(location const& l, const char* message);
     
     bool is_enabled() const    { return enabled_; }
-    bool enable(bool e = true) { enabled_ = e; }
+    void enable(bool e = true) { enabled_ = e; }
     const char* name() const   { return name_; }
 private:
     const char* name_;

@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# bootstrap-project
+#
+# see tinfra-support/build-helper.sh for help
+#
+# checks if tinfra-support is installed, optionally checkouts it
+# and runs tinfra-support/build-helper.sh
+#
+set -e
+PNAME=$(basename $0)
+if ! [ -d tinfra-support ] ; then
+    echo "$PNAME: tinfra-support is missing, trying install one" >&2
+    if ! mtn -b pl.reddix.tinfra-support co tinfra-support ; then
+        echo "$PNAME: tinfra-support is hard requirement, get tinfra monotone database or" >&2
+        echo "$PNAME: place tinfra-support in folder ${PWD}/tinfra-support" >&2
+        exit 1
+    fi
+fi
+
+AUTOCONF_CONFIG_FILE=tinfra/config.h
+
+. tinfra-support/build-helper.sh
