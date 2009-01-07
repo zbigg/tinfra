@@ -1,0 +1,86 @@
+<?xml version="1.0" ?>
+<!--
+    Copyright (C) 2008-2009 Zbigniew Zagorski <z.zagorski@gmail.com>,
+    licensed to the public under the terms of the GNU GPL (>= 2)
+    see the file COPYING for details
+    I.e., do what you like, but keep copyright and there's NO WARRANTY.
+-->
+
+<makefile>
+    <option name="BUILD_TYPE">
+        <values>release,debug</values>
+        <values-description>Release,Debug</values-description>
+        <default-value>debug</default-value>
+        <description>
+            Build type of tinfra
+        </description>
+    </option>
+    
+    <set var="OPTIMIZE_FLAG">
+	<if cond="BUILD_TYPE=='release'">speed</if>
+	<if cond="BUILD_TYPE=='debug'">off</if>
+    </set>
+    <set var="DEBUG_FLAG">
+	<if cond="BUILD_TYPE=='release'">off</if>
+	<if cond="BUILD_TYPE=='debug'">on</if>
+    </set>
+    <set var="WARNING_FLAG">
+	<if cond="BUILD_TYPE=='release'">default</if>
+	<if cond="BUILD_TYPE=='debug'">max</if>
+    </set>
+    
+    <define-tag name="msvc-headers" rules="exe,dll,lib">
+        <msvc-project-files>$(value)</msvc-project-files>
+    </define-tag>
+    
+    <define-tag name="cpp-module" rules="exe,dll,lib">       
+       <sources>$(" ".join(map(lambda a: a+".cpp",value.split())))</sources>
+       <msvc-headers>$(" ".join(map(lambda a: a+".h",value.split())))</msvc-headers>
+    </define-tag>
+
+    <set var="LIB_DEBUG_SUFFIX">
+        <if cond="BUILD_TYPE=='debug'">d</if>
+    </set>
+
+    <set var="DEBUG_PREPFLAG">
+        <if cond="BUILD_TYPE=='debug'">_DEBUG</if>
+        <if cond="BUILD_TYPE=='release'">NDEBUG</if>
+    </set>
+
+    <if cond="FORMAT!='autoconf'">
+        <set var="BUILDNAME">
+            <if cond="BUILD_TYPE=='debug'">debug_$(COMPILER)</if>
+            <if cond="BUILD_TYPE=='release'">release_$(COMPILER)</if>
+        </set>
+
+        <set var="BUILDDIR">out$(DIRSEP)$(BUILDNAME)</set>
+    </if>
+            
+    <!-- THESE SETTINGS are appended to all exe,lib,dll,module -->
+    <template id="default-workspace-settings">
+        <runtime-libs>dynamic</runtime-libs>
+        <optimize>$(OPTIMIZE_FLAG)</optimize>
+	<debug-info>$(DEBUG_FLAG)</debug-info>
+        <warnings>$(WARNING_FLAG)</warnings>
+        <define>$(DEBUG_PREPFLAG)</define>
+    </template>
+    
+    <set var="VARS_DONT_ELIMINATE" append="1">top_srcdir</set> 
+    <fragment format='autoconf'> 
+#
+# Keep Makefiles recent
+#
+
+${top_srcdir}/Makefile.in: ${top_srcdir}/tinfra-common/common.bkl ${top_srcdir}/*.bkl
+	(cd $(top_srcdir); bakefile_gen -f autoconf )
+
+${top_srcdir}/configure: ${top_srcdir}/configure.ac
+	(cd $(top_srcdir); autoconf ; )
+
+$(top_builddir)./config.status : ${top_srcdir}/configure
+	(cd $(top_builddir)./ ; ./config.status --recheck ; )
+
+Makefile: $(srcdir)/Makefile.in $(top_builddir)./config.status
+	(cd $(top_builddir)./ ; ./config.status ; )
+    </fragment>
+</makefile>
