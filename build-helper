@@ -1,24 +1,12 @@
 #!/bin/sh
-
-
+#
 # bootstrap-project
 #
-# prepare project for build
+# see tinfra-support/build-helper.sh for help
 #
-# invokes
-#    bakefile
-#    aclocal
-#    autoconf
+# checks if tinfra-support is installed, optionally checkouts it
+# and runs tinfra-support/build-helper.sh
 #
-# checks if tinfra-support is installed
-#
-# TODO: it should be named tinfra-project
-# and contain few commands
-#   prepare - do what is in here
-#   clean   - clean all
-# actual implementation should go be in tinfra-support
-#
-# TODO tinfra-support should be renamed to tinfra-support
 set -e
 PNAME=$(basename $0)
 if ! [ -d tinfra-support ] ; then
