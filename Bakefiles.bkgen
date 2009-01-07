@@ -3,7 +3,7 @@
     <disable-formats>dmars,dmars_smake,cbx_unix,cbuilderx,msvc4prj</disable-formats>
     
     <input>
-        build/bakefiles/tinfra.bkl
+        tinfra.bkl
     </input>
     
     <add-formats>

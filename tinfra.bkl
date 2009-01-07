@@ -37,8 +37,6 @@
             tinfra/server.cpp
             <!-- tinfra/io/zcompat.cpp -->
             tinfra/fmt.cpp
-            tinfra/regexp.cpp
-	    tinfra/regexp_pcre.cpp
             tinfra/string.cpp
             tinfra/tstring.cpp
             tinfra/path.cpp
@@ -67,9 +65,18 @@
     <using module="pkgconfig"/>
     
     <pkgconfig>
-        <src>tinfra.pc</src>
+        <src>
+            tinfra.pc
+        </src>
     </pkgconfig>
-    
+
+    <pkgconfig>
+        <src>
+            tinfra-test.pc
+        </src>
+    </pkgconfig>
+            
+
     <using module="datafiles"/>
     
     <data-files-tree id="headers">
@@ -81,7 +88,6 @@
             tinfra/exception.h
             tinfra/exeinfo.h
             tinfra/fmt.h
-            tinfra/regexp.h
             tinfra/string.h
             tinfra/tstring.h
             tinfra/io/stream.h            
@@ -144,7 +150,6 @@
             
             tinfra/test_main.cpp
             tinfra/test_subprocess.cpp
-            tinfra/test_regexp.cpp
 	    tinfra/test_memory_pool.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>

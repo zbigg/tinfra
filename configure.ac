@@ -29,7 +29,6 @@ AC_CANONICAL_SYSTEM
 
 AC_BAKEFILE([m4_include(autoconf_inc.m4)])
 
-m4_include([pcre.m4])
 AC_CHECK_HEADERS([pthread.h])
 
 AC_CHECK_FUNCS([opendir nanosleep usleep])
@@ -44,17 +43,7 @@ AC_CHECK_LIB(nsl,gethostbyname)
 
 AC_CHECK_FUNC(hstrerror)
 
-AM_PATH_PCRE(4.5,
-[
-    LIBS="$LIBS $PCRE_LIBS"
-    CPPFLAGS="$CPPFLAGS $PCRE_CFLAGS"
-    AC_DEFINE(HAVE_PCRE,1,[Have PCRE library for regexp])
-], 
-[
-    AC_MSG_ERROR([pcre library not found, where is your pcre-config ?])
-])
-
-AC_CONFIG_FILES([Makefile  tinfra.pc])
+AC_CONFIG_FILES([Makefile  tinfra.pc tinfra-test.pc])
 AC_OUTPUT
 
 cat << EOF
