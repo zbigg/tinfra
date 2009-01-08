@@ -46,15 +46,19 @@
             tinfra/os_common.cpp
             tinfra/trace.cpp
             tinfra/lazy_protocol.cpp
-	    tinfra/test.cpp
             $(TINFRA_PLATFORM_SOURCES)
-            
+        </sources>
+        <install-to>$(LIBDIR)</install-to> 
+    </lib>
+    <lib id="tinfra-test" template="default-workspace-settings">
+        <include>$(SRCDIR)</include>
+        <sources>
+            tinfra/test.cpp
         </sources>
         <install-to>$(LIBDIR)</install-to> 
     </lib>
     
-    <using module="pkgconfig"/>
-    
+    <using module="pkgconfig"/>    
     <pkgconfig>
         <src>
             tinfra.pc
@@ -98,7 +102,6 @@
             tinfra/os_common.h
             tinfra/platform.h
             tinfra/runtime.h
-	    tinfra/test.h
             tinfra/trace.h
             tinfra/generator.h
             tinfra/interruptible.h
@@ -108,6 +111,8 @@
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
 	    tinfra/memory_pool.h
+            
+	    tinfra/test.h
         </files>
     </data-files-tree>
     
@@ -144,8 +149,8 @@
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
         <library>tinfra</library>
+        <library>tinfra-test</library>
         <sys-lib>unittest++</sys-lib>
-        <sys-lib>pthread</sys-lib>
         <if cond="FORMAT!='autoconf' and PLATFORM_WIN32=='1'"> 
             <sys-lib>wsock32</sys-lib>
         </if>

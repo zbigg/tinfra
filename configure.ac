@@ -33,6 +33,8 @@ AC_CHECK_HEADERS([pthread.h])
 
 AC_CHECK_FUNCS([opendir nanosleep usleep])
 
+LIBS="$LIBS -lpthread"
+
 case "$target" in
 *-mingw*|*-mingw32*)
 	LIBS="$LIBS -lwsock32"

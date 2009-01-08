@@ -4,8 +4,8 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: @PACKAGE_NAME@
-Description: tinfra library
+Description: tinfra-test library
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -ltinfra @LIBS@
+Libs: -L${libdir} -ltinfra-test -lunittest++
 Cflags: -I${includedir}
-Requires: libpcre 
+Requires: tinfra
