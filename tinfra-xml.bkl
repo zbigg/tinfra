@@ -1,0 +1,51 @@
+<?xml version="1.0" ?>
+
+<makefile>
+    <include file="tinfra-support/common.bkl"/>
+        
+    
+    <lib id="tinfra-xml" template="default-workspace-settings">
+        <include>$(SRCDIR)</include>
+        <sources>
+            <!--tinfra/xml_stream.cpp-->
+            tinfra/xml/XMLStream.cpp
+            tinfra/xml/XMLStreamReader.cpp
+        </sources>
+        <install-to>$(LIBDIR)</install-to> 
+    </lib>
+    
+    <using module="pkgconfig"/>
+    
+    <pkgconfig>
+        <src>tinfra-xml.pc</src>
+    </pkgconfig>
+    
+    <using module="datafiles"/>
+    
+    <data-files-tree id="headers">
+        <srcdir>$(SRCDIR)</srcdir>
+        <install-to>$(INCLUDEDIR)</install-to> 
+        <files>
+            tinfra/xml.h
+            <!--tinfra/xml/xml_stream.h-->
+            tinfra/xml/XMLStream.h
+        </files>
+    </data-files-tree>
+    
+    <!-- local things -->
+    <exe id="unittests" template="default-workspace-settings">
+        <include>$(SRCDIR)</include>
+        <sources>
+            tests/test_main.cpp            
+        </sources>
+        <library>tinfra-xml</library>
+        <define>SRCDIR="$(SRCDIR)"</define>
+        <define>UNITTEST_IGNORE_SIGNALS</define>
+        <sys-lib>unittest++</sys-lib>
+    </exe>
+    
+    <action id="check" depends="unittests">
+        <depends>unittests</depends>
+        <command>sh $(SRCDIR)/check.sh $(BUILDDIR)</command>
+    </action>
+</makefile>
