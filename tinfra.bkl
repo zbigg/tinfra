@@ -53,15 +53,6 @@
         <install-to>$(LIBDIR)</install-to> 
     </lib>
     
-    <lib id="tinfra_xml" template="default-workspace-settings">
-        <include>$(SRCDIR)</include>
-        <sources>
-            tinfra/xml/XMLStream.cpp
-            tinfra/xml/XMLStreamReader.cpp
-        </sources>
-        <install-to>$(LIBDIR)</install-to> 
-    </lib>
-    
     <using module="pkgconfig"/>
     
     <pkgconfig>
@@ -105,8 +96,6 @@
             tinfra/thread.h
             tinfra/queue.h
             tinfra/os_common.h
-            tinfra/xml/XMLStream.h
-            tinfra/xml.h
             tinfra/platform.h
             tinfra/runtime.h
 	    tinfra/test.h
@@ -155,7 +144,6 @@
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
         <library>tinfra</library>
-        <library>tinfra_xml</library>
         <sys-lib>unittest++</sys-lib>
         <sys-lib>pthread</sys-lib>
         <if cond="FORMAT!='autoconf' and PLATFORM_WIN32=='1'"> 
