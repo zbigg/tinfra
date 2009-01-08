@@ -1,0 +1,4 @@
+
+/* Have PCRE library for regexp */
+#undef HAVE_PCRE
+

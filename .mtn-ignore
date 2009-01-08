@@ -21,6 +21,5 @@
 ^aclocal.m4$
 ^test_result/
 ^tinfra/regexp-config.h$
-^tinfra/regexp-config.h.in$
 ^unittests
 ^tinfra-regexp.pc$
