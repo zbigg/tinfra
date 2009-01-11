@@ -130,6 +130,8 @@ protected:
             // TODO should create option to have reader reporting error
             //      - namely std::logic_error with something like expecting 4 bytes
             //        or message lengh should be at least next + bytes
+            //
+            // THROW_ANALYSIS: escape condition, not available
             throw tinfra::io::would_block(tinfra::fmt(
                 "not enough information to assemble message, wanted %i bytes for %s at position %i")
                 % n % what % (next-data));

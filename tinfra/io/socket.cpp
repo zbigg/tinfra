@@ -102,6 +102,7 @@ public:
     
     int seek(int pos, stream::seek_origin origin)
     {
+        // THROW_ANALYSIS: assertion, programmer error
         throw io_exception("sockets don't support seek()");
     }
     
@@ -111,6 +112,7 @@ public:
         int result = ::recv(socket_, data ,size, 0);
         L(fmt("%i: readed %i '%s'") % socket_ % result % std::string(data,result));
         if( result == -1 ) {
+            // THROW_ANALYSIS: domain/environment event, error
             throw_socket_error("unable to read from socket");
         }
         return result;
@@ -122,6 +124,7 @@ public:
         int result = ::send(socket_, data, size, 0);
         L(fmt("%i: sent %i") % socket_ % result);
         if( result == -1 ) {
+            // THROW_ANALYSIS: domain/environment event, error
             throw_socket_error("unable to write to socket");
         }
         return result;
@@ -247,6 +250,7 @@ static void get_inet_address(const char* address, int rport, struct sockaddr_in*
         ha = ::gethostbyname(address);
         if( ha == NULL ) {
 #ifdef TS_WINSOCK
+            // THROW_ANALYSIS: domain/environment property, not intrinsicly an error
             throw_socket_error(fmt("unable to resolve '%s'") % address);
 #else
             std::string message = fmt("unable to resolve '%s': %s") % address % hstrerror(h_errno);
@@ -255,8 +259,10 @@ static void get_inet_address(const char* address, int rport, struct sockaddr_in*
             case NO_ADDRESS:
             // TODO: check on uix machine: NO_DATA should be also domain error
             // case NO_DATA: 
+                // THROW_ANALYSIS: domain/environment property, not intrinsicly an error
                 throw std::domain_error(message);
             default:
+                // THROW_ANALYSIS: domain/environment event, error
                 throw std::runtime_error(message);
             }
 #endif
@@ -280,6 +286,7 @@ stream* open_client_socket(char const* address, int port)
     if( ::connect(s, (struct sockaddr*)&sock_addr,sizeof(sock_addr)) != 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
+        // THROW_ANALYSIS: domain/environment event, error
         throw_socket_error(error_code, fmt("unable to connect to '%s:%i'") % address % port);
     }
     return new socketstream(s);
@@ -303,12 +310,14 @@ stream* open_server_socket(char const* listening_host, int port)
         int r = 1;
         if( ::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)(void*)&r, sizeof(r)) ) {
             // TODO: it should be warning
+            // THROW_ANALYSIS: domain/environment event, error, ignorable
             std::cerr << "unable to set SO_REUSEADDR=1 on socket" << std::endl;
         }
     }
     if( ::bind(s,(struct sockaddr*)&sock_addr, sizeof(sock_addr)) != 0 ) {
         int error_code = socket_get_last_error();
         close_socket_nothrow(s);
+        // THROW_ANALYSIS: domain/environment event, error
         throw_socket_error(error_code, fmt("bind to '%s:%i' failed") % listening_host % port );
     }
 
@@ -338,6 +347,7 @@ stream* accept_client_connection(stream* server_socket, std::string* peer_addres
 {
     socketstream* socket = dynamic_cast<socketstream*>(server_socket);
     if( !socket ) 
+        // THROW_ANALYSIS: assertion, programmer error
         throw std::invalid_argument("accept: not a socketstream");
     
     socklen_t addr_size = sizeof(sockaddr_in);
@@ -359,6 +369,7 @@ void set_blocking(intptr_t socket_, bool blocking)
 #ifdef TS_WINSOCK
     unsigned long block = blocking ? 0 : 1;
     if( ioctlsocket(socket, FIONBIO, &block) < 0 )
+        // THROW_ANALYSIS: domain/environment event, error
         throw_socket_error("set_blocking: ioctlsocket(FIONBIO) failed");
 #else
     int flags = fcntl( socket, F_GETFL );

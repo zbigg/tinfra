@@ -71,6 +71,7 @@ void list_files(tstring const& dirname, file_list_visitor& visitor)
 #ifdef HAVE_OPENDIR
     DIR* dir = ::opendir(dirname.c_str(temporary_context));
     if( !dir ) {
+        // THROW_ANALYSIS: domain/environment property, not intrinsicly an error
         throw_errno_error(errno, fmt("unable to read dir '%s'") % dirname);
     }
     holder<DIR*> dir_closer(dir);
@@ -94,6 +95,7 @@ void list_files(tstring const& dirname, file_list_visitor& visitor)
 		}
 	} while( _findnext(nonce, &finddata) == 0);	
 #else
+    // THROW_ANALYSIS: program configuration error, should be linker error
     throw generic_exception("tinfra::fs::list_files not implemented on this platform");
 #endif  
 }
@@ -155,6 +157,7 @@ void rm(tstring const& name)
     string_pool temporary_context;
     int result = ::unlink(name.c_str(temporary_context));
     if( result == -1 ) {
+        // THROW_ANALYSIS: domain/environment event, error
         throw_errno_error(errno, fmt("unable to remove file '%s'") % name);
     }
 }
@@ -164,6 +167,7 @@ void rmdir(tstring const& name)
     string_pool temporary_context;
     int result = ::rmdir(name.c_str(temporary_context));
     if( result == -1 ) {
+        // THROW_ANALYSIS: domain/environment event, error
         throw_errno_error(errno, fmt("unable to remove folder '%s'") % name);
     }
 }
@@ -174,7 +178,8 @@ void mkdir(tstring const& name, bool create_parents)
     if( !path::is_dir(parent) ) {
         if( create_parents )
             mkdir(parent);
-        else
+        else 
+            // THROW_ANALYSIS: domain/environment property, not intrinsicly an error
             throw std::logic_error(fmt("unable to create dir '%s': %s") % name % "parent folder doesn't exist");
     }
     string_pool temporary_context;
@@ -184,12 +189,14 @@ void mkdir(tstring const& name, bool create_parents)
     int result = ::mkdir(name.c_str(temporary_context), 0777);
 #endif
     if( result == -1 ) {
+        // THROW_ANALYSIS: domain/environment property, not intrinsicly an error
         throw_errno_error(errno, fmt("unable to create dir '%s'") % name);
     }
 }
 
 void copy(tstring const& src, tstring const& dest)
 {
+    // THROW_ANALYSIS: environment property, error
     if( path::is_dir(src) ) 
         throw std::invalid_argument("tinfra::fs::copy supports only generic files");
     if( path::is_dir(dest) ) {
@@ -212,6 +219,7 @@ void cd(tstring const& dirname)
     string_pool temporary_context;
     int result = ::chdir(dirname.c_str(temporary_context));
     if( result == -1 ) {
+        // THROW_ANALYSIS: domain/environment property, not intrinsicly an error
         throw_errno_error(errno, fmt("unable to open output '%s'") % dirname);
     }
 }
@@ -220,6 +228,7 @@ std::string pwd()
 {
     char buf[1024];
     if( getcwd(buf, sizeof(buf)) == 0 ) {
+        // THROW_ANALYSIS: assertion, programmer error, unimplemented function
         throw_errno_error(errno, "fs::pwd() unable read pwd (implement it better!)");
     }
     return std::string(buf);

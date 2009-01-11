@@ -42,6 +42,7 @@ void recursive_rm(tstring const& src);
 struct walker 
 {
     /** Throw this from accept to stop walk. */
+    // THROW_ANALYSIS: interruption condition (API laziness)
     struct stop { };
     
     /** 

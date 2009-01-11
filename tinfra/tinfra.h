@@ -253,6 +253,7 @@ namespace detail {
     {
         const detail::OffsetMap& om = detail::getOffsetMap<MSType,FieldType>();    
         detail::OffsetMap::const_iterator i = om.find(key);
+        // THROW_ANALYSIS: assertion, programmer error
         if( i == om.end() ) throw field_error(TypeTraits<MSType>::name(), key.c_str());
         return i->second;
     }

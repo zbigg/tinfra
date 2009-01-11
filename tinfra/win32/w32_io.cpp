@@ -63,6 +63,7 @@ win32_stream::~win32_stream()
 void win32_stream::close()
 {
     if( close_nothrow() == -1 ) 
+        // THROW_ANALYSIS: domain/environment event, error
         throw_get_last_error("close failed");
     
 }
@@ -122,6 +123,7 @@ stream* open_file(const char* name, std::ios::openmode mode)
                 FILE_ATTRIBUTE_NORMAL,
                 NULL);
     if( handle == INVALID_HANDLE_VALUE || handle == NULL ) {
+        // THROW_ANALYSIS: domain/environment property, not intrinsicly an error
         throw_get_last_error(fmt("unable to open %s") % name);
     }
     return new win32_stream(handle);
@@ -153,6 +155,7 @@ int win32_stream::seek(int pos, stream::seek_origin origin)
     if( r != 0xffffffff ) {
         return (int)r;
     } else {
+        // THROW_ANALYSIS: domain/environment event/property, error
         throw_get_last_error("seek failed");
         // doesn't return
         return -1;
@@ -171,6 +174,7 @@ int win32_stream::read(char* data, int size)
         DWORD error = ::GetLastError();
         if( error == ERROR_BROKEN_PIPE )
             return 0;
+        // THROW_ANALYSIS: domain/environment event, error
         throw_get_last_error("read failed"); 
     }
     //printf("win32_stream: readed %i bytes\n", readed);
@@ -185,7 +189,8 @@ int win32_stream::write(char const* data, int size)
                   (DWORD)  size,
                   &written,
                   NULL ) == 0 ) 
-    {        
+    {   
+        // THROW_ANALYSIS: domain/environment event, error
         throw_get_last_error("write failed"); 
     }
     //printf("win32_stream: written %i bytes\n", written);

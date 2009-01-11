@@ -81,6 +81,7 @@ void Server::stop()
             stopped_ = true;
         }
     } catch( std::exception& e)  {
+        // THROW_ANALYSIS: error conversion, TODO
         throw std::runtime_error(fmt("unable to stop server %s:%s: %s") %  connect_address % bound_address_ % e.what());
     }
     stopping_ = false;

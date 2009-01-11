@@ -50,6 +50,8 @@ void regexp::compile(const char* pattern, int options)
     int cflags = REG_EXTENDED;
     int r = regcomp(&re_, pattern, cflags);
     if( r != 0 ) {
+        // THROW_ANALYSIS: assertion, programmer error
+        // THROW_ANALYSIS: this is "bad command line parameter" error
         throw_reg_error(r, re_); 
     }
 }
@@ -65,6 +67,7 @@ bool regexp::do_match(match_result_processor* result, tstring const& str, size_t
     if( r == REG_NOMATCH )
         return false;
     if( r != 0 ) {
+        // THROW_ANALYSIS: domain/environment event, error
         throw_reg_error(r, re_);
     }
     result->prepare(NMATCH);

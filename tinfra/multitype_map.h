@@ -84,6 +84,7 @@ public:
     T & get(K const& k) {
         type_key mkey = get_type_key<T>();
         std::map<K, T>* m = get_type_map<T>(mkey,true);
+        // THROW_ANALYSIS: don't know TODO
         if( !m ) throw std::exception();        
         return (*m)[k];
     }

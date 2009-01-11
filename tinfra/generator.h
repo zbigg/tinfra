@@ -88,6 +88,7 @@ public:
     // java-ish iterator contract
     value_type& next() {
         if( !has_next())
+            // THROW_ANALYSIS: assertion, programmer error (has_next should be called)
             throw std::logic_error("no more elements");
         last_result_valid_ = false;
         return current_entry_;

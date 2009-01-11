@@ -69,6 +69,7 @@ posix_stream::~posix_stream()
 void posix_stream::close()
 {
     if( close_nothrow() == -1 ) 
+        // THROW_ANALYSIS: domain/environment event, error
         throw_errno_error(errno, "close failed");
 }
 
@@ -90,12 +91,14 @@ stream* open_file(const char* name, openmode mode)
 	else if ( fwrite )
 	    flags |= O_WRONLY | O_CREAT;
 	else
+            // THROW_ANALYSIS: assertion, programmer error
 	    throw std::invalid_argument("bad openmode");
 	if( (mode & std::ios::trunc) == std::ios::trunc) flags |= O_TRUNC;
 	if( (mode & std::ios::app) == std::ios::app) flags |= O_APPEND;
     }
     int fd = ::open(name, flags, 00644);
     if( fd == -1 ) 
+        // THROW_ANALYSIS: domain/environment property, not intrinsicly an error
         throw_errno_error(errno, fmt("unable to open '%s'") % name);
     return new posix_stream(fd);
 }
@@ -123,6 +126,7 @@ int posix_stream::seek(int pos, stream::seek_origin origin)
     }
     off_t e = lseek(handle_, pos, whence);
     if( e == (off_t)-1 )
+        // THROW_ANALYSIS: domain/environment event, error
 	throw_errno_error(errno, "seek failed");
     return (int)e;
 }
@@ -134,6 +138,7 @@ int posix_stream::read(char* data, int size)
         if( r < 0 && errno == EINTR ) 
             continue;
         if( r < 0 ) 
+            // THROW_ANALYSIS: domain/environment event, error
             throw_errno_error(errno, "read failed");
         return r;
     }
@@ -146,6 +151,7 @@ int posix_stream::write(char const* data, int size)
         if( w < 0 && errno == EINTR )
             continue;
         if( w < 0 ) 
+            // THROW_ANALYSIS: domain/environment event, error
             throw_errno_error(errno, "write failed");
         return w;
     }
@@ -182,6 +188,7 @@ stream* accept_unix_socket_connection(tinfra::io::stream* server_socket)
     socklen_t address_len;
     int client_fd = accept(server_fd, reinterpret_cast<sockaddr*>(&client_address), &address_len);
     if (client_fd < 0) {
+        // THROW_ANALYSIS: domain/environment event, error
         throw_errno_error(errno, "accept(AF_UNIX) failed");
     }
     
@@ -212,11 +219,13 @@ stream* open_unix_socket_server(const char* name, bool fail_if_exists)
     
     if (::bind(fd, reinterpret_cast<sockaddr*>(&address), address_len) < 0) {
         ::close(fd);
+        // THROW_ANALYSIS: domain/environment event, error
         throw_errno_error(errno, "bind failed");
     }
     
     if (listen(fd, 5) < 0) {
         ::close(fd);
+        // THROW_ANALYSIS: domain/environment event, error
         throw_errno_error(errno, "listen failed");
     }
     
@@ -227,6 +236,7 @@ stream* connect_unix_socket_server(const char* name)
 {
     int fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
     if( fd == -1 ) {
+        // THROW_ANALYSIS: domain/environment event, error
         throw_errno_error(errno, "socket(AF_UNIX) failed");
     }
     struct sockaddr_un address;

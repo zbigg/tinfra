@@ -118,6 +118,7 @@ void enable_tracer_by_name_cmd(tstring const& name)
 {
     if( name.size() == 0 || !enable_tracer_by_name(name) ) {
         print_tracer_usage();
+        // THROW_ANALYSIS: this is "bad command line parameter" error
         throw std::logic_error(fmt("unknown or invalid tracer name: '%s'") % name);
     }
 }
@@ -149,6 +150,7 @@ void process_params(int& argc, char** argv)
         if( ENABLE_COMMAND == argv[i]) {
             if( i == argc-1 ) {
                 print_tracer_usage();
+                // THROW_ANALYSIS: this is "bad command line parameter" error
                 throw std::logic_error("--tracer-enable: missing tracer name");
             }
             enable_tracer_by_name_cmd(argv[i+1]);

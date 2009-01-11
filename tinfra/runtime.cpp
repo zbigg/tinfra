@@ -133,6 +133,7 @@ void test_interrupt()
 {
     if( interrupted ) {
         interrupted = 0;
+        // THROW_ANALYSIS: interruption condition (no immediate solution)
         throw interrupted_exception();
     }
 }

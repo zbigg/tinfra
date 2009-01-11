@@ -1,0 +1,11 @@
+// THROW_ANALYSIS: this is "bad command line parameter" error
+// THROW_ANALYSIS: assertion, programmer error
+// THROW_ANALYSIS: fatal runtime error, abort? TODO
+// THROW_ANALYSIS: environment property, not intrinsicly an error
+// THROW_ANALYSIS: domain/environment property, not intrinsicly an error
+// THROW_ANALYSIS: domain/environment event, error
+// THROW_ANALYSIS: domain/environment event, error, ignorable
+// THROW_ANALYSIS: program configuration error, should be linker error
+// THROW_ANALYSIS: not implemented, should be linker error
+// THROW_ANALYSIS: escape condition, not available
+// THROW_ANALYSIS: alien system error reporting, may be anything in fact (assertion, runtime condition, environment property etc)

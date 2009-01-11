@@ -80,6 +80,7 @@ public:
     T* alloc(size_t n=1) {
         while(true) {
             if( n > chunk_size )
+                // THROW_ANALYSIS: fatal runtime error, abort? TODO
                 throw std::logic_error("attempt to allocate more than pool supports");
 
             if( current_pool ) {

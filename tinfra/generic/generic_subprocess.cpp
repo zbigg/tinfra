@@ -56,6 +56,7 @@ struct subprocess_impl: public subprocess {
                 continue;
 	    pipe_ = 0;
             if( tpid < 0 )
+                // THROW_ANALYSIS: domain/environment event, error
                 throw_io_exception("pclose");
             // now convert wait exit_code to process exit code as in wait(2)
             // manual
@@ -91,6 +92,7 @@ struct subprocess_impl: public subprocess {
     }
     
     void     start(std::vector<std::string> const& args) {
+        // THROW_ANALYSIS: not implemented, should be linker error
         throw std::logic_error("generic::subprocess_impl: start(vector<>) not implemented");
     }
 private:
@@ -103,12 +105,14 @@ private:
         //const bool ferr  =  (stderr_mode == REDIRECT && !redirect_stderr);
         
         if( fread && fwrite )
+            // THROW_ANALYSIS: platform property, configuration error
             throw std::logic_error("generic::subprocess_impl: RW subprocess not supported on this platform");
         
         const char* open_mode = fread_ ? "rb" : "wb";
         
         pipe_ = ::popen(command.c_str(temporary_string_pool), open_mode)         
         if( pipe_ == 0 ) {
+            // THROW_ANALYSIS: domain/environment event, error
             throw_io_exception("popen");
         }
         
@@ -136,6 +140,7 @@ std::auto_ptr<subprocess> subprocess::create()
 EVEN don't link such a program and give user choice what to do
 std::auto_ptr<subprocess> subprocess::create()
 {
+    // THROW_ANALYSIS: not implemented, should be linker error
     throw std::logic_error("generic::subprocess_impl: not supported on this platform");
 }
 */

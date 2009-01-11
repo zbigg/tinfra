@@ -137,6 +137,7 @@ struct LexicalInterpreter<char[N]> {
                 std::memcpy(dest,v.data(), v.size());
                 dest[v.size()] = 0;
             } else {
+                // THROW_ANALYSIS: assertion, programmer error
                 throw bad_lexical_cast(TypeTraits<const char*>::name(), TypeTraits<char[N]>::name());
             }
 	}

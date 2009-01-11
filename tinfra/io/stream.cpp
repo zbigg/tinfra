@@ -27,16 +27,19 @@ namespace io {
 
 stream* open_socket(char const* address, int port)
 {
+    // THROW_ANALYSIS: not implemented, should be linker error
     return socket::open_client_socket(address, port);
 }
 
 stream* open_command_pipe(char const* command, openmode mode)
 {
+    // THROW_ANALYSIS: not implemented, should be linker error
     throw io_exception("command pipe: unimplemented");
 }
 
 stream* open_anon_pipe()
 {    
+    // THROW_ANALYSIS: not implemented, should be linker error
     throw io_exception("anon_pipe: unimplemented");
 }
 
@@ -68,11 +71,13 @@ int dstream::seek(int pos, seek_origin origin) {
 }
 int dstream::read(char* dest, int size) {
     if( !input_ )
+        // THROW_ANALYSIS: assertion, programmer error
         throw io_exception("trying to read from write-only stream");
     return input_->read(dest, size);
 }
 int dstream::write(const char* data, int size) {
     if( !output_ )
+        // THROW_ANALYSIS: assertion, programmer error
         throw io_exception("trying to write to read-only stream");
     return output_->write(data, size);
 }
@@ -85,6 +90,7 @@ intptr_t dstream::native() const
 {
     if( input_ ) return input_->native();
     if( output_ ) return output_->native();
+    // THROW_ANALYSIS: assertion, programmer error
     throw std::logic_error("dstream::native: not supported call");
 }
 
@@ -360,6 +366,7 @@ void copy(stream* in, stream* out, size_t max_bytes)
     char buffer[COPY_BUFFER_SIZE];
     // TODO: implement max_bytes > 0 case
     if( max_bytes != 0 )
+        // THROW_ANALYSIS: not implemented, laziness
         throw std::logic_error("copy(streams, max_bytes != 0) not implemented");
     int readed;
     while( (readed = in->read(buffer, sizeof(buffer))) > 0 ) {
@@ -367,6 +374,7 @@ void copy(stream* in, stream* out, size_t max_bytes)
         while( written < readed ) {
             int cw = out->write(buffer + written, readed-written);
             if( cw <= 0 ) {
+                // THROW_ANALYSIS: domain/environment event, error
                 throw std::runtime_error("error copying file, output stream closed?");
             }
             written += cw;
@@ -386,6 +394,7 @@ void copy(std::streambuf& in, std::streambuf& out)
             std::streamsize wt = out.sputn(buffer + written, readed-written);
             if( wt < 0 ) {
                 std::string error_str = "?";
+                // THROW_ANALYSIS: domain/environment event, error
                 throw generic_exception(fmt("error writing file: %s") % error_str);
             }
             written += wt;

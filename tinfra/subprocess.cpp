@@ -37,6 +37,7 @@ std::string capture_command(std::string const& command)
     const int exit_code = p->get_exit_code();
     
     if( exit_code != 0 ) {
+        // THROW_ANALYSIS: alien system error reporting, may be anything in fact (assertion, runtime condition, environment property etc)
         throw std::runtime_error(fmt("command '%s' failed status $s") % command % exit_code);
     }
     

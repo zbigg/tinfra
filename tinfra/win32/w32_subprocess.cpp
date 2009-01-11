@@ -80,6 +80,7 @@ struct win32_subprocess: public subprocess {
     
     virtual void     wait() {
         if( WaitForSingleObject(process_handle, INFINITE) != WAIT_OBJECT_0 ) {
+            // THROW_ANALYSIS: fatal runtime error, abort? TODO
             throw_system_error("WaitForSingleObject on subprocess failed");
         }
     }
@@ -88,6 +89,7 @@ struct win32_subprocess: public subprocess {
         if( exit_code == -1 && process_handle != NULL ) {
             DWORD dwExitCode;
             if( !::GetExitCodeProcess(process_handle,&dwExitCode) ) {
+                // THROW_ANALYSIS: fatal runtime error, abort? TODO
                 throw_system_error("GetExitCodeProcess failed");
             }
             if( dwExitCode == STILL_ACTIVE )
@@ -104,6 +106,7 @@ struct win32_subprocess: public subprocess {
     }
     virtual void     kill() { 
         if( !::TerminateProcess(process_handle, 10) ) {
+            // THROW_ANALYSIS: domain/environment event, error, ignorable
             throw_system_error("TerminateProcess failed");
         }
     }
@@ -152,6 +155,7 @@ struct win32_subprocess: public subprocess {
             
             if( fwrite ) {            
                 if ( CreatePipe(&out_remote, &out_here, &saAttr, 0) == 0 ) {
+                    // THROW_ANALYSIS: domain/environment event, error
                     throw_system_error("CreatePipe failed");
                 }
                 SetHandleInformation(out_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
@@ -159,6 +163,7 @@ struct win32_subprocess: public subprocess {
             }
             if( fread ) {
                 if ( CreatePipe(&in_here, &in_remote, &saAttr, 0) == 0 ) {
+                    // THROW_ANALYSIS: domain/environment event, error
                     throw_system_error("CreatePipe failed");
                 }
                 SetHandleInformation(in_remote, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
@@ -239,6 +244,7 @@ struct win32_subprocess: public subprocess {
                 &si,
                 &processi) == 0 )
             {
+                // THROW_ANALYSIS: domain/environment event/property, error
                 throw_system_error("CreateProcess failed");
             }
             process_handle = processi.hProcess;

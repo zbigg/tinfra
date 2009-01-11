@@ -53,6 +53,7 @@ template <typename T>
     private:
         void assertExists() const {
             if( !exists() ) 
+                // THROW_ANALYSIS: assertion, programmer error
                 throw bad_optional();
         }
     };

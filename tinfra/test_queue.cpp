@@ -29,6 +29,7 @@ SUITE(tinfra)
         {
             int r = q->get();
             if( r < 0 || r >= 1000 )
+                // THROW_ANALYSIS: assertion, programmer error
                 throw UnitTest::AssertException("bad data in queue",__FILE__, __LINE__);
         }
         return 0;
@@ -39,6 +40,7 @@ SUITE(tinfra)
         for(int i = 0; i < 1000; ++i )
         {
             if( i !=  q->get())
+                // THROW_ANALYSIS: assertion, programmer error
                 throw UnitTest::AssertException("bad data in queue",__FILE__, __LINE__);
         }
         return 0;

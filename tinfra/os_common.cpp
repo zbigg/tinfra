@@ -29,21 +29,26 @@ void throw_errno_error(int error, std::string const & message)
     case EBADF:
     case E2BIG:
     case EINVAL:
+        // THROW_ANALYSIS: assertion, programmer error
         throw_errno<std::invalid_argument>(error, message);
     
     case EFBIG:
     case ENOSPC:
+        // THROW_ANALYSIS: domain/environment event, error
         throw_errno<std::length_error>(error, message);
     
     case EAGAIN:
+        // THROW_ANALYSIS: domain/environment property, not an error
         throw_errno<tinfra::io::would_block>(error, message);
     
     case ENOENT:
     case EISDIR:
-    case ENOTDIR: 
+    case ENOTDIR:
+        // THROW_ANALYSIS: domain/environment property, not intrinsicly an error
         throw_errno<std::logic_error>(error, message);
     
     default:
+        // THROW_ANALYSIS: alien system error reporting, may be anything in fact (assertion, runtime condition, environment property etc)
         throw_errno<std::runtime_error>(error, message);
     }
 }

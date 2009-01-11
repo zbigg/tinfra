@@ -56,6 +56,7 @@ int execute_command(const char* command)
 {
     int r = system(command);
     if( r < 0 )
+        // THROW_ANALYSIS: alien system error reporting, may be anything in fact (assertion, runtime condition, environment property etc)
         throw_io_exception("system failed");
     if( WIFEXITED(r) ) {
         r = WEXITSTATUS(r);
@@ -77,6 +78,7 @@ int execute_command(std::vector<std::string> const& args)
         raw_args[idx] = 0;
     }
     execvp(raw_args[0], raw_args);
+    // THROW_ANALYSIS: fatal runtime error, abort? TODO
     throw_io_exception("exec failed");
     return 0;
 }
@@ -116,6 +118,7 @@ struct posix_subprocess: public subprocess {
             if( tpid < 0 &&  errno == EINTR )
                 continue;
             if( tpid < 0 )
+                // THROW_ANALYSIS: domain/environment event, error
                 throw_io_exception("waitpid");
             // now convert wait exit_code to process exit code as in wait(2)
             // manual
@@ -135,11 +138,13 @@ struct posix_subprocess: public subprocess {
     
     virtual void     terminate() {
         if ( ::kill(pid, SIGTERM) < 0 ) 
+            // THROW_ANALYSIS: domain/environment event, error, ignorable
             throw_io_exception(fmt("kill(%i,SIGTERM)") % pid);
     }
     
     virtual void     kill() { 
         if ( ::kill(pid, SIGKILL) < 0 ) 
+            // THROW_ANALYSIS: domain/environment event, error, ignorable
             throw_io_exception(fmt("kill(%i,SIGKILL)") % pid);
     }
     
@@ -178,6 +183,7 @@ struct posix_subprocess: public subprocess {
         if( fwrite ) {            
             int boo[2];
             if ( pipe(boo) < 0 ) 
+                // THROW_ANALYSIS: domain/environment event, error
                 throw_io_exception("pipe");
             out_remote = boo[0];
             out_here = boo[1];
@@ -185,6 +191,7 @@ struct posix_subprocess: public subprocess {
         if( fread ) {
             int boo[2];
             if ( pipe(boo) < 0 ) 
+                // THROW_ANALYSIS: domain/environment event, error
                 throw_io_exception("pipe");
             
             in_here   = boo[0];
@@ -202,6 +209,7 @@ struct posix_subprocess: public subprocess {
         // TODO: it should rather be vfork
         pid = ::fork();
         if( pid == -1 ) 
+            // THROW_ANALYSIS: domain/environment event, error
             throw_io_exception("fork");
             
         if( pid == 0 ) {

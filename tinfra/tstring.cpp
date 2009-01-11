@@ -86,6 +86,7 @@ namespace tinfra {
             if( tstring_detail::bad_abort ) {
                 abort();
             } else {
+                // THROW_ANALYSIS: assertion, programmer error
                 throw std::logic_error("invalid tstring usage!");
             }
         }
