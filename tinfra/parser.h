@@ -5,25 +5,22 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_sequence_parser_h__
-#define __tinfra_sequence_parser_h__
+#ifndef tinfra_parser_h__
+#define tinfra_parser_h__
 
 #include "tinfra/tstring.h"
-#include "tinfra/parser.h"
 
 namespace tinfra {
 
 template <typename T>
-class sequence_parser: public parser {
+class parser {
 public:
-        // inherited from parser
-	//virtual int   process_input(tinfra::tstring const& input) = 0;
-	//virtual void  eof(tinfra::tstring const& unparsed_input) = 0;
-        virtual bool  get_result(T& r) = 0;
+	virtual int   process_input(tinfra::tstring const& input) = 0;
+	virtual void  eof(tinfra::tstring const& unparsed_input) = 0;
 };
 
 } // end namespace tinfra
 
-#endif //__tinfra_parser_h__
+#endif // tinfra_parser_h__
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++

@@ -105,7 +105,7 @@ private:
 		const bool clean_eof = buffer_.empty() && eof_readed_;
 		const bool premature_eof = eof_readed_ && last_accepted == 0;
 		if( clean_eof || premature_eof ) {
-			get_protocol().eof(get_feedback_channel());
+			get_protocol().eof(buffer_.get_contents(), get_feedback_channel());
 			eof_signaled_ = true;
 		}
 	}
@@ -203,6 +203,11 @@ private:
 	
 	void write_with_buffering(tstring const& bytes, stream* channel)
 	{
+		if( !buffer_.empty() ) {
+			// buffer already full, so append bytes to buffer;
+			buffer_.put(bytes);
+			return;
+		}
 		const size_t readed = write_no_buffer(bytes, channel);
 		if( readed == bytes.size() ) {
 			return;
