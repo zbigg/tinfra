@@ -35,6 +35,8 @@ public:
 	    Framework informs that channel has reached EOF when reading.
 	*/
 	virtual void  eof(tinfra::tstring const& unparsed_input, tinfra::io::stream*) = 0;
+
+    virtual ~protocol() {}
 };
 
 class protocol_aio_adapter: public tinfra::aio::listener {

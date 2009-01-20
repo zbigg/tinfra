@@ -12,11 +12,13 @@
 
 namespace tinfra {
 
-template <typename T>
 class parser {
 public:
 	virtual int   process_input(tinfra::tstring const& input) = 0;
 	virtual void  eof(tinfra::tstring const& unparsed_input) = 0;
+
+
+        virtual ~parser() {}
 };
 
 } // end namespace tinfra

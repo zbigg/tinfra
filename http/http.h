@@ -1,6 +1,10 @@
 #ifndef tinfra_http_h__
 #define tinfra_http_h__
 
+#include <tinfra/tstring.h>
+#include <tinfra/parser.h>
+#include <tinfra/lazy_byte_consumer.h>
+
 namespace tinfra { namespace http {
 
 struct raw_parser_sink {
@@ -23,12 +27,13 @@ struct raw_parser_sink {
     virtual ~raw_parser_sink() {}
 };
 
-class protocol_parser: public tinfra::lazy_protocol<protocol_parser> {
+class protocol_parser: public tinfra::parser {
 public:
     enum parse_mode {
         SERVER,
         CLIENT
-    }
+    };
+    
     protocol_parser(raw_parser_sink&, parse_mode);
 
 private:
@@ -47,12 +52,16 @@ private:
     void handle_protocol_header(tstring const& name, tstring const& value);
     void check_content_length(size_t length);
     
+    
     raw_parser_sink& sink_;
     parse_mode mode_;
     
     size_t parsed_content_length;
     size_t readed_content_length;
+    
+    tinfra::lazy_byte_consumer<protocol_parser> dispatch_helper_;
 };
+
 } } // end namespace tinfra::http
 
 #endif // tinfra_http_h__
