@@ -1,11 +1,13 @@
 TINFRA_SRC=/home/zbigg/projects/tinfra/trunk
 
 CXXFLAGS=-O4 -Wall -Werror -pedantic -I$(TINFRA_SRC) -I.
-LDLIBS=-L$(HOME)/lib -g -ltinfra -lpthread -lpcre
+LDLIBS=-L$(HOME)/lib -g -ltinfra -lpthread -lwsock32
 CC=g++
 
 LANG=C
 export LANG
+
+editor_server: editor_server.o
 
 http_server: http_server.o tinfra/lazy_protocol.o tinfra/aio.o tinfra/aio_net.o
 
