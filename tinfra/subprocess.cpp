@@ -37,7 +37,7 @@ std::string capture_command(std::string const& command)
     const int exit_code = p->get_exit_code();
     
     if( exit_code != 0 ) {
-        throw std::runtime_error(fmt("command '%s' failed status $s") % command % exit_code);
+        throw std::runtime_error(fmt("command '%s' failed status %s") % command % exit_code);
     }
     
     return result;
