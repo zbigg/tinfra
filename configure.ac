@@ -32,7 +32,7 @@ PKG_CHECK_MODULES([TINFRA], [tinfra >= 0.0.1],
     [
         CXXFLAGS="$CXXFLAGS $TINFRA_CFLAGS"
         CPPFLAGS="$CPPFLAGS $TINFRA_CFLAGS"
-        LDFLAGS="$LIBS $TINFRA_LIBS"
+        LIBS="$LIBS $TINFRA_LIBS"
     ],
     [ AC_MSG_ERROR([
             tinfra library required

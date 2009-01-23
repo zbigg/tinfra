@@ -48,6 +48,7 @@
         <library>tinfra-regexp</library>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
+	<sys-lib>tinfra-test</sys-lib>
         <sys-lib>unittest++</sys-lib>
     </exe>
     
