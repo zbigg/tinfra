@@ -14,7 +14,7 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
 
-#ifdef _WINSOCK
+#ifdef _WIN32
 #include "winsock.h"
 #else
 #include <arpa/inet.h>
@@ -234,4 +234,4 @@ void deserialize(std::string const& buffer, T& dest)
 
 }} // end namespace rfc4251
 
-#endif __tinfra_rfc4251_h__
+#endif // __tinfra_rfc4251_h__

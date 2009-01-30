@@ -20,4 +20,4 @@ auto_ptr<vfs> create(std::string const& target, std::string const& sftp_subsyste
 
 }} // end namespace tinfra::sftp
 
-#endif __tinfra__sftp_vfs_h__
+#endif // __tinfra__sftp_vfs_h__

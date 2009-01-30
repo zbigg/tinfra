@@ -67,7 +67,7 @@ std::string struct_to_string(T const& v)
 std::string hexify(const char* buf, size_t length)
 {
     std::ostringstream r;
-    for(int i = 0; i < length; ++i ) {
+    for(size_t i = 0; i < length; ++i ) {
         if( i > 0 )
             r << " ";
         r << std::setw(2) << std::setfill('0') << std::hex << (int)(unsigned char)(buf[i]);
@@ -616,8 +616,8 @@ private:
     
     std::auto_ptr<tinfra::subprocess> ssh;
     
-    tinfra::io::stream* from_server;
     tinfra::io::stream* to_server;
+    tinfra::io::stream* from_server;
     
     int next_request_id;
 };

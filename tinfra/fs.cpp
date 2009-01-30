@@ -164,7 +164,7 @@ bool is_dir(tstring const& name)
     // slash in folder name
     if( len > 1 && is_dir_sep(name[len-1]) ) {
         tstring tmp(name.data(), len-1);
-        return is_dir(name);
+        return is_dir(tmp);
     }
 #endif
     string_pool temporary_context;
