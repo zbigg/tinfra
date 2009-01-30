@@ -8,6 +8,8 @@
 #ifndef __tinfra_subprocess_h__
 #define __tinfra_subprocess_h__
 
+#include <memory>
+
 #include "tinfra/io/stream.h"
 
 namespace tinfra {

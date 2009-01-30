@@ -16,6 +16,8 @@
 #include <time.h>
 #endif
 
+#include <cstdlib>
+
 #include "tinfra/path.h"
 
 // need from system
@@ -97,8 +99,8 @@ std::string dirname(tstring const& name)
 std::string tmppath()
 {
     std::string result;    
-    const char* tmpdir  = ::getenv("TMP");
-    if( !tmpdir) tmpdir = ::getenv("TEMP");
+    const char* tmpdir  = std::getenv("TMP");
+    if( !tmpdir) tmpdir = std::getenv("TEMP");
 #ifdef _WIN32
     if( !tmpdir) tmpdir = "/Temp";
 #else
@@ -107,7 +109,7 @@ std::string tmppath()
     // TODO: it's somewhat weak radnomization strategy
     //       invent something better
     time_t t;
-    ::time(&t);
+    time(&t);
     static bool srand_called = false;
     if( !srand_called ) {
         srand_called = true;

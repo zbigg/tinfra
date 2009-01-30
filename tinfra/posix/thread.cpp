@@ -13,6 +13,7 @@
 #include "tinfra/thread.h"
 
 #include <iostream>
+#include <memory>
 
 #include <pthread.h>
 #include "tinfra/fmt.h"

@@ -29,7 +29,7 @@ AC_CANONICAL_SYSTEM
 
 AC_BAKEFILE([m4_include(autoconf_inc.m4)])
 
-AC_CHECK_HEADERS([pthread.h])
+AC_CHECK_HEADERS([pthread.h time.h])
 
 AC_CHECK_FUNCS([opendir nanosleep usleep])
 

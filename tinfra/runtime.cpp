@@ -8,7 +8,9 @@
 #include <ostream>
 #include <iostream>
 #include <iomanip>
-#include <string.h>
+
+#include <cstring>
+#include <cstdlib>
 
 #include "tinfra/fmt.h"
 #include "tinfra/runtime.h"

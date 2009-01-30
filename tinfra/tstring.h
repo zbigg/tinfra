@@ -11,7 +11,9 @@
 #include <string>
 #include <stdexcept>
 #include <vector>
+
 #include <cassert>
+#include <cstring>
 
 namespace tinfra {
 

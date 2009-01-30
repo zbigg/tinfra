@@ -17,6 +17,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <ios>
+#include <memory>
 
 #include <sys/types.h>
 #include <sys/stat.h>

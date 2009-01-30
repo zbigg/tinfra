@@ -10,10 +10,12 @@
 #include "tinfra/exeinfo.h"
 #include "tinfra/trace.h"
 
-#include <stdio.h>
 #include <iostream>
 #include <string>
 #include <exception>
+
+#include <cstdio>
+#include <cstdlib>
 
 using namespace std;
 namespace tinfra {

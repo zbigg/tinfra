@@ -12,6 +12,7 @@
 #include "tinfra/fmt.h"
 
 #include <iostream>
+#include <algorithm>
 
 #include <unittest++/UnitTest++.h>
 #include <unittest++/TestReporter.h>
@@ -154,7 +155,7 @@ public:
     bool operator()(const UnitTest::Test* const test) const
     {
         std::string test_name = test->m_details.testName;
-        return find(names_.begin(), names_.end(), test_name) != names_.end();
+        return std::find(names_.begin(), names_.end(), test_name) != names_.end();
     }
 };
 

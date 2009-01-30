@@ -16,6 +16,8 @@
 #include <cxxabi.h>
 #endif
 
+#include <cstdlib>
+
 
 namespace tinfra {
 
@@ -28,7 +30,7 @@ std::string demangle_typeinfo_name(const std::type_info& t)
     case 0:
         {
             std::string result = data;
-            ::free(data);
+            std::free(data);
             return result;
         }
     case -1:
