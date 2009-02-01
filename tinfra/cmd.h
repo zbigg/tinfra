@@ -42,8 +42,10 @@ int main(int argc, char* argv[],int (*real_main)(int,char*[]));
 
 inline tinfra::cmd::app& get_app() { return tinfra::cmd::app::get(); }
     
-#define TINFRA_MAIN(a) int main(int argc, char** argv) \
-    { return tinfra::cmd::main(argc, argv, a); }
+#define TINFRA_MAIN(a)                           \
+int main(int argc, char** argv)                  \
+    { return tinfra::cmd::main(argc, argv, a); } \
+int __tinfra_main_statement_enforement
 
 } // end of namespace tinfra
 
