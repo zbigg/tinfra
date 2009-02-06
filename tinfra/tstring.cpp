@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <algorithm>
+#include <cassert>
 
 #include "tinfra/thread.h"
 #include "tinfra/cmd.h"
@@ -179,7 +180,7 @@ tstring::size_type
 tstring::find_last_of(char_type const* s, size_type pos, size_type n) const
 {
     if( tstring::size() > 0 ) {
-        // TODO: pos not used!
+        assert(pos == npos); // TODO: pos not used!
         for( const_iterator i = rbegin(); i != rend(); --i ) {
             if( std::memchr(s, *i, n) != 0 ) // 'in S' so return
                 return i - begin();
@@ -192,7 +193,7 @@ tstring::size_type
 tstring::find_last_of(char_type c, size_type pos) const
 {
     if( tstring::size() > 0 ) {
-        // TODO: pos not used!
+        assert(pos == npos); // TODO: pos not used!
         for( const_iterator i = rbegin(); i != rend(); --i ) {
             if( *i == c ) // '== C' so return
                 return i - begin();
@@ -207,7 +208,7 @@ tstring::size_type
 tstring::find_last_not_of(char_type const* s, size_type pos, size_type n) const
 {
     if( tstring::size() > 0 ) {
-        // TODO: pos not used!
+        assert(pos == npos); // TODO: pos not used!
         for( const_iterator i = rbegin(); i != rend(); --i ) {
             if( std::memchr(s, *i, n) == 0 ) // 'not == S' so return
                 return i - begin();
@@ -220,7 +221,7 @@ tstring::size_type
 tstring::find_last_not_of(char_type c, size_type pos) const
 {
     if( tstring::size() > 0 ) {
-        // TODO: pos not used!
+        assert(pos == npos); // TODO: pos not used!
         for( const_iterator i = rbegin(); i != rend(); --i ) {
             if( *i != c ) // 'not = C' so return
                 return i - begin();
