@@ -152,10 +152,33 @@ class test_name_matcher {
 public:
     test_name_matcher(test_name_list& n): names_(n) {}
     
+    static bool matches(tstring const& mask, tstring const& str)
+    {
+        if( mask == str )
+            return true;
+        if( mask.size() > 0 && mask[mask.size()-1] == '*') {
+            size_t const_part_len = mask.size()-1;
+            
+            if( str.size() >= const_part_len &&
+                str.substr(0,const_part_len) == mask.substr(0, const_part_len) )
+                return true;
+        }
+        return false;
+    }
     bool operator()(const UnitTest::Test* const test) const
     {
-        std::string test_name = test->m_details.testName;
-        return std::find(names_.begin(), names_.end(), test_name) != names_.end();
+        std::string test_name      = test->m_details.testName;
+        std::string full_test_name = fmt("%s::%s") % test->m_details.suiteName % test_name;
+        
+        for( test_name_list::const_iterator i = names_.begin(); i != names_.end(); ++i )
+        {
+            std::string const& mask = *i;
+            if( matches(mask, test_name) ) 
+                return true;
+            if( matches(mask, full_test_name) ) 
+                return true;
+        }
+        return false;
     }
 };
 
