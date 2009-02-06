@@ -98,4 +98,36 @@ SUITE(tinfra)
             CHECK_EQUAL(dataset[i].expected, std::string(dataset[i].victim).find(dataset[i].param));
         }
     }
+    
+    TEST(tstring_null_termination)
+    {
+        tinfra::string_pool pool;
+        
+        {   // check that literal based tstring is null terminated
+            // and don't duplicate data using_c_str
+            tstring literal_based("abc");
+            CHECK(  literal_based.c_str(pool) == literal_based.data() );
+            CHECK(  literal_based.is_null_terminated());
+        }
+        
+        {
+            // same as above for std::string based tstring
+            std::string akuku("abc");
+            tstring  basic_string_based(akuku);
+            CHECK( basic_string_based.is_null_terminated());
+            CHECK( basic_string_based.c_str(pool) == akuku.c_str());
+        }
+        
+        {
+            // buffer based string (eg. slice of another)
+            // usually is not null_terminated, so
+            // it should use pool to alloc copy of string
+            char buf[] = { 'a', 'b', 'c' };
+                
+            tstring buffer_based(buf, sizeof(buf));
+            CHECK( !buffer_based.is_null_terminated());
+            
+            CHECK( buffer_based.c_str(pool) != buffer_based.data() );
+        }
+    }
 }

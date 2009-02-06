@@ -66,9 +66,30 @@ public:
         static T dummy;
         type_key mkey = get_type_key<T>();
         std::map<K, T> const* m = get_type_map<T>(mkey);
-        if( !m ) return dummy;
+        if( !m ) 
+            throw std::exception();
         typename std::map<K, T>::const_iterator i = m->find(k);
-        if( i == m->end() ) return dummy;
+        if( i == m->end() ) 
+            throw std::exception();
+        return *i;
+    }
+    
+    /**
+    * Get value
+    *
+    * If map is missing value of T with key k then reference to empty value is
+    * returned 
+    */
+    template<typename T>
+    T get(K const& k, T const& default_value) const {
+        static T dummy;
+        type_key mkey = get_type_key<T>();
+        std::map<K, T> const* m = get_type_map<T>(mkey);
+        if( !m ) 
+            return default_value;
+        typename std::map<K, T>::const_iterator i = m->find(k);
+        if( i == m->end() ) 
+            return default_value;
         return *i;
     }
     
@@ -84,7 +105,8 @@ public:
     T & get(K const& k) {
         type_key mkey = get_type_key<T>();
         std::map<K, T>* m = get_type_map<T>(mkey,true);
-        if( !m ) throw std::exception();        
+        if( !m ) 
+            throw std::exception();        
         return (*m)[k];
     }
     
