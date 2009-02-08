@@ -53,7 +53,6 @@ public:
 private:
     int close_nothrow();
 };    
-static void throw_io_exception(const char* message);
 
 posix_stream::~posix_stream()
 {
@@ -120,6 +119,10 @@ int posix_stream::seek(int pos, stream::seek_origin origin)
     case stream::end:
         whence = SEEK_END;
         break;
+    default:
+        assert(0);
+        // TODO, it should be TINFRA_HARD_ASSERT or what ?
+        throw std::logic_error("bad seek_origin");
     }
     off_t e = lseek(handle_, pos, whence);
     if( e == (off_t)-1 )

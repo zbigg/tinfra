@@ -21,11 +21,14 @@
 #if   defined( _WIN32)
 // on win32 we must use pthread-win32 because we need condition variables
 // #       include <tinfra/win32/thread.h>
+#       define TINFRA_THREADS 1
 #include <tinfra/posix/thread.h>
 #elif defined(HAVE_PTHREAD_H)
 #       include <tinfra/posix/thread.h>
+#       define TINFRA_THREADS 1
 #else
 #error "tinfra: no threading support on this platform"
+#       define TINFRA_THREADS 0
 #endif
 
 namespace tinfra {
