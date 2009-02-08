@@ -48,8 +48,13 @@ public:
     
     void reset();
     
-    operator std::string() {
+    operator std::string const&() {
         return str();
+    }
+    
+    operator tinfra::tstring() {
+        realize();
+        return tinfra::tstring(output_);
     }
     
     operator const char*() {
@@ -80,9 +85,10 @@ private:
 ///
 typedef simple_fmt fmt;
 
+std::ostream& operator << (std::ostream& out, simple_fmt& fmt);
+
 } // end namespace tinfra
 
-std::ostream& operator << (std::ostream& out, tinfra::simple_fmt& fmt);
 
 #endif
 

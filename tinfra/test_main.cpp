@@ -27,7 +27,7 @@ int main(int argc, char** argv)
         tinfra::test::TempTestLocation::setTestResourcesDir(argv[2]);
     else
         tinfra::test::TempTestLocation::setTestResourcesDir(test_resources_dir);
-    return tinfra::cmd::main(argc,argv, tinfra::test::test_main);
+    return tinfra::cmd::main_wrapper(argc,argv, tinfra::test::test_main);
 }
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:

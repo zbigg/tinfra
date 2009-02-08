@@ -9,6 +9,7 @@
 #define __tinfra_cmd_h__
 
 #include <string>
+#include <tinfra/tstring.h>
 
 namespace tinfra {
 namespace cmd {
@@ -21,11 +22,11 @@ public:
     std::string const& program_name() const;
 
     unsigned error_count() const;
-    void fail(std::string const& msg);
-    void warning(std::string const& msg);
-    void silent_exception(std::string const& msg);
-    void inform(std::string const& msg);
-    void error(std::string const& msg);
+    void fail(tstring const& msg);
+    void warning(tstring const& msg);
+    void silent_exception(tstring const& msg);
+    void inform(tstring const& msg);
+    void error(tstring const& msg);
 
     static app& get();
 private:
@@ -35,15 +36,19 @@ private:
     unsigned warning_count_;
 };
 
-int main(int argc, char* argv[],int (*real_main)(int,char*[]));
+inline void warning(tstring const& m) { app::get().warning(m); }
+inline void inform(tstring const& m) { app::get().inform(m); }
+inline void fail(tstring const& m) { app::get().fail(m); }
+inline void error(tstring const& m) { app::get().error(m); }
 
+int main_wrapper(int argc, char* argv[],int (*real_main)(int,char*[]));
 
 } // end of namespace cmd
 
 inline tinfra::cmd::app& get_app() { return tinfra::cmd::app::get(); }
     
 #define TINFRA_MAIN(a) int main(int argc, char** argv) \
-    { return tinfra::cmd::main(argc, argv, a); }
+    { return tinfra::cmd::main_wrapper(argc, argv, a); }
 
 } // end of namespace tinfra
 

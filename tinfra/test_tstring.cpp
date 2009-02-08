@@ -130,4 +130,25 @@ SUITE(tinfra)
             CHECK( buffer_based.c_str(pool) != buffer_based.data() );
         }
     }
+    
+    static void foo(tstring const& a)
+    {
+        std::string x = a.str();
+    }
+    
+    // @compilation-test
+    // @valgrind-test
+    TEST(tstring_conversions)
+    {
+        // checks that tstrin const& parameters are captured
+        // in most use cases
+        foo( "abc" );
+        
+        std::string a("abc");
+        foo( a );
+        foo( std::string("abc") );
+        
+        using tinfra::fmt;
+        foo( fmt("abc%s") % a );
+    }
 }

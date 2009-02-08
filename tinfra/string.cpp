@@ -65,7 +65,6 @@ void        chop_inplace(std::string& s)
 
 std::string chop(tstring const& s)
 {
-    std::size_t start = 0;
     std::size_t last = s.find_last_not_of(END_OF_LINE_CHARS);
     if( last == std::string::npos ) {
         /* if(     s.size() > 0 

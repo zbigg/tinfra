@@ -113,9 +113,10 @@ void simple_fmt::realize()
     pos_ = fmt_.size();
 }
 
-} // end namespace tinfra
 
-std::ostream& operator << (std::ostream& out, tinfra::simple_fmt& fmt)
+std::ostream& operator << (std::ostream& out, simple_fmt& fmt)
 {
     return out << fmt.str();
 }
+
+} // end namespace tinfra

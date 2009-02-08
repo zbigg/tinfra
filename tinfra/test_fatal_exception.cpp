@@ -89,7 +89,7 @@ void test_interrupt(tinfra::cmd::app& app)
     sleep(10);
 }
 
-int test_main(int argc, char** argv)
+int test_fatal_exception_main(int argc, char** argv)
 {    
     tinfra::cmd::app& app = tinfra::cmd::app::get();
     tinfra::set_fatal_exception_handler(fatal_exception_handler);
@@ -111,7 +111,5 @@ int test_main(int argc, char** argv)
     return 0;
 }
 
-int main(int argc,char** argv)
-{
-    return tinfra::cmd::main(argc,argv,test_main);
-}
+TINFRA_MAIN(test_fatal_exception_main);
+

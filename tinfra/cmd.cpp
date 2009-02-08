@@ -21,7 +21,7 @@ using namespace std;
 namespace tinfra {
 namespace cmd {
 
-static void print_maybe_multiline(string const& PS1, string const& PS2, string const& message, ostream& out)
+static void print_maybe_multiline(tstring const& PS1, tstring const& PS2, tstring const& message, ostream& out)
 {
     // TODO: implement "multiline behaviour"
     size_t start = 0;
@@ -48,7 +48,7 @@ static void print_maybe_multiline(string const& PS1, string const& PS2, string c
         start = eol+1;
     } while( !finished );
 }
-static void print_maybe_multiline(string const& prefix, string const& message, ostream& out)
+static void print_maybe_multiline(tstring const& prefix, tstring const& message, ostream& out)
 {
     print_maybe_multiline(prefix,prefix,message,out);
 }
@@ -84,32 +84,32 @@ unsigned app::error_count() const
     return error_count_;
 }
 
-void app::fail(std::string const& msg)
+void app::fail(tstring const& msg)
 {
     print_maybe_multiline(program_name() + ": fatal error: ", msg,cerr);
     error_count_ += 1;
     exit(1);
 }
 
-void app::warning(std::string const& msg)
+void app::warning(tstring const& msg)
 {
     print_maybe_multiline(program_name() + ": warning: ", msg,cerr);
     warning_count_ += 1;
 }
 
-void app::silent_exception(std::string const& msg)
+void app::silent_exception(tstring const& msg)
 {
     print_maybe_multiline(program_name() + ": warning, ignored exception: ", msg,cerr);
     warning_count_ += 1;
 }
 
-void app::error(std::string const& msg)
+void app::error(tstring const& msg)
 {
     print_maybe_multiline(program_name() + ": error: ", msg,cerr);
     error_count_ += 1;
 }
 
-void app::inform(std::string const& msg)
+void app::inform(tstring const& msg)
 {
     print_maybe_multiline(program_name() + ": ", msg,cerr);
 }
@@ -121,12 +121,14 @@ app& app::get()
     return default_app; 
 }
 
+// the "main" that enables some runtime things
+// called by TINFRA_MAIN.
+// forwards control to real application main
 
-int main(int argc, char* argv[],int (*real_main)(int,char*[]))
+int main_wrapper(int argc, char* argv[],int (*real_main)(int,char*[]))
 {
     set_exepath(argv[0]);
         
-    
     app::get().program_name(argv[0]);
     
     initialize_fatal_exception_handler();    
