@@ -1,5 +1,5 @@
 //
-// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// Copyright (C) 2008,2009 Zbigniew Zagorski <z.zagorski@gmail.com>,
 // licensed to the public under the terms of the GNU GPL (>= 2)
 // see the file COPYING for details
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
@@ -32,10 +32,11 @@
 #endif
 
 namespace tinfra {
-
-class Monitor {
-    Mutex      m;
-    Condition  c;
+namespace thread {
+	
+class monitor {
+    mutex      m;
+    condition  c;
 public:
     void lock()      { m.lock(); }
     void unlock()    { m.unlock(); }
@@ -45,44 +46,47 @@ public:
     void broadcast() { c.broadcast(); }
 };
 
-class Synhronizator {
-    Monitor& m;
+class synchronizator {
+    monitor& m;
     
 public:
-    Synhronizator(Monitor& m): m(m) { m.lock(); }
-    ~Synhronizator() { m.unlock(); }
+    synchronizator(monitor& m): m(m) { m.lock(); }
+    ~synchronizator() { m.unlock(); }
     
     void wait()      { m.wait(); }
     void signal()    { m.signal(); }
     void broadcast() { m.broadcast(); }
 };
 
-class ThreadSet {
-    std::vector<Thread> threads_;
+class thread_set {
+    std::vector<thread> threads_;
 
 public:
-    ~ThreadSet();
+    ~thread_set();
 
-    Thread start( Runnable& runnable);
-    Thread start(Thread::thread_entry entry, void* param);
+    thread start( Runnable& runnable);
+    thread start(thread::thread_entry entry, void* param);
 
     template <typename T>
-        Thread start(void* (*entry)(T), T param) {
-            return start(reinterpret_cast<Thread::thread_entry>(entry), (void*)param);
+        thread start(void* (*entry)(T), T param) {
+            return start(reinterpret_cast<thread::thread_entry>(entry), (void*)param);
         }
     
-    void   add(Thread t);
+    void   add(thread t);
 
     /// Join all threads
     /// 
-    /// Join all threads in the ThreadSet in reverse order reverse to
+    /// Join all threads in the thread_set in reverse order reverse to
     /// addition/creation. Successfully joined threads are removed
-    /// from ThreadSet.
+    /// from thread_set.
     /// result vector pointer may be null if result is to be ignored.
     void join(std::vector<void*>* result = 0);
     
 };
 
-} // end namespace tinfra
+} } // end namespace tinfra::thread
 
 #endif // #ifdef __tinfra_thread_h__
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+

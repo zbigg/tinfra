@@ -1,5 +1,5 @@
 //
-// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// Copyright (C) 2008,2009 Zbigniew Zagorski <z.zagorski@gmail.com>,
 // licensed to the public under the terms of the GNU GPL (>= 2)
 // see the file COPYING for details
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
@@ -22,6 +22,7 @@
 //#include <semaphore.h>
 
 namespace tinfra {
+namespace thread {
 /*
 class Semaphore {
     sem_t sem_;        
@@ -36,14 +37,14 @@ public:
 };
 */
 
-class Mutex {
+class mutex {
     pthread_mutex_t mutex_;
 public:
     
     typedef pthread_mutex_t handle_type;
 
-    Mutex() { ::pthread_mutex_init(&mutex_, 0); }
-    ~Mutex() { ::pthread_mutex_destroy(&mutex_); }
+    mutex() { ::pthread_mutex_init(&mutex_, 0); }
+    ~mutex() { ::pthread_mutex_destroy(&mutex_); }
 
     void lock() { 
         ::pthread_mutex_lock(&mutex_); 
@@ -54,13 +55,13 @@ public:
     pthread_mutex_t* get_native() { return &mutex_; }
 };
 
-class Condition {
+class condition {
     pthread_cond_t cond_;
 public:
     typedef pthread_cond_t handle_type;
 
-    Condition()  { ::pthread_cond_init(&cond_, 0); }
-    ~Condition() { ::pthread_cond_destroy(&cond_); }
+    condition()  { ::pthread_cond_init(&cond_, 0); }
+    ~condition() { ::pthread_cond_destroy(&cond_); }
     
     void signal()    { 
         ::pthread_cond_signal(&cond_); 
@@ -71,32 +72,36 @@ public:
     void wait(pthread_mutex_t* mutex) { 
         ::pthread_cond_wait(&cond_, mutex );
     }
-    void wait(Mutex& mutex) { 
+    void wait(mutex& mutex) { 
         ::pthread_cond_wait(&cond_, mutex.get_native() );
     }
 };
 
-class Thread {
+class thread {
     pthread_t thread_;
 public:
-    explicit Thread(pthread_t thread): thread_(thread) {}
-    static Thread current() { return Thread(::pthread_self()); }
+    explicit thread(pthread_t thread): thread_(thread) {}
+    static thread current() { return thread(::pthread_self()); }
+    
     static void sleep(long milliseconds);
     typedef void* (thread_entry)(void*);
 
-    static Thread start( Runnable& runnable);
+    static thread start( Runnable& runnable);
     /// Start a detached thread
     /// runnable will be deleted before thread end
-    static Thread start_detached( Runnable* runnable);    
+    static thread start_detached( Runnable* runnable);    
     
-    static Thread start( thread_entry entry, void* param );
-    static Thread start_detached( thread_entry entry, void* param );
+    static thread start( thread_entry entry, void* param );
+    static thread start_detached( thread_entry entry, void* param );
     
     void* join();
-	size_t to_number() const;
+    size_t to_number() const;
 };
 
-} // end namespace tinfra
+} } // end namespace tinfra
 
 
 #endif // #ifndef __tinfra_posix_thread_h__
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+

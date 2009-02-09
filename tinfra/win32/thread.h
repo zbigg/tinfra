@@ -1,5 +1,5 @@
 //
-// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// Copyright (C) 2008,2009  Zbigniew Zagorski <z.zagorski@gmail.com>,
 // licensed to the public under the terms of the GNU GPL (>= 2)
 // see the file COPYING for details
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
@@ -17,11 +17,12 @@
 #include <windows.h>
 
 namespace tinfra {
+namespace thread {
 
-class Mutex {
+class mutex {
 public:    
-    Mutex();
-    ~Mutex();
+    mutex();
+    ~mutex();
 
     void lock();
     void unlock();
@@ -31,43 +32,43 @@ private:
     CRITICAL_SECTION mutex_;
 };
 
-class Condition {    
+class condition {    
 public:
     typedef void* handle_type;
 
-    Condition();
-    ~Condition();
+    condition();
+    ~condition();
     
     void signal();
     void broadcast();
     void wait(void* mutex);
-    void wait(Mutex& mutex);
+    void wait(mutex& mutex);
 
     CONDITION_VARIABLE* get_native() { return &cond_; }
 private:
     CONDITION_VARIABLE cond_;
 };
 
-class Thread {
+class thread {
 public:
     typedef unsigned long handle_type;
 
-    explicit Thread(handle_type thread): thread_id_(thread) {}
+    explicit thread(handle_type thread): thread_id_(thread) {}
         
-    static Thread current();
+    static thread current();
     
     static void sleep(long milliseconds);
     
     typedef void* (thread_entry)(void*);
 
-    static Thread start( Runnable& runnable);
+    static thread start( Runnable& runnable);
     
     /// Start a detached thread
     /// runnable will be deleted after thread end
-    static Thread start_detached( Runnable* runnable);    
+    static thread start_detached( Runnable* runnable);    
     
-    static Thread start( thread_entry entry, void* param );
-    static Thread start_detached( thread_entry entry, void* param );
+    static thread start( thread_entry entry, void* param );
+    static thread start_detached( thread_entry entry, void* param );
     
     void* join();
     
@@ -76,6 +77,9 @@ private:
     handle_type thread_id_;
 };
 
-} // end namespace tinfra
+} } // end namespace tinfra::thread
 
 #endif
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+

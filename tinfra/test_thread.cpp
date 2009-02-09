@@ -16,33 +16,41 @@ using namespace tinfra;
 
 SUITE(tinfra)
 {
+    using tinfra::thread::mutex;
+    using tinfra::thread::condition;
+    using tinfra::thread::thread;
+    
     TEST(thread_mutex_basic)
     {
-        Mutex m;
+        mutex m;
         m.lock();
         m.unlock();
     }
     
     TEST(thread_condition_basic)
     {
-        Condition cond;
+        tt:condition cond;
         cond.signal();
         cond.broadcast();
     }
-    void* nothing(void*)
+    
+    static int nothing_run_indicator = 0;
+    static void* nothing(void*)
     {
+        nothing_run_indicator = 1;
         return 0;
     }
-    
-    
+        
     TEST(thread_simple)
     {
-        Thread t = Thread::start(nothing, 0);
+        thread t = thread::start(nothing, 0);
         CHECK_EQUAL(0, (intptr_t) t.join() );
+        CHECK_EQUAL(1, nothing_run_indicator);
     }
+    
     struct A {
-	Condition c;
-	Mutex m;
+	condition c;
+	mutex m;
 	
 	void signal() { 
 	    m.lock();
@@ -57,7 +65,7 @@ SUITE(tinfra)
 	}
     };
     
-    void* cond_signaler(void* p)
+    static void* cond_signaler(void* p)
     {
         A* a = static_cast<A*>(p);
 	a->wait(); // wait for green light
@@ -69,7 +77,7 @@ SUITE(tinfra)
 	a->signal(); // signal job finished
         return 0;
     }
-    void* cond_waiter(void* p)
+    static void* cond_waiter(void* p)
     {
         A* a = static_cast<A*>(p);
 	a->signal(); // set up green light
@@ -84,8 +92,8 @@ SUITE(tinfra)
 	//      waiter if it's fast enough consume signal
 	//      sent to signaler
 	//      must use two synchronizers
-        Thread p = Thread::start(cond_signaler, a);
-        Thread c = Thread::start(cond_waiter, a);
+        thread p = thread::start(cond_signaler, a);
+        thread c = thread::start(cond_waiter, a);
         CHECK_EQUAL(0, (intptr_t) c.join() );
         CHECK_EQUAL(0, (intptr_t) p.join() );
     }
@@ -103,9 +111,13 @@ SUITE(tinfra)
     {
         TestRunnable runnable;
         runnable.i = 0;
-        Thread t = Thread::start(runnable);
+        thread t = thread::start(runnable);
         t.join();
         CHECK_EQUAL(1, runnable.i);
     }
 }
+
 #endif // TINFRA_THREADS
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+

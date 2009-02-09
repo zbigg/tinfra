@@ -14,12 +14,12 @@
 namespace tinfra {
 
 template<typename T>
-class Queue: public std::list<T>  {
-    Monitor monitor_;
+class queue: public std::list<T>  {
+    tinfra::thread::monitor monitor_;
 public:
     void put(T const& v)
     {
-        Synhronizator s(monitor_);
+        tinfra::thread::synchronizator s(monitor_);
         this->push_back(v);
         if( this->size() == 1 ) 
             s.broadcast();
@@ -28,7 +28,7 @@ public:
     
     T get() 
     {
-        Synhronizator s(monitor_);
+        tinfra::thread::synchronizator s(monitor_);
         
         while( this->size() == 0 ) {
             s.wait();
@@ -40,7 +40,7 @@ public:
     
     T peek(T const& def = T())
     {
-        Synhronizator s(monitor_);
+        tinfra::thread::synchronizator s(monitor_);
         
         if( this->size() == 0 ) {
             return def;
@@ -51,6 +51,10 @@ public:
         }
     }
 };
-}
 
-#endif
+} // end namespace tinfra
+
+#endif // __tinfra_queue_h__
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+

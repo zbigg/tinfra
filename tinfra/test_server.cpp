@@ -94,8 +94,8 @@ SUITE(tinfra)
     {
         TestServer server;
         server.bind("localhost", 10900);
-        tinfra::ThreadSet ts;
-        tinfra::Thread server_thread = ts.start(server);    
+        tinfra::thread::thread_set ts;
+        tinfra::thread::thread server_thread = ts.start(server);    
         {        
             std::auto_ptr<tinfra::io::stream> client(tinfra::io::socket::open_client_socket("localhost",10900));
             
@@ -130,7 +130,7 @@ SUITE(tinfra)
     {
         TestServer server;
         server.bind("localhost", 10901);
-        tinfra::ThreadSet ts;
+        tinfra::thread::thread_set ts;
         ts.start(server);
         
         server.stop();

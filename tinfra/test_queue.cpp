@@ -7,24 +7,24 @@
 
 #include "tinfra/thread.h"
 #include "tinfra/queue.h"
+
 #include <sstream>
 
 #include <unittest++/UnitTest++.h>
 
-using namespace tinfra;
-
 SUITE(tinfra)
 {
+    using tinfra::queue;
     static void* produce(void* q_)
     {
-        Queue<int>* q = (Queue<int>*)q_;
+        queue<int>* q = (queue<int>*)q_;
         for(int i = 0; i < 1000; ++i )
             q->put(i);
         return 0;
     }
     static void* consume(void* q_)
     {
-        Queue<int>* q = (Queue<int>*)q_;
+        queue<int>* q = (queue<int>*)q_;
         for(int i = 0; i < 1000; ++i )
         {
             int r = q->get();
@@ -33,9 +33,10 @@ SUITE(tinfra)
         }
         return 0;
     }
+    
     static void* consume_check(void* q_)
     {
-        Queue<int>* q = (Queue<int>*)q_;
+        queue<int>* q = (queue<int>*)q_;
         for(int i = 0; i < 1000; ++i )
         {
             if( i !=  q->get())
@@ -46,19 +47,20 @@ SUITE(tinfra)
     
     TEST(queue_single_thread)
     {
-        Queue<int> q;
+        queue<int> q;
         produce(&q);
         consume_check(&q);
-        
     }
     
+    
 #if TINFRA_THREADS
+    using tinfra::thread::thread_set;
     TEST(queue_2_threads)
     {
-        Queue<int> q;
-        ThreadSet ts;
-        ts.start(&consume_check, &q);        
+        queue<int> q;
+        thread_set ts;
         
+        ts.start(&consume_check, &q);
         ts.start(&produce, &q);
         
         ts.join();
@@ -66,8 +68,9 @@ SUITE(tinfra)
     
     TEST(queue_more_threads)
     {
-        Queue<int> q;
-        ThreadSet ts;
+        queue<int> q;
+        thread_set ts;
+        
         ts.start(&consume, &q);        
         ts.start(&consume, &q);
         ts.start(&consume, &q);
@@ -80,4 +83,7 @@ SUITE(tinfra)
     }
 #endif
 
-}
+} // end SUITE(tinfra)
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+

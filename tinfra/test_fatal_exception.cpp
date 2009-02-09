@@ -48,10 +48,11 @@ void* thread_func(void*)
 
 void test_thread_segv(tinfra::cmd::app& app)
 {
-    using namespace tinfra;
+    using tinfra::thread::thread;
+    using tinfra::fmt;
     app.inform("segfaulting in child thread, fatal exception_handler should be called from child thread");
-    app.inform(fmt("main thread: %i") % Thread::current().to_number());
-    Thread t = Thread::start(thread_func,0);
+    app.inform(fmt("main thread: %i") % thread::current().to_number());
+    thread t = thread::start(thread_func,0);
     t.join();
 }
 

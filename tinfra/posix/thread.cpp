@@ -1,5 +1,5 @@
 //
-// Copyright (C) Zbigniew Zagorski <z.zagorski@gmail.com>,
+// Copyright (C) 2008,2009  Zbigniew Zagorski <z.zagorski@gmail.com>,
 // licensed to the public under the terms of the GNU GPL (>= 2)
 // see the file COPYING for details
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
@@ -26,6 +26,7 @@
 #endif
 
 namespace tinfra {
+namespace thread {
 
 static void thread_error(const char* message, int rc)
 {
@@ -43,14 +44,14 @@ static void* thread_master_fun(void* param)
         std::auto_ptr<thread_entry_param> p2((thread_entry_param*)param);
         return p2->entry(p2->param);
     } catch(std::exception& e) {
-        std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % Thread::current().to_number() % e.what();
+        std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % thread::current().to_number() % e.what();
         return 0;
     }
 }
 
-Thread Thread::start(thread_entry entry, void* param )
+thread thread::start(thread_entry entry, void* param )
 {
-    pthread_t thread;
+    pthread_t tid;
     pthread_attr_t attr;
     
     pthread_attr_init(&attr);
@@ -59,19 +60,19 @@ Thread Thread::start(thread_entry entry, void* param )
     std::auto_ptr<thread_entry_param> param2(new thread_entry_param());
     param2->entry = entry;
     param2->param = param;
-    int rc = pthread_create(&thread, &attr, thread_master_fun, (void *)param2.get());
+    int rc = pthread_create(&tid, &attr, thread_master_fun, (void *)param2.get());
     param2.release();
     pthread_attr_destroy(&attr);
     
     if( rc != 0 ) 
         thread_error("start thread", rc);
     
-    return Thread(thread);
+    return thread(tid);
 }
 
-Thread Thread::start_detached( Thread::thread_entry entry, void* param )
+thread thread::start_detached( thread::thread_entry entry, void* param )
 {
-    pthread_t thread;
+    pthread_t tid;
     pthread_attr_t attr;
     
     pthread_attr_init(&attr);
@@ -80,7 +81,7 @@ Thread Thread::start_detached( Thread::thread_entry entry, void* param )
     std::auto_ptr<thread_entry_param> param2(new thread_entry_param());
     param2->entry = entry;
     param2->param = param;
-    int rc = pthread_create(&thread, &attr, thread_master_fun, (void *)param2.get());
+    int rc = pthread_create(&tid, &attr, thread_master_fun, (void *)param2.get());
     param2.release();
     
     pthread_attr_destroy(&attr);
@@ -88,7 +89,7 @@ Thread Thread::start_detached( Thread::thread_entry entry, void* param )
     if( rc != 0 ) 
         thread_error("start thread", rc);
     
-    return Thread(thread);
+    return thread(tid);
 }
 
 static void* runnable_entry(void* param)
@@ -105,17 +106,17 @@ static void* runnable_entry_delete(void* param)
     return 0;
 }
 
-Thread Thread::start( Runnable& runnable)
+thread thread::start( Runnable& runnable)
 {
     return start(runnable_entry, (void*) &runnable);
 }
 
-Thread Thread::start_detached( Runnable* runnable)
+thread thread::start_detached( Runnable* runnable)
 {   
     return start_detached(runnable_entry_delete, (void*) &runnable);    
 }
 
-void* Thread::join()
+void* thread::join()
 {
     void* retvalue;
     int rc = ::pthread_join(thread_, &retvalue);
@@ -123,7 +124,7 @@ void* Thread::join()
     return retvalue;
 }
 
-void Thread::sleep(long milliseconds)
+void thread::sleep(long milliseconds)
 {
 #if defined(WIN32)
     ::Sleep(milliseconds);
@@ -154,11 +155,12 @@ void Thread::sleep(long milliseconds)
 #endif
 }
 
-size_t Thread::to_number() const
+size_t thread::to_number() const
 {
 	size_t* a = (size_t*)&thread_;
 	return *a;
 }
 
-}
+} } // end namespace tinfra::thread
 
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
