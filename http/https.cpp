@@ -17,10 +17,13 @@
 #include "tinfra/aio.h"
 #include "tinfra/aio_net.h"
 #include "tinfra/connection_handler.h"
+#include "tinfra/tstring.h"
 
 #include "tinfra/trace.h"
 
 #include "protocol_aio_adapter.h"
+
+#include "http.h"
 
 std::string fake_response;
 
@@ -34,29 +37,38 @@ static void build_fake_response()
     }
 }
 
-class http_request_header {
+using tinfra::tstring;
+
+struct http_header_entry {
+	tstring key;
+	tstring value;
+};
+struct http_request_header {
 	tstring method;
 	tstring request_uri;
 	tstring protocol_version;
 	std::vector<http_header_entry> headers;
 };
 
-struct http_request_builder: public http_request_processor {
+struct http_request_builder: public tinfra::http::raw_parser_sink {
 	tinfra::string_pool pool;
+    
+        http_request_header hrh;
+
 	virtual void request_line(tstring const& method, 
 	                          tstring const& request_uri,
 	                          tstring const& proto_version)
 	{
-		this->method = pool.create(method);
-		this->request_uri = pool.create(request_uri);
-		this->protocol_version = pool.create(proto_version);
+		hrh.method = pool.create(method);
+		hrh.request_uri = pool.create(request_uri);
+		hrh.protocol_version = pool.create(proto_version);
 	}
 	virtual void header(tstring const& name, tstring const& value)
 	{
 		http_header_entry tmp;
 		tmp.key = pool.create(name);
 		tmp.value = pool.create(value);
-		this->headers.push_back(tmp);
+		hrh.headers.push_back(tmp);
 	}
 	virtual void finished_headers()
 	{
@@ -64,15 +76,6 @@ struct http_request_builder: public http_request_processor {
 	virtual void content(tstring const& data, bool last)
 	{
 	}
-};
-
-class http_header_entry {
-	tstring key;
-	tstring value;
-};
-
-
-class http_server_protocol {
 };
 
 const int DEFAULT_PORT = 10456;
@@ -106,35 +109,34 @@ public:
 	
 private:
 	http_server_protocol protocol;
-	protocol_aio_adapter protocol_adapter;
+	tinfra::aio::protocol_aio_adapter protocol_adapter;
 };
 
 int listen(int port)
 {
+    using tinfra::io::stream;
+    using std::auto_ptr;
+    using tinfra::aio::connection_handler_aio_adapter;
+    using tinfra::aio::dispatcher;
 
-	using tinfra::io::stream;
-	using std::auto_ptr;
-	using tinfra::aio::connection_handler_aio_adapter;
-	using tinfra::aio::dispatcher;
-
-	auto_ptr<stream> listen_stream = tinfra::aio::create_service_stream("", port);
-	
-	http_server_connection_handler::factory_type connection_handler_factory;
-	
-	connection_handler_aio_adapter cl(connection_handler_factory);
-	
-	auto_ptr<dispatcher> dispatcher = tinfra::aio::dispatcher::create();
-	
-	dispatcher->add( listen_stream.get(), &cl, dispatcher::READ) ;
-	
-	bool should_continue = true;
-	
-	while( should_continue ) {
-		dispatcher->step();
-	
-		tinfra::test_interrupt();
-	}
-	return 0;
+    auto_ptr<stream> listen_stream = tinfra::aio::create_service_stream("", port);
+    
+    http_server_connection_handler::factory_type connection_handler_factory;    
+    connection_handler_aio_adapter cl(connection_handler_factory);
+    
+    {
+        auto_ptr<dispatcher> dispatcher = tinfra::aio::dispatcher::create();	
+        dispatcher->add( listen_stream.get(), &cl, dispatcher::READ) ;
+        
+        bool should_continue = true;
+        
+        while( should_continue ) {
+                dispatcher->step();
+        
+                tinfra::test_interrupt();
+        }
+    }
+    return 0;
 }
 
 

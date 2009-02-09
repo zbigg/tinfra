@@ -30,6 +30,8 @@ struct generic_factory_base2 {
 	typedef P2 param2_type;
 	
 	virtual T* create(P1, P2) = 0;
+    
+        virtual ~generic_factory_base2() {}
 };
 
 template <typename I, typename FT>

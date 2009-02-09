@@ -14,20 +14,21 @@ protocol_parser::protocol_parser(raw_parser_sink& ps, parse_mode m)
     : sink_(p), 
       mode_(m),
       parsed_content_length(-1), 
-      readed_content_length(0)
+      readed_content_length(0),
+      dispatch_helper_(*this)
 {
     setup_initial_state();
 }
 
 void protocol_parser::setup_initial_state()
 {
-    wait_for_delimiter("\r\n",
+    dispatch_helper_.wait_for_delimiter("\r\n",
         make_step_method(&protocol_parser::request_line));
     parsed_content_length = tstring::npos;
 }
 
 int protocol_parser::request_line(tstring const& s) {
-    wait_for_delimiter("\r\n", 
+    dispatch_helper_.wait_for_delimiter("\r\n", 
         make_step_method(&protocol_parser::header_line));
             
     // TODO: store/consume request-line
@@ -78,9 +79,9 @@ void protocol_parser::setup_content_retrieval()
     size_t remaining_size = parsed_content_length - readed_content_length;
     
     if( parsed_content_length == tstring::npos ) {
-        next(make_step_method(&protocol_parser::content_bytes));
+        dispatch_helper_.next(make_step_method(&protocol_parser::content_bytes));
     } if( remaining_size > 0 ) {
-        next(make_step_method(&protocol_parser::content_bytes));
+        dispatch_helper_.next(make_step_method(&protocol_parser::content_bytes));
     } else if( is_keep_alive() ) {
         setup_initial_state();
     } else {
@@ -90,8 +91,7 @@ void protocol_parser::setup_content_retrieval()
 const tstring CONTENT_LENGTH = "content-length";
 
 void protocol_parser::handle_protocol_header(tstring const& name, tstring const& value)
-{        
-    
+{
     if( name == CONTENT_LENGTH ) { // TODO: case
         int n;
         tinfra::from_string(value, n);

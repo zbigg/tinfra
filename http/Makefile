@@ -10,7 +10,7 @@ PROGS=https
 
 all: $(PROGS)
 
-OBJECTS=https.o ../tinfra/connection_handler.o ../tinfra/aio.o ../tinfra/aio_net.o protocol_aio_adapter.o
+OBJECTS=https.o http.o ../tinfra/connection_handler.o ../tinfra/aio.o ../tinfra/aio_net.o protocol_aio_adapter.o
 
 https: $(OBJECTS)
 
