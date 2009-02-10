@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_smart_ptr_h__
-#define __tinfra_smart_ptr_h__
+#ifndef __tinfra_shared_ptr_h__
+#define __tinfra_shared_ptr_h__
 
 namespace tinfra {
 
@@ -31,7 +31,9 @@ struct reference_count {
     }
     
     void attach() {
-        *ref_ += 1;
+        if( ref_ ) {
+            *ref_ += 1;
+        }
     }
     
     bool detach();
@@ -63,7 +65,10 @@ public:
     ~shared_ptr() {
         release();
     }
-    
+public:
+    reference_count const& _tinfra_priv_refcount_() const {
+        return refcount_;
+    }
 private:
     void release() {
         if( refcount_.detach() ) {
@@ -102,8 +107,8 @@ shared_ptr<T>::shared_ptr(shared_ptr const& p)
 template <typename T>
 template <typename Y>
 shared_ptr<T>::shared_ptr(shared_ptr<Y> const& p)
-    : ptr_(p.ptr_),
-      refcount_(p.refcount_)
+    : ptr_(p.get()),
+      refcount_(p._tinfra_priv_refcount_())
 {
     TINFRA_TRACE_MSG("tinfra::shared_ptr: copy_const template");
     refcount_.attach();
@@ -135,8 +140,8 @@ shared_ptr<T>& shared_ptr<T>::operator=(shared_ptr<Y> const& p)
     
     release();
     
-    ptr_ = p.ptr_;
-    refcount_ = p.refcount_;
+    ptr_ = p.get();
+    refcount_ = p._tinfra_priv_refcount_;
     
     refcount_.attach();
     
@@ -158,5 +163,5 @@ inline bool reference_count::detach() {
 
 } // end namespace tinfra
 
-#endif __tinfra_smart_ptr_h__
+#endif // __tinfra_shared_ptr_h__
 
