@@ -139,6 +139,22 @@ public:
             ChannelEntry& ce = channels.entries[i];
             
             
+            try {
+                if( (pfd->revents & POLLIN  ) == POLLIN ) {
+                    ce.the_listener->event(*this, ce.channel, READ);
+                }
+                if( (pfd->revents & POLLOUT ) == POLLOUT) {
+                    ce.the_listener->event(*this, ce.channel, WRITE);
+                }
+            } catch( std::exception& e) {
+                close(&ce);
+                continue;
+                
+            } catch(...) {
+                close(&ce);
+                continue;
+            }
+            
             if( (pfd->revents & POLLERR) == POLLERR ) {
                 ce.the_listener->failure(*this, ce.channel, 1);
                 close(&ce);
@@ -151,19 +167,7 @@ public:
                 continue;
             }
             
-            try {
-                if( (pfd->revents & POLLIN  ) == POLLIN ) {
-                    ce.the_listener->event(*this, ce.channel, READ);
-                }
-                if( (pfd->revents & POLLOUT ) == POLLOUT) {
-                    ce.the_listener->event(*this, ce.channel, WRITE);
-                }
-            } catch( std::exception& e) {
-                close(&ce);
-                
-            } catch(...) {
-                close(&ce);
-            }
+            
         }
         
         channels.cleanup();

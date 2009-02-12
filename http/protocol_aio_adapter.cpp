@@ -81,12 +81,20 @@ public:
 	{
 		return true;
 	}
+        
+        void signal_eof()
+        {            
+            get_protocol().eof(buffer_.get_contents(), get_feedback_channel());
+            eof_signaled_ = true;
+            buffer_.consume(buffer_.get_contents().size());
+        }
+        
 private:
 	protocol& get_protocol() { return parent_.protocol_; }
 	stream*   get_feedback_channel() { return parent_.get_feedback_channel(); }
 	
 	void consume_buffer() {
-		int accepted;
+		int accepted = 0;
 		while( ! buffer_.empty() ) {
 			 accepted = get_protocol().process_input(buffer_.get_contents(), get_feedback_channel());
 			 if( accepted == 0 ) 				 
@@ -105,10 +113,11 @@ private:
 		const bool clean_eof = buffer_.empty() && eof_readed_;
 		const bool premature_eof = eof_readed_ && last_accepted == 0;
 		if( clean_eof || premature_eof ) {
-			get_protocol().eof(buffer_.get_contents(), get_feedback_channel());
-			eof_signaled_ = true;
+			signal_eof();
 		}
 	}
+        
+        
 	int read_next_chunk(stream* channel)
 	{
 		if( eof_readed_ )
@@ -121,6 +130,7 @@ private:
 			// TODO: again this exception is bad design
 			return -1;
 		}
+                TINFRA_TRACE_VAR(readed);
 		if( readed == 0 ) {
 		    eof_readed_ = true;
 		    return 1;
@@ -238,6 +248,10 @@ protocol_aio_adapter::protocol_aio_adapter(protocol& p) :
 	protocol_(p)
 {
 }
+
+protocol_aio_adapter::~protocol_aio_adapter()
+{
+}
 void protocol_aio_adapter::event(dispatcher& d, stream* channel, int event)
 {
 	TINFRA_TRACE_MSG("protocol_aio_adapter: event");
@@ -255,7 +269,10 @@ void protocol_aio_adapter::event(dispatcher& d, stream* channel, int event)
 
 void protocol_aio_adapter::failure(dispatcher& d, stream* c, int error)
 {
-	TINFRA_TRACE_MSG("protocol_aio_adapter: failure NOT IMPLEMENTED");
+    writer_->set_base_channel(c);
+    reader_->signal_eof();
+    d.remove(c);
+    //TINFRA_TRACE_MSG("protocol_aio_adapter: failure NOT IMPLEMENTED");
 }
 
 stream* protocol_aio_adapter::get_feedback_channel()

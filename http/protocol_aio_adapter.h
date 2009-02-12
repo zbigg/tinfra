@@ -50,7 +50,7 @@ class protocol_aio_adapter: public tinfra::aio::listener {
 	protocol& protocol_;
 public:
 	protocol_aio_adapter(protocol& p);
-	
+	~protocol_aio_adapter();
 	virtual void event(dispatcher& d, stream* c, int event);
 	
 	virtual void failure(dispatcher& d, stream* c, int error);
