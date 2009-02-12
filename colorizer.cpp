@@ -90,7 +90,7 @@ public:
 	}
 };
 
-std::string clean_stl(std::string const& text)
+std::string clean_stl(tstring const& text)
 {
 	static const struct rule {
 		const char* text;
@@ -124,7 +124,7 @@ public:
     colorizer_line_sink(const char* prefix, tinfra::io::stream* out): prefix_(prefix), out_(out) {}
 
     virtual void process(tstring const& line) {
-        std::string s = fmt("%s: %s") % prefix_ % line;
+        std::string s = clean_stl(line);
         std::cerr.write(s.data(), s.size());
     }
 };
@@ -197,20 +197,18 @@ void process(tinfra::subprocess& sp)
 }
 
 int colorizer_main(int argc, char** argv)
-{
-    using std::vector;
-    using std::string;
-    
+{    
     if( argc == 1 )
         tinfra::cmd::fail("command needed");
     
+    using std::vector;
+    using std::string;
     vector<string> args(argv+1, argv+argc);
     
     auto_ptr<subprocess> sp = subprocess::create();
     
     sp->set_stdout_mode(subprocess::REDIRECT);
-    sp->set_stderr_mode(subprocess::REDIRECT);
-    
+    sp->set_stderr_mode(subprocess::REDIRECT);    
     sp->start(args);
     process(*sp);
     sp->wait();
