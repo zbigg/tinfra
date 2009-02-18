@@ -114,8 +114,6 @@ private:
     shared_ptr< impl_type > source_impl_;
 };
 
-
-
 class stream_source: public source_base<char> {
 public:
     stream_source(tinfra::io::stream* s): s_(s) {}
@@ -129,6 +127,42 @@ public:
     }
 private:
     tinfra::io::stream* s_;
+};
+
+class system_cmd_source: public source_base<char>  {
+public:
+    system_cmd_source(tstring const& command)
+        : command_(command.str()) 
+    {}
+    
+    ~system_cmd_source() {
+    }
+    pipe_status read(char& out) {
+        ensure_opened();
+        char c;
+        if( process_->get_stdout()->read(&c, 1) == 0 ) {
+            ensure_closed();
+            return eof;
+        }
+        out = c;
+        return success;
+    }
+    void ensure_open() {
+        if( process_.get() != 0 )
+            return;
+        
+        process_ = tinfra::subproces::create();
+        process_->set_stdout_mode(subprocess::REDIRECT);
+        process_->start(command_);
+    }
+    void ensure_closed() {
+        if( process_.get() == 0 )
+            return;
+        process_->wait();
+    }
+private:
+    auto_ptr<tinfra::subprocess> process_;
+    std::string command_;
 };
 
 class line_reader: public pipe_base<char, std::string> {
