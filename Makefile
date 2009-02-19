@@ -19,9 +19,9 @@ list_files_generator: list_files_generator.o
 
 colorizer: colorizer.o tinfra/aio.o http/protocol_aio_adapter.o
 
-call_remote: call_remote.o callfwd.o
+callfwd_test: callfwd_test.o callfwd.o
 
-call_remote.o callfwd.o: callfwd.h
+callfwd_test.o callfwd.o: callfwd.h callfwd_detail.h
 
 clean:
 	rm -rf *.o ftt http/*.o tinfra/*.o
