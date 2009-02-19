@@ -25,7 +25,7 @@ public:
     integer_wrapper(T v): _v(v) {}
 
     
-    integer_wrapper& operator=(T v) { _v = v; }
+    integer_wrapper& operator=(T v) { _v = v; return *this;}
     
     operator T const&() const { return _v; }
     operator T&() { return _v; }

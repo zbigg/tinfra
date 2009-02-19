@@ -202,7 +202,7 @@ stream* open_unix_socket_server(const char* name, bool fail_if_exists)
     address.sun_family = AF_UNIX;
     strcpy(address.sun_path, name);
     
-    if( tinfra::path::exists(name)) {
+    if( tinfra::fs::exists(name)) {
         if( fail_if_exists ) {
             ::close(fd);
             return 0;

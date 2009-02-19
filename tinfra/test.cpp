@@ -10,6 +10,7 @@
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
+#include "tinfra/trace.h"
 
 #include <iostream>
 #include <algorithm>
@@ -36,55 +37,47 @@ using std::cin;
 using std::endl;
     
 #ifdef SRCDIR
-static std::string top_srcdir = SRCDIR;
+    #define DEFAULT_TOP_SRCDIR SRCDIR
 #else
-static std::string top_srcdir = ".";
+    #define DEFAULT_TOP_SRCDIR "."
 #endif
 
-TempTestLocation::TempTestLocation(std::string const& name)
-    : name_(name), orig_pwd_(""), tmp_path_("") 
-{
-    init();
-}
+static std::string top_srcdir = DEFAULT_TOP_SRCDIR;
 
-void TempTestLocation::init()
+TINFRA_MODULE_TRACER(tinfra_test_fs_sandbox);
+
+test_fs_sandbox::test_fs_sandbox(tstring const& name):
+	fs_sandbox(tinfra::local_fs()),
+	name_(name.str()) 
 {
-    tmp_path_ = path::tmppath();
-    fs::mkdir(tmp_path_.c_str());
+    TINFRA_USE_TRACER(tinfra_test_fs_sandbox);
     if( name_.size() > 0 ) {
         string real_path = path::join(top_srcdir, name_);
-        if( !path::exists(real_path) ) {
+        if( !fs::exists(real_path) ) {
             throw tinfra::generic_exception(fmt("unable to find test resource %s (%s)") % name_ % real_path);
         }
-        string name_in_tmp_ = path::join(tmp_path_, name_);
-        fs::recursive_copy(real_path, name_in_tmp_);
+        
+        fs::recursive_copy(real_path, fs_sandbox::path());
     } 
     orig_pwd_ = fs::pwd();
-    fs::cd(tmp_path_.c_str());
+    fs::cd(fs_sandbox::path());
+    TINFRA_TRACE_MSG(fmt("entering sandbox pwd='%s'") % fs_sandbox::path());
 }
-TempTestLocation::~TempTestLocation()
+test_fs_sandbox::~test_fs_sandbox()
 {
-    fs::cd(orig_pwd_.c_str());
-    if( path::exists(tmp_path_) ) {
-        fs::recursive_rm(tmp_path_.c_str());
-    }
+    TINFRA_USE_TRACER(tinfra_test_fs_sandbox);
+    TINFRA_TRACE_MSG(fmt("leaving sandbox pwd='%s'") % orig_pwd_);
+    fs::cd(orig_pwd_);    
 }
 
-std::string TempTestLocation::getPath() const { 
-    if( name_.size() > 0 )
-        return name_;
-    else
-        return ".";
+void set_test_resources_dir(tstring const& x)
+{
+    top_srcdir.assign(x.data(), x.size());
 }
 
-void TempTestLocation::setTestResourcesDir(std::string const& x)
+void user_wait(tstring const& prompt)
 {
-    top_srcdir = x;
-}
-
-void user_wait(const char* prompt)
-{
-    if( prompt ) {
+    if( prompt.size() != 0 ) {
         cout << prompt << " ";
     }
     cout << "(waiting for enter)";

@@ -48,31 +48,6 @@ std::string join(tstring const& a, tstring const& b)
         return "";
 }
 
-bool exists(tstring const& name)
-{
-    string_pool temporary_context;
-    struct stat st;
-    return ::stat(name.c_str(temporary_context), &st) == 0;
-}
-
-bool is_dir(tstring const& name)
-{
-    string_pool temporary_context;
-    struct stat st;
-    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
-        return false;
-    return (st.st_mode & S_IFDIR) == S_IFDIR;
-}
-
-bool is_file(tstring const& name)
-{
-    string_pool temporary_context;
-    struct stat st;
-    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
-        return false;
-    return (st.st_mode & S_IFREG) == S_IFREG;
-}
-
 std::string basename(tstring const& name)
 {
     std::string::size_type p = name.find_last_of("/\\");
@@ -96,16 +71,20 @@ std::string dirname(tstring const& name)
     }
 }
 
-std::string tmppath()
+std::string tmppath(const char* prefix, const char* tmpdir)
 {
-    std::string result;    
-    const char* tmpdir  = std::getenv("TMP");
-    if( !tmpdir) tmpdir = std::getenv("TEMP");
-#ifdef _WIN32
-    if( !tmpdir) tmpdir = "/Temp";
-#else
-    if( !tmpdir) tmpdir = "/tmp";
-#endif
+    if( tmpdir == 0 || strlen(tmpdir) == 0 ) {
+        tmpdir  = ::getenv("TMP");
+        if( !tmpdir) 
+            tmpdir = ::getenv("TEMP");
+        #ifdef _WIN32
+            if( !tmpdir) 
+                tmpdir = "/Temp";
+        #else
+            if( !tmpdir) 
+                tmpdir = "/tmp";
+        #endif
+    }       
     // TODO: it's somewhat weak radnomization strategy
     //       invent something better
     time_t t;
@@ -117,7 +96,13 @@ std::string tmppath()
     }
     int stamp = ::rand() % 104729; // 104729 is some arbitrary prime number
     
-    return fmt("%s/%s_%s_%s") % tmpdir % basename(get_exepath()) % t % stamp;
+    std::string sprefix;
+    if( prefix == 0 || strlen(prefix) == 0) {
+        sprefix = basename(get_exepath()).c_str();
+    } else {
+        sprefix = prefix;
+    }
+    return fmt("%s/%s_%s_%s") % tmpdir % sprefix % t % stamp;
 }
 
 } }

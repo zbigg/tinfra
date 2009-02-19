@@ -51,7 +51,7 @@ SUITE(tinfra)
     TEST(io_basic)
     {
         const char* text = "abc \ndef \r\ndef\a\t\xafgef";
-        tinfra::test::TempTestLocation testLocation;
+        tinfra::test::test_fs_sandbox testLocation;
         write_file("a",text);
         std::string b;
         read_file("a", b);

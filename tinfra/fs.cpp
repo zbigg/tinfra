@@ -12,7 +12,7 @@
 #include "tinfra/fmt.h"
 #include "tinfra/io/stream.h"
 #include "tinfra/os_common.h"
-
+#include "tinfra/vfs.h"
 #include <streambuf>
 #include <fstream>
 #include <stdexcept>
@@ -82,18 +82,18 @@ void list_files(tstring const& dirname, file_list_visitor& visitor)
         visitor.accept(entry->d_name);
     }    
 #elif defined HAVE_FINDFIRST
-	std::string a = dirname.str();
-	a += "\\*";
-	_finddata_t finddata;
-	intptr_t nonce = _findfirst(a.c_str(), &finddata);
-	if( nonce == -1 ) 
-		return;
-        holder<intptr_t> nonce_closer(nonce);
-	do {
-		if( std::strcmp(finddata.name,"..") != 0 && std::strcmp(finddata.name, ".") != 0 ) {
-			visitor.accept(finddata.name);
-		}
-	} while( _findnext(nonce, &finddata) == 0);	
+    std::string a = dirname.str();
+    a += "\\*";
+    _finddata_t finddata;
+    intptr_t nonce = _findfirst(a.c_str(), &finddata);
+    if( nonce == -1 ) 
+            return;
+    holder<intptr_t> nonce_closer(nonce);
+    do {
+        if( std::strcmp(finddata.name,"..") != 0 && std::strcmp(finddata.name, ".") != 0 ) {
+            visitor.accept(finddata.name);
+        }
+    } while( _findnext(nonce, &finddata) == 0);	
 #else
     throw generic_exception("tinfra::fs::list_files not implemented on this platform");
 #endif  
@@ -115,40 +115,82 @@ void list_files(tstring const& dirname, std::vector<std::string>& result)
     list_files(dirname, visitor);
 }
 
-void recursive_copy(tstring const& src, tstring const& dest)
+file_info stat(tstring const& name)
 {
-    if( path::is_dir(dest) ) {
-        std::string new_dest = path::join(dest, path::basename(src));
-        return recursive_copy(src, new_dest);
-    } else if( path::is_dir(src) ) {
-        mkdir(dest);
-        std::vector<std::string> files;
-        list_files(src, files);
-        for( std::vector<std::string>::const_iterator i = files.begin(); i!=files.end(); ++i )
-        {
-            std::string new_src = path::join(src, *i);
-            std::string new_dest = path::join(dest, *i);
-            recursive_copy(new_src, new_dest);
-        }
-    } else {
-        copy(src, dest);
+    string_pool temporary_context;
+    struct stat st;
+    if( ::stat(name.c_str(temporary_context), &st) != 0 ) {
+        throw_errno_error(errno, fmt("unable stat file '%s'") % name);
     }
+    
+    file_info result;
+    result.is_dir = (st.st_mode & S_IFDIR) == S_IFDIR;
+    result.modification_time = st.st_mtime;
+    result.access_time = st.st_atime;
+    result.size = st.st_size;
+    return result;
 }
 
-void recursive_rm(tstring const& name)
+bool exists(tstring const& name)
 {
-    if( path::is_dir(name) ) {
-        std::vector<std::string> files;
-        list_files(name, files);
-        
-        for( std::vector<std::string>::const_iterator i = files.begin(); i!=files.end(); ++i ) 
-        {
-            recursive_rm( path::join(name, *i) );
-        }
-        rmdir(name);
-    } else {        
-        rm(name);
+    string_pool temporary_context;
+    struct stat st;
+    return ::stat(name.c_str(temporary_context), &st) == 0;
+}
+
+static bool is_dir_sep(char a)
+{
+    return    a == '/' 
+           || a == '\\';
+}
+
+bool is_dir(tstring const& name)
+{
+    size_t len = name.size();
+    
+    if( len == 1 && name[0] == '.' )      // current directory
+        return true;
+    
+    if( len == 1 && is_dir_sep(name[0]) ) // single backslash 
+        return true;
+    
+#ifdef _WIN32
+    if( len >= 2 && std::isalpha(name[0]) && name[1] == ':' ) {
+        if( len == 2 )
+            return true; // A:
+        if( len == 3 && is_dir_sep(name[2]) )
+            return true; // A:\ and A:/
     }
+    // NOTE: win32 stat doesn't accept trailing slash/back 
+    // slash in folder name
+    if( len > 1 && is_dir_sep(name[len-1]) ) {
+        tstring tmp(name.data(), len-1);
+        return is_dir(tmp);
+    }
+#endif
+    string_pool temporary_context;
+    struct stat st;
+    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
+        return false;
+    return (st.st_mode & S_IFDIR) == S_IFDIR;
+}
+
+bool is_file(tstring const& name)
+{
+    string_pool temporary_context;
+    struct stat st;
+    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
+        return false;
+    return (st.st_mode & S_IFREG) == S_IFREG;
+}
+
+void mv(tstring const& src, tstring const& dest)
+{
+    string_pool tmp_pool;
+    int result = ::rename(src.c_str(tmp_pool), dest.c_str(tmp_pool));
+    if( result == -1 ) {
+        throw_errno_error(errno, fmt("unable to rename from '%s' to '%s' ") % src % dest);
+    }    
 }
 
 void rm(tstring const& name)
@@ -172,7 +214,7 @@ void rmdir(tstring const& name)
 void mkdir(tstring const& name, bool create_parents)
 {
     std::string parent = path::dirname(name);
-    if( !path::is_dir(parent) ) {
+    if( !is_dir(parent) ) {
         if( create_parents )
             mkdir(parent);
         else
@@ -189,23 +231,22 @@ void mkdir(tstring const& name, bool create_parents)
     }
 }
 
+void recursive_copy(tstring const& src, tstring const& dest)
+{
+    tinfra::vfs& fs = tinfra::local_fs();
+    tinfra::default_recursive_copy(fs, src, fs, dest);
+}
+
+void recursive_rm(tstring const& name)
+{
+    tinfra::vfs& fs = tinfra::local_fs();
+    return tinfra::default_recursive_rm(fs, name);
+}
+
 void copy(tstring const& src, tstring const& dest)
 {
-    if( path::is_dir(src) ) 
-        throw std::invalid_argument("tinfra::fs::copy supports only generic files");
-    if( path::is_dir(dest) ) {
-        copy(src, path::join(dest, path::basename(src) ));
-        return;
-    }
-
-    typedef std::auto_ptr<tinfra::io::stream> stream_ptr;
-    string_pool temporary_context;
-    
-    stream_ptr in(tinfra::io::open_file(src.c_str(temporary_context), std::ios::in | std::ios::binary));
-    stream_ptr out(tinfra::io::open_file(dest.c_str(temporary_context), std::ios::out | std::ios::trunc | std::ios::binary));
-    
-    tinfra::io::copy(in.get(), out.get());
-    out->close();
+    tinfra::vfs& fs = tinfra::local_fs();
+    return tinfra::default_copy(fs, src, fs, dest);
 }
 
 void cd(tstring const& dirname)
@@ -239,9 +280,9 @@ struct walker_file_visitor: public tinfra::fs::file_list_visitor {
     void accept(tstring const& name)
     {
         std::string file_path(tinfra::path::join(parent_, name));
-        bool is_dir = tinfra::path::is_dir(file_path);
-        bool dig_further = walker_.accept(name,  parent_, is_dir);
-        if( is_dir && dig_further ) {
+        bool dir = is_dir(file_path);
+        bool dig_further = walker_.accept(name,  parent_, dir);
+        if( dir && dig_further ) {
             walk_(file_path, walker_);
         }
     }
@@ -254,7 +295,7 @@ static void walk_(tstring const& start, walker& w)
 }
 }
 
-void walk(const char* start, walker& w)
+void walk(tstring const& start, walker& w)
 {
     try 
     {

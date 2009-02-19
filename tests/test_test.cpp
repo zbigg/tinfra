@@ -20,7 +20,7 @@ SUITE(tinfra) {
     {
         std::string cwd = fs::pwd();
         {
-            test::TempTestLocation testLocation;
+            tinfra::test::test_fs_sandbox testLocation;
             CHECK(cwd != fs::pwd());
             std::vector<std::string> files = fs::list_files(".");
             CHECK_EQUAL(0, int(files.size()));
@@ -32,7 +32,7 @@ SUITE(tinfra) {
     {
         std::string cwd = fs::pwd();
         {
-            test::TempTestLocation testLocation("testtest_file");
+            tinfra::test::test_fs_sandbox testLocation("testtest_file");
             CHECK(cwd != fs::pwd());
             std::vector<std::string> files = fs::list_files(".");
             CHECK_EQUAL(1, int(files.size()));
@@ -45,15 +45,15 @@ SUITE(tinfra) {
     {
         std::string cwd = fs::pwd();
         {
-            test::TempTestLocation testLocation("testtest_dir");
+            tinfra::test::test_fs_sandbox testLocation("testtest_dir");
             CHECK(cwd != fs::pwd());
             std::vector<std::string> files = fs::list_files(".");
             CHECK_EQUAL(1, int(files.size()));
             CHECK_EQUAL("testtest_dir", files[0]);
-            CHECK( path::is_dir("testtest_dir"));
-            CHECK( path::is_dir("testtest_dir/a"));        
-            CHECK( path::is_file("testtest_dir/file1"));
-            CHECK( path::is_file("testtest_dir/a/file2"));
+            CHECK( fs::is_dir("testtest_dir"));
+            CHECK( fs::is_dir("testtest_dir/a"));        
+            CHECK( fs::is_file("testtest_dir/file1"));
+            CHECK( fs::is_file("testtest_dir/a/file2"));
         }
         CHECK_EQUAL(cwd, fs::pwd());
     }

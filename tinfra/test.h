@@ -8,27 +8,26 @@
 #ifndef __tinfra_test_h__
 #define __tinfra_test_h__
 
-#include <string>
+#include "tinfra/tstring.h"
+#include "tinfra/fs_sandbox.h"
+#include "tinfra/vfs.h"
 
 namespace tinfra {
 namespace test {
 
-class TempTestLocation {
+class test_fs_sandbox: public fs_sandbox {
 public:
-    explicit TempTestLocation(std::string const& name = "");
-    ~TempTestLocation();
+    explicit test_fs_sandbox(tstring const& name = "");
+    explicit test_fs_sandbox(tinfra::vfs& vfs, tstring const& name = "");
     
-    std::string getPath() const;
-        
-    static void setTestResourcesDir(std::string const& x);
+    ~test_fs_sandbox();
+    
 private:
-    void init();
     std::string name_;
     std::string orig_pwd_;
-    std::string tmp_path_;
 };
 
-void user_wait(const char* prompt = 0);
+void set_test_resources_dir(tstring const& d);
 
 /// Test driver
 ///

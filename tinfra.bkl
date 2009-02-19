@@ -41,11 +41,16 @@
             tinfra/tstring.cpp
             tinfra/path.cpp
             tinfra/fs.cpp
+            tinfra/fs_sandbox.cpp
             tinfra/threadcmn.cpp
             tinfra/runner.cpp
             tinfra/os_common.cpp
             tinfra/trace.cpp
             tinfra/lazy_protocol.cpp
+            tinfra/vfs.cpp
+            tinfra/sftp/sftp_protocol.cpp
+            tinfra/sftp/sftp_vfs.cpp
+            
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -96,6 +101,7 @@
             tinfra/tinfra_lex.h
             tinfra/path.h
             tinfra/fs.h
+            tinfra/fs_sandbox.h
             tinfra/runner.h
             tinfra/thread.h
             tinfra/queue.h
@@ -103,6 +109,7 @@
             tinfra/platform.h
             tinfra/runtime.h
             tinfra/trace.h
+            tinfra/vfs.h
             tinfra/generator.h
             tinfra/interruptible.h
             tinfra/lazy_protocol.h
@@ -110,6 +117,7 @@
             tinfra/win32/thread.h
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
+            tinfra/sftp/sftp_protocol.h
 	    tinfra/memory_pool.h
             
 	    tinfra/test.h
