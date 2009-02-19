@@ -113,7 +113,7 @@ SUITE(tinfra)
         fs::walk(".", foo);
     }
     
-    void test_vfs(UnitTest::TestResults& testResults_, UnitTest::TestDetails const& m_details, tinfra::vfs& fs)
+    void test_vfs(tinfra::vfs& fs)
     {
         using tinfra::fs::file_name_list;
         // check if the roots are available
@@ -126,7 +126,7 @@ SUITE(tinfra)
     
     TEST(test_local_vfs)
     {
-        test_vfs(testResults_, m_details, tinfra::local_fs());
+        test_vfs(tinfra::local_fs());
     }
     
 #if TEST_SFTP
@@ -139,7 +139,7 @@ SUITE(tinfra)
         std::auto_ptr<tinfra::vfs> fs;
         if( base_command.size() > 0 ) {
             fs = std::auto_ptr<tinfra::vfs>(tinfra::sftp::create(target, base_command));
-            test_vfs(testResults_, m_details, * fs.get() );
+            test_vfs(* fs.get() );
         }        
     }
 #endif
