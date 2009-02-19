@@ -16,9 +16,9 @@
 #include "tinfra/cmd.h"
 
 #ifdef SRCDIR
-static std::string test_resources_dir = SRCDIR "/tinfra/test_resources";
+static std::string test_resources_dir = SRCDIR "/tests/resources";
 #else
-static std::string test_resources_dir =  "tinfra/test_resources";
+static std::string test_resources_dir =  "tests/resources";
 #endif
 
 int main(int argc, char** argv)

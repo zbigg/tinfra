@@ -128,23 +128,23 @@
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
-            tinfra/test_string.cpp
-            tinfra/test_tstring.cpp
-            tinfra/test_path.cpp
-            tinfra/test_fs.cpp
-            tinfra/test_test.cpp
-            tinfra/test_multitype_map.cpp
-            tinfra/test_fmt.cpp
-            tinfra/io/test_stream.cpp            
-            tinfra/test_server.cpp
-            tinfra/test_symbol.cpp
-            tinfra/test_exeinfo.cpp            
-            tinfra/test_thread.cpp
-            tinfra/test_queue.cpp
+            tests/test_main.cpp
             
-            tinfra/test_main.cpp
-            tinfra/test_subprocess.cpp
-	    tinfra/test_memory_pool.cpp
+            tests/test_string.cpp
+            tests/test_tstring.cpp
+            tests/test_path.cpp
+            tests/test_fs.cpp
+            tests/test_test.cpp
+            tests/test_multitype_map.cpp
+            tests/test_fmt.cpp
+            tests/test_stream.cpp            
+            tests/test_server.cpp
+            tests/test_symbol.cpp
+            tests/test_exeinfo.cpp            
+            tests/test_thread.cpp
+            tests/test_queue.cpp
+            tests/test_subprocess.cpp
+	    tests/test_memory_pool.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
@@ -160,7 +160,7 @@
     <exe id="test_fatal_exception" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
-            tinfra/test_fatal_exception.cpp
+            tests/test_fatal_exception.cpp
         </sources>
         <library>tinfra</library>
         <sys-lib>pthread</sys-lib>
