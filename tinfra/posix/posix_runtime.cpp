@@ -19,9 +19,10 @@
 #include "tinfra/tinfra_lex.h"
 #include "tinfra/subprocess.h"
 
+#include <signal.h>
+
 #ifdef linux
 #include <execinfo.h>
-#include <signal.h>
 #define HAVE_BACKTRACE
 #endif
 
