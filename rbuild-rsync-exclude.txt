@@ -1,0 +1,14 @@
+tags
+*.a
+*.o
+*.so
+config.status
+config.log
+*.d
+.deps
+autom4te.cache
+.svn
+CVS
+_MTN
+tags
+*.exe

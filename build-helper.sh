@@ -16,6 +16,13 @@ prepare() {
     fi
     autoconf
 }
+distclean() {
+    make distclean
+    bakefile_gen --clean
+    rm -rf .bakefile_gen.state autom4te.cache autoconf_inc.m4 test_result aclocal.m4
+    @echo "still unknown files"
+    mtn ls unknown
+}
 
 usage() {
     cat <<EOF
@@ -32,6 +39,9 @@ case "$1" in
         ;;
     prepare)
         prepare
+        ;;
+    distclean)
+        distclean
         ;;
     *)
         usage >&2
