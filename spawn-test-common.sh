@@ -5,47 +5,72 @@ if [ ! -d "$dist" ] ; then
     echo "$0: output dir '$dist' doesn't exist, build the project" 1>&2  
     exit 2
 fi
-test_log_dir=${dist}/test_result
-mkdir -p ${test_log_dir}
+test_log_file_dir=${dist}/test_result
+mkdir -p ${test_log_file_dir}
 
 interactive=no
 
 failed=0
 
-success() {
-    test_name="$1"
-    test_log="${test_log_dir}/${test_name}.log"
-    echo "-----------------" >> $test_log
-    shift
-    (
-        echo "${test_name}\t\t (success)"
-        if [ -n "$*" ] ; then
-            echo "${test_name}: $*"
-        fi
-    ) | tee -a ${test_log}
+get_test_log_file()
+{
+    echo ${test_log_file_dir}/${1}.log
 }
-fail()
+report_test_start()
 {
     test_name="$1"
-    test_log="${test_log_dir}/${test_name}.log"
-    echo "-----------------" >> $test_log
     shift
+    local test_command="$@"
+    local test_log_file=$(get_test_log_file $test_name)
+    (   
+        cd $dist    
+        set -e
+        echo "TEST EXECUTION LOG"
+        echo "time:             $(date)"
+        echo "-------------------------"
+        echo "test name:        ${test_name}"
+        echo "test command:     ${test_command}"
+        echo "working directory $(pwd)"
+        echo "test environment follows"
+        env
+        echo "-------------------------"
+        echo "system:           $(uname -a)"
+        echo "------------------------- (test output begins on next line)"
+    ) > ${test_log_file}
+}
+
+report_result()
+{
+    
+    test_name="$1"
+    test_exit_code="$2"
+    msg="$3"
+    local test_log_file=$(get_test_log_file $test_name)
     (
-        echo "${test_name}\t\t (FAIL)"
-        if [ -n "$*" ] ; then
-            echo "${test_name}: $*"
-        fi
-    ) | tee -a ${test_log}
-    failed=1
+        echo "------------------------- (test output end)"
+        echo "test exit code:   ${test_exit_code}"
+        echo "overall result:   ${msg}"
+    ) >> ${test_log_file}
+    printf "%40s (${msg})\n" ${test_name}
 }
 
 generic_test()
 {
-    test_name="$1"
-    test_log="${test_log_dir}/${test_name}.log"
-    if $dist/${test_name} > ${test_log} 2>&1 ; then
-        success ${test_name}
+    local test_name="$1"
+    shift
+    local test_command="$@"
+    local test_log_file=$(get_test_log_file $test_name)
+    report_test_start ${test_name} ${test_command}
+    (
+        ${test_command}
+    ) >> ${test_log_file} 2>&1
+    local test_exit_code=$?
+    if [ "$test_exit_code" = "0" ]; then
+        msg="success"
     else
-        fail ${test_name}
+        msg="FAIL"
+        failed=1
     fi
+    report_result $test_name $test_exit_code $msg
 }
+
