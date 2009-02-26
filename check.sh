@@ -4,20 +4,30 @@
 
 test_segv()
 {
-    test_name="test_fatal_exception-segv"
-    test_log="${test_log_dir}/${test_name}.log"
-    if ! $dist/test_fatal_exception segv > ${test_log} 2>&1 ; then
-        if grep -q "fatal signal 11 received" ${test_log} ; then
-            success ${test_name}
+    local test_name="test_fatal_exception-segv"
+    local test_log_file=$(get_test_log_file $test_name)
+    report_test_start ${test_name} ./test_fatal_exception segv
+    ( 
+        cd ${dist}
+        ./test_fatal_exception segv 
+    ) >> ${test_log_file} 2>&1
+    test_exit_code=$?
+    if [ ${test_exit_code} != "0" ] ; then
+        if grep -q "fatal signal 11 received" ${test_log_file} ; then
+            report_result ${test_name} ${test_exit_code} success
         else
-            fail ${test_name} "should report exception out stdout/stderr"
+            report_result ${test_name} ${test_exit_code} "FAIL, should report exception out stdout/stderr"
+            failed=1
         fi        
     else
-        fail ${test_name} "should exit with non-zero exitcode"
+        report_result ${test_name} ${test_exit_code} "FAIL, should exit with non-zero exitcode"
+        failed=1
     fi
 }
 
 test_segv
-generic_test unittests
+generic_test plain_unittests ./unittests
+generic_test valgrind_unittests valgrind  ./unittests
 
 exit $failed
+
