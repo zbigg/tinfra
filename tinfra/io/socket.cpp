@@ -100,7 +100,7 @@ public:
         close_socket(tmp);
     }
     
-    int seek(int pos, stream::seek_origin origin)
+    int seek(int, stream::seek_origin)
     {
         throw io_exception("sockets don't support seek()");
     }
@@ -165,7 +165,7 @@ static void ensure_socket_initialized()
     if ( LOBYTE( wsaData.wVersion ) != 1 ||
 	   HIBYTE( wsaData.wVersion ) != 1 ) {
         WSACleanup();
-        errno = ENODEV;
+        err = WSAVERNOTSUPPORTED;
         throw_socket_error(err, "unsupported WinSock version");
     }
     winsock_initialized = true;

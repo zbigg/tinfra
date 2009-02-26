@@ -14,7 +14,6 @@
 
 #include <iostream>
 
-#define _WIN32_WINNT 0x10000
 #include <windows.h>
 #include <process.h>
 
@@ -22,6 +21,7 @@
 #include "tinfra/fmt.h"
 
 namespace tinfra {
+namespace thread {
 
 static void thread_error(const char* message, unsigned int rc)
 {
@@ -29,58 +29,58 @@ static void thread_error(const char* message, unsigned int rc)
 }
 
 //
-// Mutex implementation
+// mutex implementation
 //
 
-Mutex::Mutex() {
+mutex::mutex() {
     ::InitializeCriticalSection(&mutex_);
 }
 
-Mutex::~Mutex() {
+mutex::~mutex() {
     ::DeleteCriticalSection(&mutex_);
 }
 
-void Mutex::lock() {
+void mutex::lock() {
     ::EnterCriticalSection(&mutex_);
 }
 
-void Mutex::unlock() {
+void mutex::unlock() {
     ::LeaveCriticalSection(&mutex_);
 }
 
 // 
-// Condition implementation
+// condition implementation
 //
 
-Condition::Condition() {
-    ::InitializeConditionVariable(&cond_);
+condition::condition() {
+    //::InitializeconditionVariable(&cond_);
 }
 
-Condition::~Condition() {
+condition::~condition() {
 }
 
-void Condition::signal() {
-    ::WakeConditionVariable(&cond_);
+void condition::signal() {
+    //::WakeconditionVariable(&cond_);
 }
 
-void Condition::broadcast() {
-    ::WakeAllConditionVariable(&cond_);
+void condition::broadcast() {
+    //::WakeAllconditionVariable(&cond_);
 }
 
-void Condition::wait(void* mutex) {
-    CRITICAL_SECTION* cs = (CRITICAL_SECTION*)mutex;
+void condition::wait(void* mutex) {
+    //CRITICAL_SECTION* cs = (CRITICAL_SECTION*)mutex;
     
-    BOOL r = ::SleepConditionVariableCS(&cond_, cs, INFINITE);
-    if( r == 0 )
-        thread_error("wait for condition", ::GetLastError());    
+    //BOOL r = ::SleepconditionVariableCS(&cond_, cs, INFINITE);
+    //if( r == 0 )
+    //    thread_error("wait for condition", ::GetLastError());    
 }
 
-void Condition::wait(Mutex& mutex) {
+void condition::wait(mutex& mutex) {
     wait( mutex.get_native() );
 }
 
 //
-// Thread implementation
+// thread implementation
 //
 struct thread_entry_param {
     void*             (* entry)(void*);
@@ -96,13 +96,14 @@ static unsigned __stdcall thread_master_fun(void* raw_params)
         // TODO dupa!
         result = 0;
     } catch(std::exception& e) {
-        std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % Thread::current().to_number() % e.what();
+        std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % thread::current().to_number() % e.what();
         result = 0;
     }
     ::_endthreadex(result);
+	return result;
 }
 
-Thread Thread::start(thread_entry entry, void* param )
+thread thread::start(thread_entry entry, void* param )
 {    
     std::auto_ptr<thread_entry_param> te_params(new thread_entry_param());
     te_params->entry = entry;
@@ -120,18 +121,18 @@ Thread Thread::start(thread_entry entry, void* param )
     
     te_params.release();
     
-    return Thread(thread_id);
+    return thread(thread_id);
 }
 
-Thread Thread::start_detached( Thread::thread_entry entry, void* param )
+thread thread::start_detached( thread::thread_entry entry, void* param )
 {
     // no difference detached/joinable on win32
     return start(entry, param);
 }
 
-Thread Thread::current()
+thread thread::current()
 {
-    return Thread(GetCurrentThreadId());
+    return thread(GetCurrentThreadId());
 }
 
 static void* runnable_entry(void* param)
@@ -148,24 +149,24 @@ static void* runnable_entry_delete(void* param)
     return 0;
 }
 
-Thread Thread::start( Runnable& runnable)
+thread thread::start( Runnable& runnable)
 {
     return start(runnable_entry, (void*) &runnable);
 }
 
-Thread Thread::start_detached( Runnable* runnable)
+thread thread::start_detached( Runnable* runnable)
 {   
     return start_detached(runnable_entry_delete, (void*) &runnable);    
 }
 
-void* Thread::join()
+void* thread::join()
 {
     HANDLE handle = ::OpenThread(THREAD_ALL_ACCESS, FALSE, thread_id_);
     if( handle == NULL )
         thread_error("join: unable to open thread", ::GetLastError());
     
     
-    DWORD gla;
+    DWORD gla = 0;
     
     int rc = ::WaitForSingleObject( handle, INFINITE );
     if( rc == 0 ) 
@@ -182,15 +183,16 @@ void* Thread::join()
     return (void*)retvalue;
 }
 
-void Thread::sleep(long milliseconds)
+void thread::sleep(long milliseconds)
 {
     ::Sleep(milliseconds);
 }
 
-size_t Thread::to_number() const
+size_t thread::to_number() const
 {    
     return static_cast<size_t>(thread_id_);
 }
 
-}
+} } // end namespace tinfra::thread
+
 
