@@ -1,6 +1,72 @@
 #!/bin/bash
-
-#set -e -x
+#
+# rbuild script
+#
+#   Build source in remote location. Remote location can be on this
+#   or remote system. 
+#     - remote systems are accessed by ssh
+#     - source files are transferred via rsync (must live on this and build host machine)
+#
+#   = Usage = 
+#
+#   Maintenance:
+#
+#   [envsettings] rbuild --init
+#
+#     Initialize build folder BUILD_HOST. Create source folder
+#     if sources are remote.
+#
+#   [envsettings] rbuild --remove
+#
+#     Remove build folder on BUILD_HOST and source 
+#     if it's remote.
+#
+#   rbuild <make options>
+#
+#       Builds this source ($PWD) in folder ../build/${platform}/${name}
+#       where
+#           platform - is name of platform (i686, x86_64 ...)
+#           name = $(basename $(PWD))
+#       It invokes configure script and then invoke MAKE
+#       with <make options>
+#
+#
+#    rbuild ...
+#
+#         Specifies that build must be done on BUILD_HOST (ex. user@host.com)
+#         System is accessed via ssh, scp & rsync.
+#
+#    BUILD_CONF=<filename> rbuild ...
+#
+#         Read the <filename> for additional options.
+#
+#  = Options = 
+#
+#    These options can be specified in environment or via configuration files:
+#
+#    BUILD_HOST=local 
+#        build on local machine
+#
+#    BUILD_HOST=<anything>
+#        build on remote machine <anything>
+#        .rbuild-${BUILD_HOST} file is sourced for additional options.
+#        implies default remote_src=/tmp/rbuild/$(name)
+#
+#    BUILD_HOST_CONFIGURE_OPTIONS="<anything>"
+#        additional options for configure script
+#
+#    MAKE=<make command>
+#        make command invoked to run the build
+#
+#  = Issues = 
+#  
+#  1. $(platform) is "uname -i" which sometimes yields unknown :/
+#  2. This tool should be really called "rmake".
+#
+#  Author: Zbigniew Zagorski <z.zagorski@gmail.com>
+#
+set -e
+#set -x
 
 rbuild_root=$(readlink -f $(dirname $0))
 
@@ -16,6 +82,12 @@ sync()
 }
 
 MAKE=${MAKE-make}
+
+custom_config="${BUILD_CONF}"
+if [ -n "${BUILD_CONF}" ] ; then 
+    echo "$0: loading config'${custom_config}'"
+    source ${custom_config}
+fi
 
 if [ ${BUILD_HOST} = local ] ; then
     invoke_immediate() {
@@ -51,14 +123,16 @@ else
             echo "LOCAL:  scp $1 -> $2" 1>&2
             scp $1 $2
     }
-    remote_src=/tmp/rbuild/src
-    base_build_dir=/tmp/rbuild/build
 fi
-
 build_host_config=.rbuild-${BUILD_HOST}
 if [ -f ${build_host_config} ] ; then
     echo "$0: loading host config '${build_host_config}'"
     source ${build_host_config}
+fi
+
+if [ ${BUILD_HOST} != local ] ; then
+    remote_src=${remote_src-/tmp/rbuild/src}
+    base_build_dir=${base_build_dir-/tmp/rbuild/build}
 fi
 
 echo "REMOTE = $BUILD_HOST"
@@ -95,7 +169,7 @@ init_build_area() {
 Makefile: ./config.status
 	./config.status
 ./config.status: ${build_scrdir}/configure
-	${build_scrdir}/configure $BUILD_HOST_CONFIGURE_OPTIONS
+	${build_scrdir}/configure $BUILD_HOST_CONFIGURE_OPTIONS "$@"
 EOF
     copy $PLAMAKEFILE_TMP $(remote_path ${build_dir}/$PLAMAKEFILE)
     rm -rf $PLAMAKEFILE_TMP
@@ -106,15 +180,17 @@ remove_build_area() {
 }
 
 if [ "$1" = "--init" ] ; then
-	echo "$0: inializing build"
-	init_build_area
-	exit
+    shift
+    echo "$0: inializing build. configure options: $@"
+        
+    init_build_area "$@"
+    exit
 fi
 
 if [ "$1" = "--remove" ] ; then
-	echo "$0: removing build area"
-	remove_build_area
-	exit
+    echo "$0: removing build area"
+    remove_build_area
+    exit
 fi
 
 #
