@@ -15,6 +15,9 @@ std::string get_error_string(unsigned int error_code);
 void throw_system_error(unsigned int error_code, std::string const& message);
 void throw_system_error(std::string const& message);
 
+#define TINFRA_LOG_WIN32_ERROR(msg,le) \
+    TINFRA_LOG_ERROR(tinfra::fmt("%s: %s (%i)") % (msg) % tinfra::win32::get_error_string(le) % (le));
+
 } } // end namespace tinfra::win32
 
 #endif
