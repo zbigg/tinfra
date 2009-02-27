@@ -30,7 +30,7 @@ stream* open_socket(char const* address, int port)
     return socket::open_client_socket(address, port);
 }
 
-stream* open_command_pipe(char const* command, openmode mode)
+stream* open_command_pipe(char const*, openmode)
 {
     throw io_exception("command pipe: unimplemented");
 }
@@ -235,7 +235,7 @@ zstreambuf::int_type zstreambuf::uflow ()
     return result;
 }
 
-zstreambuf::int_type zstreambuf::pbackfail (int_type c)
+zstreambuf::int_type zstreambuf::pbackfail (int_type)
 {
     //zprintf("pbackfail: %i\n", c);
     // XXX: how to implement it?

@@ -53,13 +53,13 @@ public:
 	operator const char* () const      { return c_str(); }
 	operator id_type  () const         { return symbolId; }
 
-        static const int null = 0;
+	static const int null;
         
 	// symbol registry
 	static symbol	get(id_type id);
 	static symbol	get(const string& name);
 	static symbol	get(const char* name);
-        static symbol	find(const string& name);
+	static symbol	find(const string& name);
 	static symbol	find(const char* name);
 	
 private:
