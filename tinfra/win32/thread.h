@@ -14,8 +14,12 @@
 #define __tinfra_win32_thread_h__
 
 #define WIN32_LEAN_AND_MEAN
+
+#ifndef NOMINMAX
 #define NOMINMAX
-#define _WIN32_WINNT _WIN32_WINNT_WINXP
+#endif
+
+#define _WIN32_WINNT 0x0500 // Windows 2000
 #include <windows.h>
 
 namespace tinfra {

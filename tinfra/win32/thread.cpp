@@ -16,6 +16,9 @@
 
 #include <windows.h>
 #include <process.h>
+#include <limits.h>
+
+#include <memory>
 
 #include "tinfra/win32.h"
 #include "tinfra/fmt.h"
