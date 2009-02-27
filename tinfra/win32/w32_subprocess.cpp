@@ -68,7 +68,7 @@ struct win32_subprocess: public subprocess {
             delete stderr_;
         try {
             get_exit_code();
-        } catch(std::exception& e) {
+        } catch(std::exception&) {
             // TODO: silent win32 error 
         }
         if( process_handle ) {

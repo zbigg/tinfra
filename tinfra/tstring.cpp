@@ -19,7 +19,9 @@
 
 #include "tstring.h"
 
+#if TINFRA_TSTING_CHECKS
 #include <pthread.h>
+#endif
 
 #if TINFRA_TSTING_CHECKS
 namespace stack_traits {

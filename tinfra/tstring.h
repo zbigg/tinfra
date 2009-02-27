@@ -157,7 +157,7 @@ public:
     tstring substr(size_type pos, size_type n) const;
     
     int cmp (tstring const& other) const {
-        size_t common_length = std::min(size(), other.size());
+		size_t common_length = std::min(size(),other.size()); // WINDOWS min macro workaround
         int r = std::memcmp(data(), other.data(), common_length);
         if( r != 0 ) 
             return r;

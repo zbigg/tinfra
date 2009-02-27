@@ -14,6 +14,7 @@
 #define __tinfra_win32_thread_h__
 
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 
 namespace tinfra {
@@ -44,9 +45,9 @@ public:
     void wait(void* mutex);
     void wait(mutex& mutex);
 
-    CONDITION_VARIABLE* get_native() { return &cond_; }
+    //CONDITION_VARIABLE* get_native() { return &cond_; }
 private:
-    CONDITION_VARIABLE cond_;
+    //CONDITION_VARIABLE cond_;
 };
 
 class thread {
