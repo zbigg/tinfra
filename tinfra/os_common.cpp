@@ -5,6 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
+#include "tinfra/platform.h"
+
 #include <stdexcept>
 #include <cstring>
 #include <errno.h>

@@ -13,6 +13,8 @@
 /// based on codebase from
 ///    http://win32.mvps.org/misc/stackwalk.html
 
+#include "tinfra/platform.h"
+
 #include <windows.h>
 #include <string>
 #include <vector>

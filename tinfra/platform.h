@@ -13,6 +13,9 @@
 #pragma warning( disable: 4312) // 
 #pragma warning( disable: 4127) // conditional expression is constant
 
+#define _CRT_SECURE_NO_WARNINGS 1
+#define _CRT_NONSTDC_NO_WARNINGS 1
+
 #undef HAVE_SYS_TIME_H
 #undef HAVE_OPENDIR
 
