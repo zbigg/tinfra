@@ -33,7 +33,20 @@
 
 namespace tinfra {
 namespace thread {
-	
+
+class guard {
+    mutex& m;
+public:
+    guard(mutex& pm): m(pm)
+    {
+        m.lock();
+    }
+    ~guard()
+    {
+	m.unlock();
+    }
+};
+
 class monitor {
     mutex      m;
     condition  c;
