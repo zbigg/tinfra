@@ -13,8 +13,12 @@
 #pragma warning( disable: 4312) // 
 #pragma warning( disable: 4127) // conditional expression is constant
 
-#define _CRT_SECURE_NO_WARNINGS 1
-#define _CRT_NONSTDC_NO_WARNINGS 1
+// some strange warning disablers for recent visuals
+// see http://msdn.microsoft.com/en-us/library/aa985965(VS.80).aspx
+
+#define _CRT_SECURE_NO_WARNINGS  1 // yeah, good idea. warn about correct C++ usages
+#define _CRT_NONSTDC_NO_WARNINGS 1 // because of someone paranoia
+#define _SCL_SECURE_NO_WARNINGS  1 // this one is extremly stupid 
 
 #undef HAVE_SYS_TIME_H
 #undef HAVE_OPENDIR

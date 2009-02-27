@@ -110,7 +110,7 @@ struct LexicalInterpreter<tstring> {
 		dest.assign(v.data(), v.size());
 	}
 	static void to_string(tstring const& v, std::ostream& dest) {
-		dest.write(v.data(), v.size());
+		dest << v;
 	}
 };
 

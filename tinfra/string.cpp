@@ -5,6 +5,7 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
+#include "tinfra/platform.h"
 #include "tinfra/string.h"
 #include "tinfra/tstring.h"
 

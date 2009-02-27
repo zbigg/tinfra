@@ -15,6 +15,11 @@
 
 #include "tinfra/platform.h"
 
+#include "tinfra/exception.h"
+#include "tinfra/exeinfo.h"
+#include "tinfra/thread.h"
+#include "tinfra/runtime.h"
+
 #include <windows.h>
 #include <string>
 #include <vector>
@@ -23,10 +28,7 @@
 
 #include <imagehlp.h>
 
-#include "tinfra/exception.h"
-#include "tinfra/exeinfo.h"
-#include "tinfra/thread.h"
-#include "tinfra/runtime.h"
+
 
 #define gle (GetLastError())
 #define lenof(a) (sizeof(a) / sizeof((a)[0]))

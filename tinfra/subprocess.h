@@ -8,9 +8,11 @@
 #ifndef __tinfra_subprocess_h__
 #define __tinfra_subprocess_h__
 
-#include <memory>
+#include "tinfra/platform.h"
 
 #include "tinfra/io/stream.h"
+
+#include <memory>
 
 namespace tinfra {
 
