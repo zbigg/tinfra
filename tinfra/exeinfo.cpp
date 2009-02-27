@@ -5,12 +5,15 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
+#include "tinfra/platform.h"
+
+#include "tinfra/exeinfo.h"
+
 #include <istream>
 #include <cstdio>
 #include <cstring>
 #include <cctype>
 
-#include "tinfra/exeinfo.h"
 namespace tinfra {
 
 static void trim(char* str)
