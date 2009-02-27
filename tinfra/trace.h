@@ -9,6 +9,7 @@
 #define __tinfra_trace_h__
 
 #include <vector>
+#include "tinfra/platform.h"
 #include "tinfra/tstring.h"
 
 #if defined _MSC_VER
@@ -23,10 +24,13 @@
 //      ... returns the undecorated name of the enclosing function (as a string). ...
 //
 #define TINFRA_PRETTY_FUNCTION __FUNCSIG__
+#define TINFRA_SHORT_FUNCTION __FUNCTION__
 #elif defined(__GNUC__)
 #define TINFRA_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#define TINFRA_SHORT_FUNCTION __func__
 #else
 #define TINFRA_PRETTY_FUNCTION __func__
+#define TINFRA_SHORT_FUNCTION __func__
 #endif
     
 namespace tinfra {
@@ -71,20 +75,19 @@ private:
 
 class auto_register_tracer: public tracer {
 public:
-    auto_register_tracer(const char* name);
+    auto_register_tracer(const char* name, bool enabled = false);
     ~auto_register_tracer();
 };
 
 class exit_tracer {
 public:
     exit_tracer(const char* filename, int line, const char* name, tracer& other):
-        start_line(line),
         end_line(line),
         filename(filename),
         name(name),
         t(other)
     {
-        t.trace(filename, start_line, name, "entering");
+        t.trace(filename, line, name, "entering");
     }
     ~exit_tracer()
     
@@ -94,7 +97,6 @@ public:
     
     void set_end_line(int el) { end_line = el; }
 private:
-    int         start_line;
     int         end_line;
     const char* filename;
     const char* name;
@@ -106,7 +108,9 @@ std::vector<tracer*> get_global_tracers();
 void process_params(int& argc, char** argv);
 void print_tracer_usage(tstring const& msg = "");
 
-bool enable_tracer_by_name(tstring const& name);
+bool enable_tracer_by_mask(tstring const& mask);
+
+extern tinfra::trace::auto_register_tracer error_tracer;
 
 } } // end of namespace tinfra::trace
 
@@ -115,11 +119,13 @@ bool enable_tracer_by_name(tstring const& name);
 extern tinfra::trace::tracer&              __tinfra_tracer_adaptable;
 extern tinfra::trace::auto_register_tracer __tinfra_global_tracer;
 
+#define TINFRA_LOG_ERROR(msg) tinfra::trace::error_tracer.trace(__FILE__, __LINE__, TINFRA_SHORT_FUNCTION, (msg))
 
 #define TINFRA_TRACER __tinfra_tracer_adaptable
 
+
 #define TINFRA_TRACE_MSG(msg) do { if(TINFRA_TRACER.is_enabled()) { \
-  TINFRA_TRACER.trace(__FILE__, __LINE__, __func__, msg); }} while(false)
+  TINFRA_TRACER.trace(__FILE__, __LINE__, TINFRA_SHORT_FUNCTION, (msg)); }} while(false)
 
 #define TINFRA_TRACE_VAR(name) do { if( TINFRA_TRACER.is_enabled()) {    \
   std::ostringstream _ojejuku_kejku_akuku;                  \
@@ -130,12 +136,12 @@ extern tinfra::trace::auto_register_tracer __tinfra_global_tracer;
 
 
 #define TINFRA_CALL_TRACE() \
-tinfra::trace::entry_exit_tracer __tinfra_tracer_entry_exit(TINFRA_PRETTY_FUNCTION, __tinfra_tracer_adaptable)
+tinfra::trace::exit_tracer __tinfra_tracer_entry_exit(__FILE__, __LINE__, TINFRA_SHORT_FUNCTION, __tinfra_tracer_adaptable)
 
 
 #define TINFRA_EXIT_TRACE() __tinfra_tracer_entry_exit.set_end_line(__LINE__)
 
-#define TINFRA_MODULE_TRACER(name) namespace { TINFRA_PUBLIC_TRACER(name); }
+#define TINFRA_MODULE_TRACER(name) namespace { TINFRA_PUBLIC_TRACER(name); tinfra::trace::tracer& __tinfra_tracer_adaptable(name); }
 
 #define TINFRA_PUBLIC_TRACER(name)                   \
 tinfra::trace::auto_register_tracer     name(#name)
