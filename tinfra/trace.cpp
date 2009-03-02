@@ -7,6 +7,7 @@
 
 #include "tinfra/trace.h"
 #include "tinfra/fmt.h"
+#include "tinfra/cmd.h"
 
 #include <sstream>
 #include <list>
@@ -123,7 +124,7 @@ bool enable_tracer_by_mask(tstring const& mask)
         tracer* t = *i;
         if( !matches(mask,t->name()) ) 
             continue;
-            
+        tinfra::cmd::inform(fmt("trace: enabling tracer '%s'") % t->name());
         t->enable(true);
         anything = true;
     }
