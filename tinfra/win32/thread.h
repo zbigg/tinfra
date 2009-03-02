@@ -69,7 +69,7 @@ class thread {
 public:
     typedef HANDLE handle_type;
 
-    explicit thread(handle_type thread);
+    explicit thread(handle_type thread, DWORD thread_id_);
     ~thread();
 
     static thread current();
@@ -90,8 +90,13 @@ public:
     void* join();
     
     size_t to_number() const;
+    
+    HANDLE native_handle() const { return thread_handle_; }
+    DWORD  native_id() const { return thread_id_; }
+    
 private:
     handle_type thread_handle_;
+    DWORD       thread_id_;
 };
 
 } } // end namespace tinfra::thread

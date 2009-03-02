@@ -177,8 +177,7 @@ static unsigned __stdcall thread_master_fun(void* raw_params)
         result = 0;
     }
     TINFRA_TRACE_MSG(fmt("thread exited tid=%i") % tid );
-    ::_endthreadex(result);    
-    return result;
+    ::_endthreadex(result);
 }
 
 thread thread::start(thread_entry entry, void* param )
@@ -192,29 +191,27 @@ thread thread::start(thread_entry entry, void* param )
                            0,        // same stack as parent
                            thread_master_fun, 
                            te_params.get(),
-                           CREATE_SUSPENDED,  // start immediately
+                           0,  // start immediately
                            &thread_id);
     
-    if( thread_handle == -1L ) 
+    if( thread_handle == -1 ) // TODO: check this condition
         thread_error("_beginthreadex failed", ::GetLastError());
-    
     te_params.release();
-    thread result((HANDLE)thread_handle);
-
-    ResumeThread((HANDLE)thread_handle);
-    CloseHandle((HANDLE)thread_handle);
-
-    return result;
+    
+    return thread((HANDLE)thread_handle, thread_id);
 }
 
 void thread::start_detached( thread::thread_entry entry, void* param )
 {
     // no difference detached/joinable on win32
-    start(entry, param);
+    thread t = start(entry, param);
+    ::CloseHandle( t.native_handle() );
 }
 
 thread thread::current()
 {
+    return thread(NULL, GetCurrentThreadId());
+    /*
     HANDLE handle = ::OpenThread(THREAD_QUERY_INFORMATION, FALSE, GetCurrentThreadId());
     if( handle == 0 ) {
         TINFRA_LOG_WIN32_ERROR("OpenThread failed", GetLastError());
@@ -224,6 +221,7 @@ thread thread::current()
 
     CloseHandle(handle);
     return result;
+    */
 }
 
 static void* runnable_entry(void* param)
@@ -240,31 +238,18 @@ static void* runnable_entry_delete(void* param)
     return 0;
 }
 
-thread::thread(handle_type ttt)
-: 
-    thread_handle_(0) 
+thread::thread(handle_type thread_handle, DWORD thread_id)
+    :   
+    thread_handle_(thread_handle),
+    thread_id_(thread_id)
 {
-    if( DuplicateHandle(
-        GetCurrentProcess(),
-        ttt,
-        GetCurrentProcess(),
-        &thread_handle_,
-        0,
-        FALSE,
-        DUPLICATE_SAME_ACCESS) == 0 ) 
-    {
-        TINFRA_LOG_WIN32_ERROR("DuplicateHandle failed", GetLastError());
-        thread_error("unable to dup thread handle", GetLastError());
-    }
-
 }
 
 thread::~thread()
 {
-    CloseHandle(thread_handle_);
 }
 
-thread thread::start( Runnable& runnable)
+thread thread::start( Runnable& runnable )
 {
     return start(runnable_entry, (void*) &runnable);
 }
@@ -276,9 +261,14 @@ void thread::start_detached( Runnable* runnable)
 
 void* thread::join()
 {
+    if( thread_handle_ == NULL ) {
+        throw std::logic_error("trying to join already joined or detached thread");
+    }
+    
     size_t tid = to_number();
     TINFRA_TRACE_MSG(fmt("thread joining ... tid=%i") % tid);
     DWORD gla;
+    
     int rc = ::WaitForSingleObject( thread_handle_, INFINITE );
     if( rc != WAIT_OBJECT_0 ) {
         TINFRA_LOG_WIN32_ERROR("WaitForSingleObject failed", GetLastError());
@@ -309,7 +299,7 @@ void thread::sleep(long milliseconds)
 
 size_t thread::to_number() const
 {    
-    return reinterpret_cast<size_t>(thread_handle_);
+    return static_cast<size_t>(thread_id_);
 }
 
 } } // end namespace tinfra::thread
