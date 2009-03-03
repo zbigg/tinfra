@@ -35,6 +35,7 @@ SUITE(tinfra) {
         std::auto_ptr<subprocess> p = tinfra::subprocess::create();
         
         p->set_stdout_mode(subprocess::NONE);
+        
 #ifdef WIN32
         p->start("cmd /c ver");
 #else

@@ -53,7 +53,7 @@ static void throw_io_exception(const char* message)
     throw io_exception(fmt("%s: %s") % message % strerror(errno));
 }
 
-int execute_command(const char* command)
+static int execute_command(const char* command)
 {
     int r = system(command);
     if( r < 0 )
@@ -66,7 +66,7 @@ int execute_command(const char* command)
     return r;
 }
 
-int execute_command(std::vector<std::string> const& args)
+static int execute_command(std::vector<std::string> const& args)
 {
     char** raw_args;
     raw_args = new char*[args.size()+1];
@@ -243,7 +243,7 @@ struct posix_subprocess: public subprocess {
                 ::exit(127);
             }
             // TODO it should rather be exec
-            int result = tinfra::posix::execute_command(command);
+            int result = execute_command(command);
             //std::cerr << "PSP: execute_command() returned " << result << std::endl;
             if( result < 0 ) {
                 std::cerr << "TIC: system() failed!" << std::endl;
