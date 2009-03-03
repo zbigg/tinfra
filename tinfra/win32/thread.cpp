@@ -174,10 +174,11 @@ static unsigned __stdcall thread_master_fun(void* raw_params)
         result = 0;
     } catch(std::exception& e) {
         TINFRA_LOG_ERROR(fmt("thread %i failed with uncaught exception: %s\n") % tid % e.what());
-        result = 0;
+        result = ~0;
     }
     TINFRA_TRACE_MSG(fmt("thread exited tid=%i") % tid );
-    ::_endthreadex(result);
+    ::_endthreadex(result); // never returns
+    return result; // just to satisfy compiler
 }
 
 thread thread::start(thread_entry entry, void* param )
