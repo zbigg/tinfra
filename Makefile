@@ -23,6 +23,11 @@ callfwd_test: callfwd_test.o callfwd.o
 
 callfwd_test.o callfwd.o: callfwd.h callfwd_detail.h
 
+ssh.o test_ssh.o: ssh.h
+
+
+test: test_ssh.o test_main.o ssh.o
+	$(CC) -o $@ $^ -ltinfra-test -lunittest++ $(LDLIBS)
 clean:
 	rm -rf *.o ftt http/*.o tinfra/*.o
 
