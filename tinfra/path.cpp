@@ -19,6 +19,8 @@
 #endif
 
 #include <cstdlib>
+#include <cctype>
+#include <string.h>
 
 #include "tinfra/path.h"
 
@@ -122,4 +124,181 @@ std::string tmppath()
     return fmt("%s/%s_%s_%s") % tmpdir % basename(get_exepath()) % t % stamp;
 }
 
-} }
+#ifdef _WIN32
+static std::vector<std::string> get_executable_extensions() 
+{
+    const char* pathext = std::getenv("PATHEXT");
+    if( pathext == 0 )
+        pathext = ".com;.exe;.bat;.cmd";
+    return split(pathext, ";");
+}
+
+bool is_executable(tstring const& name, std::vector<std::string> const& extensions)
+{
+    // check existence
+    if( !exists(name) )
+        return false;
+    
+    // check correct extension
+    const size_t name_len = name.size();
+    for( std::vector<std::string>::const_iterator iext = extensions.begin();
+          iext != extensions.end(); ++iext)
+    {
+        const std::string& ext    = *iext;
+        const size_t       extlen = ext.size();
+        
+        if( name_len < extlen )
+            continue;
+        
+        const tstring actual_ext = name.substr(name_len-extlen, extlen);
+        if( strnicmp(actual_ext.data(), ext.data(), extlen) == 0 ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+#endif
+
+bool is_executable(tstring const& name)
+{
+#ifdef _WIN32
+    // check PATHEXT or ".exe .com .bat .cmd"
+    std::vector<std::string> extensions = get_executable_extensions();
+    return is_executable(name, extensions);
+#else
+    string_pool temporary_context;
+    struct stat st;
+    if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
+        return false;
+    const bool regular_file = (st.st_mode & S_IFREG) == S_IFREG; 
+    const bool executable   = (st.st_mode & 0111) != 0;
+    return regular_file && executable;
+#endif
+}
+
+bool is_absolute(tstring const& filename)
+{
+    if( filename.size() == 0 )
+        return false;
+    if( filename[0] == '/' || filename [0] == '\\')
+        return true;
+#ifdef _WIN32
+    if( filename.size() >= 2 && std::isalpha(filename[0]) && filename[1] == ':' )
+        return true;
+#endif
+    return false;
+}
+
+bool has_extension(tstring const& filename)
+{
+    size_t find_start = filename.find_last_of("\\/");
+    if( find_start == tstring::npos )
+        find_start = 0;
+    else
+        find_start++;
+    
+    const size_t dot_pos = filename.find_first_of('.', find_start);
+    const bool dot_exists =   (dot_pos != tstring::npos);
+    const bool not_at_start = (dot_pos > find_start);
+    return dot_exists && not_at_start;
+}
+
+#ifdef _WIN32
+static const char* PATH_SEPARATOR = ";";
+#else
+static const char* PATH_SEPARATOR = ":";
+#endif
+
+#ifdef _WIN32
+
+///
+/// Check if file with appended various extensions
+/// exists.
+///
+/// 
+/// @return empty if none of variant exists or name of firts variant that exists
+
+static std::string find_variant(tstring const& filename, std::vector<std::string> const& extensions)
+{
+    std::string pathext;
+    for( std::vector<std::string>::const_iterator iext = extensions.begin(); iext != extensions.end(); ++iext ) {
+        pathext.reserve(filename.size() + iext->size());
+        
+        pathext.assign(filename.data(), filename.size());
+        pathext.append(*iext);
+        
+        if( exists(pathext) ) {
+            return pathext;
+        }
+    }
+    return "";
+}
+
+std::string search_executable(tstring const& filename, tstring const& path)
+{
+    const bool filename_has_extension    = has_extension(filename);
+    const bool filename_is_absolute_path = is_absolute(filename);
+    
+    const std::vector<std::string> extensions = get_executable_extensions();  
+    
+    if( ! filename_is_absolute_path ) {
+        const std::vector<std::string> dirs = split(path, PATH_SEPARATOR);
+        
+        for(std::vector<std::string>::const_iterator ipath = dirs.begin(); ipath != dirs.end(); ++ipath ) {
+            const std::string path1 = tinfra::path::join(*ipath, filename);
+            if( filename_has_extension ) {
+                if( is_executable(path1 ,extensions) )
+                    return path1;
+                continue;
+            }
+            std::string maybe_with_ext = find_variant(path1, extensions);
+            if( ! maybe_with_ext.empty() )
+                return maybe_with_ext;
+        }
+    } else if( ! filename_has_extension ) {
+        return find_variant(filename.str(), extensions);
+    } else {
+        if( is_executable(filename, extensions) ) {
+            return filename.str();
+        }
+    }
+    return "";
+}
+
+// end of win32 version of search_executable
+#else 
+// start of common, posix version
+
+// TODO: move it to posix_common.sh
+std::string search_executable(tstring const& filename, tstring const& path)
+{
+    if( is_absolute(filename) )
+        if( is_executable(filename) )
+            return filename.str();
+    
+    std::vector<std::string> dirs = split(path, PATH_SEPARATOR);
+    
+    for(std::vector<std::string>::const_iterator ipath = dirs.begin(); ipath != dirs.end(); ++ipath )
+    {
+        std::string result_name = tinfra::path::join(*ipath, filename);
+        if( is_executable(result_name) ) {
+            return result_name;
+        }
+    }
+    return "";
+}
+#endif
+
+std::string search_executable(tstring const& filename)
+{
+    const char* path = std::getenv("PATH");
+    if( path == 0 )
+        path = "";
+    return search_executable(filename, path);
+}
+
+} } // end namespace tinfra::path
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
+

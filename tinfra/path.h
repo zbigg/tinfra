@@ -20,6 +20,7 @@ bool exists(tstring const& name);
 
 bool is_file(tstring const& name);
 bool is_dir(tstring const& name);
+bool is_executable(tstring const& name);
 
 std::string basename(tstring const& name);
 
@@ -27,6 +28,15 @@ std::string dirname(tstring const& name);
 
 std::string tmppath();
 
+bool has_extension(tstring const& filename);
+bool is_absolute(tstring const& filename);
+
+std::string search_executable(tstring const& filename, tstring const& path);
+std::string search_executable(tstring const& filename);
+
 } } // end namespace tinfra::path
 
 #endif
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
+
