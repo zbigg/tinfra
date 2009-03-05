@@ -3,6 +3,7 @@
 #include <tinfra/subprocess.h>
 #include <tinfra/tinfra_lex.h>
 #include <tinfra/fmt.h>
+#include <tinfra/path.h>
 
 namespace tinfra {
 namespace ssh {
@@ -12,9 +13,17 @@ using tinfra::subprocess;
 
 static std::string get_executable(std::string const& rule, std::string const& def)
 {
-    if( rule.empty() )
-        return def;
-    return rule;
+    std::string result;
+    if( rule.empty() ) 
+        result = def;
+    else
+        result = rule;
+    
+    std::string abs_path = tinfra::path::search_executable(result);
+    if( abs_path.empty() ) 
+        throw std::runtime_error(fmt("unable to find '%s' in PATH") % result);
+    
+    return abs_path;
 }
 
 void start_openssh(subprocess* sp, connection_settings const& settings, command_line const& user_command)
@@ -137,10 +146,29 @@ public:
         
         const size_t NOTFOUND = std::string::npos;
         
-        if( settings.provider.find("ssh") != NOTFOUND) {
-            start_openssh(sp.get(), settings, command);
-        } else if( settings.provider.find("plink") != NOTFOUND ) {
+        // arghhh, refactor it somehow!
+        bool use_ssh = false;
+        bool use_putty = false;
+        
+        if( settings.provider == "" ) {
+#ifdef _WIN32
+            use_putty = tinfra::path::search_executable("plink") != "";
+#endif
+            if( !use_putty )
+                use_ssh = tinfra::path::search_executable("ssh") != ""; 
+
+        }
+        
+        if( settings.provider.find("plink") != NOTFOUND ) {
+            use_putty = true;
+        } else if( settings.provider.find("ssh") != NOTFOUND ) {
+            use_ssh = true;
+        }
+        
+        if( use_putty  ) {
             start_putty(sp.get(), settings, command);
+        } else if( use_ssh ){
+            start_openssh(sp.get(), settings, command);
         } else {
             throw std::logic_error(fmt("unknown ssh provider '%s')") % settings.provider );
         }   
