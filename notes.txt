@@ -1,0 +1,21 @@
+Some useful development related notes:
+
+# home site configure
+--prefix=${HOME}
+
+# multihost site configure
+--prefix=${HOME} --exec-prefix=${HOME}/platforms/$(uname -p)
+
+#release configure
+CXXFLAGS="-Wall -O3" LDFLAGS="" ./configure
+
+#debug configure
+CXXFLAGS="-Wall -Werror -O0 -g" LDFLAGS="" ./configure
+
+
+#configure for coverage-tests
+CXXFLAGS="-fprofile-arcs -ftest-coverage -O0 -g -Wall" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure
+
+lcov --directory . --zerocounters
+lcov --directory . --capture --output-file tinfra.lcov
+genhtml -o covresults tinfra.lcov
