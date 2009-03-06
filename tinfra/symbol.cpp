@@ -5,83 +5,109 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#include <string>
-#include <iostream>
 #include "tinfra/symbol.h"
 
-using namespace std;
+#include <string>
+#include <iostream>
+#include <list>
+#include <map>
+#include <vector>
+
 namespace tinfra {
 
-symbol::Name2IdMap*      symbol::symbolMapString;
-symbol::NamesContainer*  symbol::symbolNames;
-int                      symbol::nextFreeSymbolId;
-
-const int symbol::null = 0;
-
-void symbol::initRegistry()
-{
-	static bool initialized = false;
-	if( initialized ) return;
-
-	symbolMapString = new Name2IdMap();
-	symbolNames = new NamesContainer();
-        const char* null_symbol_name = "null";
-	nextFreeSymbolId = 0;	
-	initialized = true; 
+class symbol_registry {
+public:
+    typedef symbol::id_type id_type;
+    
+    symbol_registry()
+        : next_symbol_id_(0)
+    {        
+        get_id_for_name("null");
+    }
+    
+    id_type get_id_for_name(tstring const& name)
+    {
+        tinfra::thread::guard instance_guard(instance_lock_);
         
-        getIdForName(null_symbol_name);
-}
-
-symbol::id_type symbol::getIdForName(const char* name)
-{	
-	initRegistry();
-	// TODO: it must be thread safe
-	// synchronize on static mutex
-	
-	Name2IdMap::iterator i =  symbolMapString->find(name);
-	if( i == symbolMapString->end() ) 
+        name_to_id_mapping_t::const_iterator i =  name_map_.find(name);
+	if( i == name_map_.end() ) 
 	{		
-		id_type resultId = nextFreeSymbolId++;
-		//cerr << "symbol::register(" << name << ") = " << resultId << endl;
-		symbolNames->push_back(name);
-		const string& nameInstance = symbolNames->at(resultId);
-		(*symbolMapString)[nameInstance.c_str()] = resultId;
-		return resultId;
+		id_type result_id = next_symbol_id_++;
+		name_storage_t::const_iterator istr = name_storage_.insert(name_storage_.end(), name.str());
+                
+                tstring name_allocated(*istr);
+		name_index_.push_back(istr);                
+		name_map_[name_allocated] = result_id;
+		return result_id;
 	} 
 	else 
 	{
 		return i->second;
 	}
-	// UNLOCK
+    }
+    
+    id_type find_no_create(tstring const& name)
+    {
+        tinfra::thread::guard instance_guard(instance_lock_);
+        name_to_id_mapping_t::const_iterator i =  name_map_.find(name);
+        if( i == name_map_.end() ) {
+            return 0;             
+        } else {
+            return i->second;
+        }
+    }
+    std::string const& name_for_id(id_type const& id)
+    {
+        tinfra::thread::guard instance_guard(instance_lock_);
+        
+        return * (name_index_[id] );
+    }
+private:
+    typedef std::map<tstring, id_type> name_to_id_mapping_t;
+    typedef std::list<std::string>     name_storage_t;
+    typedef std::vector<name_storage_t::const_iterator> name_index_t;
+    
+    
+    id_type               next_symbol_id_;
+    
+    name_to_id_mapping_t name_map_;
+    name_index_t         name_index_;
+    name_storage_t       name_storage_;
+    
+    tinfra::thread::mutex instance_lock_;
+};
+
+symbol_registry& global_register() {
+    static symbol_registry instance;
+    return instance;
 }
+
+symbol::id_type symbol::get_id_for_name(tstring const& str)
+{    
+    return global_register().get_id_for_name(str);
+}
+
+std::string const& symbol::name_for_id(symbol::id_type const& id)
+{
+    return global_register().name_for_id(id);
+}
+
+const symbol symbol::null = symbol(0);
 
 symbol	symbol::get(id_type id)
 {
 	return symbol(id);
 }
 
-symbol	symbol::get(const string& name)
+symbol	symbol::get(const tstring& name)
 {
-	return symbol(getIdForName(name.c_str()));
+	return symbol(get_id_for_name(name));
 }
 
-symbol	symbol::get(const char* name)
+symbol	symbol::find(tstring const& name)
 {
-	return symbol(getIdForName(name));
-}
-
-symbol	symbol::find(const string& name)
-{
-    return find(name.c_str());
-}
-
-symbol	symbol::find(const char* name)
-{
-    Name2IdMap::iterator i =  symbolMapString->find(name);
-    if( i == symbolMapString->end() ) 
-        return null;
-    else
-        return i->second;
+    id_type id = global_register().find_no_create(name);
+    return symbol(id);
 }
 
 std::ostream& operator <<(std::ostream& dest, symbol const& s)
@@ -91,4 +117,5 @@ std::ostream& operator <<(std::ostream& dest, symbol const& s)
 
 } // end namespace tinfra
 
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
 
