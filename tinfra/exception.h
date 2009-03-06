@@ -8,11 +8,10 @@
 #ifndef __tinfra_exception_h_
 #define __tinfra_exception_h_
 
-#include <exception>
+#include "tinfra/runtime.h"
+
 #include <stdexcept>
 #include <string>
-
-#include "tinfra/runtime.h"
 
 namespace tinfra {
 

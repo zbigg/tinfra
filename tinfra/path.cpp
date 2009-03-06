@@ -7,8 +7,11 @@
 
 #include "tinfra/platform.h"
 
+#include "tinfra/path.h"
+
 #include "tinfra/fmt.h"
 #include "tinfra/exeinfo.h"
+#include "tinfra/string.h"
 
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -22,7 +25,7 @@
 #include <cctype>
 #include <string.h>
 
-#include "tinfra/path.h"
+
 
 // need from system
 //    stat

@@ -6,13 +6,24 @@
 //
 
 #include "tinfra/platform.h"
-#include "tinfra/fmt.h"
-
-#include "tinfra/io/stream.h"
 
 #include "tinfra/win32.h"
+
+#include "tinfra/fmt.h"
+#include "tinfra/string.h"
+#include "tinfra/io/stream.h"
+
 #include <stdexcept>
 
+#ifndef NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#endif 
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+#define _WIN32_WINNT 0x0500 // Windows 2000
 #include <windows.h>
 
 namespace tinfra { namespace win32 {

@@ -5,6 +5,15 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
+#include "tinfra/platform.h"
+
+#include "tinfra/runtime.h"
+
+#include "tinfra/exeinfo.h"
+#include "tinfra/tinfra_lex.h"
+#include "tinfra/subprocess.h"
+#include "tinfra/string.h"
+
 #include <exception>
 #include <iostream>
 #include <iomanip>
@@ -12,12 +21,6 @@
 #include <sstream>
 #include <vector>
 #include <stdexcept>
-
-
-#include "tinfra/exception.h"
-#include "tinfra/exeinfo.h"
-#include "tinfra/tinfra_lex.h"
-#include "tinfra/subprocess.h"
 
 #include <signal.h>
 

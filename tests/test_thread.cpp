@@ -29,7 +29,7 @@ SUITE(tinfra)
     
     TEST(thread_condition_basic)
     {
-        tt:condition cond;
+        condition cond;
         cond.signal();
         cond.broadcast();
     }

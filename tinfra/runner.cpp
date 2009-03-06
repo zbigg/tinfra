@@ -26,4 +26,5 @@ Runner&  getDefaultRunner()
     return defaultRunner;
 }    
 
-};
+} // end namespace tinfra
+

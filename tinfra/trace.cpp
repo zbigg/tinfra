@@ -8,6 +8,7 @@
 #include "tinfra/trace.h"
 #include "tinfra/fmt.h"
 #include "tinfra/cmd.h"
+#include "tinfra/tstring.h"
 
 #include <sstream>
 #include <list>
@@ -87,7 +88,7 @@ auto_register_tracer::~auto_register_tracer()
     global_tracer_registry().remove(this);
 }
 
-void print_tracer_usage(tstring const& msg)
+void print_tracer_usage(tstring const&)
 {
     std::cerr << "Trace system arguments:\n"
                  "    --tracer-help        print tracers list and usage\n"
@@ -143,8 +144,8 @@ void enable_tracer_by_mask_cmd(tstring const& mask)
     enable_tracer_by_mask(mask);
 }
 
-static const tstring HELP_COMMAND = "--tracer-help";
-static const tstring ENABLE_COMMAND = "--tracer-enable";
+static const tinfra::tstring HELP_OPTION = "--tracer-help";
+static const tinfra::tstring ENABLE_OPTION = "--tracer-enable";
 
 static void remove_arg(int i, int& argc, char** argv)
 {   
@@ -163,11 +164,11 @@ void process_params(int& argc, char** argv)
     using std::strncmp;
     
     for( int i = 1; i < argc; ) {
-        if( HELP_COMMAND == argv[i] ) {
+        if( HELP_OPTION == argv[i] ) {
             print_tracer_usage();
             ::exit(0);
         }
-        if( ENABLE_COMMAND == argv[i]) {
+        if( ENABLE_OPTION == argv[i]) {
             if( i == argc-1 ) {
                 print_tracer_usage();
                 throw std::logic_error("--tracer-enable: missing tracer name");
@@ -177,10 +178,10 @@ void process_params(int& argc, char** argv)
             remove_arg(i, argc, argv);
             continue;
         }
-        if(    strncmp(argv[i], ENABLE_COMMAND.data(), ENABLE_COMMAND.size()) == 0
-            && argv[i][ENABLE_COMMAND.size()] == '=') 
+        if(    strncmp(argv[i], ENABLE_OPTION.data(), ENABLE_OPTION.size()) == 0
+            && argv[i][ENABLE_OPTION.size()] == '=') 
         {
-            const char* name = argv[i] + ENABLE_COMMAND.size()+1;
+            const char* name = argv[i] + ENABLE_OPTION.size()+1;
             enable_tracer_by_mask_cmd(name);
             
             remove_arg(i, argc, argv);

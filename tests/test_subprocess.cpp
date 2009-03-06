@@ -79,23 +79,25 @@ SUITE(tinfra) {
     }
     
     TEST(subprocess_read_write) {
-        std::auto_ptr<subprocess> p = tinfra::subprocess::create();
-        
-        p->set_stdin_mode(subprocess::REDIRECT);
-        p->set_stdout_mode(subprocess::REDIRECT);
-                
-        p->start("sort");
-        
-        CHECK(p->get_stdin()  != 0);
-        CHECK(p->get_stdout() != 0);
-        CHECK(p->get_stderr() == 0);
-        
-        write_file(p->get_stdin(), "zz\r\ncc\r\nbb\r\naa\r\n");
-        p->get_stdin()->close();
-
         std::string result;
-        read_file(p->get_stdout(), result);
-        p->wait();
+        {
+            std::auto_ptr<subprocess> p = tinfra::subprocess::create();
+            
+            p->set_stdin_mode(subprocess::REDIRECT);
+            p->set_stdout_mode(subprocess::REDIRECT);
+                    
+            p->start("sort");
+            
+            CHECK(p->get_stdin()  != 0);
+            CHECK(p->get_stdout() != 0);
+            CHECK(p->get_stderr() == 0);
+            
+            write_file(p->get_stdin(), "zz\r\ncc\r\nbb\r\naa\r\n");
+            p->get_stdin()->close();
+
+            read_file(p->get_stdout(), result);
+            p->wait();
+        }
         using tinfra::escape_c;
         CHECK_EQUAL(escape_c("aa\r\nbb\r\ncc\r\nzz\r\n"), escape_c(result.c_str()));
     }

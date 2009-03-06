@@ -15,6 +15,8 @@ namespace fs {
 
 struct file_list_visitor {
     virtual void accept(tstring const& name) =0;
+    
+    virtual ~file_list_visitor(); 
 };
 
 void list_files(tstring const& path, file_list_visitor& visitor);
@@ -52,6 +54,8 @@ struct walker
         @throws throws walker::stop to forcifully stop walking
     */
     virtual bool accept(tstring const& name, tstring const& parent, bool is_dir) = 0;
+    
+    virtual ~walker();
 };
 
 /** Walk through filesystem hierarchy.

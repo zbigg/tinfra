@@ -264,6 +264,14 @@ void walk(const char* start, walker& w)
     catch(walker::stop) { }
 }
 
+file_list_visitor::~file_list_visitor()
+{
+}
+
+walker::~walker()
+{
+}
+
 } }
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
