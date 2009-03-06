@@ -2,6 +2,7 @@
 #include <string>
 #include <typeinfo>
 #include <iostream>
+#include <sstream>
 
 // catch clause analysis
 
