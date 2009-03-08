@@ -2,6 +2,7 @@
 #include <string>
 #include <typeinfo>
 #include <iostream>
+#include <sstream>
 
 // catch clause analysis
 
@@ -27,8 +28,6 @@ struct __cxa_eh_globals {
     unsigned int        uncaughtExceptions;
 };
 
-extern "C" std::type_info *__cxa_current_exception_type ();
-extern "C" void* __cxa_get_exception_ptr(void*);
 extern "C" __cxa_eh_globals* __cxa_get_globals();
 
 struct extended_type_info {
