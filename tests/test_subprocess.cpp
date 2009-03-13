@@ -7,6 +7,8 @@
 
 #include "tinfra/subprocess.h"
 
+#include "tinfra/fmt.h"
+
 #include <unittest++/UnitTest++.h>
 
 #include "tinfra/string.h"
@@ -102,5 +104,28 @@ SUITE(tinfra) {
         CHECK_EQUAL(escape_c("aa\r\nbb\r\ncc\r\nzz\r\n"), escape_c(result.c_str()));
     }
     
+    TEST(subprocess_sets_environment)
+    {
+        using tinfra::environment_t;
+        using tinfra::fmt;
+        using tinfra::capture_command;
+        using tinfra::strip;
+        
+        environment_t base_env = tinfra::get_environment();
+        {
+            std::string unique_name = "thiSSurelyAkukuNotExists";
+            CHECK( base_env.find(unique_name) == base_env.end());
+            
+            environment_t modified_env(base_env);
+            modified_env[unique_name] = unique_name;
+#ifdef WIN32
+            std::string command = fmt("echo %%%s%%") % unique_name;
+#else
+            std::string command = fmt("echo $%s") % unique_name;
+#endif
+            CHECK_EQUAL( "", strip(capture_command(command, base_env)) );
+            CHECK_EQUAL( unique_name, strip(capture_command(command, modified_env)) );
+        }
+    }
 }
 

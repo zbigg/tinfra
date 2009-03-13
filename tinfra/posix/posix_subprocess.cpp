@@ -19,7 +19,10 @@
 
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
+#include "tinfra/path.h"
 #include "tinfra/subprocess.h"
+
+extern "C" char** environ;
 
 namespace tinfra {
 
@@ -53,8 +56,28 @@ static void throw_io_exception(const char* message)
     throw io_exception(fmt("%s: %s") % message % strerror(errno));
 }
 
-int execute_command(const char* command)
+char** make_system_environment(environment_t const& e)
 {
+    char** result = new char*[e.size()+1];
+    int idx = 0;
+    for(environment_t::const_iterator ie = e.begin(); ie != e.end(); ++ie ) {
+        std::string const& name = ie->first;
+        std::string const& value = ie->second;
+        const size_t string_size = name.size()+value.size()+1;
+        char* ev = new char[string_size+1];
+        memcpy(ev, name.data(), name.size());
+        ev[name.size()] = '=';
+        memcpy(ev + name.size()+1 , value.data(), value.size());
+        ev[string_size] = 0;
+        result[idx++] = ev;
+    }
+    result[idx] = 0;
+    return result;
+}
+int execute_command(const char* command, environment_t const* e)
+{
+    if( e != 0 )
+        environ = make_system_environment(*e);
     int r = system(command);
     if( r < 0 )
         throw_io_exception("system failed");
@@ -66,7 +89,7 @@ int execute_command(const char* command)
     return r;
 }
 
-int execute_command(std::vector<std::string> const& args)
+int execute_command(std::vector<std::string> const& args, environment_t const* e)
 {
     char** raw_args;
     raw_args = new char*[args.size()+1];
@@ -77,7 +100,16 @@ int execute_command(std::vector<std::string> const& args)
         }
         raw_args[idx] = 0;
     }
-    execvp(raw_args[0], raw_args);
+    if( !e ) {
+        execvp(raw_args[0], raw_args);
+    } else {
+        char** env = make_system_environment(*e);
+        std::string executable = tinfra::path::search_executable(raw_args[0]);
+        if( executable.size() == 0 ) {
+            throw_io_exception("unable to find executable");
+        }
+        execve(executable.c_str(), raw_args, env);
+    }
     throw_io_exception("exec failed");
     return 0;
 }
@@ -93,6 +125,8 @@ struct posix_subprocess: public subprocess {
     int pid;
     
     int exit_code;
+    environment_t env;
+    bool          env_set;
     
     posix_subprocess() : 
         pid(-1),
@@ -105,6 +139,11 @@ struct posix_subprocess: public subprocess {
         delete soutput;
         if( sinput != serror )
             delete serror;
+    }
+    virtual void     set_environment(environment_t const& e)
+    {
+        env_set = true;
+        env = e;
     }
     
     virtual void     wait() {
@@ -243,7 +282,7 @@ struct posix_subprocess: public subprocess {
                 ::exit(127);
             }
             // TODO it should rather be exec
-            int result = tinfra::posix::execute_command(command);
+            int result = tinfra::posix::execute_command(command, env_set ? &env : 0);
             //std::cerr << "PSP: execute_command() returned " << result << std::endl;
             if( result < 0 ) {
                 std::cerr << "TIC: system() failed!" << std::endl;

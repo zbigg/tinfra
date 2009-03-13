@@ -13,8 +13,11 @@
 #include "tinfra/io/stream.h"
 
 #include <memory>
+#include <map>
+#include <string>
 
 namespace tinfra {
+
 
 class subprocess {
 public:
@@ -45,6 +48,7 @@ public:
     
     virtual ~subprocess() {}
     
+    virtual void     set_environment(environment_t const& e) = 0;
     virtual void     start(const char* command) = 0;
     virtual void     start(std::vector<std::string> const& args) = 0;
     
@@ -73,10 +77,15 @@ protected:
 // deprecated
 subprocess* create_subprocess();
 
+/// Capture command output.
 /// $(command) or `command` subsitute
 /// TODO: create stream counterpart
 std::string capture_command(std::string const& command);
 
+/// Capture command output.
+/// same as capture_command but overrides program environment
+///
+std::string capture_command(std::string const& command, environment_t const& env);
 }
 
 #endif // #ifndef __tinfra_subprocess_h__

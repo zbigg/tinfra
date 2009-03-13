@@ -24,12 +24,26 @@ static void read_file(tinfra::io::stream* s, std::string& data)
     }
 }
 
+static std::string capture_command(std::string const& command, environment_t const* env);
+
 std::string capture_command(std::string const& command)
+{
+    return capture_command(command, 0);
+}
+
+std::string capture_command(std::string const& command, environment_t const& env)
+{
+    return capture_command(command, &env);
+}
+
+std::string capture_command(std::string const& command, environment_t const* env)
 {
     std::auto_ptr<subprocess> p = tinfra::subprocess::create();
                 
     p->set_stdout_mode(subprocess::REDIRECT);
-    
+    if( env )
+        p->set_environment(*env);
+
     std::string result;
     p->start(command.c_str());
     
