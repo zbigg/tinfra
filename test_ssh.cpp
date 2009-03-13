@@ -33,7 +33,34 @@ SUITE(tinfra_ssh) {
             c->get_output();
             c->get_input();
         }
+    }
+    
+    TEST(password_login)
+    {
+        std::string site = "us000175";
+        std::string login_name = "zagorzbi";
+        std::string password = "p4ssw0rd";
         
+        tinfra::ssh::connection_settings settings;
+        settings.provider = "plink";
+        settings.server_address = site;
+        settings.login_name = login_name;
+        settings.password   = password;        
+        settings.use_agent = false;
+        settings.subsystem_invocation = false;
+        
+        tinfra::ssh::command_line cmd;
+        cmd.push_back("uname");
+        cmd.push_back("-a");
+        
+        std::auto_ptr<tinfra::ssh::connection> c = tinfra::ssh::connection_factory::get()
+            .open_connection(settings, cmd);
+            
+        c->get_output();
+        tinfra::io::stream* in = c->get_input();
+        char ch;
+        while( in->read(&ch, 1) > 0 ) {
+        }
     }
 }
 

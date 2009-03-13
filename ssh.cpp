@@ -1,6 +1,7 @@
 #include "ssh.h"
 
 #include <tinfra/subprocess.h>
+#include <tinfra/runtime.h>
 #include <tinfra/tinfra_lex.h>
 #include <tinfra/fmt.h>
 #include <tinfra/path.h>
@@ -65,7 +66,23 @@ void start_openssh(subprocess* sp, connection_settings const& settings, command_
         cmd.push_back("-1"); // - one
     }
     
+    tinfra::environment_t env = tinfra::get_environment();
+    bool use_env = false;
+    if( settings.use_agent == false ) {
+        use_env = true;
+        env.erase(std::string("SSH_AUTH_SOCK"));
+    }
+    if( settings.password.size() > 0  ) {
+        use_env = true;
+        env["DISPLAY"] = "dummy";
+        
+        assert(false); // not implemented
+        //env["SSH_ASKPASS"] = sshaskpass_script;
+    }
+    cmd.push_back(settings.server_address);
     cmd.insert( cmd.end(), user_command.begin(), user_command.end() );
+    if( use_env )
+        sp->set_environment(env);
     sp->start(cmd);
 }
 
@@ -112,6 +129,12 @@ void start_putty(subprocess* sp, connection_settings const& settings, command_li
     if( settings.protocol == 1 ) 
         cmd.push_back("-1"); // - one
     
+    if( settings.password.size() > 0 ) {
+        cmd.push_back("-pw");
+        cmd.push_back(settings.password);
+    }
+    
+    cmd.push_back(settings.server_address);
     cmd.insert( cmd.end(), user_command.begin(), user_command.end() );
     sp->start(cmd);
 }
@@ -186,6 +209,10 @@ external_subprocess_factory default_factory;
 connection_factory& connection_factory::get()
 {
     return default_factory;
+}
+
+connection_factory::~connection_factory()
+{
 }
 
 } } // end namespace tinfra::ssh

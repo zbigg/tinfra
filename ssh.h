@@ -17,6 +17,7 @@ struct connection_settings {
     int         server_ssh_port;
     
     std::string login_name;
+    std::string password;
     std::string priv_key_filename;
     
     int         protocol;
@@ -65,6 +66,8 @@ public:
     
     
     static connection_factory& get();
+
+    virtual ~connection_factory();
 };
 
 } } // end namespace tinfra::ssh
