@@ -11,10 +11,18 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <map>
 
 #include "tinfra/exeinfo.h"
 
 namespace tinfra {
+    
+typedef std::map<std::string, std::string> environment_t;
+
+/// 
+/// read all envornment variables into a map
+///
+environment_t get_environment();
 
 #define TINFRA_THROW(a) do { \
     std::cerr << tinfra::get_exepath() << ": " << # a << std::endl; \

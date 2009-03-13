@@ -145,6 +145,7 @@
             tests/test_queue.cpp
             tests/test_subprocess.cpp
 	    tests/test_memory_pool.cpp
+            tests/test_runtime.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
