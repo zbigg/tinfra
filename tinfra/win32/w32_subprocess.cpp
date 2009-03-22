@@ -57,9 +57,13 @@ struct win32_subprocess: public subprocess {
     HANDLE process_handle;
     
     int exit_code;
+    environment_t env;
+    bool env_set;
     
-    win32_subprocess()
-        : process_handle(0), exit_code(-1)
+    win32_subprocess() : 
+        process_handle(0), 
+        exit_code(-1),
+        env_set(false)
     {
     }
     
@@ -115,7 +119,12 @@ struct win32_subprocess: public subprocess {
     virtual stream*  get_stderr() { return stderr_; }
     
     virtual intptr_t get_native_handle() { return reinterpret_cast<intptr_t>(process_handle); }
-    
+
+    virtual void     set_environment(environment_t const& e)
+    {
+        env = e;
+        env_set = true;
+    }
     void start(std::vector<std::string> const& args) {
         std::ostringstream cmd;
         for(std::vector<std::string>::const_iterator i = args.begin(); i != args.end(); ++i ) {
@@ -228,29 +237,64 @@ struct win32_subprocess: public subprocess {
             //creationFlags |= DETACHED_PROCESS;
             si.dwFlags |= STARTF_USESHOWWINDOW;
             si.wShowWindow = SW_HIDE;
-        
-            if( CreateProcess(
+            std::vector<char> environment_bytes;
+            if( env_set )
+                make_environment_block(environment_bytes);
+            int ret = CreateProcess(
                 NULL,
                 (char*)command,
                 NULL,
                 NULL,
                 TRUE,
                 creationFlags,
-                NULL,
+                (env_set ? &(environment_bytes.at(0)) : NULL),
                 NULL,
                 &si,
-                &processi) == 0 )
-            {
-                throw_system_error("CreateProcess failed");
-            }
-            process_handle = processi.hProcess;
+                &processi);
+            
             if( in_remote )
                 ::CloseHandle(in_remote);
             if( out_remote )
                 ::CloseHandle(out_remote);
             if( err_remote )
                 ::CloseHandle(err_remote);
+            
+            if( ret == 0 )
+            {
+                throw_system_error("CreateProcess failed");
+            }
+            process_handle = processi.hProcess;
         }
+    }
+    
+    void make_environment_block(std::vector<char>& result) const
+    {
+        {
+            size_t env_size = 1;
+            for( environment_t::const_iterator i = env.begin(); i != env.end(); ++i ) {
+                env_size += i->first.size() + i->second.size() + 2; // = and \0
+            }
+            result.reserve(env_size);
+        }
+        
+        std::vector<char>::iterator pos = result.begin();
+        for( environment_t::const_iterator i = env.begin(); i != env.end(); ++i ) {
+            
+            result.insert(pos, i->first.begin(), i->first.end());
+            pos += i->first.size();
+            
+            result.insert(pos, '=');
+            pos += 1;
+            
+            result.insert(pos, i->second.begin(), i->second.end());
+            pos += i->second.size();
+            
+            result.insert(pos, '\0');
+            pos += 1;
+        }
+        
+        result.insert(pos, '\0');
+        pos += 1;
     }
 };
 

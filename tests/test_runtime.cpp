@@ -6,6 +6,7 @@
 //
 
 #include "tinfra/runtime.h"
+#include <cstdlib>
 
 #include <unittest++/UnitTest++.h>
 
