@@ -8,6 +8,8 @@
 #ifndef __tinfra_fmt_h__
 #define __tinfra_fmt_h__
 
+#include "tinfra/platform.h"
+
 #include "tinfra/exception.h"
 #include "tinfra/tinfra_lex.h"
 #include <string>
@@ -71,6 +73,7 @@ public:
     }
     
 private:
+
     std::size_t check_command();
     void realize();
 

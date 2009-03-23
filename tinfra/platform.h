@@ -10,6 +10,7 @@
 
 #ifdef _MSC_VER
 #pragma warning( disable: 4512) // assignment operator could not be generated
+#pragma warning( disable: 4511) // copy constructor could not be generated
 #pragma warning( disable: 4312) // 
 #pragma warning( disable: 4127) // conditional expression is constant
 
