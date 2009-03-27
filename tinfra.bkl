@@ -114,7 +114,6 @@
             tinfra/win32/thread.h
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
-            tinfra/sftp/sftp_protocol.h
 	    tinfra/memory_pool.h
             
 	    tinfra/test.h
