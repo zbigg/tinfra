@@ -19,7 +19,9 @@
 
 #include "tstring.h"
 
+#if TINFRA_TSTING_CHECKS
 #include <pthread.h>
+#endif
 
 #if TINFRA_TSTING_CHECKS
 namespace stack_traits {
@@ -94,7 +96,7 @@ namespace tinfra {
     }
 #endif
 
-const tstring::size_type tstring::npos;
+const tstring::size_type tstring::npos = ~(size_type)0;
 
 tstring tstring::substr(size_type pos, size_type n) const
 {
@@ -261,7 +263,7 @@ void string_pool::clear()
     }
     strings.clear();
 }
-string_pool::string_pool(size_t initial_size)
+string_pool::string_pool(size_t)
 {
 }
 

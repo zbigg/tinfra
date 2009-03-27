@@ -5,6 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
+#include "tinfra/platform.h"
+
 #include "tinfra/test.h"
 
 #include "tinfra/fs.h"
@@ -93,7 +95,9 @@ static void out(const char* message, ...)
 #ifdef _WIN32
     char buf[2048];
     vsprintf(buf,message, ap);
-    printf("%s",buf);
+    //printf("%s",buf);
+    std::cout << buf;
+    std::cout.flush();
     OutputDebugString(buf);
 #else
     vprintf(message, ap);

@@ -8,10 +8,12 @@
 #ifndef __tinfra_io_stream_h_
 #define __tinfra_io_stream_h_
 
+#include "tinfra/platform.h"
+#include "tinfra/exception.h"
+
 #include <ios>
 #include <streambuf>
 
-#include "tinfra/exception.h"
 
 namespace tinfra { 
 namespace io {

@@ -10,12 +10,14 @@
 #ifndef __tinfra_h__
 #define __tinfra_h__
 
-#include <typeinfo>
 
 #include "tinfra/platform.h"
 #include "tinfra/symbol.h"
 #include "StaticCacheObject.h"
 #include "exception.h"
+
+#include <typeinfo>
+#include <map>
 
 namespace tinfra {
 

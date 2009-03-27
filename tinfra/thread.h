@@ -22,7 +22,7 @@
 // on win32 we must use pthread-win32 because we need condition variables
 // #       include <tinfra/win32/thread.h>
 #       define TINFRA_THREADS 1
-#include <tinfra/posix/thread.h>
+#include <tinfra/win32/thread.h>
 #elif defined(HAVE_PTHREAD_H)
 #       include <tinfra/posix/thread.h>
 #       define TINFRA_THREADS 1
@@ -33,7 +33,20 @@
 
 namespace tinfra {
 namespace thread {
-	
+
+class guard {
+    mutex& m;
+public:
+    guard(mutex& pm): m(pm)
+    {
+        m.lock();
+    }
+    ~guard()
+    {
+	m.unlock();
+    }
+};
+
 class monitor {
     mutex      m;
     condition  c;

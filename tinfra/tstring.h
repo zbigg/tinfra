@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_tstring_h__
-#define __tinfra_tstring_h__
+#ifndef tinfra_tstring_h__
+#define tinfra_tstring_h__
 
 #include <string>
 #include <stdexcept>
@@ -44,7 +44,7 @@ class string_pool;
 
 class tstring  {
     const char* str_;
-    int         length_;
+    size_t         length_;
     int         flags_;
 #if TINFRA_TSTING_CHECKS
     const void* stamp_;
@@ -157,11 +157,16 @@ public:
     tstring substr(size_type pos, size_type n) const;
     
     int cmp (tstring const& other) const {
-        size_t common_length = std::min(size(), other.size());
+		size_t common_length = std::min(size(),other.size()); // WINDOWS min macro workaround
         int r = std::memcmp(data(), other.data(), common_length);
         if( r != 0 ) 
             return r;
-        return tstring::size() - other.size();
+        if( tstring::size() > other.size() )
+            return -1;
+	else if( tstring::size() < other.size() )
+            return 1;
+        else
+            return 0;
     }
     
     bool operator == (const tstring& other) const { return cmp(other) == 0; }
@@ -221,7 +226,8 @@ public:
     size_type find_last_not_of(char_type const* s, size_type pos, size_type n) const;    
     size_type find_last_not_of(char_type c, size_type pos = npos) const;
     
-    static const size_type npos = ~(size_type)0;
+    static const size_type npos;
+
 private:
 #if TINFRA_TSTING_CHECKS
     static const void* make_stamp(const void* v)
@@ -231,7 +237,7 @@ private:
     void check_stamp();
 #else
     void check_stamp() {}
-    static const void* make_stamp(const void* v) { return 0; }
+    static const void* make_stamp(const void*) { return 0; }
 #endif
     static const char* temporary_alloc(string_pool& pool, tstring const& s);
 };

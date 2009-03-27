@@ -40,7 +40,10 @@ public:
                 std::istream in(&buf);
                 std::string cmd;
                 std::getline(in, cmd);
-                tinfra::strip_inplace(cmd);
+                if( !in )
+                    break;
+
+                tinfra::strip_inplace(cmd);                
                 //std::cerr << "S<" << cmd << std::endl;
                 if( cmd == "stop") {
                     server.stop();

@@ -7,6 +7,7 @@
 
 
 #include "tinfra/platform.h"
+
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
@@ -302,6 +303,14 @@ void walk(tstring const& start, walker& w)
         walk_(start, w);
     } 
     catch(walker::stop) { }
+}
+
+file_list_visitor::~file_list_visitor()
+{
+}
+
+walker::~walker()
+{
 }
 
 } }

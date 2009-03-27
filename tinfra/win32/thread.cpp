@@ -14,14 +14,23 @@
 
 #include <iostream>
 
-#define _WIN32_WINNT 0x10000
 #include <windows.h>
 #include <process.h>
+#include <limits.h>
+
+#include <memory>
 
 #include "tinfra/win32.h"
 #include "tinfra/fmt.h"
 
+#include "tinfra/trace.h"
+
+
+
 namespace tinfra {
+namespace thread {
+
+TINFRA_MODULE_TRACER(tinfra_thread);
 
 static void thread_error(const char* message, unsigned int rc)
 {
@@ -29,58 +38,123 @@ static void thread_error(const char* message, unsigned int rc)
 }
 
 //
-// Mutex implementation
+// mutex implementation
 //
 
-Mutex::Mutex() {
+mutex::mutex() {
     ::InitializeCriticalSection(&mutex_);
 }
 
-Mutex::~Mutex() {
+mutex::~mutex() {
     ::DeleteCriticalSection(&mutex_);
 }
 
-void Mutex::lock() {
+void mutex::lock() {
     ::EnterCriticalSection(&mutex_);
 }
 
-void Mutex::unlock() {
+void mutex::unlock() {
     ::LeaveCriticalSection(&mutex_);
 }
 
 // 
-// Condition implementation
+// condition implementation
 //
+TINFRA_PUBLIC_TRACER(tinfra_thread_condition);
+condition::condition()
+:   current_generation(0),
+    signal_count(0),
+    signal_sem(0),
+    signal_generation(0),
+    waiters_count(0),
+    was_broadcast(false),
+    broadcast_ended(0)
+{
+    TINFRA_USE_TRACER(tinfra_thread_condition);
+    TINFRA_CALL_TRACE();
 
-Condition::Condition() {
-    ::InitializeConditionVariable(&cond_);
+    signal_sem = CreateSemaphore(NULL, 0, LONG_MAX, NULL);
+    if( signal_sem == 0 ) {
+        TINFRA_LOG_WIN32_ERROR("create semaphore failed", GetLastError());
+        thread_error("create semaphore", GetLastError());
+    }
+    broadcast_ended = CreateSemaphore(NULL, 0, LONG_MAX, NULL);
+    if( broadcast_ended == 0 ) {
+        TINFRA_LOG_WIN32_ERROR("create semaphore failed", GetLastError());
+        thread_error("create semaphore", GetLastError());
+    }
+
 }
 
-Condition::~Condition() {
+condition::~condition() {
+    TINFRA_USE_TRACER(tinfra_thread_condition);
+    TINFRA_CALL_TRACE();
+
+    CloseHandle(signal_sem);
+    CloseHandle(broadcast_ended);
 }
 
-void Condition::signal() {
-    ::WakeConditionVariable(&cond_);
+void condition::signal() {
+    TINFRA_USE_TRACER(tinfra_thread_condition);
+    TINFRA_CALL_TRACE();
+
+    guard interal_guard(internal_lock);
+    if( waiters_count == 0 )
+        return;
+    signal_count  +=1;
+    waiters_count -= 1;
+    was_broadcast = false;
+    signal_generation = current_generation;
+    ReleaseSemaphore(signal_sem, 1, 0);
 }
 
-void Condition::broadcast() {
-    ::WakeAllConditionVariable(&cond_);
+void condition::broadcast() {
+    TINFRA_USE_TRACER(tinfra_thread_condition);
+    TINFRA_CALL_TRACE();
+    {
+        guard interal_guard(internal_lock);
+        if( waiters_count == 0 )
+            return;
+        signal_count = waiters_count;
+        waiters_count = 0;
+        was_broadcast = true;
+        signal_generation = current_generation;
+        ReleaseSemaphore(signal_sem, signal_count, 0);
+    }
+    WaitForSingleObject(broadcast_ended, INFINITE);
 }
 
-void Condition::wait(void* mutex) {
-    CRITICAL_SECTION* cs = (CRITICAL_SECTION*)mutex;
-    
-    BOOL r = ::SleepConditionVariableCS(&cond_, cs, INFINITE);
-    if( r == 0 )
-        thread_error("wait for condition", ::GetLastError());    
-}
+void condition::wait(mutex& external_lock) {
+    TINFRA_USE_TRACER(tinfra_thread_condition);
+    TINFRA_CALL_TRACE();
 
-void Condition::wait(Mutex& mutex) {
-    wait( mutex.get_native() );
+    unsigned long waiter_generation;
+    {
+        guard interal_guard(internal_lock);
+        waiters_count += 1;
+        waiter_generation = ++current_generation;
+    }
+    external_lock.unlock();
+
+    while( true ) {
+        WaitForSingleObject(signal_sem, INFINITE);
+
+        guard interal_guard(internal_lock);
+        if( signal_generation < waiter_generation ) {
+            ReleaseSemaphore(signal_sem, 1, 0);
+            continue;
+        }
+        signal_count -= 1;
+        if( signal_count == 0 && was_broadcast ) {
+            ReleaseSemaphore(broadcast_ended, 1, 0);
+        }
+        break;
+    }
+    external_lock.lock();
 }
 
 //
-// Thread implementation
+// thread implementation
 //
 struct thread_entry_param {
     void*             (* entry)(void*);
@@ -89,6 +163,9 @@ struct thread_entry_param {
 
 static unsigned __stdcall thread_master_fun(void* raw_params)
 {
+    size_t tid = thread::current().to_number();
+
+    TINFRA_TRACE_MSG(fmt("entered thread tid=%i") % tid);
     unsigned result;
     try {
         std::auto_ptr<thread_entry_param> params((thread_entry_param*)raw_params);
@@ -96,42 +173,56 @@ static unsigned __stdcall thread_master_fun(void* raw_params)
         // TODO dupa!
         result = 0;
     } catch(std::exception& e) {
-        std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % Thread::current().to_number() % e.what();
-        result = 0;
+        TINFRA_LOG_ERROR(fmt("thread %i failed with uncaught exception: %s\n") % tid % e.what());
+        result = ~0;
     }
-    ::_endthreadex(result);
+    TINFRA_TRACE_MSG(fmt("thread exited tid=%i") % tid );
+    ::_endthreadex(result); // never returns
+    return result; // just to satisfy compiler
 }
 
-Thread Thread::start(thread_entry entry, void* param )
+thread thread::start(thread_entry entry, void* param )
 {    
     std::auto_ptr<thread_entry_param> te_params(new thread_entry_param());
     te_params->entry = entry;
     te_params->param = param;
     unsigned thread_id;
-    uintptr_t ihandle = ::_beginthreadex(NULL, // no security desc
-                                     0,        // same stack as parent
-                                     thread_master_fun, 
-                                     te_params.get(),
-                                     0,      // start immediately
-                                     &thread_id);
+    uintptr_t thread_handle = ::_beginthreadex(
+                           NULL, // no security desc
+                           0,        // same stack as parent
+                           thread_master_fun, 
+                           te_params.get(),
+                           0,  // start immediately
+                           &thread_id);
     
-    if( ihandle == -1L ) 
-        thread_error("start thread", ::GetLastError());
-    
+    if( thread_handle == -1 ) // TODO: check this condition
+        thread_error("_beginthreadex failed", ::GetLastError());
     te_params.release();
     
-    return Thread(thread_id);
+    return thread((HANDLE)thread_handle, thread_id);
 }
 
-Thread Thread::start_detached( Thread::thread_entry entry, void* param )
+void thread::start_detached( thread::thread_entry entry, void* param )
 {
     // no difference detached/joinable on win32
-    return start(entry, param);
+    thread t = start(entry, param);
+    ::CloseHandle( t.native_handle() );
 }
 
-Thread Thread::current()
+thread thread::current()
 {
-    return Thread(GetCurrentThreadId());
+    return thread(NULL, GetCurrentThreadId());
+    /*
+    HANDLE handle = ::OpenThread(THREAD_QUERY_INFORMATION, FALSE, GetCurrentThreadId());
+    if( handle == 0 ) {
+        TINFRA_LOG_WIN32_ERROR("OpenThread failed", GetLastError());
+        thread_error("OpenThread failed", GetLastError());
+    }
+    thread result(handle);
+
+    CloseHandle(handle);
+    return result;
+    */
 }
 
 static void* runnable_entry(void* param)
@@ -148,49 +239,70 @@ static void* runnable_entry_delete(void* param)
     return 0;
 }
 
-Thread Thread::start( Runnable& runnable)
+thread::thread(handle_type thread_handle, DWORD thread_id)
+    :   
+    thread_handle_(thread_handle),
+    thread_id_(thread_id)
+{
+}
+
+thread::~thread()
+{
+}
+
+thread thread::start( Runnable& runnable )
 {
     return start(runnable_entry, (void*) &runnable);
 }
 
-Thread Thread::start_detached( Runnable* runnable)
+void thread::start_detached( Runnable* runnable)
 {   
-    return start_detached(runnable_entry_delete, (void*) &runnable);    
+    start_detached(runnable_entry_delete, (void*) &runnable);    
 }
 
-void* Thread::join()
+void* thread::join()
 {
-    HANDLE handle = ::OpenThread(THREAD_ALL_ACCESS, FALSE, thread_id_);
-    if( handle == NULL )
-        thread_error("join: unable to open thread", ::GetLastError());
+    if( thread_handle_ == NULL ) {
+        throw std::logic_error("trying to join already joined or detached thread");
+    }
     
-    
+    size_t tid = to_number();
+    TINFRA_TRACE_MSG(fmt("thread joining ... tid=%i") % tid);
     DWORD gla;
     
-    int rc = ::WaitForSingleObject( handle, INFINITE );
-    if( rc == 0 ) 
+    int rc = ::WaitForSingleObject( thread_handle_, INFINITE );
+    if( rc != WAIT_OBJECT_0 ) {
+        TINFRA_LOG_WIN32_ERROR("WaitForSingleObject failed", GetLastError());
         gla = ::GetLastError();
+    }
     
     DWORD retvalue;
-    unsigned exit_code = ::GetExitCodeThread( handle, &retvalue );
-    
-    ::CloseHandle(handle);
-    
-    if( rc == 0 )
+    BOOL rc2 = ::GetExitCodeThread( thread_handle_, &retvalue );
+    if( !rc2 ) {
+        TINFRA_LOG_WIN32_ERROR("GetExitCodeThread failed", GetLastError());
+        // silent error, can't ger exit_code
+        retvalue = 0;
+    }
+    ::CloseHandle(thread_handle_);
+    thread_handle_ = 0;
+
+    if( rc != WAIT_OBJECT_0 )
         thread_error("unable to join thread", gla);
     
+    TINFRA_TRACE_MSG(fmt("thread joined tid=%i, result %i") % tid % retvalue);
     return (void*)retvalue;
 }
 
-void Thread::sleep(long milliseconds)
+void thread::sleep(long milliseconds)
 {
     ::Sleep(milliseconds);
 }
 
-size_t Thread::to_number() const
+size_t thread::to_number() const
 {    
     return static_cast<size_t>(thread_id_);
 }
 
-}
+} } // end namespace tinfra::thread
+
 

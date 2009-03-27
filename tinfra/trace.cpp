@@ -7,6 +7,8 @@
 
 #include "tinfra/trace.h"
 #include "tinfra/fmt.h"
+#include "tinfra/cmd.h"
+#include "tinfra/tstring.h"
 
 #include <sstream>
 #include <list>
@@ -18,6 +20,7 @@
 namespace tinfra { 
 namespace trace {
     auto_register_tracer __tinfra_global_tracer("global");
+    tinfra::trace::auto_register_tracer error_tracer("errors", true);
 }}
 
 tinfra::trace::tracer& __tinfra_tracer_adaptable = tinfra::trace::__tinfra_global_tracer;
@@ -72,8 +75,8 @@ std::vector<tracer*> get_global_tracers()
 //
 // auto_register_tracer
 //
-auto_register_tracer::auto_register_tracer(const char* name)
-    : tracer(name) 
+auto_register_tracer::auto_register_tracer(const char* name, bool enabled)
+    : tracer(name, enabled) 
 {
     // TODO with lock
     global_tracer_registry().push_back(this);
@@ -85,7 +88,7 @@ auto_register_tracer::~auto_register_tracer()
     global_tracer_registry().remove(this);
 }
 
-void print_tracer_usage(tstring const& msg)
+void print_tracer_usage(tstring const&)
 {
     std::cerr << "Trace system arguments:\n"
                  "    --tracer-help        print tracers list and usage\n"
@@ -99,31 +102,50 @@ void print_tracer_usage(tstring const& msg)
     }
 }
 
-bool enable_tracer_by_name(tstring const& name)
+static bool matches(tstring const& mask, tstring const& str)
 {
-    tracer_registry& r = global_tracer_registry();
-    for(tracer_registry::const_iterator i = r.begin(); i != r.end(); ++i )
-    {
-        tracer* t = *i;
-        if( name != t->name() ) continue;
-            
-        t->enable(true);
+    if( mask == str )
         return true;
+    if( mask.size() > 0 && mask[mask.size()-1] == '*') {
+        size_t const_part_len = mask.size()-1;
+        
+        if( str.size() >= const_part_len &&
+            str.substr(0,const_part_len) == mask.substr(0, const_part_len) )
+            return true;
     }
-    
     return false;
 }
 
-void enable_tracer_by_name_cmd(tstring const& name)
+bool enable_tracer_by_mask(tstring const& mask)
 {
-    if( name.size() == 0 || !enable_tracer_by_name(name) ) {
-        print_tracer_usage();
-        throw std::logic_error(fmt("unknown or invalid tracer name: '%s'") % name);
+    tracer_registry& r = global_tracer_registry();
+    bool anything = false;
+    for(tracer_registry::const_iterator i = r.begin(); i != r.end(); ++i )
+    {
+        tracer* t = *i;
+        if( !matches(mask,t->name()) ) 
+            continue;
+        tinfra::cmd::inform(fmt("trace: enabling tracer '%s'") % t->name());
+        t->enable(true);
+        anything = true;
     }
+    if( !anything ) {
+        TINFRA_LOG_ERROR(fmt("no tracer matches mask '%s'") % mask);
+    }
+    return anything;
 }
 
-static const tstring HELP_COMMAND = "--tracer-help";
-static const tstring ENABLE_COMMAND = "--tracer-enable";
+void enable_tracer_by_mask_cmd(tstring const& mask)
+{
+    if( mask.size() == 0 ) {
+        print_tracer_usage();
+        throw std::logic_error(fmt("invalid tracer name: '%s'") % mask);
+    }
+    enable_tracer_by_mask(mask);
+}
+
+static const tinfra::tstring HELP_OPTION = "--tracer-help";
+static const tinfra::tstring ENABLE_OPTION = "--tracer-enable";
 
 static void remove_arg(int i, int& argc, char** argv)
 {   
@@ -141,31 +163,31 @@ void process_params(int& argc, char** argv)
     using std::strcmp;
     using std::strncmp;
     
-    for( int i = 1; i < argc; ++i ) {
-        if( HELP_COMMAND == argv[i] ) {
+    for( int i = 1; i < argc; ) {
+        if( HELP_OPTION == argv[i] ) {
             print_tracer_usage();
             ::exit(0);
         }
-        if( ENABLE_COMMAND == argv[i]) {
+        if( ENABLE_OPTION == argv[i]) {
             if( i == argc-1 ) {
                 print_tracer_usage();
                 throw std::logic_error("--tracer-enable: missing tracer name");
             }
-            enable_tracer_by_name_cmd(argv[i+1]);
+            enable_tracer_by_mask_cmd(argv[i+1]);
             remove_arg(i, argc, argv);
             remove_arg(i, argc, argv);
-            --i;
             continue;
         }
-        if(    strncmp(argv[i], ENABLE_COMMAND.data(), ENABLE_COMMAND.size()) == 0
-            && argv[i][ENABLE_COMMAND.size()] == '=') 
+        if(    strncmp(argv[i], ENABLE_OPTION.data(), ENABLE_OPTION.size()) == 0
+            && argv[i][ENABLE_OPTION.size()] == '=') 
         {
-            const char* name = argv[i] + ENABLE_COMMAND.size()+1;
-            enable_tracer_by_name_cmd(name);
+            const char* name = argv[i] + ENABLE_OPTION.size()+1;
+            enable_tracer_by_mask_cmd(name);
             
             remove_arg(i, argc, argv);
             continue;
         }
+        ++i;
     }
 }
 }} // end namespace tinfra::trace

@@ -33,12 +33,13 @@ AC_CHECK_HEADERS([pthread.h time.h])
 
 AC_CHECK_FUNCS([opendir nanosleep usleep])
 
-LIBS="$LIBS -lpthread"
-
 case "$target" in
 *-mingw*|*-mingw32*)
 	LIBS="$LIBS -lwsock32"
 	;;
+*)
+        LIBS="$LIBS -lpthread"
+        ;;
 esac
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(nsl,gethostbyname)

@@ -22,7 +22,27 @@ using std::sigatomic_t;
 typedef int sigatomic_t;
 #endif
 
+extern char** environ;
+
 namespace tinfra {
+
+environment_t get_environment()
+{
+    
+    environment_t result;
+    for( char** ie = environ; *ie != 0; ++ie ) {
+        tstring all(*ie);
+        size_t eq_pos = all.find_first_of('=');
+        if( eq_pos == tstring::npos ) 
+            continue;
+        tstring name = all.substr(0, eq_pos);
+        tstring value = all.substr(eq_pos+1);
+        
+        result[name.str()] = value.str();
+    }
+    return result;
+}
+
     
 void print_stacktrace(stacktrace_t const& st, std::ostream& out)
 {    

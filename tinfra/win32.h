@@ -17,6 +17,9 @@ void throw_system_error(std::string const& message);
     
 void get_available_drives(std::vector<std::string>& result);
 
+#define TINFRA_LOG_WIN32_ERROR(msg,le) \
+    TINFRA_LOG_ERROR(tinfra::fmt("%s: %s (%i)") % (msg) % tinfra::win32::get_error_string(le) % (le));
+
 } } // end namespace tinfra::win32
 
 #endif

@@ -13,6 +13,14 @@
 /// based on codebase from
 ///    http://win32.mvps.org/misc/stackwalk.html
 
+#include "tinfra/platform.h"
+
+#include "tinfra/exception.h"
+#include "tinfra/exeinfo.h"
+#include "tinfra/thread.h"
+#include "tinfra/runtime.h"
+#include "tinfra/trace.h"
+
 #include <windows.h>
 #include <string>
 #include <vector>
@@ -20,11 +28,6 @@
 #include <stdlib.h>
 
 #include <imagehlp.h>
-
-#include "tinfra/exception.h"
-#include "tinfra/exeinfo.h"
-#include "tinfra/thread.h"
-#include "tinfra/runtime.h"
 
 #define gle (GetLastError())
 #define lenof(a) (sizeof(a) / sizeof((a)[0]))
@@ -109,50 +112,17 @@ struct ModuleEntry
 typedef std::vector< ModuleEntry > ModuleList;
 typedef ModuleList::iterator ModuleListIter;
 
-static void show_stack(tinfra::stacktrace_t& dest); // dump a stack of current thread
-static void show_stack(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_t& dest ); // dump a stack
-
 static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep );
 static void enumAndLoadModuleSymbols( HANDLE hProcess, DWORD pid );
 static bool fillModuleList( ModuleList& modules, DWORD pid, HANDLE hProcess );
 static bool fillModuleListTH32( ModuleList& modules, DWORD pid );
 static bool fillModuleListPSAPI( ModuleList& modules, DWORD pid, HANDLE hProcess );
 
-bool initialize_imaghelp()
-{
-    HINSTANCE hImagehlpDll = NULL;
-    hImagehlpDll = LoadLibrary( "dbghelp.dll" );
-    if ( hImagehlpDll == NULL ) {
-	printf( "LoadLibrary( \"dbghelp.dll\" ): gle = %lu\n", gle );
-	return false;
-    }
-    
-    // we load imagehlp.dll dynamically because the NT4-version does not
-    // offer all the functions that are in the NT5 lib
-    
-    pSymCleanup = (tSymCleanup) GetProcAddress( hImagehlpDll, "SymCleanup" );
-    pSymFunctionTableAccess = (tSymFunctionTableAccess) GetProcAddress( hImagehlpDll, "SymFunctionTableAccess" );
-    pSymGetLineFromAddr = (tSymGetLineFromAddr) GetProcAddress( hImagehlpDll, "SymGetLineFromAddr" );
-    pSymGetModuleBase = (tSymGetModuleBase) GetProcAddress( hImagehlpDll, "SymGetModuleBase" );
-    pSymGetModuleInfo = (tSymGetModuleInfo) GetProcAddress( hImagehlpDll, "SymGetModuleInfo" );
-    pSymGetOptions = (tSymGetOptions) GetProcAddress( hImagehlpDll, "SymGetOptions" );
-    pSymGetSymFromAddr = (tSymGetSymFromAddr) GetProcAddress( hImagehlpDll, "SymGetSymFromAddr" );
-    pSymInitialize = (tSymInitialize) GetProcAddress( hImagehlpDll, "SymInitialize" );
-    pSymSetOptions = (tSymSetOptions) GetProcAddress( hImagehlpDll, "SymSetOptions" );
-    pStackWalk = (tStackWalk) GetProcAddress( hImagehlpDll, "StackWalk" );
-    pUnDecorateSymbolName = (tUnDecorateSymbolName) GetProcAddress( hImagehlpDll, "UnDecorateSymbolName" );
-    pSymLoadModule = (tSymLoadModule) GetProcAddress( hImagehlpDll, "SymLoadModule" );
-    
-    if ( pSymCleanup == NULL || pSymFunctionTableAccess == NULL || pSymGetModuleBase == NULL || pSymGetModuleInfo == NULL ||
-	    pSymGetOptions == NULL || pSymGetSymFromAddr == NULL || pSymInitialize == NULL || pSymSetOptions == NULL ||
-	    pStackWalk == NULL || pUnDecorateSymbolName == NULL || pSymLoadModule == NULL )
-    {
-	puts( "GetProcAddress(): some required function not found." );
-	FreeLibrary( hImagehlpDll );
-	return false;
-    }
-    return true;
-}
+static bool initialize_imaghelp();
+static bool initialize_sym(HANDLE hProcess);
+
+static bool get_current_thread_stacktrace(tinfra::stacktrace_t& dest);
+static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_t& dest );
 
 BOOL WINAPI ConsoleHandler(DWORD)
 {
@@ -185,7 +155,7 @@ static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
     
     tinfra::stacktrace_t trace;
     // TODO: trace should be filled and passed to fatal_exit
-    show_stack( GetCurrentThread(), *(ep->ContextRecord), trace );
+    get_thread_stacktace( GetCurrentThread(), *(ep->ContextRecord), trace );
     
     // TODO: abort() or return here ?
     tinfra::fatal_exit("fatal exception",trace);
@@ -198,93 +168,97 @@ namespace tinfra {
 void initialize_platform_runtime()
 {    	
     if( !initialize_imaghelp() ) {
-	// TODO: issue a warning
+	TINFRA_LOG_ERROR("tinfra::initialize_platform_runtime: unable to initialize imaghelp");
     }
     
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)unhandled_exception_filter);
     
     if( !SetConsoleCtrlHandler(ConsoleHandler, TRUE) ) {
-	// TODO: issue a warning
+	TINFRA_LOG_ERROR("tinfra::initialize_platform_runtime: unable to initialize contole interrupt handler");
     }
 }
-
-}
-
-static bool initialize_sym(HANDLE hProcess)
+    
+bool is_stacktrace_supported()
 {
-     // this is a _sample_. you can do the error checking yourself.
-    char* tt = new char[TTBUFLEN];
-    char* p = 0;
-    // build symbol search path from:
-    std::string symSearchPath = "";
-    // current directory
-    if ( GetCurrentDirectory( TTBUFLEN, tt ) )
-	    symSearchPath += tt + std::string( ";" );
-    // dir with executable
-    if ( GetModuleFileName( 0, tt, TTBUFLEN ) )
-    {
-	    for ( p = tt + strlen( tt ) - 1; p >= tt; -- p )
-	    {
-		    // locate the rightmost path separator
-		    if ( *p == '\\' || *p == '/' || *p == ':' )
-			    break;
-	    }
-	    // if we found one, p is pointing at it; if not, tt only contains
-	    // an exe name (no path), and p points before its first byte
-	    if ( p != tt ) // path sep found?
-	    {
-		    if ( *p == ':' ) // we leave colons in place
-			    ++ p;
-		    *p = '\0'; // eliminate the exe name and last path sep
-		    symSearchPath += tt + std::string( ";" );
-	    }
-    }
-    // environment variable _NT_SYMBOL_PATH
-    if ( GetEnvironmentVariable( "_NT_SYMBOL_PATH", tt, TTBUFLEN ) )
-	    symSearchPath += tt + std::string( ";" );
-    // environment variable _NT_ALTERNATE_SYMBOL_PATH
-    if ( GetEnvironmentVariable( "_NT_ALTERNATE_SYMBOL_PATH", tt, TTBUFLEN ) )
-	    symSearchPath += tt + std::string( ";" );
-    // environment variable SYSTEMROOT
-    if ( GetEnvironmentVariable( "SYSTEMROOT", tt, TTBUFLEN ) )
-	    symSearchPath += tt + std::string( ";" );
-
-    if ( symSearchPath.size() > 0 ) // if we added anything, we have a trailing semicolon
-	    symSearchPath = symSearchPath.substr( 0, symSearchPath.size() - 1 );
-
-    //printf( "symbols path: %s\n", symSearchPath.c_str() );
-
-    // why oh why does SymInitialize() want a writeable string?
-    char* tmpSymSearchPath = new char[symSearchPath.size()+1];
-    strcpy( tmpSymSearchPath, symSearchPath.c_str());
-    bool result = true;
-    
-    // init symbol handler stuff (SymInitialize())
-    if ( ! pSymInitialize( hProcess, tmpSymSearchPath, false ) )
-    {
-	printf( "SymInitialize(): gle = %lu\n", gle );
-	result = false;
-	goto cleanup;
-    }
-    
-    { // SymSetOptions call
-	DWORD symOptions; // symbol handler settings
-	// SymGetOptions()
-	symOptions = pSymGetOptions();
-	symOptions |= SYMOPT_LOAD_LINES;
-	symOptions &= ~SYMOPT_UNDNAME;
-	pSymSetOptions( symOptions ); // SymSetOptions()
-    }
-cleanup:
-    delete[] tmpSymSearchPath;
-    return result;
+    return true;
 }
+
+
+bool get_debug_info(void* address, debug_info& result)
+{
+    HANDLE hProcess = GetCurrentProcess(); // hProcess normally comes from outside
+    int frameNum; // counts walked frames
+    DWORD offsetFromSymbol; // tells us how far from the symbol we were
+    
+    IMAGEHLP_SYMBOL *pSym = (IMAGEHLP_SYMBOL *) malloc( IMGSYMLEN + MAXNAMELEN );
+    char undFullName[MAXNAMELEN]; // undecorated name with all shenanigans
+    IMAGEHLP_LINE Line;
+    
+    result.source_line = -1;
+    if ( ! pSymGetSymFromAddr( hProcess, (DWORD)address, &offsetFromSymbol, pSym ) ) {
+        if ( gle != 487 )
+            TINFRA_LOG_ERROR("get_debug_info: SymGetSymFromAddr failed");
+    } else {
+
+        pUnDecorateSymbolName( pSym->Name, undFullName, MAXNAMELEN, UNDNAME_COMPLETE );
+        result.function = undFullName;
+    }	    
+    
+    if ( pSymGetLineFromAddr != NULL ) { 
+        if ( ! pSymGetLineFromAddr( hProcess, (DWORD)address, &offsetFromSymbol, &Line ) ) {
+            if ( gle != 487 )
+                TINFRA_LOG_ERROR("get_debug_info: SymGetLineFromAddr failed");
+        }
+        else
+        {
+            result.source_line = Line.LineNumber;
+            result.source_file = Line.FileName;
+        }
+    }
+        
+    /*
+    printf("0x%08x", (unsigned int)address);
+
+    if( module_name ) {
+        printf(" (%s)", module_name);	    
+    }
+    if( symbol_name ) {
+        printf(" %s", symbol_name);
+        if( symbol_offset != -1 ) {
+            printf(" (+%i bytes)", symbol_offset);
+        }
+    }
+    if( file_name ) {
+        printf("(%s:%i)", file_name, line_number);
+    }
+    printf("\n");
+    */
+    return false;
+}
+
+bool get_stacktrace(stacktrace_t& th) 
+{
+    return get_current_thread_stacktrace(th);
+}
+
+} // end namespace tinfra
+
+//
+// implementation details
+// 
+
+// this method is called 
+// from separate, temporary thread to inspect
+// thread in which exception occured.
+//
+
 struct  thread_callstack_dumper_args {
-    HANDLE hThread;
-    bool finished;
+    HANDLE                hThread;
+    bool                  finished;
     tinfra::stacktrace_t* trace_result;
 };
-static DWORD __stdcall thread_callstack_dumper( void * arg)
+
+static DWORD __stdcall thread_callstack_dumper( void * arg )
 {
     thread_callstack_dumper_args* args = (thread_callstack_dumper_args*)arg;    
     
@@ -296,14 +270,16 @@ static DWORD __stdcall thread_callstack_dumper( void * arg)
     if ( ! ::GetThreadContext( args->hThread, &context ) ) {
         printf("unable to read thread context, call stack dump failed");
     } else {
-        show_stack( args->hThread, context, *(args->trace_result) );
+        if( !get_thread_stacktace( args->hThread, context, *(args->trace_result) ) ) {
+            // TODO: handle error
+        }
     }
     ::ResumeThread(args->hThread);
     args->finished = true;
     return 0;
 }
 
-static void show_stack(tinfra::stacktrace_t& dest)
+static bool get_current_thread_stacktrace(tinfra::stacktrace_t& dest)
 {
     thread_callstack_dumper_args args;
     
@@ -313,18 +289,18 @@ static void show_stack(tinfra::stacktrace_t& dest)
                     &args.hThread,
                     0, FALSE, DUPLICATE_SAME_ACCESS) == 0 )
     {
-        printf("unable to create thread handle, call stack dump failed");
-        return;
+        TINFRA_LOG_ERROR("get_current_thread_stacktrace: unable to obtain thread handle");
+        return false;
     }
     args.finished = 0;
     args.trace_result = &dest;
     
-    //DWORD hDumpThreadId;
+    // TODO - use beginthreadex or better, tinfra::thread
     HANDLE hDumpThread = ::CreateThread( NULL, 5*524288, thread_callstack_dumper,  &args, 0, 0 );
     if( hDumpThread == NULL ) {
         ::CloseHandle(args.hThread);
-        printf("unable create dumper thread, call stack dump failed");
-        return;
+        printf("get_current_thread_stacktrace: unable to create thread");
+        return false;
     }
     
     {   // let dumper thread suspend us and wait half-actively for 
@@ -342,9 +318,10 @@ static void show_stack(tinfra::stacktrace_t& dest)
         ::CloseHandle(hDumpThread);
         ::CloseHandle(args.hThread);
     }
+    return true;
 }
 
-static void show_stack(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_t& dest )
+static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_t& dest )
 {
     // normally, call ImageNtHeader() and use machine info from PE header
     DWORD imageType = IMAGE_FILE_MACHINE_I386;
@@ -477,9 +454,115 @@ cleanup:
     // de-init symbol handler etc. (SymCleanup())
     pSymCleanup( hProcess );
     free( pSym );
+    
+    return true;
 }
 
+static bool initialize_imaghelp()
+{
+    HINSTANCE hImagehlpDll = NULL;
+    hImagehlpDll = LoadLibrary( "dbghelp.dll" );
+    if ( hImagehlpDll == NULL ) {
+	printf( "LoadLibrary( \"dbghelp.dll\" ): gle = %lu\n", gle );
+	return false;
+    }
+    
+    // we load imagehlp.dll dynamically because the NT4-version does not
+    // offer all the functions that are in the NT5 lib
+    
+    pSymCleanup = (tSymCleanup) GetProcAddress( hImagehlpDll, "SymCleanup" );
+    pSymFunctionTableAccess = (tSymFunctionTableAccess) GetProcAddress( hImagehlpDll, "SymFunctionTableAccess" );
+    pSymGetLineFromAddr = (tSymGetLineFromAddr) GetProcAddress( hImagehlpDll, "SymGetLineFromAddr" );
+    pSymGetModuleBase = (tSymGetModuleBase) GetProcAddress( hImagehlpDll, "SymGetModuleBase" );
+    pSymGetModuleInfo = (tSymGetModuleInfo) GetProcAddress( hImagehlpDll, "SymGetModuleInfo" );
+    pSymGetOptions = (tSymGetOptions) GetProcAddress( hImagehlpDll, "SymGetOptions" );
+    pSymGetSymFromAddr = (tSymGetSymFromAddr) GetProcAddress( hImagehlpDll, "SymGetSymFromAddr" );
+    pSymInitialize = (tSymInitialize) GetProcAddress( hImagehlpDll, "SymInitialize" );
+    pSymSetOptions = (tSymSetOptions) GetProcAddress( hImagehlpDll, "SymSetOptions" );
+    pStackWalk = (tStackWalk) GetProcAddress( hImagehlpDll, "StackWalk" );
+    pUnDecorateSymbolName = (tUnDecorateSymbolName) GetProcAddress( hImagehlpDll, "UnDecorateSymbolName" );
+    pSymLoadModule = (tSymLoadModule) GetProcAddress( hImagehlpDll, "SymLoadModule" );
+    
+    if ( pSymCleanup == NULL || pSymFunctionTableAccess == NULL || pSymGetModuleBase == NULL || pSymGetModuleInfo == NULL ||
+	    pSymGetOptions == NULL || pSymGetSymFromAddr == NULL || pSymInitialize == NULL || pSymSetOptions == NULL ||
+	    pStackWalk == NULL || pUnDecorateSymbolName == NULL || pSymLoadModule == NULL )
+    {
+	puts( "GetProcAddress(): some required function not found." );
+	FreeLibrary( hImagehlpDll );
+	return false;
+    }
+    return true;
+}
 
+static bool initialize_sym(HANDLE hProcess)
+{
+     // this is a _sample_. you can do the error checking yourself.
+    char* tt = new char[TTBUFLEN];
+    char* p = 0;
+    // build symbol search path from:
+    std::string symSearchPath = "";
+    // current directory
+    if ( GetCurrentDirectory( TTBUFLEN, tt ) )
+	    symSearchPath += tt + std::string( ";" );
+    // dir with executable
+    if ( GetModuleFileName( 0, tt, TTBUFLEN ) )
+    {
+	    for ( p = tt + strlen( tt ) - 1; p >= tt; -- p )
+	    {
+		    // locate the rightmost path separator
+		    if ( *p == '\\' || *p == '/' || *p == ':' )
+			    break;
+	    }
+	    // if we found one, p is pointing at it; if not, tt only contains
+	    // an exe name (no path), and p points before its first byte
+	    if ( p != tt ) // path sep found?
+	    {
+		    if ( *p == ':' ) // we leave colons in place
+			    ++ p;
+		    *p = '\0'; // eliminate the exe name and last path sep
+		    symSearchPath += tt + std::string( ";" );
+	    }
+    }
+    // environment variable _NT_SYMBOL_PATH
+    if ( GetEnvironmentVariable( "_NT_SYMBOL_PATH", tt, TTBUFLEN ) )
+	    symSearchPath += tt + std::string( ";" );
+    // environment variable _NT_ALTERNATE_SYMBOL_PATH
+    if ( GetEnvironmentVariable( "_NT_ALTERNATE_SYMBOL_PATH", tt, TTBUFLEN ) )
+	    symSearchPath += tt + std::string( ";" );
+    // environment variable SYSTEMROOT
+    if ( GetEnvironmentVariable( "SYSTEMROOT", tt, TTBUFLEN ) )
+	    symSearchPath += tt + std::string( ";" );
+
+    if ( symSearchPath.size() > 0 ) // if we added anything, we have a trailing semicolon
+	    symSearchPath = symSearchPath.substr( 0, symSearchPath.size() - 1 );
+
+    //printf( "symbols path: %s\n", symSearchPath.c_str() );
+
+    // why oh why does SymInitialize() want a writeable string?
+    char* tmpSymSearchPath = new char[symSearchPath.size()+1];
+    strcpy( tmpSymSearchPath, symSearchPath.c_str());
+    bool result = true;
+    
+    // init symbol handler stuff (SymInitialize())
+    if ( ! pSymInitialize( hProcess, tmpSymSearchPath, false ) )
+    {
+	printf( "SymInitialize(): gle = %lu\n", gle );
+	result = false;
+	goto cleanup;
+    }
+    
+    { // SymSetOptions call
+	DWORD symOptions; // symbol handler settings
+	// SymGetOptions()
+	symOptions = pSymGetOptions();
+	symOptions |= SYMOPT_LOAD_LINES;
+	symOptions &= ~SYMOPT_UNDNAME;
+	pSymSetOptions( symOptions ); // SymSetOptions()
+    }
+cleanup:
+    delete[] tmpSymSearchPath;
+    return result;
+}
 
 static void enumAndLoadModuleSymbols( HANDLE hProcess, DWORD pid )
 {

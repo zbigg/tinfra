@@ -9,7 +9,7 @@
             tinfra/win32/w32_io.cpp
             tinfra/win32/w32_subprocess.cpp
             tinfra/win32/w32_common.cpp
-            tinfra/posix/thread.cpp <!-- win32 native thread support still broken -->
+            tinfra/win32/thread.cpp <!-- win32 native thread support still broken -->
             tinfra/win32/w32_runtime.cpp
         </if>
         
@@ -153,6 +153,7 @@
             tests/test_queue.cpp
             tests/test_subprocess.cpp
 	    tests/test_memory_pool.cpp
+            tests/test_runtime.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>

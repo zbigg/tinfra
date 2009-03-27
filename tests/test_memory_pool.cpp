@@ -20,7 +20,7 @@ SUITE(tinfra)
         // TODO: decide if memory pool should throw, return null or assert in this
         //       case (too big allocation)
         //CHECK( pool.alloc(2) == 0 );
-        CHECK_THROW( pool.alloc(2) == 0, std::logic_error );
+        CHECK_THROW( pool.alloc(2), std::logic_error );
         for( int i = 0; i < 100; ++i ) {
             CHECK(pool.alloc(1) != 0);
         }

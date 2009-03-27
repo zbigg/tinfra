@@ -5,10 +5,13 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
+#include "tinfra/platform.h"
+
 #include "tinfra/io/socket.h"
 #include "tinfra/server.h"
 
 #include "tinfra/fmt.h"
+
 #include <iostream>
 #include <stdexcept>
 

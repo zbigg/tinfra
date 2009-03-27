@@ -28,14 +28,14 @@ SUITE(tinfra)
             { 2, "abc", 'c'},
         */    
             
-        CHECK_EQUAL(0, tstring("abc").find_first_of('a'));
-        CHECK_EQUAL(1, tstring("abc").find_first_of('b'));
-        CHECK_EQUAL(2, tstring("abc").find_first_of('c'));
+        CHECK_EQUAL(0u, tstring("abc").find_first_of('a'));
+        CHECK_EQUAL(1u, tstring("abc").find_first_of('b'));
+        CHECK_EQUAL(2u, tstring("abc").find_first_of('c'));
         CHECK_EQUAL(tstring::npos, tstring("abc").find_first_of('d'));
         
-        CHECK_EQUAL(0, tstring("aaa").find_first_of('a'));
-        CHECK_EQUAL(1, tstring("aaa").find_first_of('a',1));
-        CHECK_EQUAL(2, tstring("aaa").find_first_of('a',2));
+        CHECK_EQUAL(0u, tstring("aaa").find_first_of('a'));
+        CHECK_EQUAL(1u, tstring("aaa").find_first_of('a',1));
+        CHECK_EQUAL(2u, tstring("aaa").find_first_of('a',2));
         CHECK_EQUAL(tstring::npos, tstring("aaa").find_first_of('a',3));
     }
     
@@ -45,11 +45,11 @@ SUITE(tinfra)
         CHECK_EQUAL(tstring::npos, tstring("a").find_first_of(""));
         CHECK_EQUAL(tstring::npos, tstring("").find_first_of("ab"));
         
-        CHECK_EQUAL(1, tstring(" abc ").find_first_of("ab"));
-        CHECK_EQUAL(1, tstring(" abc ").find_first_of("ba"));
+        CHECK_EQUAL(1u, tstring(" abc ").find_first_of("ab"));
+        CHECK_EQUAL(1u, tstring(" abc ").find_first_of("ba"));
         
-        CHECK_EQUAL(1, tstring(" abc ").find_first_of("ab"));
-        CHECK_EQUAL(3, tstring(" abc ").find_first_of("cd"));
+        CHECK_EQUAL(1u, tstring(" abc ").find_first_of("ab"));
+        CHECK_EQUAL(3u, tstring(" abc ").find_first_of("cd"));
         CHECK_EQUAL(tstring::npos, tstring("abc").find_first_of("def"));
     }
     
