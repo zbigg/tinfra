@@ -128,21 +128,6 @@ SUITE(tinfra)
     {
         test_vfs(tinfra::local_fs());
     }
-    
-#if TEST_SFTP
-    TEST(test_sftp_vfs)
-    {
-        std::string base_command;
-        std::string target;
-        base_command = "ssh -s";
-        target = "localhost";
-        std::auto_ptr<tinfra::vfs> fs;
-        if( base_command.size() > 0 ) {
-            fs = std::auto_ptr<tinfra::vfs>(tinfra::sftp::create(target, base_command));
-            test_vfs(* fs.get() );
-        }        
-    }
-#endif
 }
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
