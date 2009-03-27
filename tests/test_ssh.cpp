@@ -2,8 +2,7 @@
 #include <unittest++/UnitTest++.h>
 
 
-//#include "tinfra/ssh.h"
-#include "ssh.h"
+#include "tinfra/ssh.h"
 
 SUITE(tinfra_ssh) {
   
@@ -37,9 +36,9 @@ SUITE(tinfra_ssh) {
     
     TEST(password_login)
     {
-        //std::string site = "localhost";
-        //std::string login_name = "";
-        //std::string password = "";
+        std::string site = "localhost";
+        std::string login_name = "";
+        std::string password = "";
         
         tinfra::ssh::connection_settings settings;
         settings.provider = "plink";
