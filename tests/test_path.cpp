@@ -6,6 +6,7 @@
 //
 
 #include "tinfra/path.h"
+#include "tinfra/fs.h"
 
 #include <unittest++/UnitTest++.h>
 
@@ -100,7 +101,7 @@ SUITE(tinfra)
     {
         using tinfra::path::search_executable;
         using tinfra::path::is_executable;
-        using tinfra::path::exists;
+        using tinfra::fs::exists;
 #ifdef _WIN32
         std::string rp = search_executable("regedit");
         CHECK( rp != "");

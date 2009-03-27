@@ -15,11 +15,6 @@
 
 #include <unittest++/UnitTest++.h>
 
-#define TEST_SFTP 1
-
-#if TEST_SFTP
-#include "tinfra/sftp/sftp_vfs.h"
-#endif
 using namespace tinfra;
 
 SUITE(tinfra)

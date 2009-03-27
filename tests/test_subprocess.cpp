@@ -111,9 +111,9 @@ SUITE(tinfra) {
     static std::string get_echo_var_command(tstring const& varname)
     {
 #ifdef WIN32
-            return tinfra::fmt("cmd /c \"echo %%%s%%\"") % varname;
+        return tinfra::fmt("cmd /c \"echo %%%s%%\"") % varname;
 #else
-            return fmt("echo $%s") % varname;
+        return tinfra::fmt("echo $%s") % varname;
 #endif
     }
     

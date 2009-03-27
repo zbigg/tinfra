@@ -48,9 +48,6 @@
             tinfra/trace.cpp
             tinfra/lazy_protocol.cpp
             tinfra/vfs.cpp
-            tinfra/sftp/sftp_protocol.cpp
-            tinfra/sftp/sftp_vfs.cpp
-            
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
