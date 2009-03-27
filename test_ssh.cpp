@@ -37,9 +37,9 @@ SUITE(tinfra_ssh) {
     
     TEST(password_login)
     {
-        std::string site = "us000175";
-        std::string login_name = "zagorzbi";
-        std::string password = "p4ssw0rd";
+        //std::string site = "localhost";
+        //std::string login_name = "";
+        //std::string password = "";
         
         tinfra::ssh::connection_settings settings;
         settings.provider = "plink";

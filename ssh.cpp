@@ -5,6 +5,17 @@
 #include <tinfra/tinfra_lex.h>
 #include <tinfra/fmt.h>
 #include <tinfra/path.h>
+#include <tinfra/os_common.h>
+
+#include <iostream>
+
+#ifndef _WIN32
+#include <cerrno>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+#endif
 
 namespace tinfra {
 namespace ssh {
@@ -12,6 +23,31 @@ namespace ssh {
 using std::auto_ptr;
 using tinfra::subprocess;
 
+#ifndef WIN32
+static std::string make_safe_script(std::string const& contents )
+{
+    std::string name = tinfra::path::tmppath();
+    int fd = ::open(name.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 0700);
+    if( fd < 0) 
+        tinfra::throw_errno_error(errno, "open safe file failed");
+    
+    size_t w = write(fd, contents.data(), contents.size());
+    if( w != contents.size() ) {
+        ::close(fd);
+        tinfra::throw_errno_error(errno, "write safe file failed");
+    }
+    
+    if( ::close(fd) < 0 ) 
+        tinfra::throw_errno_error(errno, "open safe file failed");
+    return name;
+}
+
+#else
+static std::string make_safe_script(std::string contents& a)
+{
+    assert(false);
+}
+#endif
 static std::string get_executable(std::string const& rule, std::string const& def)
 {
     std::string result;
@@ -75,9 +111,14 @@ void start_openssh(subprocess* sp, connection_settings const& settings, command_
     if( settings.password.size() > 0  ) {
         use_env = true;
         env["DISPLAY"] = "dummy";
+        std::string tmppath = tinfra::path::tmppath();
         
-        assert(false); // not implemented
-        //env["SSH_ASKPASS"] = sshaskpass_script;
+        std::string ssh_ask_pass_path = make_safe_script(
+            fmt(
+                "#!/bin/sh\n"
+                "echo -n '%s'\n" )  % settings.password);
+        env["SSH_ASKPASS"] = ssh_ask_pass_path;
+        std::cerr << "warning, remove this file: " << ssh_ask_pass_path << "\n";
     }
     cmd.push_back(settings.server_address);
     cmd.insert( cmd.end(), user_command.begin(), user_command.end() );
@@ -92,6 +133,8 @@ void start_putty(subprocess* sp, connection_settings const& settings, command_li
     std::string program = get_executable(settings.provider, "plink");
     
     cmd.push_back(program);
+    
+    cmd.push_back("-batch");
     
     if( settings.use_agent ) 
         cmd.push_back("-agent");
@@ -145,11 +188,11 @@ public:
     subprocess_ssh_connection(auto_ptr<subprocess> sp_):
         sp(sp_)
     {}
-        
+    
     stream* get_output() {
         return sp->get_stdin();
     }
-    
+
     stream* get_input() {
         return sp->get_stdout();
     }
