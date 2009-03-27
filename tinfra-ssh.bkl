@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+
+<makefile>
+    <include file="tinfra-support/common.bkl"/>
+        
+    <lib id="tinfra-ssh" template="default-workspace-settings">
+        <include>$(SRCDIR)</include>
+        <sources>
+            tinfra/ssh.cpp
+        </sources>
+        <install-to>$(LIBDIR)</install-to> 
+    </lib>
+    
+    <using module="pkgconfig"/>
+    
+    <pkgconfig>
+        <src>tinfra-ssh.pc</src>
+    </pkgconfig>
+    
+    <using module="datafiles"/>
+    
+    
+    <data-files-tree id="headers">
+        <srcdir>$(SRCDIR)</srcdir>
+        <install-to>$(INCLUDEDIR)</install-to> 
+        <files>
+            tinfra/ssh.h
+        </files>
+    </data-files-tree>    
+   
+    
+    <!-- local things -->
+    <exe id="unittests" template="default-workspace-settings">
+        <include>$(SRCDIR)</include>
+        <sources>
+            tests/test_main.cpp
+            tests/test_ssh.cpp
+        </sources>
+        <library>tinfra-ssh</library>
+        <define>SRCDIR="$(SRCDIR)"</define>
+        <define>UNITTEST_IGNORE_SIGNALS</define>
+	<sys-lib>tinfra-test</sys-lib>
+        <sys-lib>unittest++</sys-lib>
+    </exe>
+    
+    <action id="check" depends="unittests">
+        <depends>unittests</depends>
+        <command>sh $(SRCDIR)/check.sh $(BUILDDIR)</command>
+    </action>
+</makefile>
