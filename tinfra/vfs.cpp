@@ -9,7 +9,9 @@
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
 #include "tinfra/tstring.h"
+
 #include <stdexcept>
+#include <memory>
 
 #ifdef WIN32
 #include "tinfra/win32.h"

@@ -8,6 +8,7 @@
 #include "tinfra/platform.h"
 
 #include "tinfra/path.h"
+#include "tinfra/fs.h"
 
 #include "tinfra/fmt.h"
 #include "tinfra/exeinfo.h"
@@ -124,7 +125,7 @@ static std::vector<std::string> get_executable_extensions()
 bool is_executable(tstring const& name, std::vector<std::string> const& extensions)
 {
     // check existence
-    if( !exists(name) )
+    if( !tinfra::fs::exists(name) )
         return false;
     
     // check correct extension
@@ -216,7 +217,7 @@ static std::string find_variant(tstring const& filename, std::vector<std::string
         pathext.assign(filename.data(), filename.size());
         pathext.append(*iext);
         
-        if( exists(pathext) ) {
+        if( fs::exists(pathext) ) {
             return pathext;
         }
     }

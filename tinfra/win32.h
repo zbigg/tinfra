@@ -8,6 +8,9 @@
 #ifndef __tinfra_win32_h__
 #define __tinfra_win32_h__
 
+#include <vector>
+#include <string>
+
 namespace tinfra { namespace win32 {
 
 std::string get_error_string(unsigned int error_code);
