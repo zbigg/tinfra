@@ -7,8 +7,11 @@ prepare() {
     then
         bakefile_gen
     fi
-
-    aclocal -I "$(dirname $(which bakefile))/../share/aclocal"
+    LOCAL_ACDIR="$(dirname $(which bakefile))/../share/aclocal"
+    
+    [ -d ${LOCAL_ACDIR} ] && ACLOCAL_FLAGS="-I ${LOCAL_ACDIR}"
+    
+    aclocal ${ACLOCAL_FLAGS}
 
     if [ -n "$AUTOCONF_CONFIG_FILE" ]
     then
