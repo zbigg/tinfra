@@ -145,12 +145,13 @@ int main()
     
     {
         my_server r;
-        callfwd::call_forwarder<my_server> cf(r);
+        callfwd::call_queue q;
+        callfwd::delegator<my_server> cf(q);
         foo("call_forwarder", cf);
     
         LOG(main, "replaying");
         while(! r.shutdown ) {
-            cf.pull();
+            callfwd::process(q, r);
         }
     }
     {
@@ -164,16 +165,17 @@ int main()
         std::cout << "REPLAYING\n";
         
         std::istringstream bufin(bufout.str());
-        dummy_protocol::reader r(bufin);
+        dummy_protocol::reader source(bufin);
         
         my_server srv;
-        callfwd::call_receiver<my_server, dummy_protocol::reader> cf(srv, r);
+        callfwd::dispatch_map<my_server, dummy_protocol::reader> dispatcher;
         
-        cf.register_message<info_signal>();
-        cf.register_message<shutdown_signal>();
-        cf.register_message<std::string>();
-        while( !!bufin ) {
-            cf.pull();
+        dispatcher.register_message<info_signal>();
+        dispatcher.register_message<shutdown_signal>();
+        dispatcher.register_message<std::string>();
+        
+        while( !srv.shutdown ) {
+            callfwd::process(source, dispatcher, srv);
         }
     }
     

@@ -10,12 +10,6 @@
 namespace callfwd {
 namespace detail {
 
-class caller_base {
-public:
-    virtual ~caller_base() {};
-    virtual void operator()() = 0;
-};
-
 namespace S {
     extern tinfra::symbol message_id;
     extern tinfra::symbol arguments;
@@ -101,17 +95,6 @@ namespace tinfra {
 namespace callfwd { 
 namespace detail {
 
-template <typename IMPL, typename MT>
-class functor_caller: public caller_base {
-    IMPL* impl;
-    MT    mt;
-public:
-    functor_caller(IMPL* impl, MT mt): impl(impl), mt(mt) {}
-        
-    void operator()() {
-        mt.call(*impl);
-    }
-};
 
 /// dynamic container of any object
 ///
@@ -132,9 +115,9 @@ struct dynamic_any_container {
 /// which type is known only to implementation.
 ///
 /// C++ equivalent of void (void*)
-struct any_consumer_base {
-    virtual ~any_consumer_base();
-    virtual void invoke(void* pmt) = 0;
+struct partial_invoker_base {
+    virtual ~partial_invoker_base();
+    virtual void invoke(void* what) = 0;
 };
 
 /// base for any parser of reader R
@@ -145,6 +128,41 @@ template <typename R>
 struct any_parser_base {
     virtual ~any_parser_base() {}
     virtual std::auto_ptr<dynamic_any_container> parse(R&) = 0;
+};
+
+//
+// partial invoker that remembers message
+//
+
+template <typename IMPL, typename MT>
+class message_invoker: public partial_invoker_base {
+    MT    mt;
+
+public:
+    message_invoker(MT const& mt): mt(mt) {}
+        
+    void invoke(void* target) {
+        IMPL* impl = reinterpret_cast<IMPL*>(target);
+        mt.call(*impl);
+    }
+};
+
+//
+// partial invoker that remembers implementation
+//
+
+template <typename IMPL, typename MT>
+class functor_message_invoker: public partial_invoker_base {
+    
+public:
+        
+    void invoke(void* pmt) {
+        void** params = reinterpret_cast<void**>(pmt);
+        
+        IMPL* impl = reinterpret_cast<IMPL*>(params[0]);
+        MT*   mt = reinterpret_cast<MT*>(params[1]);
+        mt->call(*impl);
+    }
 };
 
 template<typename T>
@@ -158,18 +176,6 @@ public:
     T&            typed_get() { return value; }
 };
 
-template <typename IMPL, typename MT>
-class basic_message_consumer: public any_consumer_base {
-    IMPL& impl;
-    
-public:
-    basic_message_consumer(IMPL& impl): impl(impl) {}
-        
-    void invoke(void* pmt) {
-        MT* mt = reinterpret_cast<MT*>(pmt);
-        mt->call(impl);
-    }
-};
 
 template <typename MT, typename R>
 class basic_message_parser: public any_parser_base<R> {

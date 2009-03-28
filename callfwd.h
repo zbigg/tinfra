@@ -16,37 +16,41 @@ typedef std::string message_serial_id;
 
 namespace callfwd {
 
+typedef tinfra::queue<detail::partial_invoker_base*> call_queue;
+
 template <typename T>
-class call_forwarder {
-    tinfra::queue<detail::caller_base*> q;
-    T* impl;
+class delegator {
+    call_queue& q;
 public:
-    call_forwarder(T& i): impl(&i) {}
+    delegator(call_queue& pq): q(pq) {}
 
     void operator()() {
-        q.put( new detail::functor_caller<T, detail::message0 >(impl) );
+        detail::message0 m;
+        q.put( new detail::message_invoker<T, detail::message0 >(m) );
     }
     
     template <typename P1>
     void operator() (P1 const& p1) {
         typedef detail::message1<P1> lmt;
-        q.put( new detail::functor_caller<T, lmt >(impl, lmt(p1) ));
+        q.put( new detail::message_invoker<T, lmt >(lmt(p1) ));
     }
     
     template <typename P1, typename P2>
     void operator() (P1 const& p1, P2 const& p2) {
         typedef detail::message2<P1,P2> lmt;
-        q.put( new detail::functor_caller<T, lmt >(impl, lmt(p1, p2) ));
+        q.put( new detail::message_invoker<T, lmt >(lmt(p1, p2) ));
     }
     
-    void pull() {
-        std::auto_ptr<detail::caller_base> p(q.get());
-        detail::caller_base& cb = *p.get();
-        cb();
-        // p is deleted using auto_ptr
-    }
     bool empty() { return q.empty(); }
 };
+
+template <typename T>
+void process(call_queue& q, T& impl)
+{
+    std::auto_ptr<detail::partial_invoker_base> p( q.get() );
+    detail::partial_invoker_base& cb = *p.get();
+    cb.invoke(&impl);
+}
 
 /// Serializer of calls.
 ///
@@ -70,26 +74,30 @@ public:
 };
 
 template <typename IMPL, typename R>
-class call_receiver {    
-    R& reader_;
-    IMPL& impl_;
-    
-    std::map<message_serial_id, detail::any_consumer_base*> dispatch_map;
-    std::map<message_serial_id, detail::any_parser_base<R>*> parser_map;
+class dispatch_map {
 public:
-    /// Construct call_receiver.
-    ///
-    /// Both parameters will be remembered and used during
-    /// call_receiver life.
-    ///
-    /// Before using pull() to process messages one should
-    /// register message types than can be received by IMPL.
-    /// 
-    /// @param i   instance of message receiver
-    /// @param r   instance of reader R
+    typedef detail::partial_invoker_base invoker_type;
+    typedef detail::any_parser_base<R>   parser_type;
     
-    call_receiver(IMPL& i, R& r): reader_(r), impl_(i) {}    
-    ~call_receiver();
+    invoker_type* get_invoker(message_serial_id const& mid) const
+    {
+        const typename std::map<message_serial_id, detail::partial_invoker_base*>::const_iterator i = dispatch_map.find(mid);
+        
+        if( i == dispatch_map.end() )
+            return 0;
+        return i->second;
+    }
+    
+    parser_type* get_parser(message_serial_id const& mid) const
+    {
+        const typename std::map<message_serial_id, detail::any_parser_base<R>* >::const_iterator i = parser_map.find(mid);
+        
+        if( i == parser_map.end() )
+            return 0;
+        return i->second;
+    }
+    
+    ~dispatch_map();
     
     /// register unparametrized parameter message (a signal)
     void register_signal();
@@ -100,7 +108,7 @@ public:
     {
         typedef detail::message1<P1> local_message_type;
         message_serial_id mid = local_message_type::serial_id;
-        dispatch_map[mid] = new detail::basic_message_consumer<IMPL, local_message_type>(impl_);
+        dispatch_map[mid] = new detail::functor_message_invoker<IMPL, local_message_type>();
         parser_map[mid]   = new detail::basic_message_parser<local_message_type, R>();
     }
     /// register two parameter message
@@ -109,17 +117,16 @@ public:
     {
         typedef detail::message2<P1,P2> local_message_type;
         message_serial_id mid = local_message_type::serial_id;
-        dispatch_map[mid] = new detail::basic_message_consumer<IMPL, local_message_type>(impl_);
+        dispatch_map[mid] = new detail::functor_message_invoker<IMPL, local_message_type>();
         parser_map[mid]   = new detail::basic_message_parser<local_message_type, R>();
     }
-    
-    /// process one call
-    ///
-    /// Read and deserialize one message from reader R.
-    /// Then invoke this message on IMPL instaance
-    void pull();
-
+private:
+    std::map<message_serial_id, detail::partial_invoker_base*> dispatch_map;
+    std::map<message_serial_id, detail::any_parser_base<R>*> parser_map;
 };
+
+template <typename IMPL, typename R>
+void process(R& reader, dispatch_map<IMPL, R> const& meta, IMPL& target)
 
 //
 // implementation of call_sender
@@ -152,61 +159,63 @@ void call_sender<W>::operator() (P1 const& p1, P2 const& p2) {
 }
 
 //
-// implementation of call_receiver
+// implementation of dispatch_map
 //
 
 template <typename IMPL, typename R>
-call_receiver<IMPL,R>::~call_receiver() {
+dispatch_map<IMPL,R>::~dispatch_map() {
     detail::clear_pointer_map(dispatch_map);
     detail::clear_pointer_map(parser_map);
 }
 
 template <typename IMPL, typename R>
-void call_receiver<IMPL,R>::register_signal()
+void dispatch_map<IMPL,R>::register_signal()
 {
     typedef detail::message0 local_message_type;
     message_serial_id mid = local_message_type::serial_id;
-    dispatch_map[mid] = new detail::basic_message_consumer<IMPL, local_message_type>(impl_);
+    dispatch_map[mid] = new detail::functor_message_invoker<IMPL, local_message_type>();
     parser_map[mid]   = new detail::basic_message_parser<local_message_type, R>();
 }
 /*
 template <typename IMPL, typename R>
 template <typename P1>
-void call_receiver<IMPL,R>::register_message<P1>()
+void dispatch_map<IMPL,R>::register_message<P1>()
 {
     typedef detail::message1<P1> local_message_type;
     message_serial_id mid = local_message_type::serial_id;
-    dispatch_map[mid] = new detail::basic_message_consumer<IMPL, local_message_type>(impl_);
+    dispatch_map[mid] = new detail::functor_invoker<IMPL, local_message_type>(impl_);
     parser_map[mid]   = new detail::basic_message_parser<local_message_type, R>();
 }
 
 template <typename IMPL, typename R>
 template <typename P1, typename P2>
-void call_receiver<IMPL,R>::register_message<P1,P2>()
+void dispatch_map<IMPL,R>::register_message<P1,P2>()
 {
     typedef detail::message2<P1,P2> local_message_type;
     message_serial_id mid = local_message_type::serial_id;
-    dispatch_map[mid] = new detail::basic_message_consumer<IMPL, local_message_type>(impl_);
+    dispatch_map[mid] = new detail::functor_invoker<IMPL, local_message_type>(impl_);
     parser_map[mid]   = new detail::basic_message_parser<local_message_type, R>();
 }
 */
 template <typename IMPL, typename R>
-void call_receiver<IMPL,R>::pull()
+void process(R& reader, dispatch_map<IMPL, R> const& meta, IMPL& target)
 {
     message_serial_id mid;
-    reader_(detail::S::message_id, mid);
+    reader(detail::S::message_id, mid);
     
     // check if mid is registered here
-    assert(dispatch_map.find(mid) != dispatch_map.end());
-    assert(parser_map.find(mid) != parser_map.end());
+    detail::any_parser_base<R>* parser = meta.get_parser(mid);
+    detail::partial_invoker_base* invoker = meta.get_invoker(mid);
     
-    // parse it
-    detail::any_parser_base<R>* parser = parser_map[mid];
-    std::auto_ptr<detail::dynamic_any_container> mptr = parser->parse(reader_);
+    assert(parser != 0);
+    assert(invoker != 0);
     
-    // call it
-    detail::any_consumer_base* mc = dispatch_map[mid];
-    mc->invoke(mptr->get());
+    // parse it -> creates new message <mid> and reads it's content from reader
+    std::auto_ptr<detail::dynamic_any_container> mptr = parser->parse(reader);
+    
+    // type aware call "target(*mptr)"
+    void* params[2] = { & (target), mptr->get() };
+    invoker->invoke(params);
     
     // *mptr is released
 }
