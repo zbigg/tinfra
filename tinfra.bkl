@@ -5,11 +5,11 @@
     
     <set var="TINFRA_PLATFORM_SOURCES" hints="files">
         <if cond="PLATFORM_WIN32=='1'">
-            tinfra/win32/fatal_exception.cpp
+            tinfra/win32/w32_stacktrace.cpp
             tinfra/win32/w32_io.cpp
             tinfra/win32/w32_subprocess.cpp
             tinfra/win32/w32_common.cpp
-            tinfra/win32/thread.cpp <!-- win32 native thread support still broken -->
+            tinfra/win32/thread.cpp
             tinfra/win32/w32_runtime.cpp
         </if>
         
