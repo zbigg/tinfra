@@ -3,6 +3,7 @@
 
 
 #include "tinfra/ssh.h"
+#include <iostream>
 
 SUITE(tinfra_ssh) {
   
@@ -37,14 +38,15 @@ SUITE(tinfra_ssh) {
     TEST(password_login)
     {
         std::string site = "localhost";
-        std::string login_name = "";
+        //std::string login_name = "zbigg";
+        // jeez, when i'll write test-resources infra
         std::string password = "";
         
         tinfra::ssh::connection_settings settings;
-        settings.provider = "plink";
+        settings.provider = "ssh";
         settings.server_address = site;
-        settings.login_name = login_name;
-        settings.password   = password;        
+        //settings.login_name = login_name;
+        settings.password   = password;
         settings.use_agent = false;
         settings.subsystem_invocation = false;
         
@@ -59,6 +61,7 @@ SUITE(tinfra_ssh) {
         tinfra::io::stream* in = c->get_input();
         char ch;
         while( in->read(&ch, 1) > 0 ) {
+            std::cout << ch;
         }
     }
 }

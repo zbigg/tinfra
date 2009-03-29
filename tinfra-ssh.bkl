@@ -7,6 +7,8 @@
         <include>$(SRCDIR)</include>
         <sources>
             tinfra/ssh.cpp
+	    tinfra/sftp_protocol.cpp
+	    tinfra/sftp_vfs.cpp
         </sources>
         <install-to>$(LIBDIR)</install-to> 
     </lib>
@@ -19,15 +21,15 @@
     
     <using module="datafiles"/>
     
-    
     <data-files-tree id="headers">
         <srcdir>$(SRCDIR)</srcdir>
         <install-to>$(INCLUDEDIR)</install-to> 
         <files>
             tinfra/ssh.h
+	    tinfra/sftp_protocol.h
+	    tinfra/sftp_vfs.h
         </files>
-    </data-files-tree>    
-   
+    </data-files-tree>
     
     <!-- local things -->
     <exe id="unittests" template="default-workspace-settings">
@@ -35,6 +37,7 @@
         <sources>
             tests/test_main.cpp
             tests/test_ssh.cpp
+	    tests/test_sftp_vfs.cpp
         </sources>
         <library>tinfra-ssh</library>
         <define>SRCDIR="$(SRCDIR)"</define>
@@ -48,3 +51,4 @@
         <command>sh $(SRCDIR)/check.sh $(BUILDDIR)</command>
     </action>
 </makefile>
+

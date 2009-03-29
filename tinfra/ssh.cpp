@@ -6,7 +6,7 @@
 #include <tinfra/fmt.h>
 #include <tinfra/path.h>
 #include <tinfra/os_common.h>
-
+#include <tinfra/trace.h>
 #include <iostream>
 
 #ifndef _WIN32
@@ -17,8 +17,22 @@
 #include <fcntl.h>
 #endif
 
+TINFRA_MODULE_TRACER(tinfra_ssh);
+
+
 namespace tinfra {
 namespace ssh {
+
+TINFRA_USE_TRACER(tinfra_ssh);
+
+std::ostream& operator <<(std::ostream& s, std::vector<std::string> const& a) {
+    for(int i = 0; i < a.size(); ++i ) {
+        if( i > 0 )
+                s << " ";
+        s << a[i];
+    }
+    return s;
+}
 
 using std::auto_ptr;
 using tinfra::subprocess;
@@ -124,6 +138,8 @@ void start_openssh(subprocess* sp, connection_settings const& settings, command_
     cmd.insert( cmd.end(), user_command.begin(), user_command.end() );
     if( use_env )
         sp->set_environment(env);
+    
+    TINFRA_TRACE_VAR(cmd);
     sp->start(cmd);
 }
 
@@ -179,6 +195,8 @@ void start_putty(subprocess* sp, connection_settings const& settings, command_li
     
     cmd.push_back(settings.server_address);
     cmd.insert( cmd.end(), user_command.begin(), user_command.end() );
+    
+    TINFRA_TRACE_VAR(cmd);
     sp->start(cmd);
 }
 
