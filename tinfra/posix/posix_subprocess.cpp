@@ -237,10 +237,15 @@ struct posix_subprocess: public subprocess {
                 ::dup2(a,0);
                 ::close(a);
                 
+                // detach from tty
+                //
                 // TODO: decide if we should really detach from tty - and how?
                 //	always/flag/never? connection with detached flag on woe32 ?
                 
-                /*
+                // now reasoing is following:
+                //   if we're redirecting stdin of subprocess then we wanw
+                //   it to read from us not TTY  ==> always detach if stdin == REDIRECT
+                
                 int tty_fd = open("/dev/tty", O_RDWR);
                 if (tty_fd >= 0) {
                     int ret = ioctl(tty_fd, TIOCNOTTY, 0);
@@ -251,8 +256,6 @@ struct posix_subprocess: public subprocess {
                 else {
                     perror("open (disabling tty)");
                 }
-                */
-                
             } else if( stdin_mode == NONE) { 
                 ::close(0);
                 ::open("/dev/null",O_RDONLY);
