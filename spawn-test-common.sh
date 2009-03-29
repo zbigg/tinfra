@@ -20,7 +20,7 @@ report_test_start()
 {
     test_name="$1"
     shift
-    local test_command="$@"
+    test_command="$*"
     local test_log_file=$(get_test_log_file $test_name)
     (   
         cd $dist    
@@ -42,8 +42,8 @@ report_test_start()
 report_result()
 {
     
-    test_name="$1"
-    test_exit_code="$2"
+    local test_name="$1"
+    local test_exit_code="$2"
     msg="$3"
     local test_log_file=$(get_test_log_file $test_name)
     (
@@ -58,12 +58,13 @@ generic_test()
 {
     local test_name="$1"
     shift
-    local test_command="$@"
+    test_command="$*"
     local test_log_file=$(get_test_log_file $test_name)
     report_test_start ${test_name} ${test_command}
-    (
+    ( (
+        cd $dist
         ${test_command}
-    ) >> ${test_log_file} 2>&1
+    )  2>&1 ) >> ${test_log_file} 
     local test_exit_code=$?
     if [ "$test_exit_code" = "0" ]; then
         msg="success"

@@ -20,10 +20,12 @@ prepare() {
     autoconf
 }
 distclean() {
-    make distclean
+    make distclean || true
     bakefile_gen --clean
     rm -rf .bakefile_gen.state autom4te.cache autoconf_inc.m4 test_result aclocal.m4
-    @echo "still unknown files"
+    find . -name "*.d" | xargs rm -rf
+    find . -name "*.o" | xargs rm -rf
+    echo "still unknown files"
     mtn ls unknown
 }
 
