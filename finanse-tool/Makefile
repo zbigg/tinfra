@@ -1,5 +1,5 @@
-CXXFLAGS=-O9 -g -Wall -I.. -DBUILD_UNITTEST
-LDLIBS=-g -ltinfra -lpthread -lpcre -lunittest++
+CXXFLAGS=-O2 -g -Wall -I.. -DBUILD_UNITTEST
+LDLIBS=-g -ltinfra-test -lunittest++ -ltinfra -lpthread -lpcre 
 CC=g++
 
 OBJECTS= importer.o tinfra/csv.o

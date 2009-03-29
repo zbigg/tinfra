@@ -126,7 +126,7 @@ private:
 };
 
 template <typename IMPL, typename R>
-void process(R& reader, dispatch_map<IMPL, R> const& meta, IMPL& target)
+void process(R& reader, dispatch_map<IMPL, R> const& meta, IMPL& target);
 
 //
 // implementation of call_sender

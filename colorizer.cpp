@@ -102,7 +102,7 @@ std::string clean_stl(tstring const& text)
 		{ "std::basic_streambuf<char, std::char_traits<char> >", "std::streambuf" },
 		{ 0,0 }
 	};
-	std::string result = text;
+        std::string result = text.str();
 	const rule* i = rules;
 	while( i->text != 0 ) {
 		result = replacestr(i->text, result, const_replacer(i->replacement));
@@ -124,7 +124,7 @@ public:
     colorizer_line_sink(const char* prefix, tinfra::io::stream* out): prefix_(prefix), out_(out) {}
 
     virtual void process(tstring const& line) {
-        std::string s = clean_stl(line);
+        std::string s = std::string(prefix_) + ": " + clean_stl(line);
         std::cerr.write(s.data(), s.size());
     }
 };
@@ -167,29 +167,53 @@ public:
 };
 
 using std::auto_ptr;
+using tinfra::aio::dispatcher;
+using tinfra::io::stream;
 
+class aio_colorizer: public tinfra::aio::listener {
+    tinfra::io::stream* _out;
+    colorizer_line_sink sink;
+    line_protocol       protocol;
+    tinfra::aio::protocol_aio_adapter aio_adapter;
+    
+public:
+    aio_colorizer(const char* prefix,tinfra::io::stream* out) : 
+        _out(out),
+        sink(prefix, out),
+        protocol(sink),
+        aio_adapter(protocol),
+        finished(false)
+    {}
+    
+    bool finished;
+    virtual void event(dispatcher& d, stream* c, int event)
+    {
+        aio_adapter.event(d,c,event);
+    }
+    
+    virtual void failure(dispatcher& d, stream* c, int error)
+    {
+        aio_adapter.failure(d,c,error);
+    }
+    virtual void removed(dispatcher& d, stream* c)
+    {
+        finished = true;
+    }
+};
 using tinfra::subprocess;
 void process(tinfra::subprocess& sp)
 {
     tinfra::io::stream* my_stdout = 0;
     tinfra::io::stream* my_stderr = 0;
     
-    colorizer_line_sink out_sink("OUT", my_stdout);
-    colorizer_line_sink err_sink("ERR", my_stderr);
+    aio_colorizer stdout_colorizer("OUT", my_stdout);
+    aio_colorizer stderr_colorizer("ERR", my_stderr);
     
-    line_protocol out_proto(out_sink);
-    line_protocol err_proto(err_sink);
-    
-    using tinfra::aio::protocol_aio_adapter;
-    protocol_aio_adapter out_adapter(out_proto);
-    protocol_aio_adapter err_adapter(err_proto);
-    
-    using tinfra::aio::dispatcher;
     auto_ptr<dispatcher> D = dispatcher::create();
-    D->add( sp.get_stdout(), &out_adapter, dispatcher::READ);
-    D->add( sp.get_stderr(), &err_adapter, dispatcher::READ);
+    D->add( sp.get_stdout(), &stdout_colorizer, dispatcher::READ);
+    D->add( sp.get_stderr(), &stderr_colorizer, dispatcher::READ);
     
-    while( !out_proto.finished || !err_proto.finished ) {
+    while( !stdout_colorizer.finished || !stderr_colorizer.finished ) {
             D->step();
     
             tinfra::test_interrupt();
@@ -216,4 +240,4 @@ int colorizer_main(int argc, char** argv)
     return exit_code;
 }
 
-TINFRA_MAIN(colorizer_main)
+TINFRA_MAIN(colorizer_main);
