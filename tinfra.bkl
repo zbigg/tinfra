@@ -115,7 +115,7 @@
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
 	    tinfra/memory_pool.h
-            
+            tinfra/mo.h
 	    tinfra/test.h
         </files>
     </data-files-tree>
@@ -150,6 +150,7 @@
             tests/test_subprocess.cpp
 	    tests/test_memory_pool.cpp
             tests/test_runtime.cpp
+            tests/test_mo.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
