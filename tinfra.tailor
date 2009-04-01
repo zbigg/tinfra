@@ -1,0 +1,24 @@
+[DEFAULT]
+#debug = True
+#verbose = True
+start-revision = INITIAL
+root-directory = tinfra-rootdir
+source = monotone:
+target = svn:
+#source-repository = tinfra.mtn
+target-repository = https://tinfra.googlecode.com/svn
+use-propset = True
+# Projects
+
+#
+[pl.reddix.tinfra]
+
+# Sources
+[monotone:pl.reddix.tinfra]
+module = pl.reddix.tinfra
+subdir = mtnside-pl.reddix.tinfra
+
+# Targets
+[svn:pl.reddix.tinfra]
+module = trunk/tinfra
+subdir = svnside-pl.reddix.tinfra
