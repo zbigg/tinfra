@@ -57,6 +57,7 @@ SUITE(tinfra)
         CHECK(  is_absolute("/abc/def") );
         CHECK( !is_absolute("abc/def") );
         CHECK( !is_absolute("a") );
+        CHECK( !is_absolute("") );
 
 #ifdef _WIN32
         CHECK( is_absolute("C:") );
@@ -116,6 +117,8 @@ SUITE(tinfra)
         CHECK( is_executable(rp) );
                 
         CHECK( search_executable("uname-surelydontexists") == "");
+        
+        CHECK( search_executable("/bin/sh") == "/bin/sh");
 #endif
     }
 }

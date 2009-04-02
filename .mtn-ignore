@@ -24,3 +24,5 @@ autoconf_inc.m4
 ^test_fatal_exception
 ^unittests
 ^tinfra.pc
+\.gcda$
+\.gcno$
