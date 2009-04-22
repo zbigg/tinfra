@@ -19,7 +19,6 @@ const tstring LINE_DELIMITER = "\n";
 }
 
 TINFRA_MODULE_TRACER(tinfra_csv);
-TINFRA_USE_TRACER(tinfra_csv);
 
 csv_parser::csv_parser(char separator):
     in_quotes(false),
@@ -73,17 +72,26 @@ tstring csv_parser::process(tstring input, bool first)
         return process_quoted_entry(input);
     }
     
+    if( input[0] == '\n' ) 
+        return EMPTY_STRING;
+    
+    if( input.size() >= 2 && input[0] == '\r' && input[1] == '\n')
+        return EMPTY_STRING;
+
     if( first ) {
         return process_entry(input);
     }
-    
+        
     if( input.size() == 0 ) {
         return input;
     }
-    
+        
     if( input[0] == SEPARATOR_CHAR ) {
         return process_entry(input.substr(1));
     }
+    TINFRA_TRACE_VAR(input[0]);
+    TINFRA_TRACE_VAR(input.size());
+    TINFRA_TRACE_VAR(first);
     assert(false);
 }
 
@@ -148,9 +156,8 @@ void csv_parser::process_line(tstring const& line)
     tstring input = line;
     
     do {
-        bool first = ! in_quotes && entry_.size() == 0;
-        input = process(input, first);
-        first = false;
+        bool first = (!in_quotes) && (entry_.size() == 0);
+        input = process(input, first);        
     } while( input.size() > 0 );
     has_result_ = entry_.size() > 0;
 }
@@ -278,7 +285,7 @@ SUITE(tinfra_csv) {
     }
     
     TEST(csv_dbl_quotes) {
-        entry_type t = one_line_parse("\"\"\"\"");
+        entry_type t = one_line_parse("\"\"\"\"\n");
         CHECK_EQUAL( 1, t.size());
         CHECK_EQUAL( "\"",    t[0]);
     }

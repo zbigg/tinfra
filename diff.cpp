@@ -16,7 +16,15 @@ TINFRA_SYMBOL_DECL(home);
 TINFRA_SYMBOL_DECL(apartment);
 TINFRA_SYMBOL_DECL(city);
 
-struct address {
+
+template <typename T>
+struct mo: public T {
+    typedef T  value_type;
+    typedef T& reference;
+    mo(T const& v): T(v) {}
+};
+
+struct address_data {
     std::string street;
     std::string home;
     std::string apartment;
@@ -31,13 +39,29 @@ struct address {
     }
 };
 
+typedef mo<address_data> address;
+
 TINFRA_SYMBOL_IMPL(street);
 TINFRA_SYMBOL_IMPL(home);
 TINFRA_SYMBOL_IMPL(apartment);
 TINFRA_SYMBOL_IMPL(city);
 
 template <typename T>
-T const& ref_in_other(const void* base_a, const T* value_in_a, const void* base_b)
+T& ref_in_other(const void* base_a, const T* value_in_a, void* base_b)
+{
+    const char* cp_base_a = reinterpret_cast<const char*>(base_a);
+    const char* cp_value_in_a = reinterpret_cast<const char*>(value_in_a);
+    char* cp_base_b = reinterpret_cast<char*>(base_b);
+    
+    ptrdiff_t offset = (cp_value_in_a - cp_base_a);
+    
+    char* cp_value_in_b = cp_base_b + offset;
+    
+    return reinterpret_cast<T&>( *cp_value_in_b );
+}
+
+template <typename T>
+T const& const_ref_in_other(const void* base_a, const T* value_in_a, const void* base_b)
 {
     const char* cp_base_a = reinterpret_cast<const char*>(base_a);
     const char* cp_value_in_a = reinterpret_cast<const char*>(value_in_a);
@@ -61,7 +85,7 @@ public:
     template <typename V>
     void operator()(symbol const& sym, V const& va)
     {
-        V const& vb = ref_in_other(a, &va, b);
+        V const& vb = const_ref_in_other(a, &va, b);
         this->operator()(sym, va, vb);
     }
     
@@ -75,6 +99,8 @@ public:
         }
     }
 };
+
+
 template <typename T>
 void compare(T const& a, T const& b)
 {
@@ -82,15 +108,55 @@ void compare(T const& a, T const& b)
     tinfra::process(a,c);
 }
 
+class swapper {
+    void* a;
+    void* b;
+public:
+    swapper(void* pa, void* pb): a(pa), b(pb) {}
 
-int diff_main(int argc, char** argv)
+    template <typename V>
+    void operator()(symbol const& sym, V& va)
+    {
+        V & vb = ref_in_other(a, &va, b);
+        this->operator()(sym, va, vb);
+    }
+    
+    template <typename V>
+    void operator()(symbol const& , V& va, V & vb)
+    {
+        swap(va, vb);
+    }
+};
+
+template <typename T>
+void tinfra_swap(T& a, T& b)
 {
-    address grzesiek = { "szczecinska", "39b", "", "Tanowo" };
-    address mama = { "XXX-lecia", "12", "", "Tanowo" };
+    swapper s(&a, &b);
+    tinfra::mutate(a, s);
+}
+
+namespace std {
+template <typename T>
+void swap(mo<T>& a, mo<T>& b)
+{
+    std::cerr << "USED managed_type swap\n";
+    //std::swap(a,b);
+    tinfra_swap(a,b);
+}
+}
+
+int diff_main(int, char**)
+{
+    address_data d1 = { "szczecinska", "39b", "", "Tanowo" };
+    address_data d2 = { "szczecinska", "39b", "", "Tanowo" };
+    address grzesiek(d1);
+    address mama(d2);
     //address ja = { "strzelecka", "5g", "11", "Szczecin" };
     //address sasiad = { "strzelecka", "5g", "12", "Szczecin" };
     //address tesciu = { "bandurskiego", "51", "2", "Szczecin" };
     
+    compare(grzesiek, mama);
+    std::swap(grzesiek, mama);
     compare(grzesiek, mama);
     return 0;
 }

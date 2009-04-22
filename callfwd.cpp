@@ -19,7 +19,7 @@ dynamic_any_container::~dynamic_any_container()
 {
 }
 
-any_consumer_base::~any_consumer_base() 
+partial_invoker_base::~partial_invoker_base() 
 {
 }
 
