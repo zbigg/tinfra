@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_interruptible_h__
-#define __tinfra_interruptible_h__
+#ifndef tinfra_interruptible_h_included__
+#define tinfra_interruptible_h_included__
 
 #include <stdexcept>
 
@@ -24,6 +24,8 @@ public:
         finished_(false)
     {
     }
+    
+    virtual ~interruptible() {}
     
     R process(T const& input)
     {
@@ -47,19 +49,8 @@ public:
     bool is_finished() const {
         return finished_;
     }
-protected:
-    
-    R call(step_method m, T const& a)
-    {
-        return (implementation_.*m)(a);
-    }
     void next(step_method s) {
         next_method_ = s;
-    }
-        
-    // deprecated
-    step_method make_step_method(R (IMPL::*m)(T const&)) {
-        return m;
     }
     void again() {
         again_ = true;
@@ -68,6 +59,13 @@ protected:
     void finish() {
         // nothing needed
     }
+protected:
+    
+    virtual R call(step_method m, T const& a)
+    {
+        return (implementation_.*m)(a);
+    }
+
 private:
     IMPL&       implementation_;
     step_method next_method_;
@@ -77,4 +75,7 @@ private:
 
 } // end namespace tinfra
 
-#endif // __tinfra_interruptible_h__
+#endif // tinfra_interruptible_h_included__
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
+

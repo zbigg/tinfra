@@ -21,7 +21,7 @@
 
 #include "tinfra/trace.h"
 
-#include "protocol_aio_adapter.h"
+#include "buffered_aio_adapter.h"
 
 #include "http.h"
 
@@ -50,7 +50,7 @@ struct http_request_header {
 	std::vector<http_header_entry> headers;
 };
 
-struct http_request_builder: public tinfra::http::raw_parser_sink {
+struct http_request_builder: public tinfra::http::protocol_listener {
 	tinfra::string_pool pool;
     
         http_request_header hrh;
@@ -62,6 +62,10 @@ struct http_request_builder: public tinfra::http::raw_parser_sink {
 		hrh.method = pool.create(method);
 		hrh.request_uri = pool.create(request_uri);
 		hrh.protocol_version = pool.create(proto_version);
+	}
+	virtual void response_line(tstring const&, tstring const&, tstring const&) 
+	{
+		// not used, we're HTTP server
 	}
 	virtual void header(tstring const& name, tstring const& value)
 	{
@@ -86,7 +90,7 @@ using tinfra::aio::dispatcher;
 using tinfra::aio::listener;
 using tinfra::aio::stream;
 
-class http_server_connection_handler: public generic_connection_handler {
+class http_server_connection_handler: public generic_connection_handler, public tinfra::http::protocol_listener {
 public:
 	typedef generic_factory_impl2<http_server_connection_handler, connection_handler::factory_type> 
 		factory_type;
@@ -94,8 +98,8 @@ public:
 	http_server_connection_handler(std::auto_ptr<tinfra::aio::stream> stream, 
 	                                std::string const& client_address)
 		: generic_connection_handler(stream, client_address),
-		  protocol(*this),
-		  protocol_adapter(protocol)
+		  protocol(*this, tinfra::http::protocol_parser::SERVER),
+		  aio_adapter(protocol)
 	{
 		TINFRA_TRACE_MSG("http_server_connection_handler created");
 	}
@@ -105,11 +109,31 @@ public:
 		TINFRA_TRACE_MSG("http_server_connection_handler destroyed");
 	}
 	
-	listener& get_aio_listener() { return protocol_adapter; }
+	listener& get_aio_listener() { return aio_adapter; }
 	
+	virtual void request_line(tstring const& method, 
+	                          tstring const& request_uri,
+	                          tstring const& proto_version)
+	{
+		
+	}
+	virtual void response_line(tstring const&, tstring const&, tstring const&) 
+	{
+		// not used, we're HTTP server
+	}
+	virtual void header(tstring const& name, tstring const& value)
+	{
+		
+	}
+	virtual void finished_headers()
+	{
+	}
+	virtual void content(tstring const& data, bool last)
+	{
+	}
 private:
-	http_server_protocol protocol;
-	tinfra::aio::protocol_aio_adapter protocol_adapter;
+	tinfra::http::protocol_parser protocol;
+	tinfra::aio::buffered_aio_adapter aio_adapter;
 };
 
 int listen(int port)

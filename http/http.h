@@ -4,27 +4,34 @@
 #include <tinfra/tstring.h>
 #include <tinfra/parser.h>
 #include <tinfra/lazy_byte_consumer.h>
+#include <tinfra/symbol.h>
 
 namespace tinfra { namespace http {
 
-struct raw_parser_sink {
+namespace S {
+    extern symbol content_length;
+    extern symbol keep_alive;
+}
+
+struct protocol_listener {
     virtual void request_line(
         tstring const& method, 
         tstring const& request_uri,
         tstring const& proto_version) = 0;
-    virtual void status_line(
+    virtual void response_line(
         tstring const& protocol_version,
         tstring const& status,
         tstring const& status_string) = 0;
     virtual void header(
         tstring const& name, 
         tstring const& value) = 0;
-    virtual void finished_headers();
+    virtual void finished_headers() {}
     virtual void content(
         tstring const& data,
         bool last) = 0;
     
-    virtual ~raw_parser_sink() {}
+    virtual ~protocol_listener(); 
+
 };
 
 class protocol_parser: public tinfra::parser {
@@ -34,7 +41,10 @@ public:
         CLIENT
     };
     
-    protocol_parser(raw_parser_sink&, parse_mode);
+    protocol_parser(protocol_listener&, parse_mode);
+
+    int   process_input(tinfra::tstring const& input);
+    void  eof(tinfra::tstring const& unparsed_input);
 
 private:
     bool is_server() const { return mode_ == SERVER; }
@@ -43,7 +53,7 @@ private:
     // state updaters
     void setup_content_retrieval();
     void setup_initial_state();
-    
+
     // byte handlers
     int request_line(tstring const& s);
     int header_line(tstring const& s);
@@ -53,7 +63,7 @@ private:
     void check_content_length(size_t length);
     
     
-    raw_parser_sink& sink_;
+    protocol_listener& sink_;
     parse_mode mode_;
     
     size_t parsed_content_length;
@@ -65,3 +75,6 @@ private:
 } } // end namespace tinfra::http
 
 #endif // tinfra_http_h__
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
+

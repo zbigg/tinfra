@@ -18,16 +18,16 @@
 //#include "tinfra/connection_handler.h"
 #include "tinfra/trace.h"
 
-#include "protocol_aio_adapter.h"
+#include "buffered_aio_adapter.h"
 
 namespace tinfra {
 namespace aio {
 
 //
-// protocol_aio_adapter::buffer_impl
+// buffered_aio_adapter::buffer_impl
 //
 
-class protocol_aio_adapter::buffer_impl {
+class buffered_aio_adapter::buffer_impl {
 	std::string contents_;
 public:
 	void put(tstring const& b)
@@ -51,17 +51,17 @@ public:
 };
 
 //
-// protocol_aio_adapter::reader_impl
+// buffered_aio_adapter::reader_impl
 //
 
-class protocol_aio_adapter::reader_impl {
-	protocol_aio_adapter::buffer_impl buffer_;
-	protocol_aio_adapter& parent_;
+class buffered_aio_adapter::reader_impl {
+	buffered_aio_adapter::buffer_impl buffer_;
+	buffered_aio_adapter& parent_;
 	
 	bool eof_signaled_;
 	bool eof_readed_;
 public:
-	reader_impl(protocol_aio_adapter& parent): 
+	reader_impl(buffered_aio_adapter& parent): 
 		parent_(parent),		
 		eof_signaled_(false),
 		eof_readed_(false)
@@ -84,19 +84,18 @@ public:
         
         void signal_eof()
         {            
-            get_protocol().eof(buffer_.get_contents(), get_feedback_channel());
+            get_parser().eof(buffer_.get_contents());
             eof_signaled_ = true;
             buffer_.consume(buffer_.get_contents().size());
         }
         
 private:
-	protocol& get_protocol() { return parent_.protocol_; }
-	stream*   get_feedback_channel() { return parent_.get_feedback_channel(); }
+	parser& get_parser()           { return parent_.parser_; }
 	
 	void consume_buffer() {
 		int accepted = 0;
 		while( ! buffer_.empty() ) {
-			 accepted = get_protocol().process_input(buffer_.get_contents(), get_feedback_channel());
+			 accepted = get_parser().process_input(buffer_.get_contents());
 			 if( accepted == 0 ) 				 
 				 break; // not nough data, try later
 			 buffer_.consume(accepted);
@@ -109,7 +108,7 @@ private:
 		// there are two conditions for signalling EOF
 		// 1. buffer is empty and is EOF signaled
 		// 2. EOF is readed and last accepted bytes == 0, 
-		//    (means protocol expects something but it will never arrive)
+		//    (means parser expects something but it will never arrive)
 		const bool clean_eof = buffer_.empty() && eof_readed_;
 		const bool premature_eof = eof_readed_ && last_accepted == 0;
 		if( clean_eof || premature_eof ) {
@@ -141,17 +140,17 @@ private:
 };
 
 //
-// protocol_aio_adapter::writer_impl
+// buffered_aio_adapter::writer_impl
 //
 
-class protocol_aio_adapter::writer_impl {
-	protocol_aio_adapter::buffer_impl buffer_;
-	protocol_aio_adapter& parent_;
+class buffered_aio_adapter::writer_impl {
+	buffered_aio_adapter::buffer_impl buffer_;
+	buffered_aio_adapter& parent_;
 	
 	bool waiting_write_;
 	stream* base_channel_;
 public:
-	writer_impl(protocol_aio_adapter& parent): 
+	writer_impl(buffered_aio_adapter& parent): 
 		parent_(parent),
 		waiting_write_(false),
 		base_channel_(0),
@@ -177,10 +176,10 @@ public:
 	}
 private:
 	class output_stream_adaptor: public tinfra::io::stream {
-		protocol_aio_adapter::writer_impl& parent_;
+		buffered_aio_adapter::writer_impl& parent_;
 	public:
 		
-		output_stream_adaptor(protocol_aio_adapter::writer_impl& p): parent_(p) {}
+		output_stream_adaptor(buffered_aio_adapter::writer_impl& p): parent_(p) {}
 		
 		virtual int write(const char* data, int size)
 		{
@@ -192,8 +191,8 @@ private:
 		virtual intptr_t native() const { return -1; }		
 		virtual void release() { }		
 		virtual void close() {}		
-		virtual int seek(int, seek_origin) { throw std::logic_error("protocol_aio_adapter::output_stream_adaptor: seek() not supported"); }		
-		virtual int read(char*, int) {  throw std::logic_error("protocol_aio_adapter::output_stream_adaptor: read() not supported"); }
+		virtual int seek(int, seek_origin) { throw std::logic_error("buffered_aio_adapter::output_stream_adaptor: seek() not supported"); }		
+		virtual int read(char*, int) {  throw std::logic_error("buffered_aio_adapter::output_stream_adaptor: read() not supported"); }
 		virtual void sync() { }
 	};
 	
@@ -240,21 +239,22 @@ private:
 };
 
 //
-// protocol_aio_adapter
+// buffered_aio_adapter
 //
-protocol_aio_adapter::protocol_aio_adapter(protocol& p) :
+buffered_aio_adapter::buffered_aio_adapter(tinfra::parser& p) :
+	parser_(p),
 	reader_(new reader_impl(*this)),
-	writer_(new writer_impl(*this)),
-	protocol_(p)
+	writer_(new writer_impl(*this))
+
 {
 }
 
-protocol_aio_adapter::~protocol_aio_adapter()
+buffered_aio_adapter::~buffered_aio_adapter()
 {
 }
-void protocol_aio_adapter::event(dispatcher& d, stream* channel, int event)
+void buffered_aio_adapter::event(dispatcher& d, stream* channel, int event)
 {
-	TINFRA_TRACE_MSG("protocol_aio_adapter: event");
+	TINFRA_TRACE_MSG("buffered_aio_adapter: event");
 	writer_->set_base_channel(channel);
 	if( (event & dispatcher::READ) == dispatcher::READ) {		
 		reader_->handle_reading(channel);
@@ -267,15 +267,15 @@ void protocol_aio_adapter::event(dispatcher& d, stream* channel, int event)
 	d.wait(channel, dispatcher::WRITE, writer_->is_waiting());
 }
 
-void protocol_aio_adapter::failure(dispatcher& d, stream* c, int error)
+void buffered_aio_adapter::failure(dispatcher& d, stream* c, int error)
 {
     writer_->set_base_channel(c);
     reader_->signal_eof();
     d.remove(c);
-    //TINFRA_TRACE_MSG("protocol_aio_adapter: failure NOT IMPLEMENTED");
+    //TINFRA_TRACE_MSG("buffered_aio_adapter: failure NOT IMPLEMENTED");
 }
 
-stream* protocol_aio_adapter::get_feedback_channel()
+stream* buffered_aio_adapter::get_feedback_channel()
 {
 	return writer_->get_stream();
 }
