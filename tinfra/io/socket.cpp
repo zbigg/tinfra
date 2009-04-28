@@ -181,6 +181,17 @@ static int  socket_get_last_error()
 #endif
 }
 
+static bool error_means_blocked(int error_code) {
+#ifdef TS_WINSOCK
+    if( error_code == WSAWOULDBLOCK )
+        return true;
+#else
+    if( error_code == EAGAIN || error_code == EINPROGRESS )
+        return true;
+#endif
+    return false;
+}
+
 static void throw_socket_error(int error_code, const char* message)
 {
 #ifdef TS_WINSOCK
@@ -269,18 +280,25 @@ static void get_inet_address(const char* address, int rport, struct sockaddr_in*
     sa->sin_port = htons((short)rport);
 }
 
-stream* open_client_socket(char const* address, int port)
-{    
+stream* open_client_socket(char const* address, int port, int flags)
+{   
+    const bool non_blocking = (flags & NON_BLOCK) == NON_BLOCK ;
     ::sockaddr_in sock_addr;
     
     get_inet_address(address, port, &sock_addr);
     
     socket_type s = create_socket();
+     
+    if( non_blocking ) {
+	    set_blocking(s, false);
+    }
     
     if( ::connect(s, (struct sockaddr*)&sock_addr,sizeof(sock_addr)) != 0 ) {
         int error_code = socket_get_last_error();
-        close_socket_nothrow(s);
-        throw_socket_error(error_code, fmt("unable to connect to '%s:%i'") % address % port);
+	if( !non_blocking && !error_means_blocked(error_code) ) {
+	    close_socket_nothrow(s);
+	    throw_socket_error(error_code, fmt("unable to connect to '%s:%i'") % address % port);
+	}
     }
     return new socketstream(s);
 }
@@ -344,8 +362,13 @@ stream* accept_client_connection(stream* server_socket, std::string* peer_addres
     sockaddr_in client_address;
     socket_type accept_sock = ::accept(socket->get_socket(), (struct sockaddr*)&client_address, &addr_size );
     
-    if( accept_sock == invalid_socket ) 
-        throw_socket_error("accept failed");
+    if( accept_sock == invalid_socket ) {
+        int error_code = socket_get_last_error();
+	if( error_means_blocked(error_code) )
+	    return 0;
+        else
+	    throw_socket_error(error_code, "accept failed");
+    }
     
     if( peer_address )
         *peer_address = get_peer_address_string(client_address);
