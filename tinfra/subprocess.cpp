@@ -59,6 +59,30 @@ std::string capture_command(std::string const& command, environment_t const* env
     return result;
 }
 
+void start_detached(tstring const& command, environment_t const* env);
+
+void start_detached(tstring const& command)
+{
+    start_detached(command, 0);
+}
+
+void start_detached(tstring const& command, environment_t const& env)
+{
+    start_detached(command, env);
+}
+
+void start_detached(tstring const& command, environment_t const* env)
+{
+    std::auto_ptr<subprocess> p = subprocess::create();
+    p->set_stdout_mode(subprocess::NONE);
+    p->set_stdin_mode(subprocess::NONE);
+    p->set_stderr_mode(subprocess::NONE);
+    
+    if( env )
+        p->set_environment(*env);
+    p->start(command.str().c_str());
+    p->detach();
+}
 //
 // tinfra global stub for posix
 // @deprecated
@@ -67,4 +91,5 @@ subprocess* create_subprocess() {
     return subprocess::create().release();
 }
 
-}
+} // end of namespace tinfra
+

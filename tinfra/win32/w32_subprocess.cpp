@@ -89,6 +89,16 @@ struct win32_subprocess: public subprocess {
             throw_system_error("WaitForSingleObject on subprocess failed");
         }
     }
+
+    virtual void     detach() {
+        if( process_handle ) {
+            if( !::CloseHandle(process_handle) ) {
+                // TODO: silent win32 error
+            }
+            process_handle = 0;
+        }
+        exit_code = -1;
+    }
     
     virtual int      get_exit_code() {
         if( exit_code == -1 && process_handle != NULL ) {

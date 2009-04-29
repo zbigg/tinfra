@@ -157,6 +157,12 @@ struct posix_subprocess: public subprocess {
         }
     }
     
+    virtual void     detach()
+    {
+        exit_code = -1;
+        pid = -1;
+    }
+    
     virtual int      get_exit_code() {        
         return exit_code;
     }
