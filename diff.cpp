@@ -124,6 +124,7 @@ public:
     template <typename V>
     void operator()(symbol const& , V& va, V & vb)
     {
+        using std::swap;
         swap(va, vb);
     }
 };
@@ -162,3 +163,4 @@ int diff_main(int, char**)
 }
 
 TINFRA_MAIN(diff_main);
+
