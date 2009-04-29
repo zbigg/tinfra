@@ -136,7 +136,7 @@ private:
 	tinfra::aio::buffered_aio_adapter aio_adapter;
 };
 
-int listen(int port)
+void run_sample_client()
 {
     using tinfra::io::stream;
     using std::auto_ptr;
@@ -165,10 +165,10 @@ int listen(int port)
 
 
 
-int https_main(int argc, char** argv)
+int httpc_main(int argc, char** argv)
 {
 	tinfra::set_interrupt_policy(tinfra::DEFERRED_SIGNAL);
-	return listen(DEFAULT_PORT);
+	return run_sapmle_client(DEFAULT_PORT);
 }
 
 TINFRA_MAIN(https_main);

@@ -275,7 +275,7 @@ void buffered_aio_adapter::failure(dispatcher& d, stream* c, int error)
     //TINFRA_TRACE_MSG("buffered_aio_adapter: failure NOT IMPLEMENTED");
 }
 
-stream* buffered_aio_adapter::get_feedback_channel()
+stream* buffered_aio_adapter::get_output_channel()
 {
 	return writer_->get_stream();
 }

@@ -19,6 +19,15 @@
 namespace tinfra {
 namespace aio {
 
+/// connection_handler interface
+///
+/// Connection handler in tinfra::aio is an object that both owns and is owned
+/// by connection socket/stream.
+///
+/// Lifetime:
+///   - when AIO server accepts a connection then new connection_handler instance is
+///     created using some factoty (server implementation detail)
+///   
 class connection_handler {
 public:
 	virtual listener& get_aio_listener() = 0;
@@ -28,6 +37,10 @@ public:
 	                              std::auto_ptr<tinfra::aio::stream>, 
 				      std::string const&> 
 		factory_type;
+};
+
+struct dynamic_aio_adapter {
+	static listener* create(std::auto_ptr<connection_handler> handler);
 };
 
 class connection_handler_aio_adapter: public tinfra::aio::connection_listener {
@@ -44,6 +57,15 @@ public:
 	
 	virtual void failure(dispatcher&, stream*, int);
 };
+
+/// Generic connection_handler implementation.
+///
+/// This is a default implementation of connection handler. It should be subclassed
+/// by client code in most ways.
+///
+/// - It remembers peer_address (TODO rename also in code).
+/// - It OWNS a stream.
+/// - It is abstract and it still must implement connection_handler methods.
 
 class generic_connection_handler: public connection_handler {
 	std::auto_ptr<tinfra::aio::stream> stream_;

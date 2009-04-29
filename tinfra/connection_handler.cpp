@@ -48,11 +48,21 @@ public:
 	virtual void removed(dispatcher& d, stream* c)
 	{
 		delegate_.removed(d,c);
+		// value_ -> connection_handler in this case is removed also
 		delete this;
 	}
 };
 
 } // end namespace detail
+
+listener* dynamic_aio_adapter::create(std::auto_ptr<connection_handler> handler)
+{
+	listener* dl = new detail::dynamic_listener<connection_handler>(
+	    handler->get_aio_listener(), 
+	    handler.release());
+	
+	return dl;
+}
 
 void connection_handler_aio_adapter::accept_connection(
                         dispatcher& dispatcher,
@@ -63,11 +73,11 @@ void connection_handler_aio_adapter::accept_connection(
 	std::auto_ptr<connection_handler> handler( 
 	    handler_factory_.create(client_stream, client_address) );
 		 
-	listener* dl = new detail::dynamic_listener<connection_handler>(
-	    handler->get_aio_listener(), 
-	    handler);
+	std::auto_ptr<listener> dl(dynamic_aio_adapter::create(handler));
 	
-	dispatcher.add( client_stream_tmp, dl, dispatcher::READ );
+	dispatcher.add( client_stream_tmp, dl.get(), dispatcher::READ );
+	
+	dl.release();
 }
 
 void connection_handler_aio_adapter::failure(dispatcher& d, stream* c, int error)

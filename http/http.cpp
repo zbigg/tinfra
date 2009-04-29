@@ -143,7 +143,17 @@ int protocol_parser::content_bytes(tstring const& s) {
     setup_content_retrieval();
     return current_size;
 }
+
+
+void write(tinfra::io::stream*, response_header_data const&, optional<size_t> const& content_length)
+{
     
+}
+void write(tinfra::io::stream*, request_header_data const&, optional<size_t> const& content_length);
+
+void write(tinfra::io::stream*, request_data const&);
+void write(tinfra::io::stream*, response_data const& d);
+
 } } // end namespace tinfra::http
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++

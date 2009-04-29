@@ -8,6 +8,48 @@
 
 namespace tinfra { namespace http {
 
+enum protocol_version {
+    HTTP_1_0,
+    HTTP_1_1
+};
+
+struct request_header_entry {
+    std::string       name;
+    std::string       value;
+};
+
+struct request_header_data {
+    std::string       method;
+    std::string       request_uri;
+    protocol_version  proto;
+    
+    std::vector<request_header_entry> headers;
+};
+
+struct request_data {
+    request_header_data header;
+    std::string         content;
+};
+
+struct response_header_data {
+    protocol_version  proto;
+    int               status;
+    std::string       status_message;
+    
+    std::vector<request_header_entry> headers;
+};
+
+struct response_data {
+    response_data header;
+    std::string   content;
+};
+
+void write(tinfra::io::stream*, response_header_data const&, optional<size_t> const& content_length);
+void write(tinfra::io::stream*, request_header_data const&, optional<size_t> const& content_length);
+
+void write(tinfra::io::stream*, request_data const&);
+void write(tinfra::io::stream*, response_data const& d);
+
 namespace S {
     extern symbol content_length;
     extern symbol keep_alive;
@@ -17,7 +59,7 @@ struct protocol_listener {
     virtual void request_line(
         tstring const& method, 
         tstring const& request_uri,
-        tstring const& proto_version) = 0;
+        tstring const& protocol_version) = 0;
     virtual void response_line(
         tstring const& protocol_version,
         tstring const& status,

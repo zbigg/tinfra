@@ -22,7 +22,7 @@ public:
     buffered_aio_adapter(tinfra::parser& p);
     ~buffered_aio_adapter();
     
-    stream* get_feedback_channel();
+    stream* get_output_channel();
     
     // implementation of tinfra::aio::listener
     virtual void event(dispatcher& d, stream* c, int event);
