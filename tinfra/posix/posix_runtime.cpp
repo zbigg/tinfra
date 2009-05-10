@@ -22,6 +22,8 @@
 #include <vector>
 #include <stdexcept>
 
+#include <stdio.h>
+
 #include <signal.h>
 
 #ifdef linux

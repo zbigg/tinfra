@@ -13,6 +13,7 @@
 #include "tinfra/tinfra.h"
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
+#include "tinfra/string.h"
 
 #ifdef _WIN32
 #include "winsock.h"

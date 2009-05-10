@@ -11,6 +11,8 @@
 #include "tinfra/platform.h"
 
 #include "tinfra/io/stream.h"
+#include "tinfra/runtime.h"
+#include "tinfra/tstring.h"
 
 #include <memory>
 #include <map>
@@ -53,6 +55,7 @@ public:
     virtual void     start(std::vector<std::string> const& args) = 0;
     
     virtual void     wait() = 0;
+    virtual void     detach() = 0;
     virtual int      get_exit_code() = 0;
     
     virtual void     terminate() = 0;
@@ -77,6 +80,10 @@ protected:
 // deprecated
 subprocess* create_subprocess();
 
+// TODO: start_detached& capture_command are members of ::tinfra
+// they should include "process, program, subprocess" in name
+// or become member of subprocess ?
+
 /// Capture command output.
 /// $(command) or `command` subsitute
 /// TODO: create stream counterpart
@@ -86,6 +93,18 @@ std::string capture_command(std::string const& command);
 /// same as capture_command but overrides program environment
 ///
 std::string capture_command(std::string const& command, environment_t const& env);
-}
+
+/// Start a process, don't wait for finalization.
+///
+/// Throws on error.
+void start_detached(tstring const& command);
+
+/// Start a process, don't wait for finalization.
+///
+/// Version that overrides subprocess
+/// Throws on error.
+void start_detached(tstring const& command, environment_t const& env);
+
+} // end of namespace tinfra
 
 #endif // #ifndef __tinfra_subprocess_h__

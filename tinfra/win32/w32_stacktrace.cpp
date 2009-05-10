@@ -395,7 +395,7 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
 	address = stack_frame.AddrPC.Offset;
 
 	if( stack_frame.AddrPC.Offset == 0 || stack_frame.AddrReturn.Offset == 0) break;
-	
+	/*
 	if ( ! pSymGetSymFromAddr( hProcess, address, &offsetFromSymbol, pSym ) ) {
 	    if ( gle != 487 )
 		    printf( "SymGetSymFromAddr(): gle = %lu\n", gle );
@@ -418,7 +418,8 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
 		symbol_offset = offsetFromSymbol;
 	    }
 	}
-
+        */
+        /*
 	if ( ! pSymGetModuleInfo( hProcess, address, &Module ) )
 	{
 	    printf( "SymGetModuleInfo): gle = %lu\n", gle );
@@ -427,6 +428,7 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
 	    module_name = Module.ModuleName;
 	    module_base = Module.BaseOfImage;
 	}
+        */
 	
         dest.push_back((void*)address);
         /*

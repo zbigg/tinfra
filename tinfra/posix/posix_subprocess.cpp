@@ -14,13 +14,16 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
-
+#include <sys/ioctl.h>
+#include <stdio.h>
 #include <iostream>
 
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
 #include "tinfra/path.h"
 #include "tinfra/subprocess.h"
+#include "tinfra/os_common.h"
+#include "tinfra/trace.h"
 
 extern "C" char** environ;
 
@@ -51,10 +54,6 @@ public:
     operator int () const { return fd; }
 };
 
-static void throw_io_exception(const char* message)
-{
-    throw io_exception(fmt("%s: %s") % message % strerror(errno));
-}
 
 char** make_system_environment(environment_t const& e)
 {
@@ -74,22 +73,8 @@ char** make_system_environment(environment_t const& e)
     result[idx] = 0;
     return result;
 }
-int execute_command(const char* command, environment_t const* e)
-{
-    if( e != 0 )
-        environ = make_system_environment(*e);
-    int r = system(command);
-    if( r < 0 )
-        throw_io_exception("system failed");
-    if( WIFEXITED(r) ) {
-        r = WEXITSTATUS(r);
-    } else {
-        r = EXIT_FAILURE;
-    }
-    return r;
-}
 
-int execute_command(std::vector<std::string> const& args, environment_t const* e)
+int execute_process(std::vector<std::string> const& args, environment_t const* e)
 {
     char** raw_args;
     raw_args = new char*[args.size()+1];
@@ -106,12 +91,14 @@ int execute_command(std::vector<std::string> const& args, environment_t const* e
         char** env = make_system_environment(*e);
         std::string executable = tinfra::path::search_executable(raw_args[0]);
         if( executable.size() == 0 ) {
-            throw_io_exception("unable to find executable");
+            //std::cerr << "tinfra::unable to find executable for " << raw_args[0] << "\n";
+            TINFRA_LOG_ERROR(fmt("subprocess start failed: unable to find executable for '%s'") % raw_args[0]);
+            return 127;
         }
         execve(executable.c_str(), raw_args, env);
     }
-    throw_io_exception("exec failed");
-    return 0;
+    TINFRA_LOG_ERROR(fmt("subprocess start failed: exec failed %s %s ...") % raw_args[0] % raw_args[1]);
+    return 126;
 }
 //
 // subprocess support for posix
@@ -130,7 +117,8 @@ struct posix_subprocess: public subprocess {
     
     posix_subprocess() : 
         pid(-1),
-        exit_code(-1)
+        exit_code(-1),
+        env_set(false)
     {
     }
     
@@ -156,7 +144,7 @@ struct posix_subprocess: public subprocess {
             if( tpid < 0 &&  errno == EINTR )
                 continue;
             if( tpid < 0 )
-                throw_io_exception("waitpid");
+                throw_errno_error(errno, "waitpid failed");
             // now convert wait exit_code to process exit code as in wait(2)
             // manual
             if( WIFEXITED(exit_code_raw) ) {
@@ -169,18 +157,24 @@ struct posix_subprocess: public subprocess {
         }
     }
     
+    virtual void     detach()
+    {
+        exit_code = -1;
+        pid = -1;
+    }
+    
     virtual int      get_exit_code() {        
         return exit_code;
     }
     
     virtual void     terminate() {
         if ( ::kill(pid, SIGTERM) < 0 ) 
-            throw_io_exception(fmt("kill(%i,SIGTERM)") % pid);
+            throw_errno_error(errno, fmt("kill(%i,SIGTERM)") % pid);
     }
     
     virtual void     kill() { 
         if ( ::kill(pid, SIGKILL) < 0 ) 
-            throw_io_exception(fmt("kill(%i,SIGKILL)") % pid);
+            throw_errno_error(errno, fmt("kill(%i,SIGKILL)") % pid);
     }
     
     virtual stream*  get_stdin()  { return sinput;  }
@@ -190,15 +184,14 @@ struct posix_subprocess: public subprocess {
     virtual intptr_t get_native_handle() { return pid; }
     
     void start(const char* command) {
-        do_start(command);
+        std::vector<std::string> args;
+        args.push_back("/bin/sh");
+        args.push_back("-c");
+        args.push_back(command);
+        start(args);
     }
     
-    void     start(std::vector<std::string> const& args) {
-        do_start(args);
-    }
-    
-    template <typename T>
-    void do_start(T const& command)
+    void start(std::vector<std::string> const& args)
     {
         fd_holder out_here(-1);    // writing HERE -> child
         fd_holder out_remote(-1);  // reading CHILD <- here
@@ -218,14 +211,14 @@ struct posix_subprocess: public subprocess {
         if( fwrite ) {            
             int boo[2];
             if ( pipe(boo) < 0 ) 
-                throw_io_exception("pipe");
+                throw_errno_error(errno, "pipe failed");
             out_remote = boo[0];
             out_here = boo[1];
         }
         if( fread ) {
             int boo[2];
             if ( pipe(boo) < 0 ) 
-                throw_io_exception("pipe");
+                throw_errno_error(errno, "pipe failed");
             
             in_here   = boo[0];
             in_remote = boo[1];
@@ -233,16 +226,15 @@ struct posix_subprocess: public subprocess {
         if( ferr ) {
             int boo[2];
             if ( pipe(boo) < 0 ) 
-                throw_io_exception("pipe");
+                throw_errno_error(errno, "pipe failed");
             
             err_here   = boo[0];
             err_remote = boo[1];
         }
         
-        // TODO: it should rather be vfork
         pid = ::fork();
         if( pid == -1 ) 
-            throw_io_exception("fork");
+            throw_errno_error(errno, "fork failed");
             
         if( pid == 0 ) {
             // children part            
@@ -250,6 +242,26 @@ struct posix_subprocess: public subprocess {
                 int a = ::dup(out_remote);
                 ::dup2(a,0);
                 ::close(a);
+                
+                // detach from tty
+                //
+                // TODO: decide if we should really detach from tty - and how?
+                //	always/flag/never? connection with detached flag on woe32 ?
+                
+                // now reasoing is following:
+                //   if we're redirecting stdin of subprocess then we wanw
+                //   it to read from us not TTY  ==> always detach if stdin == REDIRECT
+                
+                int tty_fd = open("/dev/tty", O_RDWR);
+                if (tty_fd >= 0) {
+                    int ret = ioctl(tty_fd, TIOCNOTTY, 0);
+                    if (ret == -1) 
+                        perror("ioctl  (disabling tty)");
+                    close(tty_fd);
+                }
+                else {
+                    perror("open (disabling tty)");
+                }
             } else if( stdin_mode == NONE) { 
                 ::close(0);
                 ::open("/dev/null",O_RDONLY);
@@ -278,15 +290,10 @@ struct posix_subprocess: public subprocess {
                 ::close(fd);
             
             if( ::chdir(working_dir.c_str()) < 0 ) {
-                std::cerr << "TIC: unable to change working dir!" << std::endl;
+                TINFRA_LOG_ERROR(fmt("subprocess start: unable to chdir to '%s'") % working_dir);
                 ::exit(127);
             }
-            // TODO it should rather be exec
-            int result = tinfra::posix::execute_command(command, env_set ? &env : 0);
-            //std::cerr << "PSP: execute_command() returned " << result << std::endl;
-            if( result < 0 ) {
-                std::cerr << "TIC: system() failed!" << std::endl;
-            }
+            int result = execute_process(args, env_set ? &env : 0);  
             _exit(result);
         } else {
             if( fwrite ) {
@@ -318,3 +325,6 @@ std::auto_ptr<subprocess> subprocess::create()
 
 
 } // end namespace tinfra
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
+
