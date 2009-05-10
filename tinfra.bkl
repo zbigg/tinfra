@@ -151,6 +151,7 @@
 	    tests/test_memory_pool.cpp
             tests/test_runtime.cpp
             tests/test_mo.cpp
+            tests/test_structure_printer.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>

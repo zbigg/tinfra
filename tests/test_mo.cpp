@@ -31,8 +31,6 @@ namespace tinfra {
 
 SUITE(tinfra)
 {
-    
-    
     using tinfra_mo_test::point;
     using tinfra::symbol;
     
@@ -60,36 +58,6 @@ SUITE(tinfra)
         CHECK_EQUAL(1, a.x);
         CHECK_EQUAL(1, a.y);
     }
-    
-    TEST(mo_field_printer_struct) {
-        std::ostringstream buf;
-        tinfra::field_printer printer(buf);
-        point X = {1,2};
-        tinfra::process(tinfra::symbol("X"), X, printer);
-        CHECK_EQUAL("X={ x=1, y=2 }", buf.str());
-    }
-    
-    TEST(mo_field_printer_container) {
-        std::ostringstream buf;
-        tinfra::field_printer printer(buf);
-        
-        std::vector<int> v;
-        v.push_back(1);
-        v.push_back(2);
-        v.push_back(3);
-        v.push_back(5);
-        
-        tinfra::process(tinfra::symbol("v"), v, printer);
-        CHECK_EQUAL("v=[ 1, 2, 3, 5 ]", buf.str());
-    }
-    
-    TEST(mo_field_printer_mo_container) {
-        std::ostringstream buf;
-        tinfra::field_printer printer(buf);
-        point X = {1,2};
-        std::vector<point> v(2, X);
-        tinfra::process(tinfra::symbol("v"), v, printer);
-        CHECK_EQUAL("v=[ { x=1, y=2 }, { x=1, y=2 } ]", buf.str());
-    }
-    
 }
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:

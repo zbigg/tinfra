@@ -11,7 +11,20 @@
 #include "tinfra/symbol.h"
 
 namespace tinfra {
+/** MO structure trait
+
+mo_traits<T> is template class that provides means for MO algorithms to
+know if process value with functor.
+
+Default mo_traits<T> applies functor to value thus trating value as leaf.
     
+For structures that has children - objects or containers one should specialize
+mo_traits<V> and provide specialized walk mechanism:
+ * struct_mo_trait is for MO structures
+ * conatiner_mo_trair is for STL compatible containers (only processing 
+   is provided)
+    
+*/
 template <typename T>
 struct mo_traits {
     template <typename F>
@@ -142,118 +155,8 @@ void container_mo_traits<T>::process(const symbol& s, const T& v, Functor& f) {
 #define TINFRA_SYMBOL_DECL(a) namespace S { extern tinfra::symbol a; }
 #define TINFRA_SYMBOL_IMPL(a) namespace S { tinfra::symbol a(#a); }
 
-class field_printer {
-    std::ostream& out;
-    bool need_separator;
-    int  indent_size;
-    int  indent_level;
-    bool multiline;
-    bool showing_name;
-    std::vector<bool> sn_history;
-public:
-    field_printer(std::ostream& o): 
-        out(o), 
-        need_separator(false),
-        indent_size(2),
-        indent_level(0), 
-        multiline(false),
-        showing_name(true)
-    {}
-    
-    template <class T>
-    void operator () (const tinfra::symbol& sym, T const& t) 
-    {
-        separate();
-        apply_indent();
-        name(sym);
-        out << t;
-        need_separator = true;
-    }
-    
-    template <typename T>
-    void begin_mo(tinfra::symbol const& sym, T const& v)
-    {
-        separate();
-        enter(sym, '{');
-        push_showing_name(true);
-    }
-    
-    template <typename T>
-    void end_mo(tinfra::symbol const& sym, T const& v)
-    {
-        pop_showing_name();
-        need_separator = false;
-        separate();
-        exit(sym,'}');
-    }
-    
-    template <typename T>
-    void begin_container(tinfra::symbol const& sym, T const& v)
-    {
-        separate();
-        enter(sym, '[');
-        push_showing_name(false);        
-    }
-    
-    template <typename T>
-    void end_container(tinfra::symbol const& sym, T const& v)
-    {
-        pop_showing_name();
-        need_separator = false;
-        separate();
-        exit(sym,']');
-    }
-private:
-    void push_showing_name(bool new_value) {
-        sn_history.push_back(showing_name);
-        showing_name = new_value;
-    }
-    void pop_showing_name() {
-        showing_name = sn_history.at(sn_history.size()-1);
-        sn_history.erase(sn_history.end()-1);
-    }
-    void name(symbol const& sym) {
-        if( showing_name ) {
-            out << sym << '=';
-        }
-    }
-    void separate() {
-        if( need_separator ) {
-            out << ", ";
-        }
-        if( multiline ) {
-            out << "\n";
-        }
-        need_separator = false;
-    }
-    void apply_indent() {
-        if( indenting() ) {
-            for(int i = 0; i < indent_level*indent_size; ++i )
-                out << " ";
-        }
-    }
-    void enter(tinfra::symbol const& sym, char sep) {
-        apply_indent();
-        name(sym);
-        out << sep;
-        indent_level+=1;
-        if( !multiline )
-            out << " ";
-        need_separator = false;
-    }
-    
-    void exit(tinfra::symbol const&, char sep) {
-        indent_level -= 1;
-        apply_indent();
-        if( !multiline )
-            out << ' ';
-        out << sep;
-        need_separator = true;
-    }
-    
-    bool indenting() const { return multiline && indent_level != 0 && indent_size > 0; }
-}; 
-
 } // end namespace tinfra
 
-#endif // tinfra_struct_h_included__
+#endif // tinfra_mo_h_included__
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
