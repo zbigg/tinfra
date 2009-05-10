@@ -42,36 +42,27 @@ template <typename T>
 struct struct_mo_traits {
     template <typename Functor>
     static void process(const symbol& s, const T& v, Functor& f) { 
-        f.begin_mo(s, v);
-        mo_process(v, f);
-        f.end_mo(s, v);
+        f.mstruct(s, v);
     }
     
     template <typename Functor>
     static void mutate(const symbol& s, T& v, Functor& f) { 
-        f.begin_mo(s, v);
-        mo_mutate(v, f);
-        f.end_mo(s, v);
+        f.mstruct(s, v);
     }
 };
 
 template <typename T>
 struct container_mo_traits{
     template <typename Functor>
-    static void process(const symbol& s, const T& v, Functor& f);
+    static void process(const symbol& s, const T& v, Functor& f) {
+        f.container(s, v);
+    }
     
-    /*
+    
     template <typename Functor>
     static void mutate(const symbol& s, T& v, Functor& f) { 
-        f.begin_container(s, v);
-        typedef typename T::value_type value_type;
-        typedef typename T::const_iterator  iterator;
-        while( f.hasNext() ) {
-            v.push_back(f.next());
-        }
-        f.end_container(s, v);
+        f.container(s, v);
     }
-    */
 };
 
 template <typename T>
@@ -138,16 +129,7 @@ void mutate(symbol const& sym,  T& value, F& functor)
     functor_disp(sym, value);
 }
 
-template <typename T>
-template <typename Functor>
-void container_mo_traits<T>::process(const symbol& s, const T& v, Functor& f) { 
-    f.begin_container(s, v);
-    typedef typename T::const_iterator  iterator;
-    for( iterator i = v.begin(); i != v.end(); ++i ) {
-        tinfra::process(symbol(0),*i, f);
-    }
-    f.end_container(s, v);
-}
+
 #define TINFRA_MO_MANIFEST(a)  template <typename F> void apply(F& f) const
 
 #define TINFRA_MO_FIELD(a)    f(S::a, a)

@@ -61,16 +61,14 @@ public:
     }
     
     template <typename T>
-    void begin_mo(tinfra::symbol const& sym, T const& v)
+    void mstruct(tinfra::symbol const& sym, T const& v)
     {
         separate();
         enter(sym, '{');
         push_showing_name(true);
-    }
-    
-    template <typename T>
-    void end_mo(tinfra::symbol const& sym, T const& v)
-    {
+        
+        tinfra::mo_process(v, *this);
+        
         pop_showing_name();
         need_separator = false;
         separate();
@@ -78,16 +76,17 @@ public:
     }
     
     template <typename T>
-    void begin_container(tinfra::symbol const& sym, T const& v)
+    void container(tinfra::symbol const& sym, T const& v)
     {
         separate();
         enter(sym, '[');
-        push_showing_name(false);        
-    }
-    
-    template <typename T>
-    void end_container(tinfra::symbol const& sym, T const& v)
-    {
+        push_showing_name(false);
+        
+        typedef typename T::const_iterator  iterator;
+        for( iterator i = v.begin(); i != v.end(); ++i ) {
+            tinfra::process(symbol(0),*i, *this);
+        }
+        
         pop_showing_name();
         need_separator = false;
         separate();
