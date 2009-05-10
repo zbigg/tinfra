@@ -183,7 +183,7 @@ static int  socket_get_last_error()
 
 static bool error_means_blocked(int error_code) {
 #ifdef TS_WINSOCK
-    if( error_code == WSAWOULDBLOCK )
+    if( error_code == WSAEWOULDBLOCK )
         return true;
 #else
     if( error_code == EAGAIN || error_code == EINPROGRESS )
