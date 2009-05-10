@@ -133,29 +133,23 @@ void process(R& reader, dispatch_map<IMPL, R> const& meta, IMPL& target);
 //
 
 template <typename W>
-void call_sender<W>::operator() () {
-    tinfra::TypeTraitsProcessCaller<W> writer(writer_);
-    
-    writer(detail::S::message_id, detail::message0::serial_id);
-    writer(detail::S::arguments, detail::message0());
+void call_sender<W>::operator() () {    
+    tinfra::process(detail::S::message_id, detail::message0::serial_id, writer_);
+    tinfra::process(detail::S::arguments, detail::message0(), writer_);
 }
 
 template <typename W>
 template <typename P1>
 void call_sender<W>::operator() (P1 const& p1) {
-    tinfra::TypeTraitsProcessCaller<W> writer(writer_);
-    
-    writer(detail::S::message_id, detail::message1<P1>::serial_id);
-    writer(detail::S::arguments, detail::message1<P1>(p1));
+    tinfra::process(detail::S::message_id, detail::message1<P1>::serial_id, writer_);
+    tinfra::process(detail::S::arguments, detail::message1<P1>(p1), writer_);
 }
 
 template <typename W>
 template <typename P1, typename P2>
 void call_sender<W>::operator() (P1 const& p1, P2 const& p2) {
-    tinfra::TypeTraitsProcessCaller<W> writer(writer_);
-        
-    writer(detail::S::message_id, detail::message2<P1,P2>::serial_id);
-    writer(detail::S::arguments, detail::message2<P1,P2>(p1,p2));
+    tinfra::process(detail::S::message_id, detail::message2<P1,P2>::serial_id, writer_);
+    tinfra::process(detail::S::arguments, detail::message2<P1,P2>(p1,p2), writer_);
 }
 
 //

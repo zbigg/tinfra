@@ -54,12 +54,6 @@ public:
         put(sym, v);
     }
     
-    template <typename T>
-    void managed_struct(T const& v, tinfra::symbol const&)
-    {
-        tinfra::process(v, *this);
-    }
-    
     void operator()(tinfra::symbol const& sym, info_signal const&)
     {
         put(sym, "<info_signal>");
@@ -68,6 +62,12 @@ public:
     void operator()(tinfra::symbol const& sym, shutdown_signal const&)
     {
         put(sym, "<shutdown_signal>");
+    }
+    
+    template <typename T>
+    void mstruct(tinfra::symbol const&, T const& v)
+    {
+        tinfra::mo_process(v, *this);
     }
     
 private:
@@ -94,15 +94,9 @@ public:
     }
     
 
-    void operator()(tinfra::symbol const& sym, std::string& v)
+    void operator()(tinfra::symbol const& , std::string& v)
     {
         v = readline();
-    }
-    
-    template <typename T>
-    void managed_struct(T& v, tinfra::symbol const&)
-    {
-        tinfra::mutate(v, *this);
     }
     
     void operator()(tinfra::symbol const&, info_signal&)
@@ -113,6 +107,12 @@ public:
     void operator()(tinfra::symbol const&, shutdown_signal&)
     {
         readline();
+    }
+    
+    template <typename T>
+    void mstruct(tinfra::symbol const&, T& v)
+    {
+        tinfra::mo_mutate(v, *this);
     }
 };
 

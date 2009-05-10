@@ -3,9 +3,11 @@
 
 #include "tinfra/symbol.h"
 #include "tinfra/queue.h"
-#include "tinfra/tinfra.h"
+#include "tinfra/mo.h"
 
 #include <memory>
+#include <typeinfo>
+#include <map>
 
 namespace callfwd {
 namespace detail {
@@ -81,15 +83,15 @@ const message_serial_id message2<P1,P2>::serial_id(std::string("2") + typeid(P1)
 
 namespace tinfra {   
     template <>
-    struct TypeTraits<callfwd::detail::message0>: public ManagedStruct<callfwd::detail::message0> {};
+    struct mo_traits<callfwd::detail::message0>: public struct_mo_traits<callfwd::detail::message0> {};
         
     template <>
     template <typename P1>
-    struct TypeTraits< callfwd::detail::message1<P1> >: public ManagedStruct<callfwd::detail::message1<P1> > {};
+    struct mo_traits< callfwd::detail::message1<P1> >: public struct_mo_traits<callfwd::detail::message1<P1> > {};
         
     template <>
     template <typename P1, typename P2>
-    struct TypeTraits< callfwd::detail::message2<P1, P2> >: public ManagedStruct<callfwd::detail::message2<P1, P2> > {};
+    struct mo_traits< callfwd::detail::message2<P1, P2> >: public struct_mo_traits<callfwd::detail::message2<P1, P2> > {};
 }
 
 namespace callfwd { 
@@ -183,8 +185,7 @@ class basic_message_parser: public any_parser_base<R> {
     {
         std::auto_ptr<dynamic_any_container_impl<MT> > pmsg( new dynamic_any_container_impl<MT>() );
         
-        tinfra::TypeTraitsProcessCaller<R> tt_reader(reader);
-        tt_reader(S::message_id, pmsg->typed_get());
+        tinfra::process(S::message_id, pmsg->typed_get(), reader);
         
         return std::auto_ptr<dynamic_any_container>( pmsg.release() );
     }

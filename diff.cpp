@@ -2,49 +2,38 @@
 #include <tinfra/cmd.h>
 
 #include <iostream>
-#include <tinfra/tinfra.h>
+#include <tinfra/mo.h>
 
-#define TINFRA_MANAGED_STRUCT(a)  template <typename F> void apply(F& f) const
-
-#define TINFRA_MS_FIELD(a)    f(S::a, a)
-    
-#define TINFRA_SYMBOL_DECL(a) namespace S { extern tinfra::symbol a; }
-
-#define TINFRA_SYMBOL_IMPL(a) tinfra::symbol S::a(#a)
 TINFRA_SYMBOL_DECL(street);
 TINFRA_SYMBOL_DECL(home);
 TINFRA_SYMBOL_DECL(apartment);
 TINFRA_SYMBOL_DECL(city);
 
-
-template <typename T>
-struct mo: public T {
-    typedef T  value_type;
-    typedef T& reference;
-    mo(T const& v): T(v) {}
-};
-
-struct address_data {
+struct address {
     std::string street;
     std::string home;
     std::string apartment;
     std::string city;
     
-    TINFRA_MANAGED_STRUCT(address)
+    TINFRA_MO_MANIFEST(address)
     {
-        TINFRA_MS_FIELD(street);
-        TINFRA_MS_FIELD(home);
-        TINFRA_MS_FIELD(apartment);
-        TINFRA_MS_FIELD(city);
+        TINFRA_MO_FIELD(street);
+        TINFRA_MO_FIELD(home);
+        TINFRA_MO_FIELD(apartment);
+        TINFRA_MO_FIELD(city);
     }
 };
 
-typedef mo<address_data> address;
 
 TINFRA_SYMBOL_IMPL(street);
 TINFRA_SYMBOL_IMPL(home);
 TINFRA_SYMBOL_IMPL(apartment);
 TINFRA_SYMBOL_IMPL(city);
+
+namespace tinfra {
+    template<> 
+    struct mo_traits<address>: public tinfra::struct_mo_traits<address> {};
+} 
 
 template <typename T>
 T& ref_in_other(const void* base_a, const T* value_in_a, void* base_b)
@@ -98,14 +87,18 @@ public:
             std::cout << sym << " identical\n";
         }
     }
+    template <typename T>
+    void mstruct(symbol const&, T const& value) {
+        tinfra::mo_process(value, *this);
+    }
 };
 
 
 template <typename T>
-void compare(T const& a, T const& b)
+void compare(tinfra::symbol const& sym, T const& a, T const& b)
 {
     comparator c(&a,&b);
-    tinfra::process(a,c);
+    tinfra::process(sym, a,c);
 }
 
 class swapper {
@@ -133,32 +126,19 @@ template <typename T>
 void tinfra_swap(T& a, T& b)
 {
     swapper s(&a, &b);
-    tinfra::mutate(a, s);
+    tinfra::mo_mutate(a, s);
 }
 
-namespace std {
-template <typename T>
-void swap(mo<T>& a, mo<T>& b)
-{
-    std::cerr << "USED managed_type swap\n";
-    //std::swap(a,b);
-    tinfra_swap(a,b);
-}
-}
 
 int diff_main(int, char**)
 {
-    address_data d1 = { "szczecinska", "39b", "", "Tanowo" };
-    address_data d2 = { "szczecinska", "39b", "", "Tanowo" };
-    address grzesiek(d1);
-    address mama(d2);
-    //address ja = { "strzelecka", "5g", "11", "Szczecin" };
-    //address sasiad = { "strzelecka", "5g", "12", "Szczecin" };
-    //address tesciu = { "bandurskiego", "51", "2", "Szczecin" };
+    using tinfra::symbol;
+    address grzesiek = { "garlicka", "12b", "", "Tanowo" };
+    address mama = { "malpia", "12", "", "Szczein" };
     
-    compare(grzesiek, mama);
-    std::swap(grzesiek, mama);
-    compare(grzesiek, mama);
+    compare(symbol("abc"), grzesiek, mama);
+    tinfra_swap(grzesiek, mama);
+    compare(symbol("abc"), grzesiek, mama);
     return 0;
 }
 
