@@ -5,19 +5,46 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_fs_h__
-#define __tinfra_fs_h__
+#ifndef tinfra_fs_h_included__
+#define tinfra_fs_h_included__
+
+#include "tinfra/tstring.h"
+#include "tinfra/generator.h"
 
 #include <string>
 #include <vector>
-
-#include "tinfra/tstring.h"
+#include <memory>
 
 namespace tinfra {
 namespace fs {
 
+struct file_info {
+    size_t    size;
+    bool      is_dir;   
+    time_t    modification_time;
+    time_t    access_time;
+};
+
 typedef std::vector<std::string> file_name_list;
+
+struct directory_entry {
+    tstring   name;
     
+    file_info info;
+};
+
+class lister: public generator_impl<lister, directory_entry> {
+public:
+    lister(tstring const& path, bool need_stat = false);    
+    ~lister();
+
+    bool fetch_next(directory_entry&);
+    
+private:
+    struct internal_data;
+    std::auto_ptr<internal_data> data_;
+};
+
 struct file_list_visitor {
     virtual void accept(tstring const& name) =0;
     
@@ -32,12 +59,7 @@ inline std::vector<std::string> list_files(const char* path) {
     return r;
 }
 
-struct file_info {
-    size_t    size;
-    bool      is_dir;   
-    time_t    modification_time;
-    time_t    access_time;
-};
+
 
 file_info stat(tstring const& name);
 bool exists(tstring const& name);
@@ -80,7 +102,8 @@ struct walker
 */
 void walk(tstring const& start, walker& w);
 
-} }
+} } // end namespace tinfra::fs
 
-#endif
+#endif // tinfra_fs_h_included__
+
 

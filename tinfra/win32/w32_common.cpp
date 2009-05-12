@@ -14,6 +14,7 @@
 #include "tinfra/io/stream.h"
 
 #include <stdexcept>
+#include <cassert>
 
 #ifndef NOMINMAX
 #define WIN32_LEAN_AND_MEAN
@@ -103,5 +104,70 @@ void get_available_drives(std::vector<std::string>& result)
         len -= l2;
     }
 }
+
+std::wstring make_wstring_from_utf8(tstring const& str)
+{
+    // TODO: write test for this one
+    // http://msdn.microsoft.com/en-us/library/dd319072(VS.85).aspx
+    const UINT codePage = CP_UTF8;
+    const DWORD flags   = MB_ERR_INVALID_CHARS;
+
+    const int buffer_size = MultiByteToWideChar(
+        codePage, flags, 
+        str.data(), str.size(),
+        0, 0 );
+
+    wchar_t* buffer = new wchar_t[buffer_size+1];
+    
+    int written = MultiByteToWideChar(
+        codePage, flags, 
+        str.data(), str.size(),
+        buffer, buffer_size );
+    
+    if( written == 0 ) {
+        delete [] buffer;
+        throw_system_error("unable to convert utf8 -> unicode");
+    }
+    buffer[written] = 0;
+    
+    std::wstring result(buffer);
+    delete[] buffer;
+    return result;
+}
+
+// TODO: implement it
+//std::wstring make_wstring_from(tstring const& str, int encoding)
+//{
+//}
+
+std::string make_utf8(wchar_t const* str)
+{
+    // TODO: write test for this one
+    // http://msdn.microsoft.com/en-us/library/dd374130(VS.85).aspx
+    const UINT codePage = CP_UTF8;
+    const DWORD flags   = 0;
+    const int result_size = WideCharToMultiByte(
+        codePage, flags,
+        str, -1,
+        0, 0,
+        NULL,
+        NULL);
+    char* buffer = new char[result_size+1];
+    const int written = WideCharToMultiByte(
+        codePage, flags,
+        str, -1,
+        buffer, result_size,
+        NULL,
+        NULL);
+    if( written == 0 ) {
+        delete [] buffer;
+        throw_system_error("unable to convert unicode -> utf8");
+    }
+    buffer[written] = 0;
+    std::string result(buffer, written-1);
+    delete [] buffer;
+    return result;
+}
+    
 
 } } // end namespace tinfra::win32

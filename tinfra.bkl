@@ -11,6 +11,7 @@
             tinfra/win32/w32_common.cpp
             tinfra/win32/thread.cpp
             tinfra/win32/w32_runtime.cpp
+            tinfra/win32/w32_fs.cpp
         </if>
         
         <if cond="PLATFORM_UNIX=='1'">
@@ -18,6 +19,7 @@
             tinfra/posix/posix_subprocess.cpp
             tinfra/posix/thread.cpp
             tinfra/posix/posix_runtime.cpp
+            tinfra/posix/posix_fs.cpp
         </if>
     </set>
 

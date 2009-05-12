@@ -5,8 +5,10 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_win32_h__
-#define __tinfra_win32_h__
+#ifndef tinfra_win32_h_included__
+#define tinfra_win32_h_included__
+
+#include <tinfra/tstring.h>
 
 #include <vector>
 #include <string>
@@ -20,9 +22,13 @@ void throw_system_error(std::string const& message);
     
 void get_available_drives(std::vector<std::string>& result);
 
+std::wstring make_wstring_from_utf8(tstring const& str);
+std::wstring make_wstring_from(tstring const& str, int encoding);
+std::string make_utf8(wchar_t const* str);
+
 #define TINFRA_LOG_WIN32_ERROR(msg,le) \
     TINFRA_LOG_ERROR(tinfra::fmt("%s: %s (%i)") % (msg) % tinfra::win32::get_error_string(le) % (le));
 
 } } // end namespace tinfra::win32
 
-#endif
+#endif // tinfra_win32_h_included__

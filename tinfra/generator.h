@@ -106,11 +106,17 @@ public:
     }
     
     // stl iterator adaptation
-    typedef generator_stl_adapter< IMPL > stl_iterator;    
+    typedef generator_stl_adapter< IMPL > stl_iterator;
+    typedef generator_stl_adapter< IMPL > iterator;
+    
     stl_iterator end() const {
         return stl_iterator::end();
     }
     stl_iterator current() {
+        return stl_iterator(impl());
+    }
+    
+    stl_iterator begin() {
         return stl_iterator(impl());
     }
 

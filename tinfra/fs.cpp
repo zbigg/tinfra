@@ -35,85 +35,28 @@
 #include <io.h>
 #endif
 
-#ifdef HAVE_OPENDIR
-#include <dirent.h>
-#endif
-
 namespace tinfra {
 namespace fs {
 
-
-template <typename T>
-struct holder {
-    T value_;
-    holder(T const& value): value_(value) {}
-    ~holder() { dispose(value_); }
-    
-    static void dispose(T value);
-};
-
-#ifdef HAVE_OPENDIR
-template<>
-void holder<DIR*>::dispose(DIR* dir)
-{
-    ::closedir(dir);
-    dir = 0;
-}
-#elif defined HAVE_FINDFIRST
-template<>
-void holder<intptr_t>::dispose(intptr_t i)
-{
-    _findclose(i);
-}
-#endif
-
 void list_files(tstring const& dirname, file_list_visitor& visitor)
 {
-    string_pool temporary_context;
-#ifdef HAVE_OPENDIR
-    DIR* dir = ::opendir(dirname.c_str(temporary_context));
-    if( !dir ) {
-        throw_errno_error(errno, fmt("unable to read dir '%s'") % dirname);
-    }
-    holder<DIR*> dir_closer(dir);
-    dirent* entry;
-    while( (entry = ::readdir(dir)) != 0 ) 
-    {        
-        if( std::strcmp(entry->d_name,"..") == 0 || std::strcmp(entry->d_name,".") == 0 ) continue;
-        visitor.accept(entry->d_name);
-    }    
-#elif defined HAVE_FINDFIRST
-    std::string a = dirname.str();
-    a += "\\*";
-    _finddata_t finddata;
-    intptr_t nonce = _findfirst(a.c_str(), &finddata);
-    if( nonce == -1 ) 
-            return;
-    holder<intptr_t> nonce_closer(nonce);
-    do {
-        if( std::strcmp(finddata.name,"..") != 0 && std::strcmp(finddata.name, ".") != 0 ) {
-            visitor.accept(finddata.name);
-        }
-    } while( _findnext(nonce, &finddata) == 0);	
-#else
-    throw generic_exception("tinfra::fs::list_files not implemented on this platform");
-#endif  
-}
-
-struct vector_sink_file_visitor: public file_list_visitor {
-    std::vector<std::string>& result;
-    vector_sink_file_visitor(std::vector<std::string>& result): result(result) {}
+    lister files(dirname);
+    for(lister::iterator i = files.begin(); i != files.end(); ++i ) {
+        directory_entry const& de = *i;
         
-    virtual void accept(tstring const& name)
-    {
-        result.push_back(name.str());
+        visitor.accept(de.name);
     }
-};
+}
+    
 
 void list_files(tstring const& dirname, std::vector<std::string>& result)
 {
-    vector_sink_file_visitor visitor(result);
-    list_files(dirname, visitor);
+    lister files(dirname);
+    for(lister::iterator i = files.begin(); i != files.end(); ++i ) {
+        directory_entry const& de = *i;
+        
+        result.push_back(de.name.str());
+    }
 }
 
 file_info stat(tstring const& name)
