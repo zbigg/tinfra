@@ -97,6 +97,17 @@ END_EVENT_TABLE()
 //
 // action vs. toolbar helper
 //
+
+std::string make_tooltip(ActionInfo const* ai)
+{
+	std::string result = ai->label;
+	if( ai->shortcut.size() > 0 ) {
+		result += " (";
+		result += ai->shortcut;
+		result += ")";
+	}
+	return result;
+}
 void addAction(wxToolBar* t, int id)
 {
     ActionInfo* ai = ActionManager::getInstance()->getActionInfo(id);
@@ -106,7 +117,7 @@ void addAction(wxToolBar* t, int id)
     wxBitmap bmp = wxArtProvider::GetBitmap(ai->icon_resource, wxART_TOOLBAR);
 	if( !bmp.IsOk() )
 		bmp = wxArtProvider::GetBitmap(wxART_ERROR , wxART_TOOLBAR);
-    t->AddTool(ai->id, ai->label, bmp);
+    t->AddTool(ai->id, ai->label, bmp, make_tooltip(ai));
 }
 
 wxToolBar* buildDocumentToolbar(wxWindow* parent)
@@ -217,7 +228,13 @@ wxFrame* tickedit_init(wxWindow* parent)
         //editorHost->AddPage(new TickEditorTextControl(editorHost),"Editor2");
         
         frame->Show(true);
-        
+		{
+			wxAcceleratorEntry entries[1];
+			entries[0].Set(wxACCEL_CTRL,  (int) 's',     wxID_SAVE);
+			entries[0].Set(wxACCEL_CTRL,  (int) 'x',     wxID_EXIT);
+			wxAcceleratorTable accel(1, entries);
+			frame->SetAcceleratorTable(accel);
+		}
         mgr->Update();
     }
     {
