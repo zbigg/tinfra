@@ -26,6 +26,7 @@ TEST(multitype_map)
     CHECK_VALUE(m, "a", int, 5);
     CHECK_VALUE(m, "b", double, 2.4);
     CHECK_VALUE(m, "c", string, "Z");
+    CHECK_VALUE(m, "c", string, "G");
     
     CHECK( m.begin<int>() != m.end<int>() );
     CHECK( m.begin<double>() != m.end<double>() );

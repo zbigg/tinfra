@@ -123,7 +123,7 @@ public:
         type_key mkey = get_type_key<T>();
         std::map<K, T>* m = get_type_map<T>(mkey,true);
         typename std::map<K, T>::value_type p(k,v);
-        m->insert(p);
+        (*m)[k] = v;
     }
     
     template <typename T>
@@ -135,7 +135,7 @@ public:
     typename std::map<K, T>::const_iterator begin() const {
         std::map<K, T> const* m = get_type_map<T>(get_type_key<T>());
         if( m ) return m->begin();
-        return std::map<K, T>::const_iterator();
+        return typename std::map<K, T>::const_iterator();
     }
     
     template <typename T>
@@ -147,7 +147,7 @@ public:
     typename std::map<K, T>::const_iterator end() const {
         std::map<K, T> const* m = get_type_map<T>(get_type_key<T>());
         if( m ) return m->end();
-        return std::map<K, T>::const_iterator();
+        return typename std::map<K, T>::const_iterator();
     }
     
     /// XXX: should we put it here ?
