@@ -8,6 +8,8 @@
 #ifndef __tinfra_shared_ptr_h__
 #define __tinfra_shared_ptr_h__
 
+#include <tinfra/trace.h>
+
 namespace tinfra {
 
 struct reference_count {

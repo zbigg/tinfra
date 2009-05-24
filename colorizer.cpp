@@ -10,7 +10,7 @@
 #include <iostream>
 
 #include "tinfra/aio.h"
-#include "http/protocol_aio_adapter.h"
+#include "http/buffered_aio_adapter.h"
 
 using tinfra::regexp;
 using tinfra::tstring;
@@ -84,7 +84,7 @@ class const_replacer {
 public:
 	const_replacer(tstring const& r): replacement(r) {}
 	
-	std::string operator()(tstring const& i) {
+	std::wstring operator()(tstring const& i) {
 		//std::cerr << tinfra::fmt("replacer(%s)->%s") % i % replacement << std::endl;
 		return replacement.str();
 	}
@@ -129,17 +129,17 @@ public:
     }
 };
 
-class line_protocol: public tinfra::aio::protocol {
+class line_protocol: public tinfra::parser {
     string_sink& sink;
 public:
     
     line_protocol(string_sink& s): sink(s),finished(false) {}
-    virtual int   process_input(tinfra::tstring const& input, tinfra::io::stream*)
+    virtual int   process_input(tinfra::tstring const& input)
     {
         return consume(input);
     }
     
-    virtual void  eof(tinfra::tstring const& unparsed_input, tinfra::io::stream*)
+    virtual void  eof(tinfra::tstring const& unparsed_input)
     {
         TINFRA_TRACE_MSG("eof signaled");
         consume(unparsed_input);
@@ -174,10 +174,10 @@ class aio_colorizer: public tinfra::aio::listener {
     tinfra::io::stream* _out;
     colorizer_line_sink sink;
     line_protocol       protocol;
-    tinfra::aio::protocol_aio_adapter aio_adapter;
+    tinfra::aio::buffered_aio_adapter aio_adapter;
     
 public:
-    aio_colorizer(const char* prefix,tinfra::io::stream* out) : 
+    aio_colorizer(const char* prefix, tinfra::io::stream* out) : 
         _out(out),
         sink(prefix, out),
         protocol(sink),
@@ -241,3 +241,4 @@ int colorizer_main(int argc, char** argv)
 }
 
 TINFRA_MAIN(colorizer_main);
+
