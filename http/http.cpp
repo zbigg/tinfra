@@ -2,6 +2,8 @@
 
 #include <tinfra/regexp.h>
 
+#include <limits>
+
 namespace tinfra { namespace http {
 
 namespace S {
@@ -37,9 +39,9 @@ int protocol_parser::process_input(tinfra::tstring const& input)
 
 void protocol_parser::eof(tinfra::tstring const& unparsed_input)
 {
-	int processed = dispatch_helper_.process(unparsed_input);
+	/*int processed = */dispatch_helper_.process(unparsed_input);
 	// ok, what now ?
-        processed;
+        //processed;
 }
 
 void protocol_parser::setup_initial_state()
@@ -144,15 +146,63 @@ int protocol_parser::content_bytes(tstring const& s) {
     return current_size;
 }
 
-
-void write(tinfra::io::stream*, response_header_data const&, optional<size_t> const& content_length)
+static void write_headers(std::ostream& out, std::vector<request_header_entry> const& hv, size_t content_length)
 {
+    using std::numeric_limits;
+    const bool use_content_length = (content_length != numeric_limits<size_t>::max() );
     
+    std::vector<request_header_entry>::const_iterator i = hv.begin();
+    while( i != hv.end() ) {
+        out << i->name << ": " << i->value << "\r\n";
+    }
+    
+    if( use_content_length ) {
+        out << "Content-Length: " << content_length << "\r\n";
+    }
 }
-void write(tinfra::io::stream*, request_header_data const&, optional<size_t> const& content_length);
 
-void write(tinfra::io::stream*, request_data const&);
-void write(tinfra::io::stream*, response_data const& d);
+//void write(tinfra::io::stream*, response_header_data const&, optional<size_t> const& content_length)
+void write(tinfra::io::stream* out, response_header_data const& rhd, size_t content_length)
+{
+    const char* proto_string = rhd.proto == HTTP_1_0 ? "HTTP/1.0"
+                                                     : "HTTP/1.1";
+    std::ostringstream formatter;
+    formatter << proto_string << " " << rhd.status << " " << rhd.status_message << "\r\n";
+    
+    write_headers(formatter, rhd.headers, content_length);
+    
+    std::string const& r = formatter.str();
+    out->write(r.data(), r.size());
+}
+
+//void write(tinfra::io::stream*, request_header_data const&, optional<size_t> const& content_length)
+void write(tinfra::io::stream* out, request_header_data const& rhd, size_t content_length)
+{
+    const char* proto_string = rhd.proto == HTTP_1_0 ? "HTTP/1.0"
+                                                     : "HTTP/1.1";
+    
+    std::ostringstream formatter;
+    formatter << rhd.method << " " << rhd.request_uri << " " << proto_string << "\r\n";
+    
+    write_headers(formatter, rhd.headers, content_length);
+    
+    std::string const& r = formatter.str();
+    out->write(r.data(), r.size());
+}
+
+void write(tinfra::io::stream* out, request_data const& rf)
+{
+    write(out, rf.header, rf.content.size());
+    
+    out->write(rf.content.data(), rf.content.size());
+}
+
+void write(tinfra::io::stream* out, response_data const& rd)
+{
+    write(out, rd.header, rd.content.size());
+    
+    out->write(rd.content.data(), rd.content.size());
+}
 
 } } // end namespace tinfra::http
 
