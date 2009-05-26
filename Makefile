@@ -19,7 +19,7 @@ posix_signals: posix_signals.o
 
 list_files_generator: list_files_generator.o
 
-colorizer: colorizer.o tinfra/aio.o http/buffered_aio_adapter.o
+colorizer: colorizer.o tinfra/aio.o tinfra/buffered_aio_adapter.o
 
 callfwd_test: callfwd_test.o callfwd.o
 

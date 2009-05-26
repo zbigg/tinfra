@@ -10,11 +10,11 @@ PROGS=https
 
 all: $(PROGS)
 
-OBJECTS=http.o https.o ../tinfra/connection_handler.o ../tinfra/aio.o ../tinfra/aio_net.o buffered_aio_adapter.o
+OBJECTS=http.o https.o ../tinfra/connection_handler.o ../tinfra/aio.o ../tinfra/aio_net.o ../tinfra/buffered_aio_adapter.o
 
 https: $(OBJECTS)
 
-$(OBJECTS): ../tinfra/*.h http.h buffered_aio_adapter.h
+$(OBJECTS): ../tinfra/*.h http.h
 
 clean:
 	rm -rf *.o $(PROGS)

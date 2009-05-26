@@ -10,7 +10,7 @@
 #include <iostream>
 
 #include "tinfra/aio.h"
-#include "http/buffered_aio_adapter.h"
+#include "tinfra/buffered_aio_adapter.h"
 
 using tinfra::regexp;
 using tinfra::tstring;

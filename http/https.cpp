@@ -16,12 +16,14 @@
 
 #include "tinfra/aio.h"
 #include "tinfra/aio_net.h"
+
+#include "tinfra/buffered_aio_adapter.h"
+
 #include "tinfra/connection_handler.h"
 #include "tinfra/tstring.h"
 
 #include "tinfra/trace.h"
 
-#include "buffered_aio_adapter.h"
 
 #include "http.h"
 
@@ -136,7 +138,7 @@ private:
 	tinfra::aio::buffered_aio_adapter aio_adapter;
 };
 
-void run_sample_client()
+int run_sample_client(int port)
 {
     using tinfra::io::stream;
     using std::auto_ptr;
@@ -165,10 +167,10 @@ void run_sample_client()
 
 
 
-int httpc_main(int argc, char** argv)
+int https_main(int argc, char** argv)
 {
 	tinfra::set_interrupt_policy(tinfra::DEFERRED_SIGNAL);
-	return run_sapmle_client(DEFAULT_PORT);
+	return run_sample_client(DEFAULT_PORT);
 }
 
 TINFRA_MAIN(https_main);
