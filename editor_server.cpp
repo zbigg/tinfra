@@ -3,6 +3,7 @@
 #include <tinfra/cmd.h>
 #include <tinfra/fmt.h>
 #include <tinfra/string.h>
+#include <tinfra
 
 #include <stdlib.h>
 #include <iostream>
@@ -62,7 +63,10 @@ public:
             }
             std::string command = get_editor_command(path);
             std::cerr << "ok: executing " << command << "\n";
-            system(command.c_str());
+            
+            tinfra::spawn_detached(command);
+            std::cerr << "spawned, closing connection\n";
+            client.reset();
         } catch( std::exception const& e) {
             std::cerr << "error during execution: " << e.what() << "\n";
         }
@@ -71,16 +75,21 @@ public:
 
 
 
-int editor_server_main(int, char**)
+int editor_server_main(int argc, char** argv)
 {
     using std::cout;
-    
+    using std::cerr;
+    if( argc == 1 ) {
+        cerr << "provide path to jedit.cmd/bat/anything as first and only parameter\n";
+        return 1;
+    }
+    editor_command = argv[1];
     // TODO: add token randomization    
     server_auth_token = "12345";
     cout << "auth_token=" << server_auth_token << "\n";
     
     editor_server server;
-    server.bind("", 10666);
+    server.bind("", 10667);
     
     server.run();
     return 0;
