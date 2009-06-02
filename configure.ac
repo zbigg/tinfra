@@ -34,9 +34,8 @@ PKG_CHECK_MODULES([TINFRA], [tinfra >= 0.0.1],
         CPPFLAGS="$CPPFLAGS $TINFRA_CFLAGS"
         LIBS="$LIBS $TINFRA_LIBS"
     ],
-    [ AC_MSG_ERROR([
-            tinfra library required
-        ]) ])
+    [AC_MSG_ERROR([tinfra library required] )]
+    )
 
 
 AM_PATH_PCRE(4.5,
