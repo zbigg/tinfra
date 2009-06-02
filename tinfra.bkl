@@ -170,7 +170,6 @@
             tests/test_fatal_exception.cpp
         </sources>
         <library>tinfra</library>
-        <sys-lib>pthread</sys-lib>
     </exe>
     
     <action id="check" depends="unittests">
