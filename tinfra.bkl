@@ -50,6 +50,7 @@
             tinfra/trace.cpp
             tinfra/lazy_protocol.cpp
             tinfra/vfs.cpp
+            tinfra/option.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -117,6 +118,7 @@
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
 	    tinfra/memory_pool.h
+            tinfra/option.h
             
 	    tinfra/test.h
         </files>
@@ -152,6 +154,7 @@
             tests/test_subprocess.cpp
 	    tests/test_memory_pool.cpp
             tests/test_runtime.cpp
+            tests/test_option.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
