@@ -12,20 +12,71 @@
 #include <unittest++/UnitTest++.h>
 
 SUITE(tinfra) {
+    TEST(option_registry_api)
+    {
+        using tinfra::option_registry;
+        option_registry::get();
+    }
+    
     TEST(option_api)
     {
+        using std::string;
         using tinfra::option_list;
-        using tinfra::option_registry;
         using tinfra::option;
-        
-        option_registry::get();
-        
+        using tinfra::option_switch;
+            
         option_list the_list;
         
-        option<int>         opt1(the_list, 99,      "opt-1", "opt_synopsis");
-        option<std::string> opt2(the_list, "akuku", "opt-2", "opt_synopsis");
+        option<int>    opt1(the_list, 99,      "opt-1", "opt_synopsis");
+        option<string> opt2(the_list, "akuku", "opt-2", "opt_synopsis");
+        option_switch  opt3(the_list,          "opt-3", "opt_synopsis");
         
         CHECK( the_list.find_option("opt-1") == &opt1);
         CHECK( the_list.find_option("opt-2") == &opt2);
+        CHECK( the_list.find_option("opt-3") == &opt3);
+        
+        
+        CHECK_EQUAL( opt1.default_value(), opt1.value());
+        CHECK_EQUAL( opt2.default_value(), opt2.value());
+        CHECK_EQUAL( opt3.default_value(), opt3.value());
+        
+        CHECK_EQUAL( 99,              opt1.value());
+        CHECK_EQUAL( string("akuku"), opt2.value());
+        CHECK_EQUAL( false          , opt3.value());
     }
-} // end SUITE(fmt)
+    
+    TEST(option_parse_simple) {
+        using std::vector;
+        using std::string;
+        
+        using tinfra::tstring;
+        using tinfra::option_list;
+        using tinfra::option;
+        using tinfra::option_switch;
+
+        vector<tstring> params;
+        
+        params.push_back("abc");
+        params.push_back("--def=ijk");
+        params.push_back("--foo");
+        params.push_back("--bar=no");
+        params.push_back("xyz");
+        
+        option_list the_list;
+        
+        option<string>  def(the_list, "boom", "def", "foo");
+        option_switch   foo(the_list, "foo", "enable foo");
+        option_switch   bar(the_list, "bar", "disable foo");
+        
+        the_list.parse(params);
+        
+        CHECK_EQUAL(2, params.size());
+        
+        CHECK_EQUAL("abc", params[0]);
+        CHECK_EQUAL("xyz", params[1]);
+        
+        CHECK_EQUAL("ijk", def.value());
+        CHECK_EQUAL(true,  foo.value());
+        CHECK_EQUAL(false, bar.value());
+    }
+} // end SUITE(tinfra)

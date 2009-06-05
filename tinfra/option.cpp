@@ -73,6 +73,23 @@ std::string option_impl::get_synopsis() const
 }
 
 //
+// option_switch
+//
+
+void option_switch::accept(tstring const& input)
+{
+    if( input.size() == 0 ) {
+        this->value_ = !default_value();
+    } else if( input == "yes" ||
+               input == "y" ||
+               input == "1") {
+        this->value_ = true;
+    } else {
+        this->value_ = false;
+    }
+    accepted_ = true;
+}
+//
 // option_list
 //
 
@@ -149,7 +166,10 @@ void option_list::parse(std::vector<tstring>& params)
             
             opt->accept(option_value);
         } else {
-            opt->accept("");
+            if( argument_present ) 
+                opt->accept(option_value);
+            else
+                opt->accept("");
         }
         remove_params(params, i, arguments_eaten);
     }

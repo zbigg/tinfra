@@ -75,9 +75,6 @@ protected:
 
 template <typename T>
 class option: public option_impl {
-    T value_;
-    T default_value_;
-    bool accepted_;
 public:
     option(option_list& ol, T const& default_value, char switch_letter, std::string const& name, std::string const& synopsis): 
         option_impl(ol, switch_letter, name, synopsis),
@@ -137,12 +134,55 @@ public:
         return tmp.str();
     }
     
+    bool accepted() const {
+        return accepted_;
+    }
+    
     T const& value() const {
+        if( ! accepted_ )
+            return default_value_;
         return value_;
     }
     
     T const& default_value() const {
         return default_value_;
+    }
+protected:
+    T value_;
+    bool accepted_;
+private:
+    T default_value_;
+};
+
+class option_switch: public option<bool> {
+public:
+    option_switch(option_list& ol, char switch_letter, std::string const& name, std::string const& synopsis): 
+        option<bool>(ol, false, switch_letter, name, synopsis)
+    {}
+    
+    option_switch(option_list& ol, std::string const& name, std::string const& synopsis): 
+        option<bool>(ol, false, name, synopsis)
+    {}
+
+    option_switch(char switch_letter, std::string const& name, std::string const& synopsis): 
+        option<bool>(false, switch_letter, name, synopsis)
+    {}
+    
+    option_switch(std::string const& name, std::string const& synopsis): 
+        option<bool>(false, name, synopsis)
+    {}
+public:
+    virtual bool needs_argument() const {
+        return false;
+    }
+    virtual void accept(tstring const& value);
+    
+    bool enabled() const {
+        return value() == true;
+    }
+    
+    bool disabled() const {
+        return value() == false;
     }
 };
 
