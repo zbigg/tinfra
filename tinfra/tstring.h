@@ -248,6 +248,26 @@ namespace tstring_detail {
 
 std::ostream& operator<<(std::ostream& out, tstring const& s);
 
+inline bool operator==(tstring const& a, const char* b)
+{
+    return a.cmp(tstring(b)) == 0;
+}
+
+inline bool operator==(const char* a, tstring const& b)
+{
+    return b.cmp(tstring(a)) == 0;
+}
+
+inline bool operator==(tstring const& a, std::string const& b)
+{
+    return a.cmp(tstring(b)) == 0;
+}
+
+inline bool operator==(std::string const& a, tstring const& b)
+{
+    return b.cmp(tstring(a)) == 0;
+}
+
 /// String pool
 ///
 /// tstring class doesn't guarantee that it's string is ended with 0
