@@ -1,7 +1,7 @@
 TINFRA_SRC=/home/zbigg/projects/tinfra/trunk
 
 CXXFLAGS=-O0 -g -Wall -Werror -I$(TINFRA_SRC) -I.
-LDLIBS=-L$(HOME)/lib -g -ltinfra -lpthread -lwsock32
+LDLIBS=-L$(HOME)/lib -g -ltinfra -lwsock32
 CC=g++
 
 LANG=C

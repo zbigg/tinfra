@@ -3,7 +3,7 @@
 #include <tinfra/cmd.h>
 #include <tinfra/fmt.h>
 #include <tinfra/string.h>
-#include <tinfra
+#include <tinfra/subprocess.h>
 
 #include <stdlib.h>
 #include <iostream>
@@ -64,7 +64,7 @@ public:
             std::string command = get_editor_command(path);
             std::cerr << "ok: executing " << command << "\n";
             
-            tinfra::spawn_detached(command);
+            tinfra::start_detached(command);
             std::cerr << "spawned, closing connection\n";
             client.reset();
         } catch( std::exception const& e) {
@@ -95,4 +95,4 @@ int editor_server_main(int argc, char** argv)
     return 0;
 }
 
-TINFRA_MAIN(editor_server_main)
+TINFRA_MAIN(editor_server_main);
