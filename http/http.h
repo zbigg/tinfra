@@ -1,5 +1,5 @@
-#ifndef tinfra_http_h__
-#define tinfra_http_h__
+#ifndef tinfra_http_h_included_
+#define tinfra_http_h_included_
 
 #include <tinfra/tstring.h>
 #include <tinfra/parser.h>
@@ -79,7 +79,6 @@ struct protocol_listener {
         bool last) = 0;
     
     virtual ~protocol_listener(); 
-
 };
 
 class protocol_parser: public tinfra::parser {
@@ -97,6 +96,14 @@ public:
 private:
     bool is_server() const { return mode_ == SERVER; }
     bool is_client() const { return mode_ == CLIENT; }
+    
+    enum {
+        EXPECTING_RESPONSE_LINE,
+        EXPECTING_REQUEST_LINE,
+        EXPECTING_HEADER,
+        EXPECTING_CONTENT,
+        EXPECTING_RESET
+    } state;
     
     // state updaters
     void setup_content_retrieval();
@@ -122,7 +129,7 @@ private:
 
 } } // end namespace tinfra::http
 
-#endif // tinfra_http_h__
+#endif // tinfra_http_h_included_
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
 

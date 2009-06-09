@@ -12,6 +12,7 @@
 #include <string>
 
 #include <tinfra/tstring.h>
+#include "tinfra/trace.h"
 //#include <tinfra/interruptible.h>
 
 #include "interruptible.h"
@@ -28,6 +29,11 @@ public:
     {}
     
 
+    void wait_for_anything(step_method method) {
+        waiting_for_ = ANYTHING;
+        next(method);
+    }
+    
     void wait_for_bytes(size_t count, step_method method);
     
     void wait_for_delimiter(tstring const& delim, step_method method);
@@ -38,6 +44,7 @@ private:
     std::string waiter_delim_;
     enum wait_type {
         NOTHING,
+        ANYTHING,
         COUNT,
         DELIMITER,
     }           waiting_for_;
@@ -51,7 +58,10 @@ int lazy_byte_consumer<IMPL>::call(step_method m, tstring const& input)
 {
     switch( waiting_for_ ) {
     case NOTHING:
+        TINFRA_TRACE_VAR(input);
         throw std::logic_error("lazy_byte_consumer doesn't expect input now");
+    case ANYTHING:
+        break;
         
     case COUNT:
         if( input.size() < waiter_count_ ) {
@@ -61,7 +71,7 @@ int lazy_byte_consumer<IMPL>::call(step_method m, tstring const& input)
         break;
     case DELIMITER:
         {
-            size_t pos =  input.find_first_of(waiter_delim_.data(), waiter_delim_.size());
+            size_t pos =  input.find(waiter_delim_);
             if( pos == tstring::npos ) {
                 this->again();
                 return 0;
@@ -70,6 +80,7 @@ int lazy_byte_consumer<IMPL>::call(step_method m, tstring const& input)
         break;
     }
     waiting_for_ = NOTHING;
+    //TINFRA_TRACE_VAR(input);
     return interruptible<IMPL, int, tstring>::call(m, input);
 }
 
