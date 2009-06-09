@@ -1,6 +1,7 @@
 #include "option.h"
 
 #include "tinfra/tstring.h"
+#include <cstdlib>
 
 namespace tinfra {
 
