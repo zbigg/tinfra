@@ -1,9 +1,10 @@
-#CPPFLAGS=
-#CXXFLAGS=-O2 -pg -Wall
-CXXFLAGS=-O0 -g -Wall -I..
-#CFLAGS=-O3 -g
-#LDLIBS=-g -pg -L$(HOME)/lib -ltinfra
-LDLIBS=-g -ltinfra-test -lunittest++ -ltinfra -ltinfra-regexp -lpthread -lpcre
+
+DEP_CXXFLAGS=$(shell pkg-config tinfra-test tinfra-regexp --cflags)
+DEP_LDLIBS$(shell pkg-config tinfra-test tinfra-regexp --cflags)
+
+CXXFLAGS=-O0 -g -Wall -I.. $(DEP_CXXFLAGS)
+LDLIBS=-g $(DEP_LDLIBS)
+
 CC=g++
 
 PROGS=https test_http
