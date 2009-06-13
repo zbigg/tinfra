@@ -1,6 +1,6 @@
 
 DEP_CXXFLAGS=$(shell pkg-config tinfra-test tinfra-regexp --cflags)
-DEP_LDLIBS$(shell pkg-config tinfra-test tinfra-regexp --cflags)
+DEP_LDLIBS=$(shell pkg-config tinfra-test tinfra-regexp --libs)
 
 CXXFLAGS=-O0 -g -Wall -I.. $(DEP_CXXFLAGS)
 LDLIBS=-g $(DEP_LDLIBS)

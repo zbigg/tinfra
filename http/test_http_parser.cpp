@@ -59,6 +59,17 @@ SUITE(tinfra_http) {
             readed_contents.append(data.data(), data.size());
         }
         
+        bool operator==(mock_http_listener const& other) const {
+            //tinfra::mo_equal(*this, other);
+            return method == other.method &&
+                request_uri == other.request_uri &&
+                protocol_version == other.protocol_version &&
+                status_string == other.status_string && 
+                status == other.status &&
+                headers == other.headers &&
+                readed_contents == other.readed_contents;
+        }
+        
         string method;
         string request_uri;
         string protocol_version;
@@ -66,40 +77,44 @@ SUITE(tinfra_http) {
         string status_string;
         string status;
         
-        vector<pair<string,string> > headers;
+        vector< pair<string,string> > headers;
         
         string readed_contents;
     };
     
     class buffer_parser_feeder {
     public:
-        buffer_parser_feeder(tinfra::tstring const& buffer, size_t step_size=0):
+        buffer_parser_feeder(tinfra::tstring const& buffer, size_t step_size = tinfra::tstring::npos):
             buffer_(buffer),
             index_(0),
-            step_size_(0)
+            step_size_(step_size)
             
         {}
         
         void process(tinfra::parser& p)
         {
-            size_t current_size = tinfra::tstring::npos;
+            size_t current_size = step_size_;
             
             while( index_ < buffer_.size() ) {
-                const tinfra::tstring current_value = buffer_.substr(index_, current_size);
+                const size_t left     = buffer_.size()-index_;
+                const size_t try_size = std::min(left, current_size);
+                
+                const tinfra::tstring current_value = buffer_.substr(index_, try_size);
                 const int processed = p.process_input(current_value);
+                
                 assert(processed >= 0);
-                //if( step_size_ != 0 ) {
-                //    if( processed == 0 && current_size_ +
-                //}
-                 
+                
                 if( processed == 0 ) {
+                    if( try_size != left ) {
+                        current_size += step_size_;
+                        continue;
+                    }
                     p.eof(current_value);
                     return;
                 }
                 
                 index_ += processed;
-                //if( step_size != 0 )
-                //    current_size_ = step_size_;
+                current_size = step_size_;
             }
         }
     private:
@@ -111,15 +126,25 @@ SUITE(tinfra_http) {
     using tinfra::http::protocol_listener;
     using tinfra::http::protocol_parser;
     
-    void feed(protocol_parser::parse_mode pm, protocol_listener& pl,
+    void feed(protocol_parser::parse_mode pm, mock_http_listener& mh,
         std::string const& message)
     {
-        protocol_parser parser(pl, pm);
+        
+        protocol_parser parser(mh, pm);
+
         buffer_parser_feeder feeder(message);
-        buffer_parser_feeder feeder1(message, 1);
-        
-        
         feeder.process(parser);
+        
+        // invoke the same but with feeder
+        // with small chunk size
+        const int chunk_size = 1;
+        mock_http_listener m2;
+        protocol_parser parser_chunked(m2, pm);
+        buffer_parser_feeder feeder_chunked(message, chunk_size);
+        feeder_chunked.process(parser_chunked);
+        
+        // check that two feeders generated same result
+        CHECK(mh == m2);
     }
     
     TEST(request_simple) {
