@@ -1,12 +1,12 @@
 #include "model.h"
 
-#include <wx/dialog.h>
+#include "controls/AdvDialog.h"
 
 namespace tinfra { namespace  gui {
 
 void show(dialog* definition, container* layout)
 {
-    wxDialog* dlg = new wxDialog(NULL, -1, wxT("tinfra::wxgui::test"), 
+    AdvDialog* dlg = new AdvDialog(NULL, -1, wxT("tinfra::wxgui::test"), 
         wxDefaultPosition, wxDefaultSize, 
         wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxMAXIMIZE_BOX | wxMINIMIZE_BOX);
 
