@@ -101,7 +101,7 @@ void option_list::add(option_base* opt)
 
 void remove_params(std::vector<tstring>& from_where, int pos, int how_many = 1)
 {
-    assert(pos + how_many < from_where.size());
+    assert(pos + how_many <= from_where.size());
     
     std::vector<tstring>::iterator remove_begin = from_where.begin()+pos;
     std::vector<tstring>::iterator remove_end   = from_where.begin()+pos + how_many;

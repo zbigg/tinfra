@@ -79,4 +79,24 @@ SUITE(tinfra) {
         CHECK_EQUAL(true,  foo.value());
         CHECK_EQUAL(false, bar.value());
     }
+    
+    TEST(option_bug_remove_last_param) {
+        using std::vector;
+        using std::string;
+        
+        using tinfra::tstring;
+        using tinfra::option_list;
+        using tinfra::option;
+        using tinfra::option_switch;
+
+        vector<tstring> params;
+        
+        params.push_back("--def=ijk");
+        
+        option_list the_list;
+        
+        option<string>  def(the_list, "boom", "def", "foo");
+        the_list.parse(params);
+        CHECK_EQUAL("ijk", def.value());
+    }
 } // end SUITE(tinfra)
