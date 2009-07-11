@@ -299,7 +299,7 @@ struct attr {
 
 struct packet_header {
     uint32  length;
-    byte    type;    
+    byte    type;   	 
     
     TINFRA_DECLARE_STRUCT {
         FIELD(length);
@@ -517,14 +517,14 @@ struct status_packet {
     
     uint32 request_id;
     uint32 status_code;
-    string error_message;
-    string language_tag;
+    //string error_message;
+    ///string language_tag;
     
     TINFRA_DECLARE_STRUCT {
         FIELD(request_id);
         FIELD(status_code);
-        FIELD(error_message);
-        FIELD(language_tag);
+        //FIELD(error_message);
+        //FIELD(language_tag);
     }
 };
 

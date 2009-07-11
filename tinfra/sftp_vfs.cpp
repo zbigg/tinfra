@@ -150,6 +150,7 @@ void check_status(status_packet& response)
         return;
     }
     
+    std::string error_message = "?";
     switch( (int)response.status_code ) {
     // should be ignored here
     case SSH_FX_EOF:
@@ -159,20 +160,20 @@ void check_status(status_packet& response)
     case SSH_FX_NO_SUCH_FILE:
     case SSH_FX_PERMISSION_DENIED:
     case SSH_FX_FAILURE:
-        throw std::runtime_error(tinfra::fmt("sftp(%i): %s") % response.status_code % response.error_message);
+        throw std::runtime_error(tinfra::fmt("sftp(%i): %s") % response.status_code % error_message);
         
     case SSH_FX_OP_UNSUPPORTED:
-        throw std::runtime_error(tinfra::fmt("sftp(%i): %s") % response.status_code % response.error_message);
+        throw std::runtime_error(tinfra::fmt("sftp(%i): %s") % response.status_code % error_message);
         
     
     // fatal failures, protocol end
     case SSH_FX_BAD_MESSAGE:
-        throw std::runtime_error(tinfra::fmt("sftp(%i): %s") % response.status_code % response.error_message);
+        throw std::runtime_error(tinfra::fmt("sftp(%i): %s") % response.status_code % error_message);
     
     case SSH_FX_NO_CONNECTION:
     case SSH_FX_CONNECTION_LOST:
         // protocol violation, abort connection
-        throw std::runtime_error(tinfra::fmt("sftp(%i): %s") % response.status_code % response.error_message);
+        throw std::runtime_error(tinfra::fmt("sftp(%i): %s") % response.status_code % error_message);
     }
 }
 
@@ -560,8 +561,18 @@ public:
     virtual bool exists(const char* name);    
     */
     sftp_vfs(std::string const& target, std::string const& command):
-        base_command(command),
+        sftp_command( (tinfra::fmt("%s %s sftp") % command % target).str() ),
         target(target),
+        ssh(tinfra::subprocess::create()),
+        to_server(0), from_server(0),
+        next_request_id(0)
+    {
+        start();
+    }
+    
+    sftp_vfs(std::string const& command):
+        sftp_command(command),
+        target(""),
         ssh(tinfra::subprocess::create()),
         to_server(0), from_server(0),
         next_request_id(0)
@@ -582,12 +593,11 @@ public:
     
 private:
     void start()
-    {
-        string command = tinfra::fmt("%s %s sftp") % base_command % target;
+    {;
         ssh->set_stdout_mode(tinfra::subprocess::REDIRECT);
         ssh->set_stdin_mode(tinfra::subprocess::REDIRECT);
     
-        ssh->start(command.c_str());
+        ssh->start(sftp_command.c_str());
         
         from_server = ssh->get_stdout();
         to_server   = ssh->get_stdin();
@@ -611,7 +621,7 @@ private:
         return ++next_request_id;
     }
     
-    std::string base_command;
+    std::string sftp_command;
     std::string target;
     
     std::auto_ptr<tinfra::subprocess> ssh;
@@ -624,8 +634,7 @@ private:
 
 auto_ptr<vfs> create(std::string const& sftp_subsystem_command)
 {
-    //return auto_ptr<vfs>(new sftp_vfs(sftp_subsystem_command));
-    return auto_ptr<vfs>();
+    return auto_ptr<vfs>(new sftp_vfs(sftp_subsystem_command));
 }
 
 auto_ptr<vfs> create(std::string const& target, std::string const& ssh_subsystem_command)

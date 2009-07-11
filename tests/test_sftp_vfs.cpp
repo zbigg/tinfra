@@ -19,6 +19,11 @@
 
 SUITE(tinfra_ssh)
 {
+    struct dummy_visitor: tinfra::fs::file_list_visitor {
+        virtual void accept(const tinfra::tstring&)
+        {
+        }
+    };
     TEST(sftp_vfs)
     {
         std::string base_command;
@@ -26,10 +31,13 @@ SUITE(tinfra_ssh)
         base_command = "ssh -s";
         target = "localhost";
         std::auto_ptr<tinfra::vfs> fs;
-        if( base_command.size() > 0 ) {
-            fs = std::auto_ptr<tinfra::vfs>(tinfra::sftp::create(target, base_command));
-            //test_vfs(* fs.get() );
-        }        
+        fs = std::auto_ptr<tinfra::vfs>(tinfra::sftp::create("/usr/lib/sftp-server"));
+        
+        fs->stat("/");
+        
+        dummy_visitor v;
+        fs->list_files("/", v);
+
     }
 }
 
