@@ -13,6 +13,7 @@
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
 #include "tinfra/trace.h"
+#include "tinfra/option.h"
 
 #include <iostream>
 #include <algorithm>
@@ -184,10 +185,15 @@ int test_main(int argc, char** argv)
     TinfraTestReporter reporter;
     UnitTest::TestRunner runner(reporter);
     test_name_list test_names;
-    for(int i = 1; i < argc; ++i ) {
-        if( strncmp(argv[i],"-",1) != 0 ) 
-            test_names.push_back(argv[i]);
+    
+    std::vector<tinfra::tstring> args(argv+1, argv+argc);
+    tinfra::option_registry::get().parse(args);
+    
+    for(int i = 0; i < args.size(); ++i ) {
+        if( args[i][0] != '-' ) 
+            test_names.push_back(args[i].str());
     }
+    
     if( ! test_names.empty() ) {        
         test_name_matcher predicate(test_names);        
         return runner.RunTestsIf(UnitTest::Test::GetTestList(), 0, predicate, 0);
