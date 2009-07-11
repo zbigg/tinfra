@@ -124,7 +124,8 @@ void start_openssh(subprocess* sp, connection_settings const& settings, command_
     }
     if( settings.password.size() > 0  ) {
         use_env = true;
-        env["DISPLAY"] = "dummy";
+        if( env["DISPLAY"] == "") 
+            env["DISPLAY"] = "dummy";
         std::string tmppath = tinfra::path::tmppath();
         
         std::string ssh_ask_pass_path = make_safe_script(
