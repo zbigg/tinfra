@@ -147,11 +147,11 @@ public:
     T const& default_value() const {
         return default_value_;
     }
+private:
+    T default_value_;
 protected:
     T value_;
     bool accepted_;
-private:
-    T default_value_;
 };
 
 class option_switch: public option<bool> {

@@ -195,7 +195,7 @@ thread thread::start(thread_entry entry, void* param )
                            0,  // start immediately
                            &thread_id);
     
-    if( thread_handle == -1 ) // TODO: check this condition
+    if( thread_handle == (uintptr_t)-1 ) // TODO: check this condition
         thread_error("_beginthreadex failed", ::GetLastError());
     te_params.release();
     
