@@ -134,8 +134,8 @@ void mutate(symbol const& sym,  T& value, F& functor)
 
 #define TINFRA_MO_FIELD(a)    f(S::a, a)
     
-#define TINFRA_SYMBOL_DECL(a) namespace S { extern tinfra::symbol a; }
-#define TINFRA_SYMBOL_IMPL(a) namespace S { tinfra::symbol a(#a); }
+#define TINFRA_SYMBOL_DECL(a) namespace S { extern tinfra::symbol a; } extern int TINFRA_SYMBOL_DECL_ ## a
+#define TINFRA_SYMBOL_IMPL(a) namespace S { tinfra::symbol a(#a); } extern int TINFRA_SYMBOL_IMPL_ ## a
 
 } // end namespace tinfra
 
