@@ -50,7 +50,7 @@ inline tinfra::cmd::app& get_app() { return tinfra::cmd::app::get(); }
 #define TINFRA_MAIN(a)                                   \
 int main(int argc, char** argv)                          \
     { return tinfra::cmd::main_wrapper(argc, argv, a); } \
-int __tinfra_main_statement_enforement
+int TINFRA_MAIN_statement_enforement
 
 } // end of namespace tinfra
 

@@ -141,7 +141,11 @@ tinfra::trace::exit_tracer __tinfra_tracer_entry_exit(__FILE__, __LINE__, TINFRA
 
 #define TINFRA_EXIT_TRACE() __tinfra_tracer_entry_exit.set_end_line(__LINE__)
 
-#define TINFRA_MODULE_TRACER(name) namespace { TINFRA_PUBLIC_TRACER(name); tinfra::trace::tracer& __tinfra_tracer_adaptable(name); }
+#define TINFRA_MODULE_TRACER(name) namespace { \
+    TINFRA_PUBLIC_TRACER(name); \
+    tinfra::trace::tracer& __tinfra_tracer_adaptable(name); \
+    } \
+    int TINFRA_MODULE_TRACER_ ## name ## _statement_enforcement
 
 #define TINFRA_PUBLIC_TRACER(name)                   \
 tinfra::trace::auto_register_tracer     name(#name)

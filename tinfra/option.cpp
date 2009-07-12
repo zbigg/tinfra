@@ -99,7 +99,7 @@ void option_list::add(option_base* opt)
     options.push_back(opt);
 }
 
-void remove_params(std::vector<tstring>& from_where, int pos, int how_many = 1)
+void remove_params(std::vector<tstring>& from_where, unsigned pos, unsigned how_many = 1)
 {
     assert(pos + how_many <= from_where.size());
     
@@ -110,7 +110,7 @@ void remove_params(std::vector<tstring>& from_where, int pos, int how_many = 1)
 
 void option_list::parse(std::vector<tstring>& params)
 {
-    int i = 0;
+    unsigned i = 0;
     while( i < params.size()) {
         tstring current = params[i];
         if( current.size() < 2 ) {
