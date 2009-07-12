@@ -136,6 +136,7 @@ public:
     }
     
     std::string  str()   const  { return std::string(tstring::data(), tstring::size()); }
+    operator std::string() const { return str(); }
     
     //operator char const*() const { return data(); }
     
