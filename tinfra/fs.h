@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef tinfra_fs_h_included__
-#define tinfra_fs_h_included__
+#ifndef tinfra_fs_h_included
+#define tinfra_fs_h_included
 
 #include "tinfra/tstring.h"
 #include "tinfra/generator.h"
@@ -104,6 +104,6 @@ void walk(tstring const& start, walker& w);
 
 } } // end namespace tinfra::fs
 
-#endif // tinfra_fs_h_included__
+#endif // tinfra_fs_h_included
 
 

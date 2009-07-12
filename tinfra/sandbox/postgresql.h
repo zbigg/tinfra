@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_postgres_h__
-#define __tinfra_postgres_h__
+#ifndef tinfra_postgres_h_included
+#define tinfra_postgres_h_included
 
 #include <iterator>
 
@@ -96,4 +96,4 @@ void fetch_all(const PGresult* result, std::vector<T>& dest)
 
 } }
 
-#endif /*__tinfra_postgres_h__ */
+#endif /*tinfra_postgres_h_included */

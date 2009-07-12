@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_exeinfo_h__
-#define __tinfra_exeinfo_h__
+#ifndef tinfra_exeinfo_h_included
+#define tinfra_exeinfo_h_included
 
 #include <istream>
 

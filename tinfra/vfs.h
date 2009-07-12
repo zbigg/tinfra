@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_vfs_h__
-#define __tinfra_vfs_h__
+#ifndef tinfra_vfs_h_included
+#define tinfra_vfs_h_included
 
 #include "tinfra/fs.h"
 #include "tinfra/io/stream.h"

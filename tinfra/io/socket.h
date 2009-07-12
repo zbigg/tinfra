@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra__io__socket_h__
-#define __tinfra__io__socket_h__
+#ifndef tinfra_io_socket_h_included
+#define tinfra_io_socket_h_included
 
 #include <string>
 

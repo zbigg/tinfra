@@ -10,8 +10,8 @@
 //   win32 based implementation of threads
 //   STILL NOT READY
 
-#ifndef __tinfra_win32_thread_h__
-#define __tinfra_win32_thread_h__
+#ifndef tinfra_win32_thread_h_included
+#define tinfra_win32_thread_h_included
 
 #define WIN32_LEAN_AND_MEAN
 

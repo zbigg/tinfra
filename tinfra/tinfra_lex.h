@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_lex_h__
-#define __tinfra_lex_h__
+#ifndef tinfra_lex_h_included
+#define tinfra_lex_h_included
 #include <sstream>
 
 #include "tinfra/platform.h"
@@ -248,4 +248,4 @@ void to_string(F const& value, std::ostream& dest) {
 
 } // nemaspace tinfra
 
-#endif // __tinfra_lex_h__
+#endif // tinfra_lex_h_included

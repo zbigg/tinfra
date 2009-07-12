@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_db_h__
-#define __tinfra_db_h__
+#ifndef tinfra_db_h_included
+#define tinfra_db_h_included
 
 #include <istream>
 
@@ -20,5 +20,5 @@ namespace tinfra {
     
 } // end namespace tinfra
 
-#endif // __tinfra_db_h__
+#endif // tinfra_db_h_included
 

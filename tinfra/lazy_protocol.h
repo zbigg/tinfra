@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra__lazy_protocol_h__
-#define __tinfra__lazy_protocol_h__
+#ifndef tinfra_lazy_protocol_h_included
+#define tinfra_lazy_protocol_h_included
 
 #include <stdexcept>
 #include <string>
@@ -35,5 +35,5 @@ private:
 
 } // end namespace tinfra
 
-#endif // __tinfra__lazy_protocol_h__
+#endif // tinfra_lazy_protocol_h_included
 

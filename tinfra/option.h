@@ -1,5 +1,5 @@
-#ifndef tinfra_option_h_included__
-#define tinfra_option_h_included__
+#ifndef tinfra_option_h_included
+#define tinfra_option_h_included
 
 #include "tinfra/tstring.h"
 #include <vector>
@@ -190,4 +190,4 @@ public:
 
 } // end namespace tinfra
 
-#endif // tinfra_option_h_included__
+#endif // tinfra_option_h_included

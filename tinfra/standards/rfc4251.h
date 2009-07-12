@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_rfc4251_h__
-#define __tinfra_rfc4251_h__
+#ifndef tinfra_rfc4251_h_included
+#define tinfra_rfc4251_h_included
 
 #include <string>
 #include "tinfra/symbol.h"
@@ -235,4 +235,4 @@ void deserialize(std::string const& buffer, T& dest)
 
 }} // end namespace rfc4251
 
-#endif // __tinfra_rfc4251_h__
+#endif // tinfra_rfc4251_h_included

@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_trace_h__
-#define __tinfra_trace_h__
+#ifndef tinfra_trace_h_included
+#define tinfra_trace_h_included
 
 #include <vector>
 #include "tinfra/platform.h"

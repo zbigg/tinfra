@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_cmd_h__
-#define __tinfra_cmd_h__
+#ifndef tinfra_cmd_h_included
+#define tinfra_cmd_h_included
 
 #include <string>
 #include <tinfra/tstring.h>

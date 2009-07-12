@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_fs_sandbox_h__
-#define __tinfra_fs_sandbox_h__
+#ifndef tinfra_fs_sandbox_h_included
+#define tinfra_fs_sandbox_h_included
 
 #include <string>
 

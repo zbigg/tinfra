@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra__platform_h__
-#define __tinfra__platform_h__
+#ifndef tinfra_platform_h_included
+#define tinfra_platform_h_included
 
 #ifdef _MSC_VER
 #pragma warning( disable: 4512) // assignment operator could not be generated

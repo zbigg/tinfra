@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef tinfra_symbol_h__
-#define tinfra_symbol_h__
+#ifndef tinfra_symbol_h_included
+#define tinfra_symbol_h_included
 
 #include "tinfra/tstring.h"
 #include "tinfra/thread.h"
@@ -67,6 +67,6 @@ std::ostream& operator <<(std::ostream& dest, symbol const& s);
 
 }
 
-#endif // tinfra_symbol_h__
+#endif // tinfra_symbol_h_included
 
 
