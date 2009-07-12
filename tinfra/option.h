@@ -38,6 +38,8 @@ public:
 
     // processing
     void parse(std::vector<tstring>& params);
+    
+    void print_help(std::ostream& out);
 
     // query
     option_list_t get_options();

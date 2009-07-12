@@ -180,6 +180,27 @@ public:
     }
 };
 
+static void list_available_tests()
+{
+    using UnitTest::TestList;
+    using UnitTest::Test;
+    const TestList& tl = Test::GetTestList();
+    const Test* test = tl.GetHead();
+    
+    std::cout << "Available test cases:\n";
+    
+    while( test ) {
+        std::string full_test_name = fmt("%s::%s") 
+                                     % test->m_details.suiteName 
+                                     % test->m_details.testName;
+        std::cout << "    " << full_test_name << "\n";
+        test = test->next;
+    }
+}
+
+tinfra::option_switch opt_list('l', "test-list", "list available test cases");
+tinfra::option_switch opt_help('h', "help", "show available options");
+
 int test_main(int argc, char** argv)
 {
     TinfraTestReporter reporter;
@@ -187,6 +208,21 @@ int test_main(int argc, char** argv)
     
     std::vector<tinfra::tstring> args(argv+1, argv+argc);
     tinfra::option_registry::get().parse(args);
+    
+    if( opt_help.enabled() ) {
+        using tinfra::path::basename;
+        using tinfra::get_exepath;
+        std::cout <<
+            "Usage: " << basename(get_exepath()) << " [options] [ test_case ... ]\n" <<
+            "Available options:\n";
+        
+        tinfra::option_registry::get().print_help(std::cout);
+        return 0;
+    }
+    if( opt_list.enabled() ) {
+        list_available_tests();
+        return 0;
+    }
     
     test_name_list test_names(args.begin(), args.end());
         
