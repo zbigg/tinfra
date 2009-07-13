@@ -16,7 +16,7 @@ S'pl.reddix.tinfra-regexp'
 p8
 asS'log'
 p9
-S'unittests: fix link order\n'
+S'autoconf+pkg_config fight, who won? ... works\n'
 p10
 sS'author'
 p11
@@ -27,7 +27,7 @@ p13
 NsS'real_ancestors'
 p14
 (lp15
-S'91e6bbf865fd1802ff736eedf1fa446b55b737c7'
+S'faa026027b05c0f731084ce852453a486445365e'
 p16
 asS'tags'
 p17
@@ -38,7 +38,7 @@ p19
 cdatetime
 datetime
 p21
-(S'\x07\xd9\x01\x17\x0c2\x1d\x00\x00\x00'
+(S'\x07\xd9\x06\x02\x08+3\x00\x00\x00'
 cvcpx.tzinfo
 _UTC
 p22
@@ -72,7 +72,7 @@ sS'unidiff'
 p36
 NsS'new_revision'
 p37
-S'faa026027b05c0f731084ce852453a486445365e'
+S'be64d8870142b4d0dc54c1b232ae2e000cffef8d'
 p38
 sS'action_kind'
 p39
@@ -80,29 +80,11 @@ S'UPD'
 p40
 sS'old_name'
 p41
-Nsbag1
-(g28
-g3
-NtRp42
-(dp43
-g31
-Nsg32
-Nsg33
-I00
-sg34
-S'tinfra-regexp.bkl'
-p44
-sg36
-Nsg37
-g38
-sg39
-g40
-sg41
 NsbasS'lin_ancestor'
-p45
-S'91e6bbf865fd1802ff736eedf1fa446b55b737c7'
-p46
+p42
+S'faa026027b05c0f731084ce852453a486445365e'
+p43
 sS'revision'
-p47
+p44
 g38
 sb.N.
