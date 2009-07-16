@@ -42,4 +42,16 @@ namespace tinfra {
 	using ::intptr_t;
 }
 
+#ifdef __GNUC__
+
+#define TINFRA_LIKELY(x)       __builtin_expect((x),true)
+#define TINFRA_UNLIKELY(x)     __builtin_expect((x),false)
+
+#else
+
+#define TINFRA_LIKELY(x)       (x)
+#define TINFRA_UNLIKELY(x)     (x)
+
 #endif
+
+#endif // tinfra_platform_h_included
