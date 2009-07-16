@@ -67,6 +67,13 @@ public:
     ~shared_ptr() {
         release();
     }
+    void swap(shared_ptr<T>& other)
+    {
+        TINFRA_TRACE_MSG("tinfra::shared_ptr: swap");
+        using std::swap;
+        swap(ptr_, other.ptr_);
+        swap(refcount_.ref_, other.refcount_.ref_);
+    }
 public:
     reference_count const& _tinfra_priv_refcount_() const {
         return refcount_;
@@ -75,6 +82,7 @@ private:
     void release() {
         if( refcount_.detach() ) {
             TINFRA_TRACE_MSG("tinfra::shared_ptr: releasing");
+            TINFRA_TRACE_VAR(this->ptr_);
             delete ptr_;
             ptr_ = 0;
         }
@@ -83,6 +91,18 @@ private:
     T*    ptr_;
     reference_count refcount_;
 };
+
+} // end namespace tinfra
+
+namespace std {
+template <typename T>
+void swap(tinfra::shared_ptr<T>& a, tinfra::shared_ptr<T>& b)
+{
+    a.swap(b);
+}
+} // end namespace std
+
+namespace tinfra {
 
 //
 // implementation
@@ -120,15 +140,24 @@ template <typename T>
 shared_ptr<T>& shared_ptr<T>::operator=(shared_ptr<T> const& p)
 {
     TINFRA_TRACE_MSG("tinfra::shared_ptr: operator=");
+    TINFRA_TRACE_VAR(this->ptr_);
+    int rc = refcount_.ref_ ? *refcount_.ref_ : -1;
+    TINFRA_TRACE_VAR(rc);
     if( this == &p )
         return *this;
     
-    release();
+    // protect this value so it's deleted AFTER p
+    // is correctly referenced
+    // [ http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2003/n1450.html, section D, example 3 ]
+    shared_ptr<T> tmp; 
+    swap(tmp);
     
     ptr_ = p.ptr_;
     refcount_ = p.refcount_;
     
     refcount_.attach();
+    TINFRA_TRACE_MSG("tinfra::shared_ptr: operator=, attached:");
+    TINFRA_TRACE_VAR(this->ptr_);
     
     return *this;
 }
@@ -140,11 +169,11 @@ shared_ptr<T>& shared_ptr<T>::operator=(shared_ptr<Y> const& p)
     if( this == &p )
         return *this;
     
-    release();
+    shared_ptr<T> tmp; 
+    swap(tmp);
     
     ptr_ = p.get();
     refcount_ = p._tinfra_priv_refcount_;
-    
     refcount_.attach();
     
     return *this;
@@ -164,6 +193,8 @@ inline bool reference_count::detach() {
 }
 
 } // end namespace tinfra
+
+
 
 #endif // __tinfra_shared_ptr_h__
 

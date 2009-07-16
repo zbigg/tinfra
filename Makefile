@@ -1,7 +1,7 @@
 TINFRA_SRC=/home/zbigg/projects/tinfra/trunk
 
-CXXFLAGS=-O0 -g -Wall -Werror -I$(TINFRA_SRC) -I.
-LDLIBS=-L$(HOME)/lib -g -ltinfra -lwsock32
+CXXFLAGS=-O2 -g -Wall -Werror -I$(TINFRA_SRC) -I.
+LDLIBS=-L$(HOME)/lib -g -ltinfra-test -ltinfra -lwsock32 -lunittest++
 CC=g++
 
 LANG=C
@@ -25,15 +25,14 @@ callfwd_test: callfwd_test.o callfwd.o
 
 callfwd_test.o callfwd.o: callfwd.h callfwd_detail.h
 
-ssh.o test_ssh.o: ssh.h
-
 test_gui: test_gui.o tinfra/gui/context.o
 
-test: test_ssh.o test_main.o ssh.o
-	$(CC) -o $@ $^ -ltinfra-test -lunittest++ $(LDLIBS)
-	
+unittests: unittests.o tests/shared_ptr_test.o
+
+tests/shared_ptr_test.o: tinfra/shared_ptr.h
+
 async_fs_poc: async_fs_poc.o callfwd.o
 
 clean:
-	rm -rf *.o ftt http/*.o tinfra/*.o
+	rm -rf *.o ftt http/*.o tinfra/*.o tests/*.o
 

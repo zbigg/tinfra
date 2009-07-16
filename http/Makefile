@@ -15,7 +15,7 @@ OBJECTS=http.o https.o ../tinfra/connection_handler.o ../tinfra/aio.o ../tinfra/
 
 https: $(OBJECTS)
 
-test_http: http.o test_http_parser.o ../test_main.o
+test_http: http.o test_http_parser.o ../unittests.o
 	$(CC) $^ $(LDFLAGS) $(LDLIBS) -o $@
 
 $(OBJECTS): ../tinfra/*.h http.h
