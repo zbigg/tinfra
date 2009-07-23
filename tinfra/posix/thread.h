@@ -11,8 +11,8 @@
 //
 
 
-#ifndef __tinfra_posix_thread_h__
-#define __tinfra_posix_thread_h__
+#ifndef tinfra_posix_thread_h_included
+#define tinfra_posix_thread_h_included
 
 #include <tinfra/platform.h>
 #include <tinfra/runner.h>
@@ -101,7 +101,7 @@ public:
 } } // end namespace tinfra
 
 
-#endif // #ifndef __tinfra_posix_thread_h__
+#endif // #ifndef tinfra_posix_thread_h_included
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
 

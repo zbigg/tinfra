@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_trace_h__
-#define __tinfra_trace_h__
+#ifndef tinfra_trace_h_included
+#define tinfra_trace_h_included
 
 #include <vector>
 #include "tinfra/platform.h"
@@ -124,10 +124,10 @@ extern tinfra::trace::auto_register_tracer __tinfra_global_tracer;
 #define TINFRA_TRACER __tinfra_tracer_adaptable
 
 
-#define TINFRA_TRACE_MSG(msg) do { if(TINFRA_TRACER.is_enabled()) { \
+#define TINFRA_TRACE_MSG(msg) do { if(TINFRA_UNLIKELY(TINFRA_TRACER.is_enabled())) { \
   TINFRA_TRACER.trace(__FILE__, __LINE__, TINFRA_SHORT_FUNCTION, (msg)); }} while(false)
 
-#define TINFRA_TRACE_VAR(name) do { if( TINFRA_TRACER.is_enabled()) {    \
+#define TINFRA_TRACE_VAR(name) do { if( TINFRA_UNLIKELY(TINFRA_TRACER.is_enabled())) {    \
   std::ostringstream _ojejuku_kejku_akuku;                  \
   _ojejuku_kejku_akuku << #name << " = '" << (name) << "'";  \
   TINFRA_TRACE_MSG(_ojejuku_kejku_akuku.str().c_str()); }} while(false)

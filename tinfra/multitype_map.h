@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_multitype_map__
-#define __tinfra_multitype_map__
+#ifndef tinfra_multitype_map_h_included
+#define tinfra_multitype_map_h_included
 
 #include <map>
 #include <typeinfo>

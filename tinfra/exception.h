@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_exception_h_
-#define __tinfra_exception_h_
+#ifndef tinfra_exception_h_included
+#define tinfra_exception_h_included
 
 #include "tinfra/runtime.h"
 

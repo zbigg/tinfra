@@ -10,8 +10,8 @@
 //   common definition for tinfra threads
 //
 
-#ifndef __tinfra_thread_h__
-#define __tinfra_thread_h__
+#ifndef tinfra_thread_h_included
+#define tinfra_thread_h_included
 
 #include <tinfra/platform.h>
 #include <tinfra/runner.h>
@@ -99,7 +99,7 @@ public:
 
 } } // end namespace tinfra::thread
 
-#endif // #ifdef __tinfra_thread_h__
+#endif // #ifdef tinfra_thread_h_included
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
 

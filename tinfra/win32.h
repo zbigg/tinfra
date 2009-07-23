@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef tinfra_win32_h_included__
-#define tinfra_win32_h_included__
+#ifndef tinfra_win32_h_included
+#define tinfra_win32_h_included
 
 #include <tinfra/tstring.h>
 
@@ -31,4 +31,4 @@ std::string make_utf8(wchar_t const* str);
 
 } } // end namespace tinfra::win32
 
-#endif // tinfra_win32_h_included__
+#endif // tinfra_win32_h_included

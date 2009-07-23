@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_queue_h__
-#define __tinfra_queue_h__
+#ifndef tinfra_queue_h_included
+#define tinfra_queue_h_included
 
 #include <list>
 #include "tinfra/thread.h"
@@ -54,7 +54,7 @@ public:
 
 } // end namespace tinfra
 
-#endif // __tinfra_queue_h__
+#endif // tinfra_queue_h_included
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
 

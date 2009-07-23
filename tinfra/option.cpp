@@ -1,6 +1,8 @@
 #include "option.h"
 
 #include "tinfra/tstring.h"
+#include "tinfra/trace.h"
+
 #include <cstdlib>
 
 namespace tinfra {
@@ -117,35 +119,49 @@ void option_list::parse(std::vector<tstring>& params)
             i+=1;
             continue;
         }
-        
-        if( std::strncmp(current.data(), "--", 2) != 0 )  {
+
+        tstring option_name;
+        tstring option_value;
+        bool argument_present;
+        option_base* opt;
+        if( std::strncmp(current.data(), "--", 2) == 0 )  {
+            if( current.size() == 2 ) {
+                remove_params(params,i,1);
+                // -- is an end of parameters
+                break;
+            }
+            
+            // parse only long style, gnu-like options (--foo-bar, --foo-bar=AAA, --foo-bar AAA)
+            current = current.substr(2);
+            
+            size_t eq_pos = current.find_first_of('=');
+            argument_present = (eq_pos != tstring::npos);
+            if( argument_present ) {
+                // and option=argument pair
+                option_name  = current.substr(0,eq_pos);
+                option_value = current.substr(eq_pos+1);
+            } else {
+                // only option, no argument
+                option_name = current;
+            }
+            opt = find_by_name(option_name);
+        } else if( current[0] == '-' ) {
+            // parse short options:
+            // -I
+            // -Iparam
+            // -I param
+            const char shortcut = current[1];
+            
+            option_value = current.substr(2);
+            argument_present = (option_value.size() != 0);
+            opt = find_by_shortcut(shortcut);
+	} else {
             i+=1;
             continue;
         }
         
-        if( current.size() == 2 ) {
-            remove_params(params,i,1);
-            // -- is an end of parameters
-            break;
-        }
-        
-        // currently we support only long style, gnu-like options (--foo-bar)
-        current = current.substr(2);
-        tstring option_name;
-        tstring option_value;
-        
-        size_t eq_pos = current.find_first_of('=');
-        const bool argument_present = (eq_pos != tstring::npos);
-        if( argument_present ) {
-            // and option=argument pair
-            option_name  = current.substr(0,eq_pos);
-            option_value = current.substr(eq_pos+1);
-        } else {
-            // only option, no argument
-            option_name = current;
-        }
         int arguments_eaten = 1;
-        option_base* opt = find_option(option_name);
+        
         if( opt == 0 ) {
             // ignore unknown option
             // TODO, invent other strategy for unknown options
@@ -176,7 +192,31 @@ void option_list::parse(std::vector<tstring>& params)
     }
 }
 
-option_base* option_list::find_option(tstring const& name)
+void option_list::print_help(std::ostream& out)
+{
+    for(option_list_t::const_iterator i = options.begin(); i != options.end(); ++i) 
+    {
+        const option_base* opt = *i;
+        out << "    ";
+        
+        
+        // TODO:
+        // switch_letter is not yet supported so don't show it to user
+        /*
+        const char switch_letter =  opt->get_switch_letter();
+        if( switch_letter != option_base::NO_SWITCH )
+            out << "-" << switch_letter << ", ";
+        */
+        
+        out << "--" << opt->get_name();
+        if( opt->needs_argument() ) {
+            out << " ARG";
+        }
+        
+        out << "\t" << opt->get_synopsis() << "\n";
+    }
+}
+option_base* option_list::find_by_name(tstring const& name)
 {
     for(option_list_t::const_iterator i = options.begin(); i != options.end(); ++i) 
     {
@@ -186,6 +226,18 @@ option_base* option_list::find_option(tstring const& name)
             return opt;
         
         // TODO: add - and _ insensitive search
+    }
+    return 0;
+}
+
+option_base* option_list::find_by_shortcut(char shortcut)
+{
+    for(option_list_t::const_iterator i = options.begin(); i != options.end(); ++i) 
+    {
+        option_base* opt = *i;
+        
+        if( shortcut == opt->get_switch_letter() ) 
+            return opt;
     }
     return 0;
 }
@@ -214,3 +266,6 @@ option_list& option_registry::get()
 }
 
 } // end namespace tinfra
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+

@@ -1,5 +1,5 @@
-#ifndef tinfra_option_h_included__
-#define tinfra_option_h_included__
+#ifndef tinfra_option_h_included
+#define tinfra_option_h_included
 
 #include "tinfra/tstring.h"
 #include <vector>
@@ -38,10 +38,13 @@ public:
 
     // processing
     void parse(std::vector<tstring>& params);
+    
+    void print_help(std::ostream& out);
 
     // query
     option_list_t get_options();
-    option_base*  find_option(tstring const& name);
+    option_base*  find_by_name(tstring const& name);
+    option_base*  find_by_shortcut(char c);
 private:
     option_list_t options;
 };
@@ -186,6 +189,83 @@ public:
     }
 };
 
+template <typename T>
+class list_option: public option_impl {
+public:
+    list_option(option_list& ol, char switch_letter, std::string const& name, std::string const& synopsis): 
+        option_impl(ol, switch_letter, name, synopsis),
+        accepted_(false)
+    {}
+    
+    list_option(option_list& ol, std::string const& name, std::string const& synopsis): 
+        option_impl(ol, name, synopsis),
+        accepted_(false)
+    {}
+
+    list_option(char switch_letter, std::string const& name, std::string const& synopsis): 
+        option_impl(switch_letter, name, synopsis),
+        accepted_(false)
+    {}
+    
+    list_option(std::string const& name, std::string const& synopsis): 
+        option_impl(name, synopsis),
+        accepted_(false)
+    {}
+
+    virtual void accept(tstring const& value)
+    {
+        std::istringstream fmt(value.str());
+        T tmp_val;
+        fmt >> tmp_val;
+        // TODO: check for correctnes of input
+        //if( !fmt ) {
+        //    return;
+        //}
+        accepted_ = true;
+        value_.push_back(tmp_val);
+    }
+    
+    virtual std::string value_as_string() const {
+        if( accepted_ ) {
+            std::ostringstream tmp;
+            for(int i = 0; i < value_.size(); ++i ) {
+                if( i > 0 )
+                    tmp << ", ";
+                tmp << value_[i];
+            }
+            return tmp.str();
+        } else {
+            return default_as_string();
+        }
+    }
+    
+    virtual std::string default_as_string() const {
+        return "(none)";
+    }
+    
+    virtual bool needs_argument() const {
+        return true;
+    }
+    
+    std::vector<T> const& value() const {
+        return value_;
+    }
+    
+    std::vector<T> default_value() const {
+        return std::vector<T>();
+    }
+    
+    bool accepted() const {
+        return accepted_;
+    }
+private:
+    std::vector<T> value_;
+    bool           accepted_;
+};
+
 } // end namespace tinfra
 
-#endif // tinfra_option_h_included__
+#endif // tinfra_option_h_included
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+

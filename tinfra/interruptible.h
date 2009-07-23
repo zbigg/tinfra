@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_interruptible_h__
-#define __tinfra_interruptible_h__
+#ifndef tinfra_interruptible_h_included
+#define tinfra_interruptible_h_included
 
 #include <stdexcept>
 
@@ -75,4 +75,4 @@ private:
 
 } // end namespace tinfra
 
-#endif // __tinfra_interruptible_h__
+#endif // tinfra_interruptible_h_included

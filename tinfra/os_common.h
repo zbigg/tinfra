@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_os_common_h__
-#define __tinfra_os_common_h__
+#ifndef tinfra_os_common_h_included
+#define tinfra_os_common_h_included
 
 namespace tinfra {
     

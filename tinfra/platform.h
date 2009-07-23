@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra__platform_h__
-#define __tinfra__platform_h__
+#ifndef tinfra_platform_h_included
+#define tinfra_platform_h_included
 
 #ifdef _MSC_VER
 #pragma warning( disable: 4512) // assignment operator could not be generated
@@ -42,4 +42,16 @@ namespace tinfra {
 	using ::intptr_t;
 }
 
+#ifdef __GNUC__
+
+#define TINFRA_LIKELY(x)       __builtin_expect((x),true)
+#define TINFRA_UNLIKELY(x)     __builtin_expect((x),false)
+
+#else
+
+#define TINFRA_LIKELY(x)       (x)
+#define TINFRA_UNLIKELY(x)     (x)
+
 #endif
+
+#endif // tinfra_platform_h_included

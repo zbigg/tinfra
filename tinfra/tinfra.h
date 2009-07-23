@@ -7,8 +7,8 @@
 
 // tinfra.h
 
-#ifndef __tinfra_h__
-#define __tinfra_h__
+#ifndef tinfra_h_included
+#define tinfra_h_included
 
 
 #include "tinfra/platform.h"

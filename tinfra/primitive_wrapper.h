@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_primitive_wrapper_h__
-#define __tinfra_primitive_wrapper_h__
+#ifndef tinfra_primitive_wrapper_h_included
+#define tinfra_primitive_wrapper_h_included
 
 #include <ostream>
 
@@ -57,4 +57,4 @@ PRIMITIVE_INTEGER_WRAPPER(unsigned long long, uint64);
 
 }} // end namespace tinfra::primitive_wrapper
 
-#endif // __tinfra_primitive_wrapper_h__
+#endif // tinfra_primitive_wrapper_h_included

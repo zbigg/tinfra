@@ -5,8 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_subprocess_h__
-#define __tinfra_subprocess_h__
+#ifndef tinfra_subprocess_h_included
+#define tinfra_subprocess_h_included
 
 #include "tinfra/platform.h"
 
@@ -107,4 +107,4 @@ void start_detached(tstring const& command, environment_t const& env);
 
 } // end of namespace tinfra
 
-#endif // #ifndef __tinfra_subprocess_h__
+#endif // #ifndef tinfra_subprocess_h_included
