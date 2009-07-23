@@ -31,9 +31,9 @@ SUITE(tinfra) {
         option<string> opt2(the_list, "akuku", "opt-2", "opt_synopsis");
         option_switch  opt3(the_list,          "opt-3", "opt_synopsis");
         
-        CHECK( the_list.find_option("opt-1") == &opt1);
-        CHECK( the_list.find_option("opt-2") == &opt2);
-        CHECK( the_list.find_option("opt-3") == &opt3);
+        CHECK( the_list.find_by_name("opt-1") == &opt1);
+        CHECK( the_list.find_by_name("opt-2") == &opt2);
+        CHECK( the_list.find_by_name("opt-3") == &opt3);
         
         
         CHECK_EQUAL( opt1.default_value(), opt1.value());
@@ -111,13 +111,16 @@ SUITE(tinfra) {
         
         vector<tstring> params;
         
-        params.push_back("--def=1");
-        params.push_back("--def=2");
-        params.push_back("--def=3");
+        params.push_back("--include");
+        params.push_back("1");
+        params.push_back("--include=2");
+        params.push_back("-I3");
+        params.push_back("-I");
+        params.push_back("4");
         
         option_list the_list;
         
-        list_option<int>  def(the_list, "def", "synopsis");
+        list_option<int>  def(the_list, 'I', "include", "synopsis");
         
         CHECK_EQUAL( "synopsis", def.get_synopsis());
         CHECK( def.value().size() == 0 );
@@ -128,11 +131,12 @@ SUITE(tinfra) {
         
         CHECK(def.accepted());
         
-        CHECK_EQUAL(3, def.value().size());
+        CHECK_EQUAL(4, def.value().size());
         
         CHECK_EQUAL(1, def.value()[0]);
         CHECK_EQUAL(2, def.value()[1]);
         CHECK_EQUAL(3, def.value()[2]);
+        CHECK_EQUAL(4, def.value()[3]);
         
     }
 } // end SUITE(tinfra)

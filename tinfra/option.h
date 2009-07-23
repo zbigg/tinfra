@@ -43,7 +43,8 @@ public:
 
     // query
     option_list_t get_options();
-    option_base*  find_option(tstring const& name);
+    option_base*  find_by_name(tstring const& name);
+    option_base*  find_by_shortcut(char c);
 private:
     option_list_t options;
 };
