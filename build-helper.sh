@@ -29,16 +29,37 @@ distclean() {
     mtn ls unknown
 }
 
+
+coverage() {
+    covname=coverage.lcov
+    lcov --directory . --zerocounters
+    ./unittests
+    lcov --directory . --capture --output-file ${covname}
+    lcov --remove ${covname} "lib/gcc/**" -o ${covname}
+    lcov --remove ${covname} "unittest++/**" -o ${covname}
+    rm -rf covresults
+    genhtml -p $(pwd) -o covresults ${covname}
+}
+
 usage() {
     cat <<EOF
 usage: build-helper command options
 
 commands:
-    prepare     prepare build system (invoke bakefile, autotools if needed)
-    help        help on this tool
+    prepare       prepare build system (invoke bakefile, autotools if needed)
+    distclean     clean as much as possible (bakefile, autoconf, aclocal, .... output)
+    
+    conf-devel    configure for devel (-g -O0 -Wall -Wextra ...)
+    conf-coverage configure for coverage tests (devel + -fprofile-arcs -ftest-coverage)
+    
+    coverage      run unittests and generate coverage report using lcov
+    help          help on this tool
 EOF
 }
-case "$1" in
+
+action="$1"
+shift
+case "${action}" in
     --help|help)
         usage
         ;;
@@ -48,6 +69,18 @@ case "$1" in
     distclean)
         distclean
         ;;
+        
+    conf-devel)
+        CXXFLAGS="-g -O0 -Wall -Wextra" ./configure "$@"
+        ;;
+    conf-coverage)
+        CXXFLAGS="-fprofile-arcs -ftest-coverage -O0 -g -Wall -Wextra" LDFLAGS="-fprofile-arcs -ftest-coverage" ./configure "$@"
+        ;;
+        
+    coverage)
+        coverage
+        ;;
+    
     *)
         usage >&2
         exit 1
