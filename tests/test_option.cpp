@@ -99,4 +99,43 @@ SUITE(tinfra) {
         the_list.parse(params);
         CHECK_EQUAL("ijk", def.value());
     }
+    
+    TEST(option_list_option)
+    {
+        using std::vector;
+        using std::string;
+        
+        using tinfra::tstring;
+        using tinfra::option_list;
+        using tinfra::list_option;
+        
+        vector<tstring> params;
+        
+        params.push_back("--def=1");
+        params.push_back("--def=2");
+        params.push_back("--def=3");
+        
+        option_list the_list;
+        
+        list_option<int>  def(the_list, "def", "synopsis");
+        
+        CHECK_EQUAL( "synopsis", def.get_synopsis());
+        CHECK( def.value().size() == 0 );
+        
+        the_list.parse(params);
+        
+        CHECK_EQUAL(0, params.size());
+        
+        CHECK(def.accepted());
+        
+        CHECK_EQUAL(3, def.value().size());
+        
+        CHECK_EQUAL(1, def.value()[0]);
+        CHECK_EQUAL(2, def.value()[1]);
+        CHECK_EQUAL(3, def.value()[2]);
+        
+    }
 } // end SUITE(tinfra)
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+
