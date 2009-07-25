@@ -1,4 +1,7 @@
-#include "callfwd.h"
+#include <unittest++/UnitTest++.h>
+
+
+#include "tinfra/callfwd.h"
 
 #include <iostream>
 #include <sstream>
@@ -9,7 +12,6 @@ struct signal_type {};
 struct shutdown_signal: public signal_type {};
 struct info_signal: public signal_type {};
 
-#define LOG(w, e) std::cerr << #w ": " << e << std::endl;
 struct my_server {
     bool shutdown;
     int  readed;
@@ -22,21 +24,15 @@ struct my_server {
     
     void operator()(shutdown_signal)
     {
-        LOG(my_server_msg, "shutdown_signal received");
         shutdown = true;
     }
     
     void operator()(info_signal)
     {
-        LOG(my_server_msg, "info_signal received");
-        
-        LOG(my_server_info, "readed: " << readed );
-        LOG(my_server_info, "shutdown: " << (int)shutdown );
     }
     
     void operator()(const std::string& input)
     {
-        LOG(my_server_msg, "input received");
         readed += input.size();
     }
 };
@@ -123,7 +119,6 @@ using tinfra::tstring;
 template <typename IMPL>
 void foo(tstring const& name, IMPL& target)
 {
-    LOG(foo-start, name);
     for(int i = 0; i < 20; ++i ) {
         if( (i % 5) == 0 ) 
             target(info_signal());
@@ -131,39 +126,36 @@ void foo(tstring const& name, IMPL& target)
         target(akuku);
     }
     target(shutdown_signal());
-    LOG(foo-end, name);
 }
 
-int main()
-{
+SUITE(tinfra) {
+    // TODO: add asserions about actual work
+    // Currently these test check only API of
+    // - callfwd::delegator
+    // - callfwd::process
+    // - callfwd::call_sender
     
-    {
-        
-        my_server r;
-        foo("direct", r);
-    }
-    
+    TEST(callfwd_delegator)
     {
         my_server r;
         callfwd::call_queue q;
         callfwd::delegator<my_server> cf(q);
         foo("call_forwarder", cf);
     
-        LOG(main, "replaying");
         while(! r.shutdown ) {
             callfwd::process(q, r);
         }
+        
+        // TODO: add actual checks to this test
     }
+    
+    TEST(callfwd_send_receive)
     {
         std::ostringstream bufout;
         dummy_protocol::writer w(bufout);
         callfwd::call_sender<dummy_protocol::writer> snd(w);
         foo("send", snd);
-        
-        std::cout << "RECORDED\n" << bufout.str();
-        
-        std::cout << "REPLAYING\n";
-        
+                
         std::istringstream bufin(bufout.str());
         dummy_protocol::reader source(bufin);
         
@@ -177,6 +169,6 @@ int main()
         while( !srv.shutdown ) {
             callfwd::process(source, dispatcher, srv);
         }
+        // TODO: add actual checks to this test
     }
-    
 }

@@ -27,7 +27,7 @@ callfwd_test.o callfwd.o: callfwd.h callfwd_detail.h
 
 test_gui: test_gui.o tinfra/gui/context.o
 
-unittests: unittests.o tests/shared_ptr_test.o tests/runner_test.o
+unittests: unittests.o tests/shared_ptr_test.o tests/runner_test.o tests/callfwd_test.o tinfra/callfwd.o
 
 tests/shared_ptr_test.o: tinfra/shared_ptr.h
 tests/runner_test.o: tinfra/thread_pool.h
