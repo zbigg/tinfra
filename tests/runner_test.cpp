@@ -12,6 +12,9 @@
 #include <unittest++/UnitTest++.h>
 
 SUITE(tinfra) {
+    
+    TINFRA_MODULE_TRACER(runner_test);
+    
     using tinfra::runner;
     using tinfra::runnable;
     using tinfra::runnable_ptr;
@@ -23,22 +26,36 @@ SUITE(tinfra) {
 	    }
     };
     
+    tinfra::thread::monitor finish_monitor;
+    
     struct basic_recursive_job: public runnable {
         runner* parent_runner;
         int     n;
         static int runs;
+        static int finished;
+        tinfra::shared_ptr<std::string> foo;
         virtual void do_run()
         {
-            runs++;
-            if( n == 0 )
-                return;
+            {
+                tinfra::thread::synchronizator sss(finish_monitor);
+                
+                if( n == 0 ) {
+                    sss.signal();
+                    //TINFRA_TRACE_MSG("finished!");
+                    finished = 1;
+                    return;
+                }
+                runs++;
+            }
             basic_recursive_job next_job;
             next_job.parent_runner = parent_runner;
             next_job.n = n-1;
+            next_job.foo = foo;
             (*parent_runner)( next_job );
         }
     };
     int basic_recursive_job::runs = 0;
+    int basic_recursive_job::finished = 0;
     
     TEST(sequential_runner)
     {
@@ -46,22 +63,42 @@ SUITE(tinfra) {
         
         basic_recursive_job job;
         job.parent_runner = &runner;
-        job.n = 5;
+        job.n = 1243;
+        job.foo = tinfra::shared_ptr<std::string>(new std::string("jedziekonpobetonieitamsiatamadffhekfhkjdshfkjdhsfegwfyegfe"));
         basic_recursive_job::runs = 0;
+        basic_recursive_job::finished = 0;
         runner(job);
-        CHECK_EQUAL(6, basic_recursive_job::runs);
+        {
+            tinfra::thread::synchronizator sss(finish_monitor);
+            while( !basic_recursive_job::finished ) {
+                sss.wait();
+            }
+        }
+        CHECK_EQUAL(job.n, basic_recursive_job::runs);
     }
-    /*
-        tinfra::shared_ptr is not thread safe yet!!!
-        so disable these tests
+    
+     //   tinfra::shared_ptr is not thread safe yet!!!
+     //   so disable these tests
     TEST(thread_runner)
     {
         tinfra::thread_runner runner;
         
         basic_recursive_job job;
         job.parent_runner = &runner;
-        job.n = 5; 
+        job.n = 120; 
+        {
+            tinfra::thread::synchronizator sss(finish_monitor);
+            basic_recursive_job::runs = 0;
+            basic_recursive_job::finished = 0;
+        }       
         runner(job);
+        {
+            tinfra::thread::synchronizator sss(finish_monitor);
+            while( !basic_recursive_job::finished ) {
+                sss.wait();
+            }
+        }
+        CHECK_EQUAL(job.n, basic_recursive_job::runs);
     }
     
     TEST(static_thread_pool_runner)
@@ -70,9 +107,22 @@ SUITE(tinfra) {
         
         basic_recursive_job job;
         job.parent_runner = &runner;
-        job.n = 20; 
+        job.n = 120; 
+        {
+            tinfra::thread::synchronizator sss(finish_monitor);
+            basic_recursive_job::runs = 0;
+            basic_recursive_job::finished = 0;
+        }
         runner(job);
-    }*/
+        
+        {
+            tinfra::thread::synchronizator sss(finish_monitor);
+            while( !basic_recursive_job::finished ) {
+                sss.wait();
+            }
+            CHECK_EQUAL(job.n, basic_recursive_job::runs);
+        }
+    }
 }
 
 namespace tinfra {
@@ -82,5 +132,7 @@ runnable::~runnable() {}
 sequential_runner::~sequential_runner() {}
 
 };
+
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+
 

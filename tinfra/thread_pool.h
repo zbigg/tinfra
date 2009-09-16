@@ -64,7 +64,7 @@ public:
         do_run(ptmp);
     }
 private:
-    virtual void do_run(runnable_ptr) = 0;
+    virtual void do_run(runnable_ptr const&) = 0;
 };
 
 class sequential_runner: public runner {
@@ -75,7 +75,7 @@ public:
     }
     ~sequential_runner();
 private:
-    void do_run(runnable_ptr p)
+    void do_run(runnable_ptr const& p)
     {
         enqueue(p);
         if( currently_executing_ ) {
@@ -107,7 +107,7 @@ private:
 
 
 class thread_runner: public runner {
-    void do_run(runnable_ptr p)
+    void do_run(runnable_ptr const& p)
     {
         std::auto_ptr<runnable_ptr> holder(new runnable_ptr(p));
         tinfra::thread::thread::start_detached(&thread_runner::static_runnable_invoker, (void*)holder.get());
@@ -128,6 +128,7 @@ class thread_runner: public runner {
         current_job();
         
         // current_job is released
+        holder.reset();
         return 0;
     }
 };
@@ -152,9 +153,10 @@ public:
             runnable* tmp = 0;
             queue_.put( runnable_ptr(tmp) );
         }
+        threads_.join();
     }
 private:
-    void do_run(runnable_ptr p)
+    void do_run(runnable_ptr const& p)
     {
         queue_.put(p);
     }
@@ -172,8 +174,10 @@ private:
             runnable& current_job = * (current_ptr.get());
             
             current_job();
+            // current_job should be destroyed now
+            current_ptr.reset();
         }
-        return 0;    
+        return 0;
     }
 };
 
