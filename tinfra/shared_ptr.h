@@ -5,17 +5,84 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef __tinfra_shared_ptr_h__
-#define __tinfra_shared_ptr_h__
+#ifndef tinfra_shared_ptr_h_included_
+#define tinfra_shared_ptr_h_included_
 
 #include <tinfra/trace.h>
 
+//#define TINFRA_HAVE_GCC_ATOMIC_BUILTINS
+//#define TINFRA_SHARED_PTR_USE_BOOST
+
+#ifdef TINFRA_SHARED_PTR_USE_BOOST
+#include <boost/shared_ptr.hpp>
+#elif defined(TINFRA_HAVE_GCC_ATOMIC_BUILTINS)
+// use GCC builtin atomic ops
+#else
+#include "tinfra/thread.h"
+#endif
+
 namespace tinfra {
 
-struct reference_count {
-    long* ref_;    
+#ifdef TINFRA_SHARED_PTR_USE_BOOST
+
+using boost::shared_ptr;
+
+#else // no TINFRA_SHARED_PTR_USE_BOOST
+
+namespace shared_ptr_atomic {
+
+#ifdef TINFRA_HAVE_GCC_ATOMIC_BUILTINS
+    typedef long atomic_long;
+    
+    inline atomic_long atomic_increment(atomic_long* a) {
+        return __sync_add_and_fetch(a,1);
+    }
+    
+    inline atomic_long atomic_decrement(atomic_long* a) {
+        return __sync_sub_and_fetch(a,1);
+    }
+#else
+    class atomic_long {
+        long value_;
+        tinfra::thread::mutex mtx_;
+    public:
+        atomic_long(long a):
+            value_(a)
+        {
+        }
+        operator long() {
+            tinfra::thread::guard g(mtx_);
+            return value_;
+        }
         
-    explicit reference_count(long* x) 
+        long inc() {
+            tinfra::thread::guard g(mtx_);
+            return (value_ += 1);
+        }
+        
+        long dec() {
+            tinfra::thread::guard g(mtx_);
+            return (value_ -= 1);
+        }
+    private:
+        atomic_long(atomic_long const&);
+        atomic_long& operator=(atomic_long const&);
+    };
+    
+    inline long atomic_increment(atomic_long* a) {
+        return a->inc();
+    }
+    
+    inline long atomic_decrement(atomic_long* a) {
+        return a->dec();
+    }
+#endif
+}
+
+struct reference_count {
+    shared_ptr_atomic::atomic_long* ref_;    
+        
+    explicit reference_count(shared_ptr_atomic::atomic_long* x) 
         : ref_(x) 
     {}
     
@@ -32,16 +99,11 @@ struct reference_count {
         return *this;
     }
     
-    void attach() {
-        if( ref_ ) {
-            *ref_ += 1;
-        }
-    }
-    
+    void attach();
     bool detach();
     
-    bool unique() const { return *ref_ == 1; } // never throws
-    long use_count() const { return *ref_; } // never throws
+    //bool unique() const { return *ref_ == 1; } // never throws
+    //long use_count() const { return *ref_; } // never throws
 };
 
 template <typename T>
@@ -57,7 +119,7 @@ public:
     shared_ptr(shared_ptr const& p);    
     template <typename Y> explicit shared_ptr(shared_ptr<Y> const& p);
     
-    shared_ptr<T>& operator=(shared_ptr const& p);    
+    shared_ptr<T>& operator=(shared_ptr const& p);
     template <typename Y> shared_ptr<T>& operator=(shared_ptr<Y> const& p);
     
     T & operator*() const  { return *ptr_; } // never throws
@@ -74,6 +136,15 @@ public:
         swap(ptr_, other.ptr_);
         swap(refcount_.ref_, other.refcount_.ref_);
     }
+    
+    void reset(shared_ptr<T> const& other) {
+        (*this) = other;
+    }
+    
+    void reset() {
+        release();      
+    }
+    
 public:
     reference_count const& _tinfra_priv_refcount_() const {
         return refcount_;
@@ -87,6 +158,8 @@ private:
             ptr_ = 0;
         }
     }
+    
+    
     
     T*    ptr_;
     reference_count refcount_;
@@ -112,7 +185,7 @@ template <typename T>
 template <typename Y>
 shared_ptr<T>::shared_ptr(Y* p)
     : ptr_(p), 
-      refcount_( new long(1))
+      refcount_( new shared_ptr_atomic::atomic_long(1))
 { 
     TINFRA_TRACE_MSG("tinfra::shared_ptr: new instance");
 }
@@ -141,7 +214,7 @@ shared_ptr<T>& shared_ptr<T>::operator=(shared_ptr<T> const& p)
 {
     TINFRA_TRACE_MSG("tinfra::shared_ptr: operator=");
     TINFRA_TRACE_VAR(this->ptr_);
-    int rc = refcount_.ref_ ? *refcount_.ref_ : -1;
+    int rc = refcount_.ref_ ? (long)(*refcount_.ref_) : -1;
     TINFRA_TRACE_VAR(rc);
     if( this == &p )
         return *this;
@@ -179,11 +252,19 @@ shared_ptr<T>& shared_ptr<T>::operator=(shared_ptr<Y> const& p)
     return *this;
 }
 
+inline void reference_count::attach() {
+    if( ref_ ) {
+        shared_ptr_atomic::atomic_increment(ref_);
+	TINFRA_TRACE_VAR(ref_);
+    }
+}
+
 inline bool reference_count::detach() {
     if( ref_ == 0 )
         return false;
-    *ref_ -= 1;
-    if( use_count() == 0 ) {
+    TINFRA_TRACE_VAR(ref_);
+    int current_use_count = shared_ptr_atomic::atomic_decrement(ref_);
+    if( current_use_count == 0 ) {
         delete ref_;
         ref_ = 0;
         return true;
@@ -192,9 +273,8 @@ inline bool reference_count::detach() {
     return false;
 }
 
+#endif // not TINFRA_SHARED_PTR_USE_BOOST
+
 } // end namespace tinfra
 
-
-
-#endif // __tinfra_shared_ptr_h__
-
+#endif // tinfra_shared_ptr_h_included_
