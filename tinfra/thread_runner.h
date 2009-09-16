@@ -5,106 +5,19 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#ifndef tinfra_thread_pool_h_included_
-#define tinfra_thread_pool_h_included_
+#ifndef tinfra_thread_runner_h_included
+#define tinfra_thread_runner_h_included
 
 #include <tinfra/thread.h>
-#include <tinfra/shared_ptr.h>
 #include <tinfra/queue.h>
 
 #include <memory>
 #include <list>
 
+#include "value_guard.h"
+#include "runner2.h"
+
 namespace tinfra {
-
-template <typename T>
-class value_guard {
-    T& ref;
-    T  copy;
-public:
-    value_guard(T& victim):
-        ref(victim),
-        copy(victim)
-    {
-    }
-    
-    ~value_guard() {
-        if( !( ref == copy ) ) {
-            ref = copy;
-        }
-    }
-};
-
-class runnable {
-public:
-    virtual ~runnable();
-    void operator()() {
-        do_run();
-    }
-    
-private:
-    virtual void do_run() = 0;
-};
-
-
-typedef shared_ptr<runnable> runnable_ptr;
-
-class runner {
-public:
-    virtual ~runner();
-    
-    void operator()(runnable_ptr p)
-    {
-        do_run(p);
-    }
-    
-    template <typename T>
-    void operator()(T const& p) {
-        runnable_ptr ptmp(new T(p));
-        do_run(ptmp);
-    }
-private:
-    virtual void do_run(runnable_ptr const&) = 0;
-};
-
-class sequential_runner: public runner {
-public:
-    sequential_runner():
-        currently_executing_(false)
-    {
-    }
-    ~sequential_runner();
-private:
-    void do_run(runnable_ptr const& p)
-    {
-        enqueue(p);
-        if( currently_executing_ ) {
-            return;
-        }
-        
-        while( !queue_.empty() ) {
-            TINFRA_TRACE_MSG("sequential_runner::do_run: starting job");
-            runnable_ptr current_ptr = queue_.front();
-            queue_.pop_front();
-            
-            runnable& current_job = * ( current_ptr.get() );
-            //IMPORTANT(current_job);
-            {
-                value_guard<bool> guard(currently_executing_);
-                currently_executing_ = true;
-                current_job();
-            }
-            // current_job is released
-        }
-    }
-    void enqueue(runnable_ptr p) {
-        queue_.push_back(p);
-    }
-    
-    bool currently_executing_;
-    std::list<runnable_ptr> queue_;
-};
-
 
 class thread_runner: public runner {
     void do_run(runnable_ptr const& p)
@@ -123,7 +36,7 @@ class thread_runner: public runner {
     static void* static_runnable_invoker(void* p) {
         std::auto_ptr<runnable_ptr> holder( static_cast<runnable_ptr*>(p));
         
-        runnable& current_job = * holder->get();
+        runnable_base& current_job = * holder->get();
         
         current_job();
         
@@ -150,7 +63,7 @@ public:
     ~static_thread_pool_runner()
     {
         for(int i = 0; i < thread_count_; ++i ) {
-            runnable* tmp = 0;
+            runnable_base* tmp = 0;
             queue_.put( runnable_ptr(tmp) );
         }
         threads_.join();
@@ -171,7 +84,7 @@ private:
                 break;
             }
             
-            runnable& current_job = * (current_ptr.get());
+            runnable_base& current_job = * (current_ptr.get());
             
             current_job();
             // current_job should be destroyed now
@@ -183,7 +96,7 @@ private:
 
 } // end namespace tinfra
 
-#endif // tinfra_thread_pool_h_included_
+#endif // tinfra_thread_runner_h_included
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
 

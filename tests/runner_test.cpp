@@ -5,7 +5,8 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#include "tinfra/thread_pool.h"
+#include "tinfra/runner2.h"
+#include "tinfra/thread_runner.h"
 
 #include "tinfra/trace.h"
 
@@ -16,7 +17,6 @@ SUITE(tinfra) {
     TINFRA_MODULE_TRACER(runner_test);
     
     using tinfra::runner;
-    using tinfra::runnable;
     using tinfra::runnable_ptr;
     
     void test(runner& r, runnable_ptr p, int N)
@@ -28,13 +28,13 @@ SUITE(tinfra) {
     
     tinfra::thread::monitor finish_monitor;
     
-    struct basic_recursive_job: public runnable {
+    struct basic_recursive_job  {
         runner* parent_runner;
         int     n;
         static int runs;
         static int finished;
         tinfra::shared_ptr<std::string> foo;
-        virtual void do_run()
+        void operator()()
         {
             {
                 tinfra::thread::synchronizator sss(finish_monitor);
@@ -124,14 +124,6 @@ SUITE(tinfra) {
         }
     }
 }
-
-namespace tinfra {
-    
-runner::~runner() {}
-runnable::~runnable() {}
-sequential_runner::~sequential_runner() {}
-
-};
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
 
