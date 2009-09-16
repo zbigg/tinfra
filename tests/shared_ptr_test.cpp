@@ -6,6 +6,7 @@
 //
 
 #include "tinfra/shared_ptr.h"
+#include "tinfra/thread.h"
 
 #include <unittest++/UnitTest++.h>
 
@@ -39,5 +40,31 @@ SUITE(tinfra) {
         shared_ptr<X> a;
         
         the_swap(a,p);
+    }
+    // TODO: this test rquires helgrind for statuc/dynamic
+    // analysis of thread interlavinga
+
+    void* fun(void* _a)
+    {
+	shared_ptr<int>* a = reinterpret_cast<shared_ptr<int>* >(_a);
+
+	*( a->get()) = 2;
+	delete a;
+	return 0;
+    }
+    TEST(shared_ptr_thread_passing)
+    {
+	tinfra::thread::thread_set ts;
+	shared_ptr<int> x;
+	{
+	    shared_ptr<int> a(new int(6));
+
+	    shared_ptr<int>* b = new shared_ptr<int>(a);
+	    ts.start(&fun, b);
+	    x = a;
+	}
+
+	ts.join();
+	CHECK_EQUAL(2, * (x.get()) );
     }
 }
