@@ -12,6 +12,7 @@
 
 #include "tinfra/exception.h"
 #include "tinfra/tinfra_lex.h"
+#include "tinfra/tstring.h"
 #include <string>
 #include <ostream>
 #include <sstream>
@@ -31,8 +32,7 @@ public:
 };
 class simple_fmt {
 public:
-    simple_fmt(char const* format): fmt_(format), pos_(0) {}
-    simple_fmt(std::string const& format): fmt_(format), pos_(0) {}
+    simple_fmt(tstring const& format): fmt_(format), pos_(0) {}
     
     template <typename T>
     simple_fmt& push(T const& value) {

@@ -27,7 +27,7 @@ test_segv()
 
 test_segv
 generic_test plain_unittests ./unittests
-generic_test valgrind_unittests valgrind  ./unittests
+generic_test valgrind_unittests valgrind --tool=memcheck ./unittests
 
 exit $failed
 

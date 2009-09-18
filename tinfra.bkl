@@ -51,6 +51,7 @@
             tinfra/lazy_protocol.cpp
             tinfra/vfs.cpp
             tinfra/option.cpp
+            tinfra/runner.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -119,7 +120,8 @@
             tinfra/standards/rfc4251.h
 	    tinfra/memory_pool.h
             tinfra/option.h
-            
+            tinfra/shared_ptr.h
+            tinfra/thread_runner.h
 	    tinfra/test.h
         </files>
     </data-files-tree>
@@ -155,6 +157,8 @@
 	    tests/test_memory_pool.cpp
             tests/test_runtime.cpp
             tests/test_option.cpp
+            tests/runner_test.cpp
+            tests/shared_ptr_test.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
