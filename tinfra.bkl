@@ -126,6 +126,7 @@
             tinfra/shared_ptr.h
             tinfra/thread_runner.h
             tinfra/value_guard.h
+            tinfra/mo.h
 	    tinfra/test.h
         </files>
     </data-files-tree>
@@ -163,6 +164,8 @@
             tests/test_option.cpp
             tests/runner_test.cpp
             tests/shared_ptr_test.cpp
+	    tinfra/test_mo.cpp
+            tinfra/test_structure_printer.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
