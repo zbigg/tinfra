@@ -164,8 +164,8 @@
             tests/test_option.cpp
             tests/runner_test.cpp
             tests/shared_ptr_test.cpp
-	    tinfra/test_mo.cpp
-            tinfra/test_structure_printer.cpp
+	    tests/test_mo.cpp
+            tests/test_structure_printer.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
