@@ -18,7 +18,8 @@
 #elif defined(TINFRA_HAVE_GCC_ATOMIC_BUILTINS)
 // use GCC builtin atomic ops
 #else
-#include "tinfra/thread.h"
+#include "tinfra/mutex.h"
+#include "tinfra/guard.h"
 #endif
 
 namespace tinfra {
@@ -44,24 +45,24 @@ namespace shared_ptr_atomic {
 #else
     class atomic_long {
         long value_;
-        tinfra::thread::mutex mtx_;
+        tinfra::mutex mtx_;
     public:
         atomic_long(long a):
             value_(a)
         {
         }
         operator long() {
-            tinfra::thread::guard g(mtx_);
+            tinfra::guard g(mtx_);
             return value_;
         }
         
         long inc() {
-            tinfra::thread::guard g(mtx_);
+            tinfra::guard g(mtx_);
             return (value_ += 1);
         }
         
         long dec() {
-            tinfra::thread::guard g(mtx_);
+            tinfra::guard g(mtx_);
             return (value_ -= 1);
         }
     private:

@@ -37,24 +37,6 @@ public:
 };
 */
 
-class mutex {
-    pthread_mutex_t mutex_;
-public:
-    
-    typedef pthread_mutex_t handle_type;
-
-    mutex() { ::pthread_mutex_init(&mutex_, 0); }
-    ~mutex() { ::pthread_mutex_destroy(&mutex_); }
-
-    void lock() { 
-        ::pthread_mutex_lock(&mutex_); 
-    }
-    void unlock() { 
-        ::pthread_mutex_unlock(&mutex_); 
-    }
-    pthread_mutex_t* get_native() { return &mutex_; }
-};
-
 class condition {
     pthread_cond_t cond_;
 public:
@@ -86,10 +68,10 @@ public:
     static void sleep(long milliseconds);
     typedef void* (thread_entry)(void*);
 
-    static thread start( Runnable& runnable);
+    static thread start( runnable job );
     /// Start a detached thread
     /// runnable will be deleted before thread end
-    static thread start_detached( Runnable* runnable);    
+    static thread start_detached( runnable job);    
     
     static thread start( thread_entry entry, void* param );
     static thread start_detached( thread_entry entry, void* param );

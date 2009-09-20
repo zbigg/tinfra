@@ -51,7 +51,6 @@
             tinfra/lazy_protocol.cpp
             tinfra/vfs.cpp
             tinfra/option.cpp
-            tinfra/runner.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -105,6 +104,8 @@
             tinfra/fs_sandbox.h
             tinfra/runner.h
             tinfra/thread.h
+            tinfra/guard.h
+            tinfra/mutex.h
             tinfra/queue.h
             tinfra/os_common.h
             tinfra/platform.h
@@ -115,13 +116,16 @@
             tinfra/interruptible.h
             tinfra/lazy_protocol.h
             tinfra/posix/thread.h
+            tinfra/posix/posix_mutex.h
             tinfra/win32/thread.h
+            tinfra/win32/w32_mutex.h
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
 	    tinfra/memory_pool.h
             tinfra/option.h
             tinfra/shared_ptr.h
             tinfra/thread_runner.h
+            tinfra/value_guard.h
 	    tinfra/test.h
         </files>
     </data-files-tree>

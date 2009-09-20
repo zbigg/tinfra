@@ -9,7 +9,6 @@
 #define tinfra_symbol_h_included
 
 #include "tinfra/tstring.h"
-#include "tinfra/thread.h"
 
 #include <string>
 #include <ostream>

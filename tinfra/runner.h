@@ -43,22 +43,77 @@ private:
     T delegate_;
 };
 
-typedef shared_ptr<runnable_base> runnable_ptr;
+template <typename T>
+class runnable_ref_adapter: public runnable_base {
+public:
+    runnable_ref_adapter(T& delegate):
+        delegate_(delegate)
+    {}
+        
+private:
+    virtual void do_run()
+    {
+        delegate_();
+    }
+    T& delegate_;
+};
+
+template <typename T>
+runnable_ref_adapter<T> runnable_ref(T& r)
+{
+    return runnable_ref_adapter<T>(r);
+}
+
+class runnable {
+    shared_ptr<runnable_base> ptr_;
+    
+public:
+    runnable(shared_ptr<runnable_base> other_):
+        ptr_(other_)
+    {}
+        
+    template <typename T>
+    runnable(runnable_ref_adapter<T> const& ref_copy):
+        ptr_(new runnable_ref_adapter<T>(ref_copy))
+    {}
+        
+        
+    template <typename T>
+    runnable(T const& p):
+        ptr_(new runnable_adapter<T>(p))
+    {
+    }
+    
+    runnable_base& get() { 
+        assert( ptr_.get() != 0 );
+        return *ptr_;
+    }
+    
+    bool operator ==(runnable const& other)
+    {
+        return ptr_.get() == other.ptr_.get();
+    }
+    
+    bool operator !=(runnable const& other)
+    {
+        return ptr_.get() != other.ptr_.get();
+    }
+    
+    static runnable EMPTY_RUNNABLE;
+};
+
+// TODO: remove all runnable_ptr references
+typedef runnable runnable_ptr;
 
 class runner {
 public:
     virtual ~runner();
     
-    void operator()(runnable_ptr p)
+    void operator()(runnable p)
     {
         do_run(p);
     }
     
-    template <typename T>
-    void operator()(T const& p) {
-        runnable_ptr ptmp(new runnable_adapter<T>(p));
-        do_run(ptmp);
-    }
 private:
     virtual void do_run(runnable_ptr const&) = 0;
 };
@@ -83,7 +138,7 @@ private:
             runnable_ptr current_ptr = queue_.front();
             queue_.pop_front();
             
-            runnable_base& current_job = * ( current_ptr.get() );
+            runnable_base& current_job = current_ptr.get();
             //IMPORTANT(current_job);
             {
                 value_guard<bool> guard(currently_executing_);

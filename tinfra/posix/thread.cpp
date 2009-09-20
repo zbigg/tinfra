@@ -94,26 +94,38 @@ thread thread::start_detached( thread::thread_entry entry, void* param )
 
 static void* runnable_entry(void* param)
 {
-    Runnable* runnable = static_cast<Runnable*>(param);
-    runnable->run();
+    std::auto_ptr<runnable> param_holder(reinterpret_cast<runnable*>(param));
+    
+    runnable_base& job= param_holder->get();
+    
+    job();
+    
+    // runnable_ptr passed as param by thread::start or thread::start_detached
+    // is destroyed here in param_holder destruction
     return 0;
 }
 
-static void* runnable_entry_delete(void* param)
+thread thread::start(runnable job)
 {
-    std::auto_ptr<Runnable> runnable(static_cast<Runnable*>(param));
-    runnable->run();
-    return 0;
+    std::auto_ptr<runnable_ptr> param_holder( new runnable_ptr(job) );
+    thread t = start(runnable_entry, param_holder.get());
+    
+    // this is executed only and only is start doesn't
+    // throw and it means that runnable_entry will
+    // remove *param_holder
+    param_holder.release();
+    return t;
 }
 
-thread thread::start( Runnable& runnable)
-{
-    return start(runnable_entry, (void*) &runnable);
-}
-
-thread thread::start_detached( Runnable* runnable)
+void thread::start_detached(runnable job)
 {   
-    return start_detached(runnable_entry_delete, (void*) &runnable);    
+    std::auto_ptr<runnable_ptr> param_holder( new runnable_ptr(job) );
+    start_detached(runnable_entry, param_holder.get());
+    
+    // this is executed only and only is start doesn't
+    // throw and it means that runnable_entry will
+    // remove *param_holder
+    param_holder.release();
 }
 
 void* thread::join()

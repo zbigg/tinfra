@@ -6,6 +6,8 @@
 //
 
 #include "tinfra/symbol.h"
+#include "tinfra/mutex.h"
+#include "tinfra/guard.h"
 
 #include <string>
 #include <iostream>
@@ -27,7 +29,7 @@ public:
     
     id_type get_id_for_name(tstring const& name)
     {
-        tinfra::thread::guard instance_guard(instance_lock_);
+        tinfra::guard instance_guard(instance_lock_);
         
         name_to_id_mapping_t::const_iterator i =  name_map_.find(name);
 	if( i == name_map_.end() ) 
@@ -48,7 +50,7 @@ public:
     
     id_type find_no_create(tstring const& name)
     {
-        tinfra::thread::guard instance_guard(instance_lock_);
+        tinfra::guard instance_guard(instance_lock_);
         name_to_id_mapping_t::const_iterator i =  name_map_.find(name);
         if( i == name_map_.end() ) {
             return 0;             
@@ -58,7 +60,7 @@ public:
     }
     std::string const& name_for_id(id_type const& id)
     {
-        tinfra::thread::guard instance_guard(instance_lock_);
+        tinfra::guard instance_guard(instance_lock_);
         
         return * (name_index_[id] );
     }
@@ -74,7 +76,7 @@ private:
     name_index_t         name_index_;
     name_storage_t       name_storage_;
     
-    tinfra::thread::mutex instance_lock_;
+    tinfra::mutex instance_lock_;
 };
 
 symbol_registry& global_register() {

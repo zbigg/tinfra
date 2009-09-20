@@ -31,21 +31,18 @@
 #       define TINFRA_THREADS 0
 #endif
 
+#include "mutex.h"
+#include "guard.h"
+
 namespace tinfra {
 namespace thread {
 
-class guard {
-    mutex& m;
-public:
-    guard(mutex& pm): m(pm)
-    {
-        m.lock();
-    }
-    ~guard()
-    {
-	m.unlock();
-    }
-};
+// import DEPRECATED symbols:
+//    tinfra::thread::mutex
+//    tinfra::thread::guard
+
+using tinfra::mutex;
+using tinfra::guard;
 
 class monitor {
     mutex      m;
@@ -77,8 +74,8 @@ class thread_set {
 public:
     ~thread_set();
 
-    thread start( Runnable& runnable);
-    thread start(thread::thread_entry entry, void* param);
+    thread start( runnable what);
+    thread start( thread::thread_entry entry, void* param);
 
     template <typename T>
         thread start(void* (*entry)(T), T param) {

@@ -34,7 +34,7 @@ thread thread_set::start(thread::thread_entry entry, void* param)
     return t;
 }
 
-thread thread_set::start(Runnable& runnable)
+thread thread_set::start(runnable_ptr runnable)
 {
     thread t =  thread::start(runnable);
     threads_.push_back(t);

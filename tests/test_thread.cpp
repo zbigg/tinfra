@@ -98,10 +98,10 @@ SUITE(tinfra)
         CHECK_EQUAL(0, (intptr_t) p.join() );
     }
     
-    struct TestRunnable: public Runnable {
+    struct TestRunnable {
         int i;
         
-        void run()
+        void operator()()
         {
             i = 1;
         }
@@ -111,7 +111,7 @@ SUITE(tinfra)
     {
         TestRunnable runnable;
         runnable.i = 0;
-        thread t = thread::start(runnable);
+        thread t = thread::start(tinfra::runnable_ref(runnable));
         t.join();
         CHECK_EQUAL(1, runnable.i);
     }

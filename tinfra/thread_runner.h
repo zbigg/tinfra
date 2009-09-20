@@ -36,7 +36,7 @@ class thread_runner: public runner {
     static void* static_runnable_invoker(void* p) {
         std::auto_ptr<runnable_ptr> holder( static_cast<runnable_ptr*>(p));
         
-        runnable_base& current_job = * holder->get();
+        runnable_base& current_job = holder->get();
         
         current_job();
         
@@ -63,8 +63,7 @@ public:
     ~static_thread_pool_runner()
     {
         for(int i = 0; i < thread_count_; ++i ) {
-            runnable_base* tmp = 0;
-            queue_.put( runnable_ptr(tmp) );
+            queue_.put( runnable::EMPTY_RUNNABLE );
         }
         threads_.join();
     }
@@ -80,15 +79,14 @@ private:
         while( true ) {
             runnable_ptr current_ptr = queue.get();
             
-            if( current_ptr.get() == 0 ) {
+            if( current_ptr == runnable::EMPTY_RUNNABLE ) {
                 break;
             }
             
-            runnable_base& current_job = * (current_ptr.get());
+            runnable_base& current_job = current_ptr.get();
             
             current_job();
             // current_job should be destroyed now
-            current_ptr.reset();
         }
         return 0;
     }

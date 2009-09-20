@@ -28,15 +28,7 @@
 
 
 namespace tinfra {
-namespace thread {
-
-TINFRA_MODULE_TRACER(tinfra_thread);
-
-static void thread_error(const char* message, unsigned int rc)
-{
-    throw generic_exception(fmt("tinfra::thread error: %s :%s(%i)") % message % win32::get_error_string(rc) % rc );
-}
-
+    
 //
 // mutex implementation
 //
@@ -55,6 +47,15 @@ void mutex::lock() {
 
 void mutex::unlock() {
     ::LeaveCriticalSection(&mutex_);
+}
+
+namespace thread {
+
+TINFRA_MODULE_TRACER(tinfra_thread);
+
+static void thread_error(const char* message, unsigned int rc)
+{
+    throw generic_exception(fmt("tinfra::thread error: %s :%s(%i)") % message % win32::get_error_string(rc) % rc );
 }
 
 // 
@@ -227,17 +228,17 @@ thread thread::current()
 
 static void* runnable_entry(void* param)
 {
-    Runnable* runnable = static_cast<Runnable*>(param);
-    runnable->run();
+    std::auto_ptr<runnable_ptr> param_holder(reinterpret_cast<runnable_ptr*>(param));
+    
+    runnable_base& runnable = param_holder->get();
+    
+    runnable();
+    
+    // runnable_ptr passed as param by thread::start or thread::start_detached
+    // is destroyed here in param_holder destruction
     return 0;
 }
 
-static void* runnable_entry_delete(void* param)
-{
-    std::auto_ptr<Runnable> runnable(static_cast<Runnable*>(param));
-    runnable->run();
-    return 0;
-}
 
 thread::thread(handle_type thread_handle, DWORD thread_id)
     :   
@@ -250,14 +251,27 @@ thread::~thread()
 {
 }
 
-thread thread::start( Runnable& runnable )
+thread thread::start( runnable job)
 {
-    return start(runnable_entry, (void*) &runnable);
+    std::auto_ptr<runnable_ptr> param_holder( new runnable(job) );
+    thread t = start(runnable_entry, param_holder.get());
+    
+    // this is executed only and only is start doesn't
+    // throw and it means that runnable_entry will
+    // remove *param_holder
+    param_holder.release();
+    return t;
 }
 
-void thread::start_detached( Runnable* runnable)
+void thread::start_detached(runnable job)
 {   
-    start_detached(runnable_entry_delete, (void*) &runnable);    
+    std::auto_ptr<runnable_ptr> param_holder( new runnable(job) );
+    start_detached(runnable_entry, param_holder.get());
+    
+    // this is executed only and only is start doesn't
+    // throw and it means that runnable_entry will
+    // remove *param_holder
+    param_holder.release();
 }
 
 void* thread::join()

@@ -19,7 +19,7 @@
 #include <unittest++/UnitTest++.h>
 #include "tinfra/test.h"
 
-class Client: public tinfra::Runnable {
+class Client {
     std::auto_ptr<tinfra::io::stream> client;
     tinfra::net::Server& server;
 public:
@@ -66,15 +66,15 @@ public:
     }
 };
 
-class TestServer: public tinfra::net::Server, public tinfra::Runnable {
+class TestServer: public tinfra::net::Server {
 public:
     virtual void onAccept(std::auto_ptr<tinfra::io::stream> client, std::string const&) {
-        Runnable* worker = new Client(client, *this);        
+        Client* worker = new Client(client, *this);        
         //tinfra::Thread::start_detached(*worker);
         worker->run();
     }
     
-    virtual void run()
+    void operator()()
     {
         tinfra::net::Server::run();
     }
@@ -91,6 +91,7 @@ std::string invoke(std::istream& in, std::ostream& out, std::string const& msg)
     //std::cerr << "C<'" << tinfra::escape_c(tmp) << "'" << std::endl;
     return tmp;
 }
+
 SUITE(tinfra)
 {
     TEST(server_generic)
@@ -98,7 +99,7 @@ SUITE(tinfra)
         TestServer server;
         server.bind("localhost", 10900);
         tinfra::thread::thread_set ts;
-        tinfra::thread::thread server_thread = ts.start(server);    
+        tinfra::thread::thread server_thread = ts.start(tinfra::runnable_ref(server));
         {        
             std::auto_ptr<tinfra::io::stream> client(tinfra::io::socket::open_client_socket("localhost",10900));
             
@@ -134,7 +135,7 @@ SUITE(tinfra)
         TestServer server;
         server.bind("localhost", 10901);
         tinfra::thread::thread_set ts;
-        ts.start(server);
+        ts.start(tinfra::runnable_ref(server));
         
         server.stop();
     }

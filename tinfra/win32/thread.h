@@ -25,19 +25,6 @@
 namespace tinfra {
 namespace thread {
 
-class mutex {
-public:    
-    mutex();
-    ~mutex();
-
-    void lock();
-    void unlock();
-
-    CRITICAL_SECTION* get_native() { return &mutex_; };
-private:
-    CRITICAL_SECTION mutex_;
-};
-
 class condition {    
 public:
     typedef void* handle_type;
@@ -78,11 +65,11 @@ public:
     
     typedef void* (thread_entry)(void*);
 
-    static thread start( Runnable& runnable);
+    static thread start( runnable_ptr runnable);
     
     /// Start a detached thread
     /// runnable will be deleted after thread end
-    static void start_detached( Runnable* runnable);    
+    static void   start_detached( runnable_ptr runnable);    
     
     static thread start( thread_entry entry, void* param );
     static void   start_detached( thread_entry entry, void* param );
