@@ -71,7 +71,7 @@ public:
     static thread start( runnable job );
     /// Start a detached thread
     /// runnable will be deleted before thread end
-    static thread start_detached( runnable job);    
+    static void   start_detached( runnable job);    
     
     static thread start( thread_entry entry, void* param );
     static thread start_detached( thread_entry entry, void* param );
