@@ -8,8 +8,11 @@
         <include>$(SRCDIR)</include>
         <sources>
             <!--tinfra/xml_stream.cpp-->
+            <!--
             tinfra/xml/XMLStream.cpp
             tinfra/xml/XMLStreamReader.cpp
+            -->
+            tinfra/xml_parser.cpp
         </sources>
         <install-to>$(LIBDIR)</install-to> 
     </lib>
@@ -27,6 +30,8 @@
         <install-to>$(INCLUDEDIR)</install-to> 
         <files>
             tinfra/xml.h
+            tinfra/xml_stream.h
+            tinfra/xml_partser.h
             <!--tinfra/xml/xml_stream.h-->
             tinfra/xml/XMLStream.h
         </files>
@@ -39,8 +44,11 @@
             tests/test_main.cpp            
         </sources>
         <library>tinfra-xml</library>
+        
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
+        
+        <sys-lib>tinfra-test</sys-lib>
         <sys-lib>unittest++</sys-lib>
     </exe>
     

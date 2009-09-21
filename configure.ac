@@ -13,7 +13,7 @@ AC_INIT(
 
 AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
 AC_CONFIG_SRCDIR([tinfra-xml.bkl])
-AC_CONFIG_HEADER([tinfra/regexp-config.h])
+AC_CONFIG_HEADER([tinfra/xml-config.h])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -31,7 +31,7 @@ PKG_CHECK_MODULES([TINFRA], [tinfra >= 0.0.1],
     [
         CXXFLAGS="$CXXFLAGS $TINFRA_CFLAGS"
         CPPFLAGS="$CPPFLAGS $TINFRA_CFLAGS"
-        LDFLAGS="$LIBS $TINFRA_LIBS"
+        LIBS="$LIBS $TINFRA_LIBS"
     ],
     [ AC_MSG_ERROR([
             tinfra library required

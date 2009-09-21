@@ -20,7 +20,7 @@
 ^bk-deps$
 ^aclocal.m4$
 ^test_result/
-^tinfra/xml/config.h$
-^tinfra/xml/config.h.in$
+^tinfra/xml-config.h$
+^tinfra/xml-config.h.in$
 ^unittests
 ^tinfra-xml.pc$
