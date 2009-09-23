@@ -129,6 +129,7 @@
             tinfra/value_guard.h
 	    tinfra/test.h
             tinfra/adaptable.h
+            tinfra/stream.h
         </files>
     </data-files-tree>
     
