@@ -51,6 +51,7 @@
             tinfra/lazy_protocol.cpp
             tinfra/vfs.cpp
             tinfra/option.cpp
+            tinfra/adaptable.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -127,6 +128,7 @@
             tinfra/thread_runner.h
             tinfra/value_guard.h
 	    tinfra/test.h
+            tinfra/adaptable.h
         </files>
     </data-files-tree>
     
@@ -163,6 +165,7 @@
             tests/test_option.cpp
             tests/runner_test.cpp
             tests/shared_ptr_test.cpp
+            tests/adaptable_test.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
