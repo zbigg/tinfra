@@ -21,7 +21,7 @@ Default mo_traits<T> applies functor to value thus trating value as leaf.
 For structures that has children - objects or containers one should specialize
 mo_traits<V> and provide specialized walk mechanism:
  * struct_mo_trait is for MO structures
- * conatiner_mo_trair is for STL compatible containers (only processing 
+ * conatiner_mo_trait is for STL compatible containers (only processing 
    is provided)
     
 */
@@ -69,6 +69,9 @@ template <typename T>
 struct mo_traits < std::vector<T> >: 
     public container_mo_traits< std::vector<T> > { };
 
+template <typename T, typename F>
+void mo_mutate(T& value, F& functor);
+
 namespace mo {
 
 template <typename Functor>
@@ -95,6 +98,11 @@ struct mutate_helper {
     template <class V>
     void operator () (const symbol& sym, const V& v) {
         mutator_(sym, const_cast<V&>(v));
+    }
+    
+    template <typename T>
+    void mstruct(symbol const&, T& v) {
+        mo_mutate(v, mutator_);
     }
 };
 

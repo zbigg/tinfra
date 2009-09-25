@@ -14,12 +14,24 @@
 namespace tinfra_mo_test {
     TINFRA_SYMBOL_IMPL(x);
     TINFRA_SYMBOL_IMPL(y);
+    TINFRA_SYMBOL_IMPL(top_left);
+    TINFRA_SYMBOL_IMPL(bottom_right);
     struct point {
         int x;
         int y;
         TINFRA_MO_MANIFEST(point) {
             TINFRA_MO_FIELD(x);
             TINFRA_MO_FIELD(y);
+        }
+    };
+    
+    struct rect {
+        point top_left;
+        point bottom_right;
+        
+        TINFRA_MO_MANIFEST(rect) {
+            TINFRA_MO_FIELD(top_left);
+            TINFRA_MO_FIELD(bottom_right);
         }
     };
     
@@ -46,6 +58,9 @@ namespace tinfra_mo_test {
 namespace tinfra {
     template<> 
     struct mo_traits<tinfra_mo_test::point>: public tinfra::struct_mo_traits<tinfra_mo_test::point> {};
+        
+    template<> 
+    struct mo_traits<tinfra_mo_test::rect>: public tinfra::struct_mo_traits<tinfra_mo_test::rect> {};
     
     template <typename MO, typename F>
     struct mo_bean_processor_adapter {
@@ -103,22 +118,39 @@ namespace tinfra {
 SUITE(tinfra)
 {
     using tinfra_mo_test::point;
+    using tinfra_mo_test::rect;
     using tinfra_mo_test::point_bean;
     using tinfra::symbol;
     
     struct dummy_functor {
         int sum;
+        int count;
         void operator()(symbol const&, int const& v) {
             sum+=v;
+            count++;
+        }
+        template <typename T>
+        void mstruct(symbol const&, T const& v) {
+            tinfra::mo_process(v, *this);
         }
     };
     
     TEST(mo_process_api)
     {
-        dummy_functor f = {0};
-        const point a = { 2,-2};
+        dummy_functor f = {0,0};
+        const point a = { 3,-2};
         tinfra::mo_process(a, f);
-        CHECK_EQUAL(0, f.sum);
+        CHECK_EQUAL(1, f.sum);
+        CHECK_EQUAL(2, f.count);
+    }
+    
+    TEST(mo_process_complex)
+    {
+        dummy_functor f = {0};
+        const rect r = { { 3,-2} , {4, -3} };
+        tinfra::mo_process(r, f);
+        CHECK_EQUAL(2, f.sum);
+        CHECK_EQUAL(4, f.count);
     }
     
     TEST(mo_process_bean_api)
@@ -132,17 +164,40 @@ SUITE(tinfra)
     }
     
     struct foo_modifier {
-        void operator()(symbol const&, int& v ) { v = 1; }
+        int count;
+        void operator()(symbol const&, int& v ) { 
+            v = 1; 
+            count++;
+        }
+        
+        template <typename T>
+        void mstruct(symbol const&, T& v) {
+            tinfra::mo_mutate(v, *this);
+        }
     };
     
     TEST(mo_mutate_api)
     {
-        foo_modifier f;
+        foo_modifier f = {0};
         point a = { 0, 0 };
         tinfra::mo_mutate(a, f);
         
         CHECK_EQUAL(1, a.x);
         CHECK_EQUAL(1, a.y);
+        CHECK_EQUAL(2, f.count);
+    }
+    
+    TEST(mo_mutate_complex)
+    {
+        foo_modifier f = {0};
+        rect r = { {0, 0}, {2,2} };
+        tinfra::mo_mutate(r, f);
+        
+        CHECK_EQUAL(1, r.top_left.x);
+        CHECK_EQUAL(1, r.top_left.y);
+        CHECK_EQUAL(1, r.bottom_right.x);
+        CHECK_EQUAL(1, r.bottom_right.y);
+        CHECK_EQUAL(4, f.count);
     }
     
     TEST(mo_mutate_bean_api)
