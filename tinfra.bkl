@@ -52,6 +52,7 @@
             tinfra/vfs.cpp
             tinfra/option.cpp
             tinfra/adaptable.cpp
+            tinfra/any.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -130,6 +131,7 @@
 	    tinfra/test.h
             tinfra/adaptable.h
             tinfra/stream.h
+            tinfra/any.h
         </files>
     </data-files-tree>
     
@@ -167,6 +169,7 @@
             tests/runner_test.cpp
             tests/shared_ptr_test.cpp
             tests/adaptable_test.cpp
+            tests/any_test.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
