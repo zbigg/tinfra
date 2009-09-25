@@ -16,18 +16,18 @@ S'pl.reddix.tinfra-support'
 p8
 asS'log'
 p9
-S"* build-helper(distclean): don't fail if make clean fails, remove _all_ .d, .o\n* spawn-test-common: make it more portable (/bin/sh)\n"
+S'* build-helper: added conf-devel, conf-coverage and coverage actions\n'
 p10
 sS'author'
 p11
-S'zbigg@zbigg.org'
+S'Zbigniew Zagorski <z.zagorski@gmail.com>'
 p12
 sS'unidiff'
 p13
 NsS'real_ancestors'
 p14
 (lp15
-S'4b1b2e33bbbc210f6b592229efad7d80be9a1d82'
+S'3e6040bd0668063f9af010f4a1f912c60cbde929'
 p16
 asS'tags'
 p17
@@ -38,7 +38,7 @@ p19
 cdatetime
 datetime
 p21
-(S'\x07\xd9\x03\x1d\x16\x06\x0c\x00\x00\x00'
+(S'\x07\xd9\x07\x17\x16\x1e\x04\x00\x00\x00'
 cvcpx.tzinfo
 _UTC
 p22
@@ -72,7 +72,7 @@ sS'unidiff'
 p36
 NsS'new_revision'
 p37
-S'3e6040bd0668063f9af010f4a1f912c60cbde929'
+S'f334ab17890d3bc1cfeca27b498abdac2cedc924'
 p38
 sS'action_kind'
 p39
@@ -80,29 +80,11 @@ S'UPD'
 p40
 sS'old_name'
 p41
-Nsbag1
-(g28
-g3
-NtRp42
-(dp43
-g31
-Nsg32
-Nsg33
-I00
-sg34
-S'spawn-test-common.sh'
-p44
-sg36
-Nsg37
-g38
-sg39
-g40
-sg41
 NsbasS'lin_ancestor'
-p45
-S'4b1b2e33bbbc210f6b592229efad7d80be9a1d82'
-p46
+p42
+S'3e6040bd0668063f9af010f4a1f912c60cbde929'
+p43
 sS'revision'
-p47
+p44
 g38
 sb.N.
