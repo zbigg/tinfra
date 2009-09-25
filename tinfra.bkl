@@ -27,7 +27,6 @@
     <lib id="tinfra" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
-            tinfra/tinfra.cpp
             tinfra/symbol.cpp
             tinfra/exception.cpp
             tinfra/runtime.cpp
@@ -97,8 +96,6 @@
             <!--tinfra/io/zcompat.h-->
             tinfra/multitype_map.h
             tinfra/symbol.h
-            tinfra/tinfra.h
-            tinfra/tinfra_lex.h
             tinfra/path.h
             tinfra/fs.h
             tinfra/fs_sandbox.h
