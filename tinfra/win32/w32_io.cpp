@@ -114,7 +114,8 @@ stream* open_file(const char* name, std::ios::openmode mode)
         } else
             dwCreationDistribution = OPEN_EXISTING;
     }
-    HANDLE handle = CreateFile(name,
+    std::wstring w_name = tinfra::win32::make_wstring_from_utf8(name);
+    HANDLE handle = CreateFileW(w_name.c_str(),
                 dwDesiredAccess,
                 0,
                 NULL,

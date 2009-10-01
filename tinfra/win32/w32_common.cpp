@@ -32,20 +32,21 @@ namespace tinfra { namespace win32 {
 std::string get_error_string(unsigned int error_code)
 {
     LPVOID lpMsgBuf;
-    if( ::FormatMessage(
+    if( ::FormatMessageW(
 	FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 	NULL,
 	error_code,
 	MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-	(LPTSTR) &lpMsgBuf,
+	(LPWSTR) &lpMsgBuf,
 	0,
 	NULL
 	) < 0 || lpMsgBuf == NULL) {
 
 	return fmt("unknown error: %i") % error_code;
     }
-    std::string result((char*)lpMsgBuf);
+    std::wstring w_result((WCHAR*)lpMsgBuf);
     ::LocalFree(lpMsgBuf);
+    std::string result = make_utf8(w_result.c_str());
     strip_inplace(result);
     return result;
 }

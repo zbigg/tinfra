@@ -9,6 +9,7 @@
 #include "tinfra/vfs.h"
 #include "tinfra/path.h"
 #include "tinfra/test.h"
+#include "tinfra/io/stream.h"
 #include <iostream>
 
 #include <stdexcept>
@@ -106,6 +107,27 @@ SUITE(tinfra)
         };
         foo_walker foo;
         fs::walk(".", foo);
+    }
+    
+    void touch(tstring const& name)
+    {
+        
+        using tinfra::io::stream;
+        using tinfra::io::open_file;
+        std::auto_ptr<stream> f(open_file(name.str().c_str(), std::ios_base::out));
+        f->close();
+    }
+    TEST(fs_localized_name_create)
+    {
+        test_fs_sandbox tmp_location;
+        
+        tstring const POLISH_NAME = "\x0c5\x082\xc3\xb3\x64\x6b\x61"; // "lodka", polish boat
+        
+        touch(POLISH_NAME);
+        
+        std::vector<std::string> files = fs::list_files(".");
+        CHECK_EQUAL(1, int(files.size()));
+        CHECK_EQUAL(POLISH_NAME, files[0]);
     }
     
     void test_vfs(tinfra::vfs& fs)
