@@ -3,6 +3,7 @@
 
 #include <map>
 #include <typeinfo>
+#include <cstdlib>
 
 namespace tinfra {
 

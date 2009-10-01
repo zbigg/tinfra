@@ -2,8 +2,10 @@
 #define tinfra_any_h_included
 
 #include "shared_ptr.h"
+
 #include <cassert>
 #include <typeinfo>
+#include <memory>
 
 namespace tinfra {
 
