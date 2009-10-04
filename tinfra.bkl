@@ -132,6 +132,7 @@
             tinfra/adaptable.h
             tinfra/stream.h
             tinfra/any.h
+            tinfra/buffer.h
         </files>
     </data-files-tree>
     
@@ -170,6 +171,7 @@
             tests/shared_ptr_test.cpp
             tests/adaptable_test.cpp
             tests/any_test.cpp
+            tests/buffer_test.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
