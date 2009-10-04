@@ -20,6 +20,8 @@
 #include "tinfra/thread.h"
 #include "tinfra/runtime.h"
 #include "tinfra/trace.h"
+#include "tinfra/fmt.h"
+#include "tinfra/buffer.h"
 
 #include <windows.h>
 #include <string>
@@ -186,6 +188,10 @@ bool is_stacktrace_supported()
 
 bool get_debug_info(void* address, debug_info& result)
 {
+    if ( pSymGetLineFromAddr == NULL ) {
+	return false;
+    }
+
     HANDLE hProcess = GetCurrentProcess(); // hProcess normally comes from outside
     int frameNum; // counts walked frames
     DWORD offsetFromSymbol; // tells us how far from the symbol we were
@@ -197,43 +203,27 @@ bool get_debug_info(void* address, debug_info& result)
     result.source_line = -1;
     if ( ! pSymGetSymFromAddr( hProcess, (DWORD)address, &offsetFromSymbol, pSym ) ) {
         if ( gle != 487 )
-            TINFRA_LOG_ERROR("get_debug_info: SymGetSymFromAddr failed");
+            TINFRA_LOG_ERROR(fmt("get_debug_info: SymGetSymFromAddr failed, gle=%i") % gle);
+	    free(pSym);
+	    return false;
     } else {
 
         pUnDecorateSymbolName( pSym->Name, undFullName, MAXNAMELEN, UNDNAME_COMPLETE );
         result.function = undFullName;
     }	    
     
-    if ( pSymGetLineFromAddr != NULL ) { 
-        if ( ! pSymGetLineFromAddr( hProcess, (DWORD)address, &offsetFromSymbol, &Line ) ) {
-            if ( gle != 487 )
-                TINFRA_LOG_ERROR("get_debug_info: SymGetLineFromAddr failed");
-        }
-        else
-        {
-            result.source_line = Line.LineNumber;
-            result.source_file = Line.FileName;
-        }
+    if ( ! pSymGetLineFromAddr( hProcess, (DWORD)address, &offsetFromSymbol, &Line ) ) {
+	if ( gle != 487 ) {
+	    TINFRA_LOG_ERROR(fmt("get_debug_info: pSymGetLineFromAddr failed, gle=%i") % gle);
+	}
+	free(pSym);
+	return false;
     }
-        
-    /*
-    printf("0x%08x", (unsigned int)address);
 
-    if( module_name ) {
-        printf(" (%s)", module_name);	    
-    }
-    if( symbol_name ) {
-        printf(" %s", symbol_name);
-        if( symbol_offset != -1 ) {
-            printf(" (+%i bytes)", symbol_offset);
-        }
-    }
-    if( file_name ) {
-        printf("(%s:%i)", file_name, line_number);
-    }
-    printf("\n");
-    */
-    return false;
+    result.source_line = Line.LineNumber;
+    result.source_file = Line.FileName;
+    free(pSym);
+    return true;
 }
 
 bool get_stacktrace(stacktrace_t& th) 
@@ -401,59 +391,8 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
 	address = stack_frame.AddrPC.Offset;
 
 	if( stack_frame.AddrPC.Offset == 0 || stack_frame.AddrReturn.Offset == 0) break;
-	/*
-	if ( ! pSymGetSymFromAddr( hProcess, address, &offsetFromSymbol, pSym ) ) {
-	    if ( gle != 487 )
-		    printf( "SymGetSymFromAddr(): gle = %lu\n", gle );
-	} else {
-
-	    pUnDecorateSymbolName( pSym->Name, undFullName, MAXNAMELEN, UNDNAME_COMPLETE );
-	    symbol_name = undFullName;
-	}	    
-
-	if ( pSymGetLineFromAddr != NULL ) { 
-	    if ( ! pSymGetLineFromAddr( hProcess, address, &offsetFromSymbol, &Line ) )
-	    {
-		if ( gle != 487 )
-		    printf( "SymGetLineFromAddr(): gle = %lu\n", gle );
-	    }
-	    else
-	    {
-		line_number = Line.LineNumber;
-		file_name = Line.FileName;
-		symbol_offset = offsetFromSymbol;
-	    }
-	}
-        */
-        /*
-	if ( ! pSymGetModuleInfo( hProcess, address, &Module ) )
-	{
-	    printf( "SymGetModuleInfo): gle = %lu\n", gle );
-	}
-	else { // got module info OK
-	    module_name = Module.ModuleName;
-	    module_base = Module.BaseOfImage;
-	}
-        */
-	
+		
         dest.push_back((void*)address);
-        /*
-	printf("0x%08x", (unsigned int)address);
-
-	if( module_name ) {
-	    printf(" (%s)", module_name);	    
-	}
-	if( symbol_name ) {
-	    printf(" %s", symbol_name);
-	    if( symbol_offset != -1 ) {
-		printf(" (+%i bytes)", symbol_offset);
-	    }
-	}
-	if( file_name ) {
-	    printf("(%s:%i)", file_name, line_number);
-	}
-	printf("\n");
-        */
 
     } // for ( frameNum )
 
@@ -468,10 +407,9 @@ cleanup:
 
 static bool initialize_imaghelp()
 {
-    HINSTANCE hImagehlpDll = NULL;
-    hImagehlpDll = LoadLibrary( "dbghelp.dll" );
+    HINSTANCE hImagehlpDll = LoadLibrary( "dbghelp.dll" );
     if ( hImagehlpDll == NULL ) {
-	printf( "LoadLibrary( \"dbghelp.dll\" ): gle = %lu\n", gle );
+	TINFRA_LOG_ERROR( "unable to load dbghelp.dll" );
 	return false;
     }
     
@@ -495,7 +433,7 @@ static bool initialize_imaghelp()
 	    pSymGetOptions == NULL || pSymGetSymFromAddr == NULL || pSymInitialize == NULL || pSymSetOptions == NULL ||
 	    pStackWalk == NULL || pUnDecorateSymbolName == NULL || pSymLoadModule == NULL )
     {
-	puts( "GetProcAddress(): some required function not found." );
+	TINFRA_LOG_ERROR( "GetProcAddress(): some required function not found in dbghelp.dll." );
 	FreeLibrary( hImagehlpDll );
 	return false;
     }

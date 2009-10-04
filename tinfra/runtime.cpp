@@ -47,11 +47,14 @@ environment_t get_environment()
 void print_stacktrace(stacktrace_t const& st, std::ostream& out)
 {    
 
+    bool have_debug_info = true;
     for( stacktrace_t::const_iterator i = st.begin(); i != st.end(); ++i ) {
         void* address = *i;
         debug_info di;
+	if( have_debug_info )
+	    have_debug_info = get_debug_info(address, di);
         out << "\tat ";
-        if( get_debug_info(address, di) ) {
+        if( have_debug_info ) {
             // func(file:line)
             out << di.function;
             if( di.source_file.size() > 0 ) {
