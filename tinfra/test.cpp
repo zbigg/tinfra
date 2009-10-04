@@ -198,6 +198,14 @@ static void list_available_tests()
     }
 }
 
+#ifdef SRCDIR
+static std::string DEFAULT_TEST_RESOURCES_DIR = SRCDIR "/tests/resources";
+#else
+static std::string DEFAULT_TEST_RESOURCES_DIR =  "tests/resources";
+#endif
+
+tinfra::option<std::string> 
+                      opt_test_resources_dir(DEFAULT_TEST_RESOURCES_DIR, 'D',"test-resources-dir", "set folder with file resources");
 tinfra::option_switch opt_list('l', "test-list", "list available test cases");
 tinfra::option_switch opt_help('h', "help", "show available options");
 
@@ -224,6 +232,8 @@ int test_main(int argc, char** argv)
         return 0;
     }
     
+    set_test_resources_dir(opt_test_resources_dir.value());
+
     test_name_list test_names(args.begin(), args.end());
         
     if( ! test_names.empty() ) {        
