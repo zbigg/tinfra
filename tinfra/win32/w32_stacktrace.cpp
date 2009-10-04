@@ -164,19 +164,27 @@ static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
+static HANDLE tinfra_hOurProcess;
 
 namespace tinfra {
-    
+
+
+
 void initialize_platform_runtime()
 {    	
+    tinfra_hOurProcess = GetCurrentProcess();
     if( !initialize_imaghelp() ) {
-	TINFRA_LOG_ERROR("tinfra::initialize_platform_runtime: unable to initialize imaghelp");
+	TINFRA_LOG_ERROR("unable to initialize imaghelp");
     }
-    
+
+    if( !initialize_sym(tinfra_hOurProcess) ) {
+	TINFRA_LOG_ERROR("unable to initialize symbol reader");
+    }
+
     SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)unhandled_exception_filter);
     
     if( !SetConsoleCtrlHandler(ConsoleHandler, TRUE) ) {
-	TINFRA_LOG_ERROR("tinfra::initialize_platform_runtime: unable to initialize contole interrupt handler");
+	TINFRA_LOG_ERROR("unable to initialize contole interrupt handler");
     }
 }
     
@@ -192,7 +200,7 @@ bool get_debug_info(void* address, debug_info& result)
 	return false;
     }
 
-    HANDLE hProcess = GetCurrentProcess(); // hProcess normally comes from outside
+    HANDLE hProcess = tinfra_hOurProcess; // hProcess normally comes from outside
     int frameNum; // counts walked frames
     DWORD offsetFromSymbol; // tells us how far from the symbol we were
     
@@ -315,7 +323,7 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
 {
     // normally, call ImageNtHeader() and use machine info from PE header
     DWORD imageType = IMAGE_FILE_MACHINE_I386;
-    HANDLE hProcess = GetCurrentProcess(); // hProcess normally comes from outside
+    HANDLE hProcess = tinfra_hOurProcess; // hProcess normally comes from outside
     int frameNum; // counts walked frames
     DWORD offsetFromSymbol; // tells us how far from the symbol we were
     
@@ -334,15 +342,11 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
     // from the target process. The current dir would be gotten through injection
     // of a remote thread; the exe fir through either ToolHelp32 or PSAPI.
 
-    if( !initialize_sym(hProcess) ) {
-	goto cleanup;
-    }
-
     
 
     // Enumerate modules and tell imagehlp.dll about them.
     // On NT, this is not necessary, but it won't hurt.
-    enumAndLoadModuleSymbols( hProcess, GetCurrentProcessId() );
+    //enumAndLoadModuleSymbols( hProcess, GetCurrentProcessId() );
 
     // init STACKFRAME for first call
     // Notes: AddrModeFlat is just an assumption. I hate VDM debugging.
