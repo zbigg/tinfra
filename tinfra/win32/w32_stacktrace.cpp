@@ -338,6 +338,8 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
     STACKFRAME stack_frame; // in/out stackframe
     memset( &stack_frame, '\0', sizeof stack_frame );
 
+    DWORD address = 0;
+
     // NOTE: normally, the exe directory and the current directory should be taken
     // from the target process. The current dir would be gotten through injection
     // of a remote thread; the exe fir through either ToolHelp32 or PSAPI.
@@ -373,9 +375,11 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
 
     offsetFromSymbol = 0;
     
+  
+
     for ( frameNum = 0; ; ++ frameNum )
     {
-	DWORD address = 0;
+	
 	char* module_name = 0;
 	DWORD  module_base = 0;
 	
@@ -392,6 +396,8 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
 		pSymFunctionTableAccess, pSymGetModuleBase, NULL ) )
 	    break;
 	
+	if( address == stack_frame.AddrPC.Offset )
+	    break;
 	address = stack_frame.AddrPC.Offset;
 
 	if( stack_frame.AddrPC.Offset == 0 || stack_frame.AddrReturn.Offset == 0) break;

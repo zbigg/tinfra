@@ -287,24 +287,18 @@ struct win32_subprocess: public subprocess {
             result.reserve(env_size);
         }
         
-        std::vector<char>::iterator pos = result.begin();
         for( environment_t::const_iterator i = env.begin(); i != env.end(); ++i ) {
             
-            result.insert(pos, i->first.begin(), i->first.end());
-            pos += i->first.size();
+            result.insert(result.end(), i->first.begin(), i->first.end());
             
-            result.insert(pos, '=');
-            pos += 1;
+            result.insert(result.end(), '=');
             
-            result.insert(pos, i->second.begin(), i->second.end());
-            pos += i->second.size();
+            result.insert(result.end(), i->second.begin(), i->second.end());
             
-            result.insert(pos, '\0');
-            pos += 1;
+            result.insert(result.end(), '\0');
         }
         
-        result.insert(pos, '\0');
-        pos += 1;
+        result.insert(result.end(), '\0');
     }
 };
 

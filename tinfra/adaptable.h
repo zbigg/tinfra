@@ -1,6 +1,8 @@
 #ifndef tinfra_adaptable_h_included
 #define tinfra_adaptable_h_included
 
+#include "platform.h"
+
 #include <map>
 #include <typeinfo>
 #include <cstdlib>

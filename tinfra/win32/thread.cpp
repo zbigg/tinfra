@@ -282,7 +282,7 @@ void* thread::join()
     
     size_t tid = to_number();
     TINFRA_TRACE_MSG(fmt("thread joining ... tid=%i") % tid);
-    DWORD gla;
+    DWORD gla = 0;
     
     int rc = ::WaitForSingleObject( thread_handle_, INFINITE );
     if( rc != WAIT_OBJECT_0 ) {

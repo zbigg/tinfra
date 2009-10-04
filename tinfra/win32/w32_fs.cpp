@@ -12,6 +12,7 @@
 #include "tinfra/fmt.h"
 
 #include <string>
+#include <cctype>
 #include <stdio.h>
 #include <windows.h>
 

@@ -21,9 +21,9 @@ using std::sigatomic_t;
 #else
 typedef int sigatomic_t;
 #endif
-
+/*
 extern char** environ;
-
+*/
 namespace tinfra {
 
 environment_t get_environment()
