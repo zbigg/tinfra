@@ -11,17 +11,36 @@
 
 #include "tinfra/mo.h"
 
+struct true_type { enum { value = 1 } ; };
+
+struct false_type { enum { value = 1 } ; };
+
 namespace tinfra_mo_test {
     TINFRA_SYMBOL_IMPL(x);
     TINFRA_SYMBOL_IMPL(y);
+    TINFRA_SYMBOL_IMPL(z);
     TINFRA_SYMBOL_IMPL(top_left);
     TINFRA_SYMBOL_IMPL(bottom_right);
+    
+    
     struct point {
         int x;
         int y;
         TINFRA_MO_MANIFEST(point) {
             TINFRA_MO_FIELD(x);
             TINFRA_MO_FIELD(y);
+        }
+    };
+    
+    struct point3d {
+        typedef true_type tinfra_is_mo;
+        int x;
+        int y;
+        int z;
+        TINFRA_MO_MANIFEST(point) {
+            TINFRA_MO_FIELD(x);
+            TINFRA_MO_FIELD(y);
+            TINFRA_MO_FIELD(z);
         }
     };
     
@@ -211,6 +230,60 @@ SUITE(tinfra)
         
         CHECK_EQUAL(1, a.getX());
         CHECK_EQUAL(1, a.getY());
+    }
+    
+    struct sfinae_functor {
+        int sum;
+        void operator()(symbol const&, int const& v ) {
+            sum += v;
+        }
+        
+        bool sfinae_matched;
+        template <typename T>
+        void operator()(symbol const&, T const& v, typename T::tinfra_is_mo = true_type()) {
+            sfinae_matched = true;
+            tinfra::mo_process(v, *this);
+        }
+    };
+    
+    TEST(mo_sfinae_processor)
+    {
+        sfinae_functor functor = {0, false};
+        const tinfra_mo_test::point3d foo = { 1,2,3 };
+        
+        tinfra::process(tinfra::symbol("a"), foo, functor);
+        
+        CHECK( functor.sfinae_matched);
+        
+        CHECK_EQUAL(6, functor.sum); 
+    }
+    
+    struct sfinae_mutator {
+        void operator()(symbol const&, int& v ) {
+            v = 0;
+        }
+        
+        bool sfinae_matched;
+        template <typename T>
+        void operator()(symbol const&, T& v, typename T::tinfra_is_mo = true_type()) {
+            sfinae_matched = true;
+            //v.foo =2; uncomment to see how unreadable error is
+            tinfra::mo_mutate(v, *this);
+        }
+    };
+    
+    TEST(mo_sfinae_mutator)
+    {
+        sfinae_mutator functor = {false};
+        tinfra_mo_test::point3d foo = { 1,2,3 };
+        
+        tinfra::mutate(tinfra::symbol("a"), foo, functor);
+        
+        CHECK( functor.sfinae_matched);
+        
+        CHECK_EQUAL(0, foo.x);
+        CHECK_EQUAL(0, foo.y);
+        CHECK_EQUAL(0, foo.z);
     }
 }
 
