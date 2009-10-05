@@ -9,7 +9,7 @@
 #define __tinfra_regex_h__
 
 #include "tinfra/regexp-config.h"
-
+#include "tinfra/lex.h"
 #ifdef HAVE_PCRE
 #define TINFRA_REGEX_PCRE 1
 #elif defined(HAVE_REGCOMP)
@@ -24,7 +24,6 @@
 #include <cassert>
 
 #include "tinfra/tstring.h"
-#include "tinfra/tinfra_lex.h"
 
 namespace tinfra {
 
