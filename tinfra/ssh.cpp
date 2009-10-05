@@ -2,8 +2,8 @@
 
 #include <tinfra/subprocess.h>
 #include <tinfra/runtime.h>
-#include <tinfra/tinfra_lex.h>
 #include <tinfra/fmt.h>
+#include <tinfra/lex.h>
 #include <tinfra/path.h>
 #include <tinfra/os_common.h>
 #include <tinfra/trace.h>
@@ -57,7 +57,7 @@ static std::string make_safe_script(std::string const& contents )
 }
 
 #else
-static std::string make_safe_script(std::string contents& a)
+static std::string make_safe_script(std::string const& contents)
 {
     assert(false);
 }

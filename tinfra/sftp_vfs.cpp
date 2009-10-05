@@ -16,13 +16,15 @@
 #include <iterator>
 #include <algorithm>
 
-#include <tinfra/tinfra.h>
+#include <tinfra/typeinfo.h>
 #include <tinfra/subprocess.h>
 #include <tinfra/fmt.h>
+#include <tinfra/structure_printer.h>
 
 #include <sys/stat.h>
 
 // TODO: move to specific utility module
+/*
 class field_printer {
     std::ostream& out;
     bool need_separator;
@@ -44,13 +46,16 @@ public:
     {
         if( need_separator ) 
             out << ", ";
-        out << tinfra::TypeTraitsGeneric<T>::name() << " { ";
+        out << tinfra::type_name<T>() << " { ";
         need_separator = false;
-        tinfra::tt_process<T>(v, *this);
+        tinfra::mo_process<T>(v, *this);
         out << " }";
         need_separator = true;
     }
 };
+*/
+
+typedef tinfra::structure_printer field_printer;
 
 template<typename T>
 std::string struct_to_string(T const& v)
@@ -58,8 +63,8 @@ std::string struct_to_string(T const& v)
     std::ostringstream s;
     field_printer printer(s);
     
-    s << tinfra::TypeTraitsGeneric<T>::name() << " { ";
-    tinfra::tt_process(v, printer);
+    s << tinfra::type_name<T>() << " { ";
+    tinfra::mo_process(v, printer);
     s << "}";
     return s.str();
 }
@@ -130,8 +135,8 @@ void send(tinfra::io::stream* to_server, T const& packet)
     packet_header header;    
     header.type       = T::type;    
     
-    tinfra::process(header, sink);
-    tinfra::tt_process(packet, sink);
+    tinfra::process(tinfra::symbol::null, header, sink);
+    tinfra::mo_process(packet, sink);
     
     uint32 real_size = packet_buffer.size() - sizeof(uint32);
     uint32 real_size_net = htonl(real_size);
@@ -187,7 +192,7 @@ void do_read_packet(tinfra::io::stream* from_server, size_t packet_length, T& pa
     //DOUT( "readed  packet: " << hexify(packet_buf, packet_length) );
     
     reader rrr(packet_buf, packet_length);
-    tinfra::tt_mutate(packet, rrr);
+    tinfra::mo_mutate(packet, rrr);
     DOUT( "decoded packet: " << struct_to_string(packet));
 }
 
@@ -200,7 +205,7 @@ int expect_header(tinfra::io::stream* s, packet_header& result, byte expected_ty
     //DOUT( "readed  header: " << hexify(packet_header_buf, PACKET_HEADER_SIZE) );
     
     reader rrr(packet_header_buf, PACKET_HEADER_SIZE);
-    tinfra::tt_mutate(result, rrr);
+    tinfra::mo_mutate(result, rrr);
     
     DOUT( "decoded header: " << struct_to_string(result) );
     
