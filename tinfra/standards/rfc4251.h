@@ -10,7 +10,7 @@
 
 #include <string>
 #include "tinfra/symbol.h"
-#include "tinfra/tinfra.h"
+#include "tinfra/mo.h"
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
 #include "tinfra/string.h"
@@ -218,7 +218,7 @@ std::string serialize(T const& value)
 {
     string buffer;
     writer processor(buffer);    
-    tinfra::process(value, processor);
+    tinfra::mo_process(value, processor);
     
     return buffer;
 }
@@ -228,7 +228,7 @@ void deserialize(std::string const& buffer, T& dest)
 {
     reader processor(buffer.data(), buffer.size());
     
-    tinfra::mutate(dest, processor);
+    tinfra::mo_mutate(dest, processor);
 }
 
 
