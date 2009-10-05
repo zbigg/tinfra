@@ -11,7 +11,6 @@
 #include "tinfra/platform.h"
 
 #include "tinfra/exception.h"
-#include "tinfra/tinfra_lex.h"
 #include "tinfra/tstring.h"
 #include <string>
 #include <ostream>

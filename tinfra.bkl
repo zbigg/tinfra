@@ -27,7 +27,6 @@
     <lib id="tinfra" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
-            tinfra/tinfra.cpp
             tinfra/symbol.cpp
             tinfra/exception.cpp
             tinfra/runtime.cpp
@@ -99,8 +98,6 @@
             <!--tinfra/io/zcompat.h-->
             tinfra/multitype_map.h
             tinfra/symbol.h
-            tinfra/tinfra.h
-            tinfra/tinfra_lex.h
             tinfra/path.h
             tinfra/fs.h
             tinfra/fs_sandbox.h
@@ -128,6 +125,7 @@
             tinfra/shared_ptr.h
             tinfra/thread_runner.h
             tinfra/value_guard.h
+            tinfra/mo.h
 	    tinfra/test.h
             tinfra/adaptable.h
             tinfra/stream.h
@@ -172,6 +170,8 @@
             tests/adaptable_test.cpp
             tests/any_test.cpp
             tests/buffer_test.cpp
+            tests/test_mo.cpp
+            tests/test_structure_printer.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
