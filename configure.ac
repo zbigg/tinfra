@@ -12,7 +12,7 @@ AC_INIT(
     0.0.1 ,
     [z.zagorski@gmail.com])
 AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
-AC_CONFIG_SRCDIR([tinfra/tinfra.h])
+AC_CONFIG_SRCDIR([tinfra.bkl])
 AC_CONFIG_HEADER([tinfra/config.h])
 
 # Checks for programs.

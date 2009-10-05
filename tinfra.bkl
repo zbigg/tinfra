@@ -52,6 +52,7 @@
             tinfra/option.cpp
             tinfra/adaptable.cpp
             tinfra/any.cpp
+            tinfra/typeinfo.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -126,11 +127,14 @@
             tinfra/thread_runner.h
             tinfra/value_guard.h
             tinfra/mo.h
+            tinfra/structure_printer.h
 	    tinfra/test.h
             tinfra/adaptable.h
             tinfra/stream.h
             tinfra/any.h
             tinfra/buffer.h
+            tinfra/lex.h
+            tinfra/typeinfo.h
         </files>
     </data-files-tree>
     
@@ -172,6 +176,7 @@
             tests/buffer_test.cpp
             tests/test_mo.cpp
             tests/test_structure_printer.cpp
+            tests/lex_test.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
