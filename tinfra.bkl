@@ -135,6 +135,7 @@
             tinfra/buffer.h
             tinfra/lex.h
             tinfra/typeinfo.h
+            tinfra/win32.h
         </files>
     </data-files-tree>
     
