@@ -15,7 +15,9 @@
 namespace tinfra {
 
 struct fmt_command {
-    char command;
+    char  command;
+    int   width;
+    char  fill;
 };
     
 template <typename T>
@@ -26,30 +28,54 @@ size_t process_fmt(std::string fmt, size_t start, fmt_command& result, T& output
     
     const std::string::const_iterator end = fmt.end();
     
+    result.command = '?';
+    result.width = 0;
+    result.fill = ' ';
     //std::cout << "pf: " << fmt << " at " << start << std::endl;
-    while( c != end ) 
-    {
-        
+    enum {
+        FREE_TEXT,
+        BEGIN_MATCH,
+        PADDING_GIVEN
+    } state = FREE_TEXT;
+    while( c != end )  switch( state ) {
+    case FREE_TEXT:
         if( *c == '%' ) {
-            if( c+1 == end ) throw format_exception("bad format: '%' at the end");
-            output.append(istart, c);            
+            if( c+1 == end ) 
+                throw format_exception("bad format: '%' at the end");
+            state = BEGIN_MATCH;
+            output.append(istart, c);
             ++c;
-            if( *c == '%' ) {
-                ++c;
-                istart = c;
-                output.append(1,'%');
-                continue; // %% sequence is an escape
-            } else if( std::isalpha(*c) ) {
-                result.command = *c;
-                ++c;
-                //std::cout << "pf: " << (c - fmt.begin()) << std::endl;
-                return c - fmt.begin();
-            } else {
-                throw format_exception("simple_fmt: bad format command");
-            }
         } else {
             ++c;
         }
+        continue;
+    case BEGIN_MATCH:
+        if( *c == '%' ) {
+            ++c;
+            istart = c;
+            output.append(1,'%');
+            state = FREE_TEXT;
+            continue; // %% sequence is an escape
+        }
+        if( *c == '0' ) {
+            result.fill = '0';
+            state = PADDING_GIVEN;
+            ++c;
+            continue;
+        }
+    case PADDING_GIVEN:
+        if( std::isdigit(*c) ) {
+            result.width = result.width*10 + (*c - '0');
+            ++c;
+            continue;
+        }
+        if( std::isalpha(*c) ) {
+            result.command = *c;
+            ++c;
+            state = FREE_TEXT;
+            return c - fmt.begin();
+        }
+        throw format_exception("simple_fmt: bad format character");
     }
     //std::cout << "pf: " << -1 << std::endl;
     output.append(istart, end);
@@ -92,11 +118,20 @@ size_t simple_fmt::check_command()
     ostream_string_output output(formatter_);
     
     size_t cmd_pos = process_fmt(fmt_, pos_, cmd, output);
-    if( cmd_pos == (size_t)-1 ) throw format_exception("simple_fmt: too many actual arguments");        
+    if( cmd_pos == (size_t)-1 ) throw format_exception("simple_fmt: too many actual arguments");
+    if( cmd.fill )
+        formatter_.fill(cmd.fill);
+    if( cmd.width )
+        formatter_.width(cmd.width);
+    
     switch( cmd.command ) {
     case 's':
     case 'i':
     case 'd':
+        std::dec(formatter_);
+        break;
+    case 'x':
+        std::hex(formatter_);
         break;
     default:
         throw format_exception(simple_fmt("simple_fmt: bad format command %s") % cmd.command);

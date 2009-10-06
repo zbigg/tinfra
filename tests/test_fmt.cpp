@@ -34,6 +34,18 @@ SUITE(tinfra) {
         CHECK_EQUAL( "1", (const char*)(fmt("%i") % 1) );
         CHECK_EQUAL( "-1", (const char*)(fmt("%i") % -1) );
     }
+    
+    TEST(fmt_hex)
+    {
+        CHECK_EQUAL("f",    (const char*)(fmt("%x") % 15) );
+        CHECK_EQUAL("ffff", (const char*)(fmt("%x") % 65535) );
+    }
+    
+    TEST(fmt_padding)
+    {
+        CHECK_EQUAL("   f",    (const char*)(fmt("%4x") %s 15) );
+        CHECK_EQUAL("0xf00ff00f", (const char*)(fmt("0x%08x") % 0xf00ff00f) );
+    }
 
     TEST(fmt_complex)
     {
