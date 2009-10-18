@@ -32,11 +32,11 @@ distclean() {
 
 coverage() {
     covname=coverage.lcov
+    set -e -x
     lcov --directory . --zerocounters
     ./unittests
-    lcov --directory . --capture --output-file ${covname}
-    lcov --remove ${covname} "lib/gcc/**" -o ${covname}
-    lcov --remove ${covname} "unittest++/**" -o ${covname}
+    lcov --directory . --capture --output-file ${covname} -b $(pwd)
+    lcov --extract ${covname} "$(pwd)/**" -o ${covname}
     rm -rf covresults
     genhtml -p $(pwd) -o covresults ${covname}
 }
