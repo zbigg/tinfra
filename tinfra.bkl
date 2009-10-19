@@ -53,6 +53,7 @@
             tinfra/adaptable.cpp
             tinfra/any.cpp
             tinfra/typeinfo.cpp
+            tinfra/stream.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
