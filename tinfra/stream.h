@@ -52,12 +52,21 @@ class position_controller {
 
 std::auto_ptr<input_stream>  create_file_input_stream(tstring const& name);
 
+enum memory_strategy {
+    USE_BUFFER,
+    COPY_BUFFER
+};
+
+std::auto_ptr<input_stream>  create_memory_input_stream(const void* buffer, size_t size, memory_strategy buffer_copy);
+
 enum file_output_mode {
     TRUNCATE = 1,
     APPEND   = 2
 };
 
 std::auto_ptr<output_stream> create_file_output_stream(tstring const& name, int mode);
+
+std::string read_all(input_stream& input);
 
 } // end namespace tinfra
 
