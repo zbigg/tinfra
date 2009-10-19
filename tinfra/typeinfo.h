@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2009, Zbigniew Zagorski
+// This software licensed under terms described in LICENSE.txt
+//
+
 #ifndef tinfra_typeinfo_h_included
 #define tinfra_typeinfo_h_included
 

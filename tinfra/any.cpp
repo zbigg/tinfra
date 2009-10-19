@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2009, Zbigniew Zagorski
+// This software licensed under terms described in LICENSE.txt
+//
+
 #include "tinfra/any.h"
 
 #include <cassert>

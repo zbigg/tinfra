@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2009, Zbigniew Zagorski
+// This software licensed under terms described in LICENSE.txt
+//
+
 #ifndef tinfra_stream_h_included
 #define tinfra_stream_h_included
 
