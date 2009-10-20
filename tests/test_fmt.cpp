@@ -41,7 +41,7 @@ SUITE(tinfra) {
     
     TEST(fmt_padding)
     {
-        CHECK_EQUAL("   f",    (const char*)(fmt("%4x") %s 15) );
+        CHECK_EQUAL("   f",    (const char*)(fmt("%4x") % 15) );
         CHECK_EQUAL("0xf00ff00f", (const char*)(fmt("0x%08x") % 0xf00ff00f) );
     }
 
