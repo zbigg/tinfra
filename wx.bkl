@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+
+<makefile>
+    <set var="WX_VERSION" overwrite="0">28</set>
+    <set var="WX_DEBUG">
+	<if cond="BUILD_TYPE=='release'">0</if>
+	<if cond="BUILD_TYPE=='debug'">1</if>
+    </set>
+    
+    <set var="WX_DIR" overwrite="0">$(DOLLAR)(WXWIN)</set>
+    
+    <include file="wx/wx.bkl"/>
+</makefile>
+
+<!-- jedit: :tabSize=8:indentSize=4:noTabs=true:mode=xml -->
