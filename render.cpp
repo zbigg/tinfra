@@ -16,3 +16,6 @@ void show(dialog* definition, container* layout)
 }
 
 } } // end namespace tinfra::gui
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
+

@@ -35,3 +35,5 @@ int test_gui_main(int argc, char** argv)
 
 TINFRA_MAIN(test_gui_main);
 
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
+

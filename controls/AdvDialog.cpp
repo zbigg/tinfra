@@ -20,7 +20,7 @@
 #include "wx/statbmp.h"
 #include "wx/stattext.h"
 #include "wx/artprov.h"
-#include "advdialog.h"
+#include "AdvDialog.h"
 
 IMPLEMENT_DYNAMIC_CLASS(AdvDialogHeader, wxPanel);
 BEGIN_EVENT_TABLE(AdvDialogHeader, wxPanel)
@@ -245,3 +245,5 @@ void AdvDialog::SetHeaderImage(const wxBitmap& bmp)
 {
     headerPanel->SetImage(bmp);
 }
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
