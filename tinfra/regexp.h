@@ -35,16 +35,28 @@ struct match_result_processor {
 };
 
 struct std_match_result: public match_result_processor {
-    void prepare(int groups);
+    void prepare(int group_count);
     void match_group(int group_no, const char* str, size_t pos, size_t len);
     
     std::vector<std::string> groups;
 };
 
+struct tstring_match_result: public match_result_processor {
+    void prepare(int group_count) {
+        groups.resize(group_count);
+    }
+    void match_group(int group_no, const char* str, size_t pos, size_t len) {
+        const char* begin = str+pos;
+        groups[group_no] = tstring(begin, len);
+    }
+    
+    std::vector<tstring> groups;
+};
+
 template <int N>
 struct static_tstring_match_result: public match_result_processor {
-    void prepare(int groups) {
-        assert(groups == N);
+    void prepare(int group_count) {
+        assert(group_count == N);
     }
     void match_group(int group_no, const char* str, size_t pos, size_t len) {
         const char* begin = str+pos;
