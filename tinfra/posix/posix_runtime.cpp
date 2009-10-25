@@ -8,7 +8,7 @@
 #include "tinfra/runtime.h"
 
 #include "tinfra/exeinfo.h"
-#include "tinfra/tinfra_lex.h"
+#include "tinfra/lex.h"
 #include "tinfra/subprocess.h"
 #include "tinfra/string.h"
 
