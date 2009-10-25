@@ -65,6 +65,10 @@ bool parser::fetch_next(entry& out)
     out.type = ENTRY;
     out.name = line.substr(0, entry_division_start);
     const size_t value_begin = line.find_first_not_of(" \t=", entry_division_start);
+    if( value_begin == std::string::npos ) {
+        out.value = "";
+        return true;
+    }
     // TODO: escape sequence support
     // TODO: unicode support
     // TODO: inline comment support
