@@ -183,7 +183,6 @@
             tests/lex_test.cpp
             tests/inifile_test.cpp
         </sources>
-        <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
         <library>tinfra-test</library>
         <library>tinfra</library>
