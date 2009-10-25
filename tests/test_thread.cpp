@@ -4,6 +4,8 @@
 //
 
 #include "tinfra/thread.h"
+#include "tinfra/guard.h"
+
 #include <sstream>
 
 #include <unittest++/UnitTest++.h>
@@ -46,52 +48,63 @@ SUITE(tinfra)
         CHECK_EQUAL(1, nothing_run_indicator);
     }
     
-    struct A {
-	condition c;
+    struct test_monitor {
+	condition ca;
+        condition cb;
 	mutex m;
-	
-	void signal() { 
-	    m.lock();
-	    c.signal();
-	    m.unlock();
-	}
-	void wait()
-	{
-	    m.lock();
-	    c.wait(m);
-	    m.unlock();
-	}
+        bool started;
+        bool finished;
     };
     
     static void* cond_signaler(void* p)
     {
-        A* a = static_cast<A*>(p);
-	a->wait(); // wait for green light
+        test_monitor* M = static_cast<test_monitor*>(p);
+        
+        // wait for start signal
+        {
+            guard g(M->m);
+            while( !M->started )
+                M->ca.wait(M->m); // wait for green light
+        }
 	for(int i = 0; i < 100*1000; i++ ) {
             std::ostringstream a;
             a << i*2;
             std::string x = a.str();
         }
-	a->signal(); // signal job finished
+        
+        // signal finish!
+        {
+            guard g(M->m);
+            M->finished = true;
+            M->cb.signal(); // signal job finished
+        }
+        
         return 0;
     }
     static void* cond_waiter(void* p)
     {
-        A* a = static_cast<A*>(p);
-	a->signal(); // set up green light
-	a->wait(); // wait for finish
+        test_monitor* M = static_cast<test_monitor*>(p);
+        {
+            guard g(M->m);
+            M->started = true;
+            M->ca.signal(); // set up green light
+        }
+        
+        {
+            guard g(M->m);
+            while( !M->finished )
+                M->cb.wait(M->m); // wait for finish
+        }
         return 0;
     }
     
     TEST(thread_condition)
     {
-        A* a = new A;
-	// TODO: this test is screwed up (seen on dual-core on win32)
-	//      waiter if it's fast enough consume signal
-	//      sent to signaler
-	//      must use two synchronizers
-        thread p = thread::start(cond_signaler, a);
-        thread c = thread::start(cond_waiter, a);
+        test_monitor M;
+        M.started = false;
+        M.finished = false;
+        thread p = thread::start(cond_signaler, &M);
+        thread c = thread::start(cond_waiter, &M);
         CHECK_EQUAL(0, (intptr_t) c.join() );
         CHECK_EQUAL(0, (intptr_t) p.join() );
     }
