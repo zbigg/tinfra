@@ -54,6 +54,7 @@
             tinfra/any.cpp
             tinfra/typeinfo.cpp
             tinfra/stream.cpp
+            tinfra/inifile.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -137,6 +138,7 @@
             tinfra/lex.h
             tinfra/typeinfo.h
             tinfra/win32.h
+            tinfra/inifile.h
         </files>
     </data-files-tree>
     
@@ -179,6 +181,7 @@
             tests/test_mo.cpp
             tests/test_structure_printer.cpp
             tests/lex_test.cpp
+            tests/inifile_test.cpp
         </sources>
         <define>SRCDIR="$(SRCDIR)"</define>
         <define>UNITTEST_IGNORE_SIGNALS</define>
