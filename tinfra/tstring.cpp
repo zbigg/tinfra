@@ -96,6 +96,20 @@ namespace tinfra {
 
 const tstring::size_type tstring::npos = ~(size_type)0;
 
+int tstring::cmp(tstring const& other) const {
+    size_t common_length = std::min(size(),other.size()); // WINDOWS min macro workaround
+    
+    int r = std::memcmp(data(), other.data(), common_length);
+    if( r != 0 ) 
+        return r;
+    if( tstring::size() > other.size() )
+        return -1;
+    else if( tstring::size() < other.size() )
+        return 1;
+    else
+        return 0;
+}
+
 tstring tstring::substr(size_type pos, size_type n) const
 {
     assert(pos <= size());
