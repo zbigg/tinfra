@@ -56,7 +56,7 @@ bool lister::fetch_next(directory_entry& result)
         bool have_data = data_->is_first;
         data_->is_first = false;
         if( !have_data )
-            have_data =  FindNextFileW(data_->ff_handle, &data_->ff_data);
+            have_data =  (FindNextFileW(data_->ff_handle, &data_->ff_data) != 0 );
         if( !have_data )
             return false;
         
@@ -273,6 +273,7 @@ std::string pwd()
         return result;
     }
     tinfra::win32::throw_system_error("fs::pwd() failed (GetCurrentDirectoryW): implement it better!");
+    return ""; // just to satisfy compiler
 }
     
 } } // end namespace tinfra::fs

@@ -30,8 +30,8 @@ void fill_invalid_entry(entry& out, std::string const& error, std::string const&
 bool parser::fetch_next(entry& out)
 {
     std::string line;
-    bool result = getline(data_->input, line);
-    if( !result )
+    getline(data_->input, line);
+    if( !data_->input )
         return false;
     
     if( line.size() == 0 ) {

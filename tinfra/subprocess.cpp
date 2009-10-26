@@ -66,7 +66,7 @@ void start_detached(tstring const& command)
 
 void start_detached(tstring const& command, environment_t const& env)
 {
-    start_detached(command, env);
+    start_detached(command, &env);
 }
 
 void start_detached(tstring const& command, environment_t const* env)

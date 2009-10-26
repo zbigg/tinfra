@@ -94,13 +94,14 @@ void get_available_drives(std::vector<std::string>& result)
     if( len == 0 || len > sizeof(drives)) {
         throw_system_error("GetLogicalDriveStrings failed"); 
     }
-    
+    size_t remaining_bytes = len;
+
     TCHAR* p = drives;
-    while( *p && len > 0 ) {
-        int l2 = strlen(p);    
+    while( *p && remaining_bytes > 0 ) {
+        const size_t current_fragment_length = strlen(p);    
         result.push_back(fmt("%s:/") % p[0]);
-        p += l2+1;
-        len -= l2;
+        p += current_fragment_length + 1;
+        remaining_bytes -= current_fragment_length;
     }
 }
 
@@ -113,14 +114,14 @@ std::wstring make_wstring_from_utf8(tstring const& str)
 
     const int buffer_size = MultiByteToWideChar(
         codePage, flags, 
-        str.data(), str.size(),
+        str.data(), int(str.size()),
         0, 0 );
 
     wchar_t* buffer = new wchar_t[buffer_size+1];
     
     int written = MultiByteToWideChar(
         codePage, flags, 
-        str.data(), str.size(),
+        str.data(), int(str.size()),
         buffer, buffer_size );
     
     if( written == 0 ) {
