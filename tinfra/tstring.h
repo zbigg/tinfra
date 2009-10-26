@@ -26,27 +26,14 @@ namespace tinfra {
     in well defined scope: eg. sub-function call.
     Usually use of it doesn't require an initialization and it reuses C++ literals memory when 
     initialized with it.
-    
-    There is no default constructor so you can't put into containers
-    and it's hard to add as uninitialized field.
-    
-    Construction of instance from object that existed calls to sub functions consitutes
-    an error which calls abort().
  */
 
-// the weird stack pointer, stack detection and heap pointer detection
-// is probably screwed up
-
-#define TINFRA_TSTING_CHECKS 0
 class string_pool;
 
 class tstring  {
     const char* str_;
     size_t         length_;
     int         flags_;
-#if TINFRA_TSTING_CHECKS
-    const void* stamp_;
-#endif    
 public:
     tstring():
         str_(0),
@@ -59,23 +46,14 @@ public:
         str_((const char*)arr),
         length_(std::strlen(arr)),
         flags_(1)
-#if TINFRA_TSTING_CHECKS
-        ,stamp_(make_stamp(arr))
-#endif        
     {
-        //std::cerr << "created ARR tstring(" << this << ") stamp_: " << stamp_ << "\n";
-        check_stamp();
     }
     
     tstring(const char* str): 
         str_(str),
         length_(std::strlen(str)),
         flags_(1)
-#if TINFRA_TSTING_CHECKS
-        ,stamp_(make_stamp(this))
-#endif
     {
-        //std::cerr << "created PTR tstring(" << this << ") stamp_: " << stamp_ << "\n";
     }
     
     
@@ -83,36 +61,21 @@ public:
         str_(str),
         length_(length),
         flags_(has_null_terminate ? 1 : 0)
-#if TINFRA_TSTING_CHECKS
-        ,stamp_(make_stamp(this))
-#endif        
-
     {
-        //cerr << "created PTR tstring(" << this << ") stamp_: " << stamp_ << "\n";
     }
     
     tstring(std::string const& str): 
         str_(str.c_str()),
         length_(str.size()),
         flags_(1)
-#if TINFRA_TSTING_CHECKS
-        ,stamp_(make_stamp(&str))
-#endif        
     {
-        //cerr << "created STD tstring(" << this << ") stamp_: " << stamp_ << "\n";
-        check_stamp();
     }
     
     tstring(tstring const& other) : 
         str_(other.str_),
         length_(other.length_),
         flags_(other.flags_)
-#if TINFRA_TSTING_CHECKS
-        ,stamp_(other.stamp_)
-#endif
     { 
-        //cerr << "created TST tstring(" << this << ") stamp_: " << stamp_ << "\n";
-        check_stamp(); 
     }
     
     bool is_null_terminated() const { return flags_ == 1; }
@@ -217,22 +180,8 @@ public:
     static const size_type npos;
 
 private:
-#if TINFRA_TSTING_CHECKS
-    static const void* make_stamp(const void* v)
-    {
-        return v;
-    }
-    void check_stamp();
-#else
-    void check_stamp() {}
-    static const void* make_stamp(const void*) { return 0; }
-#endif
     static const char* temporary_alloc(string_pool& pool, tstring const& s);
 };
-
-namespace tstring_detail {
-    void tstring_set_bad_abort(bool a);
-}
 
 std::ostream& operator<<(std::ostream& out, tstring const& s);
 
