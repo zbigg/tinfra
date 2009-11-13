@@ -16,7 +16,7 @@ S'pl.reddix.tinfra-regexp'
 p8
 asS'log'
 p9
-S'autoconf+pkg_config fight, who won? ... works\n'
+S'tstring_match_result added\n'
 p10
 sS'author'
 p11
@@ -27,7 +27,7 @@ p13
 NsS'real_ancestors'
 p14
 (lp15
-S'faa026027b05c0f731084ce852453a486445365e'
+S'fb79589180347380a25b3ac77c1809a1458aea3f'
 p16
 asS'tags'
 p17
@@ -38,7 +38,7 @@ p19
 cdatetime
 datetime
 p21
-(S'\x07\xd9\x06\x02\x08+3\x00\x00\x00'
+(S'\x07\xd9\n\x18\x156\x05\x00\x00\x00'
 cvcpx.tzinfo
 _UTC
 p22
@@ -66,13 +66,13 @@ p33
 I00
 sS'name'
 p34
-S'configure.ac'
+S'tinfra/regexp.h'
 p35
 sS'unidiff'
 p36
 NsS'new_revision'
 p37
-S'be64d8870142b4d0dc54c1b232ae2e000cffef8d'
+S'5ab957d221add12330166c71710014bfe8db7615'
 p38
 sS'action_kind'
 p39
@@ -82,7 +82,7 @@ sS'old_name'
 p41
 NsbasS'lin_ancestor'
 p42
-S'faa026027b05c0f731084ce852453a486445365e'
+S'fb79589180347380a25b3ac77c1809a1458aea3f'
 p43
 sS'revision'
 p44
