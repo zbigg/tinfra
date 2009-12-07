@@ -1,7 +1,9 @@
-
-
 #ifndef tinfra_callback_h_included__
 #define tinfra_callback_h_included__
+
+#include <tinfra/shared_ptr.h>
+
+namespace tinfra {
 
 template <typename T>
 struct callback_base {
@@ -98,6 +100,8 @@ functor_callback<T,IMPL> make_callback(IMPL& functor)
 {
 	return functor_callback<T,IMPL>(functor);
 }
+
+} // end namespace tinfra
 
 #endif
 
