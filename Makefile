@@ -4,6 +4,8 @@ CXXFLAGS=-O2 -g -Wall -Werror -I. $(shell pkg-config --cflags tinfra tinfra-test
 LDLIBS=$(shell pkg-config --libs tinfra tinfra-test)
 CC=g++
 
+all: unittests
+
 LANG=C
 export LANG
 
@@ -37,8 +39,7 @@ test_gui: test_gui.o tinfra/gui/context.o
 
 UNITESTS_OBJECTS=\
 	tests/callfwd_test.o \
-	
-	
+		
 unittests: unittests.o $(UNITESTS_OBJECTS) $(COMMON_OBJECTS)
 
 async_fs_poc: async_fs_poc.o $(TINFRA_SANDBOX_OBJECTS)
