@@ -39,6 +39,7 @@ test_gui: test_gui.o tinfra/gui/context.o
 
 UNITESTS_OBJECTS=\
 	tests/callfwd_test.o \
+	tests/callback_test.o
 		
 unittests: unittests.o $(UNITESTS_OBJECTS) $(COMMON_OBJECTS)
 

@@ -12,10 +12,10 @@ struct callback_base {
 	virtual ~callback_base() {}
 };
 
-template <typename T>
+template <typename T, typename F>
 struct function_callback: public callback_base<T> {
 	
-	typedef void (*function_type)(T const&);
+	typedef F function_type;
 	
 	function_callback(function_type fun):
 		fun_(fun) 
@@ -84,19 +84,25 @@ private:
 };
 
 template <typename T, typename IMPL>
-member_callback<T,IMPL> make_callback(IMPL& obj, void (IMPL::*method)(T const&))
+callback<T> make_callback(IMPL& obj, void (IMPL::*method)(T const&))
 {
 	return member_callback<T,IMPL>(obj, method);
 }
 
 template <typename T>
-function_callback<T> make_callback(void (*fun)(T const&))
+callback<T> make_callback(void (*fun)(T const&))
 {
-	return function_callback<T>(fun);
+	return callback<T>( function_callback<T, void(*)(T const&)>(fun) );
+}
+
+template <typename T>
+callback<T> make_callback(void (*fun)(T))
+{
+	return callback<T> ( function_callback<T, void(*)(T)>(fun) );
 }
 
 template <typename T, typename IMPL>
-functor_callback<T,IMPL> make_callback(IMPL& functor)
+callback<T> make_callback(IMPL& functor)
 {
 	return functor_callback<T,IMPL>(functor);
 }
