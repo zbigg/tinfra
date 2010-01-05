@@ -10,8 +10,6 @@
 
 #include "tinfra/thread.h"
 
-#include <iostream>
-
 #include <windows.h>
 #include <process.h>
 #include <limits.h>

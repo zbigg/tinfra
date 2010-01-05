@@ -3,7 +3,6 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include <iostream>
 #include <stdexcept>
 #include <cstdlib>
 #include <algorithm>

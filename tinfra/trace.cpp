@@ -7,12 +7,12 @@
 #include "tinfra/fmt.h"
 #include "tinfra/cmd.h"
 #include "tinfra/tstring.h"
+#include "tinfra/stream.h"
 
 #include <sstream>
 #include <list>
 #include <iterator>
 #include <algorithm>
-#include <iostream>
 #include <stdexcept>
 
 namespace tinfra { 
@@ -42,7 +42,7 @@ void tracer::trace(location const& loc, const char* message)
         out << '[' << loc.name << ']';
     } 
     out << ": " << message << std::endl;
-    std::cerr << out.str();
+    tinfra::err.write( out.str() );
 }
 
 //
@@ -88,16 +88,18 @@ auto_register_tracer::~auto_register_tracer()
 
 void print_tracer_usage(tstring const&)
 {
-    std::cerr << "Trace system arguments:\n"
-                 "    --tracer-help        print tracers list and usage\n"
-                 "    --tracer-enable=name enable specific tracer\n"
-                 "\n"
-                 "Available tracers:\n";;
+    std::ostringstream tmp;
+    tmp << "Trace system arguments:\n"
+           "    --tracer-help        print tracers list and usage\n"
+           "    --tracer-enable=name enable specific tracer\n"
+           "\n"
+           "Available tracers:\n";;
     tracer_registry& r = global_tracer_registry();
     for(tracer_registry::const_iterator i = r.begin(); i != r.end(); ++i ) {
         tracer* t = *i;
-        std::cerr << "    " << t->name() << std::endl;
+        tmp << "    " << t->name() << std::endl;
     }
+    tinfra::err.write(tmp.str());
 }
 
 static bool matches(tstring const& mask, tstring const& str)

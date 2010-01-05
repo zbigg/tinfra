@@ -198,12 +198,13 @@ void option_list::parse(std::vector<tstring>& params)
     }
 }
 
-void option_list::print_help(std::ostream& out)
+void option_list::print_help(tinfra::output_stream& out)
 {
+    std::ostringstream tmp;
     for(option_list_t::const_iterator i = options.begin(); i != options.end(); ++i) 
     {
         const option_base* opt = *i;
-        out << "    ";
+        tmp << "    ";
         
         
         // TODO:
@@ -214,13 +215,14 @@ void option_list::print_help(std::ostream& out)
             out << "-" << switch_letter << ", ";
         */
         
-        out << "--" << opt->get_name();
+        tmp  << "--" << opt->get_name();
         if( opt->needs_argument() ) {
-            out << " ARG";
+            tmp  << " ARG";
         }
         
-        out << "\t" << opt->get_synopsis() << "\n";
+        tmp << "\t" << opt->get_synopsis() << "\n";
     }
+    out.write(tmp.str());
 }
 option_base* option_list::find_by_name(tstring const& name)
 {

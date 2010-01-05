@@ -17,6 +17,11 @@ output_stream::~output_stream()
 {
 }
 
+int output_stream::write(tstring const& data)
+{
+    return this->write(data.data(), data.size());
+}
+
 class old_input_stream_adapter: public input_stream {
     auto_ptr<tinfra::io::stream> delegate_;
 public:

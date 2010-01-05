@@ -12,8 +12,8 @@
 #include "tinfra/fmt.h"
 #include "tinfra/trace.h"
 #include "tinfra/option.h"
+#include "tinfra/stream.h"
 
-#include <iostream>
 #include <algorithm>
 
 #include <unittest++/UnitTest++.h>
@@ -33,9 +33,6 @@ namespace tinfra {
 namespace test {
 
 using std::string;
-using std::cout;
-using std::cin;
-using std::endl;
     
 #ifdef SRCDIR
     #define DEFAULT_TOP_SRCDIR SRCDIR
@@ -76,30 +73,16 @@ void set_test_resources_dir(tstring const& x)
     top_srcdir.assign(x.data(), x.size());
 }
 
-void user_wait(tstring const& prompt)
-{
-    if( prompt.size() != 0 ) {
-        cout << prompt << " ";
-    }
-    cout << "(waiting for enter)";
-    cout.flush();
-    std::string s;
-    std::getline(cin, s);
-}
-
 static void out(const char* message, ...)
 {
     va_list ap;
     va_start(ap, message);
-#ifdef _WIN32
     char buf[2048];
     vsprintf(buf,message, ap);
     //printf("%s",buf);
-    std::cout << buf;
-    std::cout.flush();
+    tinfra::out.write(buf);
+#ifdef _WIN32
     OutputDebugString(buf);
-#else
-    vprintf(message, ap);
 #endif
     va_end(ap);
 }
@@ -185,15 +168,17 @@ static void list_available_tests()
     const TestList& tl = Test::GetTestList();
     const Test* test = tl.GetHead();
     
-    std::cout << "Available test cases:\n";
+    std::ostringstream tmp;
+    tmp << "Available test cases:\n";
     
     while( test ) {
         std::string full_test_name = fmt("%s::%s") 
                                      % test->m_details.suiteName 
                                      % test->m_details.testName;
-        std::cout << "    " << full_test_name << "\n";
+        tmp << "    " << full_test_name << "\n";
         test = test->next;
     }
+    tinfra::out.write(tmp.str());
 }
 
 #ifdef SRCDIR
@@ -218,11 +203,12 @@ int test_main(int argc, char** argv)
     if( opt_help.enabled() ) {
         using tinfra::path::basename;
         using tinfra::get_exepath;
-        std::cout <<
-            "Usage: " << basename(get_exepath()) << " [options] [ test_case ... ]\n" <<
-            "Available options:\n";
+        std::string usage_header = fmt(
+            "Usage: %s [options] [ test_case ... ]\n"
+            "Available options:\n") % basename(get_exepath());
         
-        tinfra::option_registry::get().print_help(std::cout);
+        tinfra::out.write(tstring(usage_header));
+        tinfra::option_registry::get().print_help(tinfra::out);
         return 0;
     }
     if( opt_list.enabled() ) {

@@ -10,7 +10,6 @@
 
 #include "tinfra/thread.h"
 
-#include <iostream>
 #include <memory>
 
 #include <pthread.h>
@@ -42,7 +41,7 @@ static void* thread_master_fun(void* param)
         std::auto_ptr<thread_entry_param> p2((thread_entry_param*)param);
         return p2->entry(p2->param);
     } catch(std::exception& e) {
-        std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % thread::current().to_number() % e.what();
+        TINFRA_LOG_ERROR( fmt("thread %i failed with uncaught exception: %s\n") % thread::current().to_number() % e.what() )
         return 0;
     }
 }

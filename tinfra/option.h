@@ -7,6 +7,8 @@
 #define tinfra_option_h_included
 
 #include "tinfra/tstring.h"
+#include "tinfra/stream.h"
+
 #include <vector>
 #include <sstream>
 
@@ -44,7 +46,7 @@ public:
     // processing
     void parse(std::vector<tstring>& params);
     
-    void print_help(std::ostream& out);
+    void print_help(tinfra::output_stream& out);
 
     // query
     option_list_t get_options();

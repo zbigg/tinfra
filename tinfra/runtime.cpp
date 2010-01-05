@@ -4,7 +4,6 @@
 //
 
 #include <ostream>
-#include <iostream>
 #include <iomanip>
 
 #include <cstring>
@@ -12,6 +11,7 @@
 
 #include "tinfra/fmt.h"
 #include "tinfra/runtime.h"
+#include "tinfra/stream.h"
 
 #if 0 // TODO woe32 part of this
 #include <csignal>
@@ -101,10 +101,13 @@ void fatal_exit(const char* message, stacktrace_t& stacktrace)
     if( fatal_exception_handler ) {
 	fatal_exception_handler();
     }
-    std::cerr << get_exepath() << ": " << message << std::endl;
+    
+    std::ostringstream tmp;
+    tmp << get_exepath() << ": " << message << std::endl;
     if( stacktrace.size() > 0 ) 
-        print_stacktrace(stacktrace, std::cerr);    
-    std::cerr << "aborting" << std::endl;
+        print_stacktrace(stacktrace, tmp);    
+    tmp << "aborting" << std::endl;
+    tinfra::err.write(tmp.str());
     abort();
 }
 
@@ -126,7 +129,7 @@ void fatal_exit(const char* message)
 //
 void interrupt_exit(const char* message)
 {
-    std::cerr << get_exepath() << ": " << message << std::endl;
+    tinfra::err.write(fmt("%s: %s\n") % get_exepath() % message);
     exit(1);
 }
 

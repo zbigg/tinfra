@@ -24,10 +24,12 @@ class output_stream {
 public:
     virtual ~output_stream();
 
-    virtual void close() = 0;
-    
+    // common interface
+    int write(tstring const& data);
+
+    // abstract interface
+    virtual void close() = 0;    
     virtual int write(const char* data, int size) = 0;
-    
     virtual void sync() = 0;
 };
 
@@ -70,14 +72,13 @@ std::string read_all(input_stream& input);
 
 } // end namespace tinfra
 
-#if 0 
 // native_file is defined "per"
 // platform
+
 #if   defined( _WIN32)
 #include "win32/w32_stream.h"
 #else
 #include "posix/posix_stream.h"
-#endif
 
 #endif // disabling of platform specific defs
 

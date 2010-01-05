@@ -7,8 +7,8 @@
 #include "tinfra/exception.h"
 #include "tinfra/exeinfo.h"
 #include "tinfra/trace.h"
+#include "tinfra/stream.h"
 
-#include <iostream>
 #include <string>
 #include <exception>
 
@@ -18,7 +18,7 @@
 namespace tinfra {
 namespace cmd {
 
-static void print_maybe_multiline(tstring const& PS1, tstring const& PS2, tstring const& message, std::ostream& out)
+static void print_maybe_multiline(tstring const& PS1, tstring const& PS2, tstring const& message, tinfra::output_stream& out)
 {
     // TODO: implement "multiline behaviour"
     size_t start = 0;
@@ -40,13 +40,18 @@ static void print_maybe_multiline(tstring const& PS1, tstring const& PS2, tstrin
             if( pi > start+1 && message[eol-1] == '\r' ) --pi;
             len = pi-start;
         }
-        if( len != 0 ) 
-            out << (start == 0 ? PS1: PS2) << message.substr(start, len) << std::endl;            
+        if( len != 0 ) {
+            // TODO: create tinfra string builders
+            std::ostringstream tmp;
+            tmp << (start == 0 ? PS1: PS2) << message.substr(start, len) << std::endl;
+            std::string const stmp = tmp.str();
+            out.write(stmp.data(), stmp.size());
+        }
         start = eol+1;
     } while( !finished );
 }
 
-static void print_maybe_multiline(tstring const& prefix, tstring const& message, std::ostream& out)
+static void print_maybe_multiline(tstring const& prefix, tstring const& message, tinfra::output_stream& out)
 {
     print_maybe_multiline(prefix,prefix,message,out);
 }
@@ -84,32 +89,32 @@ unsigned app::error_count() const
 
 void app::fail(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": fatal error: ", msg, std::cerr);
+    print_maybe_multiline(program_name() + ": fatal error: ", msg, tinfra::err);
     error_count_ += 1;
     exit(1);
 }
 
 void app::warning(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": warning: ", msg, std::cerr);
+    print_maybe_multiline(program_name() + ": warning: ", msg, tinfra::err);
     warning_count_ += 1;
 }
 
 void app::silent_exception(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": warning, ignored exception: ", msg, std::cerr);
+    print_maybe_multiline(program_name() + ": warning, ignored exception: ", msg, tinfra::err);
     warning_count_ += 1;
 }
 
 void app::error(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": error: ", msg, std::cerr);
+    print_maybe_multiline(program_name() + ": error: ", msg, tinfra::err);
     error_count_ += 1;
 }
 
 void app::inform(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": ", msg, std::cerr);
+    print_maybe_multiline(program_name() + ": ", msg, tinfra::err);
 }
 
 static app default_app;

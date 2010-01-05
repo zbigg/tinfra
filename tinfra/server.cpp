@@ -10,7 +10,6 @@
 
 #include "tinfra/fmt.h"
 
-#include <iostream>
 #include <stdexcept>
 
 namespace tinfra { namespace net {
