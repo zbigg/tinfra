@@ -1,6 +1,6 @@
 #include "tinfra/posix/posix_stream.h" // we implement these
 
-#include "os_common.h"
+#include "tinfra/os_common.h"
 
 #include <unistd.h>
 #include <errno.h>
@@ -11,7 +11,7 @@ posix::standard_handle_input  in;
 posix::standard_handle_output out(1);
 posix::standard_handle_output err(2);
 
-namespace win32 {
+namespace posix {
 
 //
 // standard_handle_input
@@ -74,6 +74,6 @@ void standard_handle_output::sync()
 {
 }
 
-} // end namespace tinfra::win32
+} // end namespace tinfra::posix
 } // end namespace tinfra
 
