@@ -10,6 +10,7 @@
 #include <string>
 #include <stdexcept>
 #include <map>
+#include <iosfwd>    // for std::ostream
 
 #include "tinfra/exeinfo.h"
 

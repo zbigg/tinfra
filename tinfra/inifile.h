@@ -8,9 +8,9 @@
 
 #include "tinfra/generator.h"
 
-#include <memory>
-#include <string>
-#include <istream>
+#include <memory> // for std::auto_ptr
+#include <string> // for std::string
+#include <iosfwd> // for std::istream
 
 namespace tinfra {
 namespace inifile {

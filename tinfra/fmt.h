@@ -10,9 +10,10 @@
 
 #include "tinfra/exception.h"
 #include "tinfra/tstring.h"
-#include <string>
-#include <ostream>
-#include <sstream>
+
+#include <string>  // for std::string
+#include <iosfwd>  // for std::ostream
+#include <sstream> // for std::ostringstream 
 
 namespace tinfra {
     
@@ -27,6 +28,7 @@ class format_exception: public generic_exception {
 public:
     format_exception(const std::string& message): generic_exception("format exception: " + message) {}
 };
+
 class simple_fmt {
 public:
     simple_fmt(tstring const& format): fmt_(format), pos_(0) {}

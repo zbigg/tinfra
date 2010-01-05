@@ -11,8 +11,6 @@
 #include "tinfra/fmt.h"
 #include "tinfra/cmd.h"
 
-#include <iostream>
-
 namespace tinfra {
 
 using std::string;

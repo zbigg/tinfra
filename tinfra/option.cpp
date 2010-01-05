@@ -8,6 +8,7 @@
 #include "tinfra/tstring.h"
 #include "tinfra/trace.h"
 
+#include <ostream>
 #include <cstdlib>
 
 namespace tinfra {

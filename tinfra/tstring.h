@@ -6,12 +6,11 @@
 #ifndef tinfra_tstring_h_included
 #define tinfra_tstring_h_included
 
-#include <string>
-#include <stdexcept>
-#include <vector>
+#include <string>  // for std::string
+#include <vector>  // for std::vector used in string_pool
 
-#include <cassert>
-#include <cstring>
+#include <cassert> // for assert
+#include <cstring> // for std::strlen
 
 namespace tinfra {
 
@@ -81,14 +80,7 @@ public:
     bool is_null_terminated() const { return flags_ == 1; }
     
     char const*  data() const  { return str_; }
-    /*
-    char const*  c_str() const
-    { 
-        if( is_null_terminated() )
-	    return str_;
-        throw std::runtime_error("c_str() called on non null-terminated string"); 
-    }
-    */
+    
     char const*  c_str(string_pool& pool) const
     {
         if( is_null_terminated() ) 
@@ -98,8 +90,6 @@ public:
     
     std::string  str()   const  { return std::string(tstring::data(), tstring::size()); }
     operator std::string() const { return str(); }
-    
-    //operator char const*() const { return data(); }
     
     char        operator[](size_t n) const { return tstring::data()[n]; }
     
