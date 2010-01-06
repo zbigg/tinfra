@@ -30,7 +30,6 @@
         <include>$(SRCDIR)</include>
         <sources>
             tinfra/symbol.cpp
-            tinfra/exception.cpp
             tinfra/runtime.cpp
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
@@ -91,7 +90,6 @@
         <files>
             tinfra/StaticCacheObject.h
             tinfra/cmd.h
-            tinfra/exception.h
             tinfra/exeinfo.h
             tinfra/fmt.h
             tinfra/string.h

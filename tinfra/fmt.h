@@ -8,13 +8,12 @@
 
 #include "tinfra/platform.h"
 
-#include "tinfra/exception.h"
 #include "tinfra/tstring.h"
 
 #include <string>  // for std::string
 #include <iosfwd>  // for std::ostream
 #include <sstream> // for std::ostringstream 
-
+#include <stdexcept> // for std::logic_error
 namespace tinfra {
     
 /// simple_fmt
@@ -24,9 +23,9 @@ namespace tinfra {
 ///     fmt("Hello %s. Nice to %s you. Count %i") % "zbyszek" % "opryszek" % 2;
 ///
 
-class format_exception: public generic_exception {
+class format_exception: public std::logic_error {
 public:
-    format_exception(const std::string& message): generic_exception("format exception: " + message) {}
+    format_exception(const std::string& message): std::logic_error("format exception: " + message) {}
 };
 
 class simple_fmt {
