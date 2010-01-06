@@ -10,5 +10,11 @@ run_tailor:
 	$(TAILOR) -c tinfra-ssh.tailor
 	$(TAILOR) -c tinfra-regexp.tailor
 
+tinfra-rootdir/svnside-pl.reddix.tinfra:
+	svn co https://tinfra.googlecode.com/svn/trunk/tinfra $@
+
+tinfra-rootdir/mtnside-pl.reddix.tinfra:
+	mtn -b pl.reddix.tinfra co $@
+
 .PHONY: run_tailor
 
