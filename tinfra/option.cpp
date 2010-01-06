@@ -8,7 +8,6 @@
 #include "tinfra/tstring.h"
 #include "tinfra/trace.h"
 
-#include <ostream>
 #include <cstdlib>
 
 namespace tinfra {
@@ -206,14 +205,10 @@ void option_list::print_help(tinfra::output_stream& out)
         const option_base* opt = *i;
         tmp << "    ";
         
-        
-        // TODO:
-        // switch_letter is not yet supported so don't show it to user
-        /*
         const char switch_letter =  opt->get_switch_letter();
         if( switch_letter != option_base::NO_SWITCH )
-            out << "-" << switch_letter << ", ";
-        */
+            tmp << "-" << switch_letter << ", ";
+        
         
         tmp  << "--" << opt->get_name();
         if( opt->needs_argument() ) {
