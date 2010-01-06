@@ -9,11 +9,12 @@
 //
 
 #include "tinfra/thread.h"
+#include "tinfra/fmt.h"
 
 #include <memory>
+#include <stdexcept>
 
 #include <pthread.h>
-#include "tinfra/fmt.h"
 
 #ifdef HAVE_NANOSLEEP
 #include <time.h>
@@ -27,7 +28,7 @@ namespace thread {
 
 static void thread_error(const char* message, int rc)
 {
-    throw generic_exception(fmt("failed to %s: %i") % message % rc);
+    throw std::runtime_error(fmt("failed to %s: %i") % message % rc);
 }
 
 struct thread_entry_param {

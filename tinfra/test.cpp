@@ -13,7 +13,7 @@
 #include "tinfra/trace.h"
 #include "tinfra/option.h"
 #include "tinfra/stream.h"
-
+#include "tinfra/exeinfo.h"
 #include <algorithm>
 #include <stdexcept>
 
