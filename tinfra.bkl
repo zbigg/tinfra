@@ -121,6 +121,7 @@
             tinfra/posix/posix_mutex.h
             tinfra/win32/thread.h
             tinfra/win32/w32_mutex.h
+            tinfra/win32/w32_stream.h
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
 	    tinfra/memory_pool.h
