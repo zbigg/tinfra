@@ -60,14 +60,6 @@ static void throw_system_error2(unsigned int error, const std::string& message)
 void throw_system_error(unsigned int error, std::string const& message)
 {
     switch( error ) {
-    case ERROR_FILE_NOT_FOUND:
-    case ERROR_PATH_NOT_FOUND:
-    
-    case WSAHOST_NOT_FOUND:
-    case WSANO_DATA:
-    case WSAECONNREFUSED:
-        throw_system_error2<std::logic_error>(error, message);
-    
     case WSAEFAULT:
     case ERROR_INVALID_HANDLE:
         throw_system_error2<std::invalid_argument>(error, message);
@@ -75,6 +67,12 @@ void throw_system_error(unsigned int error, std::string const& message)
     case WSAEWOULDBLOCK:
         throw_system_error2<tinfra::io::would_block>(error, message);
         
+    case ERROR_FILE_NOT_FOUND:
+    case ERROR_PATH_NOT_FOUND:
+    
+    case WSAHOST_NOT_FOUND:
+    case WSANO_DATA:
+    case WSAECONNREFUSED:
     default:
         throw_system_error2<std::runtime_error>(error, message);
     }
