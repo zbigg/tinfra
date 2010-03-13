@@ -57,7 +57,7 @@ static std::string make_safe_script(std::string const& contents )
 }
 
 #else
-static std::string make_safe_script(std::string contents& a)
+static std::string make_safe_script(std::string const& contents)
 {
     assert(false);
 }
