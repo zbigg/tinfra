@@ -9,7 +9,7 @@
 #define __tinfra__sftp_protocol_h__
 
 #include "tinfra/symbol.h"
-#include "tinfra/tinfra.h"
+#include "tinfra/typeinfo.h"
 #include "tinfra/standards/rfc4251.h"
 
 namespace tinfra {
@@ -632,7 +632,7 @@ public:
         while( true ) {
             try {
                 T instance;
-                tinfra::tt_mutate(instance, *this);
+                tinfra::mo_mutate(instance, *this);
                 r.push_back(instance);
             } catch( tinfra::io::would_block& e) {
                 break;
@@ -645,14 +645,14 @@ public:
         r.reserve(size);
         for( uint32 i = 0; i != size; ++i ) {
             T instance;
-            tinfra::tt_mutate(instance, *this);
+            tinfra::mo_mutate(instance, *this);
             r.push_back(instance);
         }
     }
     template <typename T>
-    void managed_struct(T& v, tinfra::symbol const& s)
+    void mstruct(tinfra::symbol const& s, T& v)
     {    
-        tinfra::tt_mutate<T>(v, *this);
+        tinfra::mo_mutate<T>(v, *this);
     }
 };
 
@@ -683,7 +683,7 @@ public:
     template <typename T>
     void operator()(tinfra::symbol const&, fill_list<T> const& v) {
         for( typename fill_list<T>::const_iterator i = v.begin(); i != v.end(); ++i ) {
-            tinfra::tt_process(*i, *this);
+            tinfra::mo_process(*i, *this);
         }
     }
     
@@ -692,21 +692,21 @@ public:
         write_uint32(v.size());
         
         for( typename fill_list<T>::const_iterator i = v.begin(); i != v.end(); ++i ) {
-            tinfra::tt_process(*i, *this);
+            tinfra::mo_process(*i, *this);
         }
     }
     
     template <typename T>
-    void managed_struct(T const& v, tinfra::symbol const& s)
+    void mstruct(tinfra::symbol const& s, T const& v)
     {    
-        tinfra::tt_process<T>(v, *this);
+        tinfra::mo_process<T>(v, *this);
     }
 };
 
 
 } } // end namespace tinfra::sftp
 
-#define TINFRA_STRUCT(a) namespace tinfra { template <> class TypeTraits<a>: public tinfra::ManagedStruct<a> {}; }
+#define TINFRA_STRUCT(a) namespace tinfra { template <> class mo_traits<a>: public tinfra::struct_mo_traits<a> {}; }
 
 TINFRA_STRUCT(tinfra::sftp::packet_header);
 TINFRA_STRUCT(tinfra::sftp::init_packet);

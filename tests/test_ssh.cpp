@@ -53,7 +53,7 @@ SUITE(tinfra_ssh) {
         }
         
         tinfra::ssh::connection_settings settings;
-        settings.provider = "ssh";
+        //settings.provider = "ssh";
         settings.server_address = opt_server_host.value();
         settings.server_ssh_port = opt_server_port.value();
         settings.login_name = opt_remote_user.value();

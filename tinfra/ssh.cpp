@@ -2,8 +2,8 @@
 
 #include <tinfra/subprocess.h>
 #include <tinfra/runtime.h>
-#include <tinfra/tinfra_lex.h>
 #include <tinfra/fmt.h>
+#include <tinfra/lex.h>
 #include <tinfra/path.h>
 #include <tinfra/os_common.h>
 #include <tinfra/trace.h>
