@@ -4,7 +4,6 @@
 //
 
 #include "tinfra/fmt.h"
-#include "tinfra/exception.h"
 #include <string>
 #include <cctype>
 #include <iterator>

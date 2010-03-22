@@ -3,7 +3,7 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/exception.h"
+#include "tinfra/runtime.h"
 #include "tinfra/cmd.h"
 #include "tinfra/thread.h"
 #include "tinfra/fmt.h"
