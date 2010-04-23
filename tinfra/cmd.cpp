@@ -4,7 +4,7 @@
 //
 
 #include "tinfra/cmd.h"
-#include "tinfra/exception.h"
+#include "tinfra/runtime.h"
 #include "tinfra/exeinfo.h"
 #include "tinfra/trace.h"
 #include "tinfra/stream.h"
