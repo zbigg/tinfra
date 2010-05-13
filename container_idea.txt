@@ -1,0 +1,51 @@
+random idea ...
+
+  we must drive into "prefork" architecture of processes
+  so each domain process (aka Nwi3CM) is "forked" and each
+  subprocess handles one client request
+ 
+  first idea:
+    this could work when we have limited (aka 15-20-30) number 
+    of simultenaous tasks
+ 
+  mass operations > 100 could be managed as introducing
+  session which is stored into shared, persistent memory (DB?)
+  and pool of processes waits for signals
+ 
+  each scenario/session/operation/flow (SSOF) has it's state 
+  stored in DB
+ 
+  each message is assigned with SSOF
+ 
+  each reply is finds it's session and is routed as pair (repply, SSOF id)
+  into process
+ 
+  extra: some dispatcher (?) knows which process handled which SSOF
+        last and it prioritizes it so this process
+        
+  process have it's queue on each he reads
+    (message, SSOF id)
+   
+  process analyzes message, 
+    performs work
+    updates SSOF
+    sends message | kills SSOF
+    
+  each SSOF
+    has timeout
+    has SSOF
+    has "last processing process" (extra)
+    has set of reply ids 
+ 
+  message processing in process
+    may create SSOF
+    may kill   SSOF - defulr
+    
+    may extend SSOF lifetime with
+        assigning set(reply id) tiemout
+        
+  SSOF supervisor searches timeouted sessions
+    marks kills SSOF
+    executes custom "failed_session_code" - in process ?
+    marks all replies in set(reply id) as dead
+    

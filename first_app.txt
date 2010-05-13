@@ -1,0 +1,45 @@
+this is proof of concept for SIDE project
+
+(SIDE is an Semi Integrated Desktop/Development Environment)
+
+use case
+    on any machine under some circumstances we generate
+    events that are of interest of desktop users
+     tool error
+        resource uri
+        line
+        message
+        
+     new version
+        name
+        description
+        diff
+    this component is "client" it doesn't run inside container
+    
+    
+    some component receives all those messages and
+        tags with date
+        tags with ??
+        stores into db
+        
+        broadcast to interested components basing on filters
+        
+        this component has no state!
+
+        this component lives in container
+        
+    on desktop one component
+        registers for all events
+
+
+architecture sketch
+
+    there is topic message
+    
+    
+======================
+
+
+container sketch
+    phase1
+    support simple tcp connector

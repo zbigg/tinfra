@@ -1,0 +1,12 @@
+module side {
+    message tool_error {
+        URI resource;
+        integer line;
+        string message;
+    }
+    
+    message foo {
+        vector<string> a;
+    }
+}
+

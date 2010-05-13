@@ -1,0 +1,18 @@
+suppose that messages are 
+
+    plain bytes at transport level
+    
+processes could be implemented using different
+transports
+    tcp         - tcp/ip socket
+    pipe        - unnamed pipe
+    ssl         - SSL over TCP/ip
+    unix        - unix pipe
+    fifo        - named pipe/fifo
+    udp         - UDP socket
+    shared_memory - shared memory (see boost interprocess)
+    ...
+    
+    
+components exchange messages aka
+    protocol buffers/YAMI/etc
