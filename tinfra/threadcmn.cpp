@@ -6,7 +6,6 @@
 #include <tinfra/thread.h> // implements (thread_set)
 
 #include <tinfra/fmt.h>    // impl dependecies
-#include <iostream>
 
 namespace tinfra {
 namespace thread {

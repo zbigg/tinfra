@@ -12,6 +12,7 @@
             tinfra/win32/thread.cpp
             tinfra/win32/w32_runtime.cpp
             tinfra/win32/w32_fs.cpp
+            tinfra/win32/w32_stream.cpp
         </if>
         
         <if cond="PLATFORM_UNIX=='1'">
@@ -20,6 +21,7 @@
             tinfra/posix/thread.cpp
             tinfra/posix/posix_runtime.cpp
             tinfra/posix/posix_fs.cpp
+            tinfra/posix/posix_stream.cpp
         </if>
     </set>
 
@@ -28,7 +30,6 @@
         <include>$(SRCDIR)</include>
         <sources>
             tinfra/symbol.cpp
-            tinfra/exception.cpp
             tinfra/runtime.cpp
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
@@ -89,7 +90,6 @@
         <files>
             tinfra/StaticCacheObject.h
             tinfra/cmd.h
-            tinfra/exception.h
             tinfra/exeinfo.h
             tinfra/fmt.h
             tinfra/string.h
@@ -121,6 +121,7 @@
             tinfra/posix/posix_mutex.h
             tinfra/win32/thread.h
             tinfra/win32/w32_mutex.h
+            tinfra/win32/w32_stream.h
             tinfra/primitive_wrapper.h
             tinfra/standards/rfc4251.h
 	    tinfra/memory_pool.h

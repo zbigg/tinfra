@@ -8,7 +8,6 @@
 #include "tinfra/guard.h"
 
 #include <string>
-#include <iostream>
 #include <list>
 #include <map>
 #include <vector>

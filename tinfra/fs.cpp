@@ -23,7 +23,6 @@
 
 #include <cstring>
 #include <errno.h>
-#include <iostream>
 
 #if defined _WIN32
 #include <direct.h>

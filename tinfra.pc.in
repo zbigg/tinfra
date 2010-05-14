@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: @PACKAGE_NAME@
 Description: tinfra library
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -ltinfra @LIBS@
-Cflags: -I${includedir}
+Libs: @LDFLAGS@ -L${libdir} -ltinfra @LIBS@
+Cflags: @CLIENT_CXXFLAGS@ -I${includedir}
 Requires:

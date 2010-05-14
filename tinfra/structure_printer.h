@@ -9,6 +9,8 @@
 #include "tinfra/symbol.h"
 #include "tinfra/mo.h"
 
+#include <ostream> // for std::ostream
+
 namespace tinfra {
 /// Structured value printer
 ///

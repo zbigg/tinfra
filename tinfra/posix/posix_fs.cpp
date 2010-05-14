@@ -13,7 +13,6 @@
 
 #include <cstring>
 #include <errno.h>
-#include <iostream>
 
 #include <sys/types.h>
 #include <sys/stat.h>

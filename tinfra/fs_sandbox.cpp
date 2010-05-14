@@ -11,14 +11,9 @@
 #include "tinfra/fmt.h"
 #include "tinfra/cmd.h"
 
-#include <iostream>
-
 namespace tinfra {
 
 using std::string;
-using std::cout;
-using std::cin;
-using std::endl;
  
 fs_sandbox::fs_sandbox(tinfra::vfs& fs, tstring const& path): 
 	_fs(fs),

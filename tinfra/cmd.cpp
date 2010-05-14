@@ -4,22 +4,21 @@
 //
 
 #include "tinfra/cmd.h"
-#include "tinfra/exception.h"
+#include "tinfra/runtime.h"
 #include "tinfra/exeinfo.h"
 #include "tinfra/trace.h"
+#include "tinfra/stream.h"
 
-#include <iostream>
 #include <string>
 #include <exception>
 
 #include <cstdio>
 #include <cstdlib>
 
-using namespace std;
 namespace tinfra {
 namespace cmd {
 
-static void print_maybe_multiline(tstring const& PS1, tstring const& PS2, tstring const& message, ostream& out)
+static void print_maybe_multiline(tstring const& PS1, tstring const& PS2, tstring const& message, tinfra::output_stream& out)
 {
     // TODO: implement "multiline behaviour"
     size_t start = 0;
@@ -29,9 +28,9 @@ static void print_maybe_multiline(tstring const& PS1, tstring const& PS2, tstrin
             
         size_t eol = message.find_first_of('\n', start);
         size_t len;
-        if( eol == string::npos ) {
+        if( eol == std::string::npos ) {
             if( start != message.size()-1 ) {
-                len = string::npos;
+                len = std::string::npos;
                 finished = true;
             } else {
                 return;
@@ -41,12 +40,18 @@ static void print_maybe_multiline(tstring const& PS1, tstring const& PS2, tstrin
             if( pi > start+1 && message[eol-1] == '\r' ) --pi;
             len = pi-start;
         }
-        if( len != 0 ) 
-            out << (start == 0 ? PS1: PS2) << message.substr(start, len) << endl;            
+        if( len != 0 ) {
+            // TODO: create tinfra string builders
+            std::ostringstream tmp;
+            tmp << (start == 0 ? PS1: PS2) << message.substr(start, len) << std::endl;
+            std::string const stmp = tmp.str();
+            out.write(stmp.data(), stmp.size());
+        }
         start = eol+1;
     } while( !finished );
 }
-static void print_maybe_multiline(tstring const& prefix, tstring const& message, ostream& out)
+
+static void print_maybe_multiline(tstring const& prefix, tstring const& message, tinfra::output_stream& out)
 {
     print_maybe_multiline(prefix,prefix,message,out);
 }
@@ -63,16 +68,16 @@ app::~app()
 {
 }
 
-void app::program_name(string const& p)
+void app::program_name(std::string const& p)
 {
-    size_t pi = p.find_last_of("/\\");
-    if( pi != string::npos)
+    const std::size_t pi = p.find_last_of("/\\");
+    if( pi != std::string::npos)
         program_name_ = p.substr(pi+1);
     else
         program_name_ = p;
 }
 
-string const& app::program_name() const
+std::string const& app::program_name() const
 {
     return program_name_;
 }
@@ -84,32 +89,32 @@ unsigned app::error_count() const
 
 void app::fail(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": fatal error: ", msg,cerr);
+    print_maybe_multiline(program_name() + ": fatal error: ", msg, tinfra::err);
     error_count_ += 1;
     exit(1);
 }
 
 void app::warning(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": warning: ", msg,cerr);
+    print_maybe_multiline(program_name() + ": warning: ", msg, tinfra::err);
     warning_count_ += 1;
 }
 
 void app::silent_exception(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": warning, ignored exception: ", msg,cerr);
+    print_maybe_multiline(program_name() + ": warning, ignored exception: ", msg, tinfra::err);
     warning_count_ += 1;
 }
 
 void app::error(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": error: ", msg,cerr);
+    print_maybe_multiline(program_name() + ": error: ", msg, tinfra::err);
     error_count_ += 1;
 }
 
 void app::inform(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": ", msg,cerr);
+    print_maybe_multiline(program_name() + ": ", msg, tinfra::err);
 }
 
 static app default_app;
@@ -148,3 +153,6 @@ int main_wrapper(int argc, char* argv[],int (*real_main)(int,char*[]))
 }
 
 } } // end of namespace tinfra::cmd
+
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
+

@@ -37,13 +37,13 @@ SUITE(tinfra)
     TEST(io_open_bad_file)
     {
         tinfra::io::zstreambuf buf;
-        CHECK_THROW( buf.open_file("this_file_doesn't_exist", std::ios_base::in), std::logic_error);
+        CHECK_THROW( buf.open_file("this_file_doesn't_exist", std::ios_base::in), std::runtime_error);
     }
 
     TEST(io_open_bad_socket)
     {
         tinfra::io::zstreambuf buf;
-        CHECK_THROW( buf.open_socket("this_host_doesnt_exist", 80), std::logic_error);
+        CHECK_THROW( buf.open_socket("this_host_doesnt_exist", 80), std::runtime_error);
     }
 
     TEST(io_basic)

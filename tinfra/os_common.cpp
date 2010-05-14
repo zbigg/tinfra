@@ -27,22 +27,17 @@ void throw_errno_error(int error, std::string const & message)
     switch(error) {
     case ENAMETOOLONG:
     case EBADF:
-    case E2BIG:
     case EINVAL:
         throw_errno<std::invalid_argument>(error, message);
-    
-    case EFBIG:
-    case ENOSPC:
-        throw_errno<std::length_error>(error, message);
     
     case EAGAIN:
         throw_errno<tinfra::io::would_block>(error, message);
     
+    case E2BIG:
+    case ENOSPC:
     case ENOENT:
     case EISDIR:
     case ENOTDIR: 
-        throw_errno<std::logic_error>(error, message);
-    
     default:
         throw_errno<std::runtime_error>(error, message);
     }

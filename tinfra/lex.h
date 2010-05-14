@@ -9,10 +9,10 @@
 #include "tstring.h"
 #include "symbol.h"
 
-#include <stdexcept>
-#include <string>
-#include <ostream>
-#include <sstream>
+#include <stdexcept>  // for std::logic_error
+#include <string>     // for std::string
+#include <iosfwd>     // for std::istream, std::ostream
+#include <sstream>    // for std::ostringstream, std::istringstream
 
 namespace tinfra {
 

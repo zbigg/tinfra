@@ -47,10 +47,10 @@ SUITE(tinfra)
         CHECK( fs::is_file("boo.test") );
         
         // check if source doesn't exist
-        CHECK_THROW( fs::copy("testtest_fileXX", "foo"), std::logic_error);
+        CHECK_THROW( fs::copy("testtest_fileXX", "foo"), std::runtime_error);
         
         // check if dest directory doesn't exist
-        CHECK_THROW( fs::copy("testtest_file", "fooFOOfoo/foo"), std::logic_error);
+        CHECK_THROW( fs::copy("testtest_file", "fooFOOfoo/foo"), std::runtime_error);
     }
     
     TEST(fs_list_files)

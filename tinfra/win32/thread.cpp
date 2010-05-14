@@ -10,13 +10,12 @@
 
 #include "tinfra/thread.h"
 
-#include <iostream>
-
 #include <windows.h>
 #include <process.h>
 #include <limits.h>
 
 #include <memory>
+#include <stdexcept>
 
 #include "tinfra/win32.h"
 #include "tinfra/fmt.h"
@@ -53,7 +52,7 @@ TINFRA_MODULE_TRACER(tinfra_thread);
 
 static void thread_error(const char* message, unsigned int rc)
 {
-    throw generic_exception(fmt("tinfra::thread error: %s :%s(%i)") % message % win32::get_error_string(rc) % rc );
+    throw std::runtime_error(fmt("tinfra::thread error: %s :%s(%i)") % message % win32::get_error_string(rc) % rc );
 }
 
 // 

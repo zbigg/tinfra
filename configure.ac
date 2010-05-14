@@ -36,11 +36,17 @@ AC_CHECK_FUNCS([opendir nanosleep usleep])
 case "$target" in
 *-mingw*|*-mingw32*)
 	LIBS="$LIBS -lwsock32"
+        CXXFLAGS="$CXXFLAGS -mthreads"
+        CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -mthreads"
+        LDFLAGS="$LDFLAGS -mthreads"
 	;;
 *)
         LIBS="$LIBS -lpthread"
         ;;
 esac
+
+AC_SUBST(CLIENT_CXXFLAGS)
+
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(nsl,gethostbyname)
 

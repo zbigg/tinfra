@@ -197,29 +197,27 @@ void option_list::parse(std::vector<tstring>& params)
     }
 }
 
-void option_list::print_help(std::ostream& out)
+void option_list::print_help(tinfra::output_stream& out)
 {
+    std::ostringstream tmp;
     for(option_list_t::const_iterator i = options.begin(); i != options.end(); ++i) 
     {
         const option_base* opt = *i;
-        out << "    ";
+        tmp << "    ";
         
-        
-        // TODO:
-        // switch_letter is not yet supported so don't show it to user
-        /*
         const char switch_letter =  opt->get_switch_letter();
         if( switch_letter != option_base::NO_SWITCH )
-            out << "-" << switch_letter << ", ";
-        */
+            tmp << "-" << switch_letter << ", ";
         
-        out << "--" << opt->get_name();
+        
+        tmp  << "--" << opt->get_name();
         if( opt->needs_argument() ) {
-            out << " ARG";
+            tmp  << " ARG";
         }
         
-        out << "\t" << opt->get_synopsis() << "\n";
+        tmp << "\t" << opt->get_synopsis() << "\n";
     }
+    out.write(tmp.str());
 }
 option_base* option_list::find_by_name(tstring const& name)
 {

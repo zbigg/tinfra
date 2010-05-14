@@ -14,7 +14,13 @@
 namespace tinfra {
 
 std::string demangle_type_info_name(const std::type_info& ti);
-    
+
+/// Get type name as string.
+///
+/// Note:
+///   On GCC, this name is demangled using abi::__cxa_demangle
+///   On other "platforms" this name equals to typeid(T).name()
+///
 template <typename T>
 std::string type_name() {
     const std::type_info& ti = typeid(T);

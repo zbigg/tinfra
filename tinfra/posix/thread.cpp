@@ -9,12 +9,13 @@
 //
 
 #include "tinfra/thread.h"
+#include "tinfra/fmt.h"
+#include "tinfra/runtime.h"
 
-#include <iostream>
 #include <memory>
+#include <stdexcept>
 
 #include <pthread.h>
-#include "tinfra/fmt.h"
 
 #ifdef HAVE_NANOSLEEP
 #include <time.h>
@@ -28,7 +29,7 @@ namespace thread {
 
 static void thread_error(const char* message, int rc)
 {
-    throw generic_exception(fmt("failed to %s: %i") % message % rc);
+    throw std::runtime_error(fmt("failed to %s: %i") % message % rc);
 }
 
 struct thread_entry_param {
@@ -42,7 +43,7 @@ static void* thread_master_fun(void* param)
         std::auto_ptr<thread_entry_param> p2((thread_entry_param*)param);
         return p2->entry(p2->param);
     } catch(std::exception& e) {
-        std::cerr << fmt("thread %i failed with uncaught exception: %s\n") % thread::current().to_number() % e.what();
+        TINFRA_LOG_ERROR( fmt("thread %i failed with uncaught exception: %s\n") % thread::current().to_number() % e.what() );
         return 0;
     }
 }

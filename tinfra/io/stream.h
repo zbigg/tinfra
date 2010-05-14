@@ -7,18 +7,17 @@
 #define tinfra_io_stream_h_included
 
 #include "tinfra/platform.h"
-#include "tinfra/exception.h"
 
 #include <ios>
 #include <streambuf>
-
+#include <stdexcept>
 
 namespace tinfra { 
 namespace io {
     
-class io_exception: public generic_exception {
+class io_exception: public std::runtime_error {
 public:
-    io_exception(std::string const& message): generic_exception(message) {}
+    io_exception(std::string const& message): std::runtime_error(message) {}
 };
 
 class would_block: public std::runtime_error {

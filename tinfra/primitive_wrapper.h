@@ -6,7 +6,7 @@
 #ifndef tinfra_primitive_wrapper_h_included
 #define tinfra_primitive_wrapper_h_included
 
-#include <ostream>
+#include <iosfwd> // for std::ostream
 
 namespace tinfra {
 namespace primitive_wrapper {

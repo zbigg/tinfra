@@ -9,7 +9,7 @@
 #include "tinfra/tstring.h"
 
 #include <string>
-#include <ostream>
+#include <iosfwd>
 
 namespace tinfra {
 	

@@ -4,7 +4,6 @@
 //
 
 #include <stdexcept>
-#include <iostream>
 
 class bad_optional: public std::runtime_error {
 public:

@@ -11,7 +11,6 @@
 
 #include "tinfra/platform.h"
 
-#include "tinfra/exception.h"
 #include "tinfra/exeinfo.h"
 #include "tinfra/thread.h"
 #include "tinfra/runtime.h"

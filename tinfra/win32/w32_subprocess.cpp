@@ -12,8 +12,6 @@
 #include "tinfra/win32.h"
 #include "tinfra/holder.h"
 
-#include <iostream>
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 

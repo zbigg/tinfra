@@ -11,8 +11,7 @@
 #include "tinfra/string.h" // debug only
 
 #include "tinfra/win32.h"
-#include <iostream> // debug only
-
+#include "tinfra/trace.h"
 #include <stdexcept>
 
 #ifdef _WIN32
@@ -319,7 +318,7 @@ stream* open_server_socket(char const* listening_host, int port)
         int r = 1;
         if( ::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)(void*)&r, sizeof(r)) ) {
             // TODO: it should be warning
-            std::cerr << "unable to set SO_REUSEADDR=1 on socket" << std::endl;
+            TINFRA_LOG_ERROR("unable to set SO_REUSEADDR=1 on socket");
         }
     }
     if( ::bind(s,(struct sockaddr*)&sock_addr, sizeof(sock_addr)) != 0 ) {

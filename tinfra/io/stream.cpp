@@ -8,7 +8,6 @@
 #include "tinfra/fmt.h"
 
 #include <sstream>
-#include <iostream>
 #include <cstring>
 #include <cctype>
 #include <algorithm>
@@ -384,7 +383,7 @@ void copy(std::streambuf& in, std::streambuf& out)
             std::streamsize wt = out.sputn(buffer + written, readed-written);
             if( wt < 0 ) {
                 std::string error_str = "?";
-                throw generic_exception(fmt("error writing file: %s") % error_str);
+                throw std::runtime_error(fmt("error writing file: %s") % error_str);
             }
             written += wt;
         }

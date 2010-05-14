@@ -24,6 +24,7 @@ SUITE(tinfra)
     
     TEST(string_strip)
     {
+        CHECK_EQUAL("", strip("     "));
         CHECK_EQUAL("abc", strip("abc"));
         CHECK_EQUAL("abc", strip(" abc"));
         CHECK_EQUAL("abc", strip("abc "));
