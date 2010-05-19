@@ -20,6 +20,7 @@
 #ifdef HAVE_IO_H
 #include <io.h>
 #endif
+#include <stdio.h>
 
 #ifdef HAVE_OPENDIR
 #include <dirent.h>
