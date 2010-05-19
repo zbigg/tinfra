@@ -137,6 +137,43 @@ struct parser_table {
         assert(false);
         throw std::logic_error("invalid goto request");
     }
+    
+    bool is_terminal(symbol_t sym) const
+    {
+        for( rule_list::const_iterator i = rules.begin(); i != rules.end(); ++i)
+        {
+            if( i->output == sym ) 
+                return false;
+        }
+        return true;
+    }
+    
+    typedef std::pair<int, int> item;
+    typedef std::vector<item> item_set;
+    
+    void close_item_set(item_set& is) const
+    {
+        for( int i = 0; i < is.size(); ++i )
+        {
+            int position = is[i[.econd;
+            rule const& rule = rules[is[i].first];
+            if( rule.inputs.size() >= position )
+                continue; // we don't need to expand if dot is at END of rule ?
+            int symbol_after_dot = rule.inputs[position];
+        }
+    }
+
+    void generate_table()
+    {
+        using std::make_pair;
+        
+        std::vector<item_set> item_sets;
+        
+        item_set initial;
+        initial.push_back(make_pair(0,0));
+        
+        close_item_set(PT, initial);
+    }
 };
 
 std::ostream& operator <<(std::ostream& s, action const& a) 
@@ -151,12 +188,13 @@ std::ostream& operator <<(std::ostream& s, action const& a)
 }
 
 enum S {
-    ZERO     = 0,
-    ONE      = 1,
-    PLUS     = 2,
-    STAR     = 3,
-    E        = 4,
-    B        = 5,
+    GRAMMAR  = 0,
+    ZERO     = 1,
+    ONE      = 2,
+    PLUS     = 3,
+    STAR     = 4,
+    E        = 5,
+    B        = 6,
     EOI
 };
 
@@ -217,7 +255,22 @@ void parse(std::vector<T> const& IN, parser_table<T> const& PT)
         }
         assert(false);
     }
+    
+    
 }
+
+namespace {
+    
+    
+}
+
+template <typename T>
+void expand_item_set(parser_table<T> const& PT, item_set& is)
+{
+    typedef typename parser_table<T>::rule rule;
+}
+
+
 
 int calc_main(int argc, char** argv)
 {
@@ -232,14 +285,17 @@ int calc_main(int argc, char** argv)
     }
     
     parser_table<S> G;
+    parser_table<S> F;
     {
+        
+        G.add_rule(GRAMMAR, E);
         G.add_rule(E, E, STAR, B);
         G.add_rule(E, E, PLUS, B);
         G.add_rule(E, B);
         
         G.add_rule(B, ZERO);
         G.add_rule(B, ONE);
-        
+        F = G;
         // shifts
         G.add_shift (0, ZERO, 1);
         G.add_shift (0, ONE,  2);
@@ -258,13 +314,14 @@ int calc_main(int argc, char** argv)
         G.add_goto  (6, B,    8);
         
         // reduces
-        G.add_reduce(1, 3);
-        G.add_reduce(2, 4);
-        G.add_reduce(4, 2);
-        G.add_reduce(7, 0);
-        G.add_reduce(8, 1);
+        G.add_reduce(1, 4);
+        G.add_reduce(2, 5);
+        G.add_reduce(4, 3);
+        G.add_reduce(7, 1);
+        G.add_reduce(8, 2);
     }
     
+    generate_table(F);
     
     
     string_lexer L(li, argv[1]);
