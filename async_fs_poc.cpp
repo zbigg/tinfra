@@ -1,14 +1,16 @@
-#include <string>
-#include <iostream>
+
+#include "tinfra/async_fs.h"
+
 
 #include "tinfra/shared_ptr.h"
-#include "tinfra/callback.h"
-
 #include "tinfra/symbol.h"
 #include "tinfra/mutex.h"
 #include "tinfra/guard.h"
+#include "tinfra/thread_runner.h"
 
-#include "callfwd.h"
+#include <map>
+#include <string>
+#include <iostream>
 
 // general idea for ASYNC file system access
 
@@ -26,69 +28,18 @@
 
 //    async_fs_client.list_folder(tstring const& path, tinfra::callback(*this, &MyControl::fileLoadCompleted)
 
-typedef int async_fs_task_id;
-struct error_condition {
-    int errno;
-    std::string error_message;
-};
-
-template <typename T>
-struct completion: public T {
-    async_fs_task_id id;
-    error_condition  error;
-    bool             is_last;
-};
-
-struct content {
-    std::string data;
-    size_t      total_size;
-};
-
-struct file_entry {
-    std::string name;
-
-    tinfra::fs::file_info info;
-};
-
-typedef std::vector<listing_entry> file_entry_list;
-
-struct listing {
-    file_entry_list  entries;
-};
-
-
-typedef completion<content> content_completion;
-typedef completion<listing> listing_completion;
-
-struct async_fs {
-    virtual async_fs_task_id   read_file(string const& name, callback<content_completion> callback) = 0;
-    virtual async_fs_task_id   list_folder(string const& name, callback<listing_completion> callback) = 0;
-
-    virtual void cancel(async_fs_task_id task_id);
-
-    virtual void process() = 0;
-
-    virtual ~async_fs() {}
-};
-
-struct async_fs_client {
-    virtual async_fs_task_id   read_file(string const& name, callback<content_completion> callback) = 0;
-    virtual async_fs_task_id   list_folder(string const& name, callback<listing_completion> callback) = 0;
-
-    virtual void cancel(async_fs_task_id task_id) = 0;
-    
-    virtual async_fs_client() {}
-};
+namespace afs = tinfra::async_fs;
 
 ///
 /// default_async_fs
 ///
 
-class default_async_fs: public async_fs {
-    static_thread_pool_runner runner;
+class default_async_fs: public afs::service {
+    tinfra::static_thread_pool_runner runner;
 public:
     default_async_fs(): 
-        runner(10)
+        runner(10),
+        last_task_id(0)
     {
     }
     
@@ -96,16 +47,16 @@ public:
         tinfra::mutex     lock;     //! task_record access lock
         
         default_async_fs* parent;   //! pointer to async_fs object owning this task
-        async_fs_task_id  id;       //! id of task
-        bool              canceled; //! whether task is cancelled fro outside
+        afs::task_id      id;       //! id of task
+        bool              cancelled;//! whether task is cancelled fro outside
         bool              notified; //! whether task was notified at least once
     };
     
     struct read_file_job {
-        task_record*                 record;
+        task_record*                 job_task_record;
         
         std::string                  name;        
-        callback<content_completion> callback;
+        afs::callback<afs::content_completion> listener;
         
         // job entry point:
         void operator()()
@@ -113,42 +64,43 @@ public:
             std::ostringstream tmp;
             // todo read file
             
-            content_completion result;
-            result.id = task_id;
-            result.error.errno = 0;
+            afs::content_completion result;
+            result.task = job_task_record->id;
+            result.error.error_code = 0;
             result.error.error_message = "";
-            result.content = tmp.str();
             result.is_last = true;
-            result.total_size = result.content.size();
+            
+            result.data = tmp.str();
+            result.total_size = result.data.size();
             
             {
-                tinfra::guard g(my_task_record->lock); // section locked with task_record::lock
+                tinfra::guard g(job_task_record->lock); // section locked with task_record::lock
                 
-                if( my_task_record->cancelled ) {
+                if( job_task_record->cancelled ) {
                     // TRACE that cancellation was seen
                 } else {
                     // TRACE that callback is being invoked
-                    callback(result);
-                    my_task_record->notified = true;
+                    listener(result);
+                    job_task_record->notified = true;
                 }                
             }
             
             
-            parent.completed(my_task_record->id);
+            job_task_record->parent->completed(job_task_record->id);
         }
     };
     
-    virtual async_fs_task_id   read_file(string const& name, callback<content_completion> callback)
+    virtual afs::task_id   read_file(std::string const& name, tinfra::callback<afs::content_completion> listener)
     {
         task_record* new_task_record = create_new_task_record();
-        read_file_job read_file_job = { new_task_record, name, callback };
+        read_file_job read_file_job = { new_task_record, name, listener };
             
-        thread_pool(read_file_job);
+        runner(read_file_job);
         
         return new_task_record->id;
     }
     
-    virtual async_fs_task_id   list_folder(string const& name, callback<listing_completion> callback)
+    virtual afs::task_id   list_folder(std::string const& name, tinfra::callback<afs::listing_completion> listener)
     {
         assert(0);
         /*
@@ -162,10 +114,11 @@ public:
     }
     
 private:
+    int last_task_id;
     tinfra::thread::mutex lock;
-    std::map<async_fs_task_id, task_record*> task_records;
+    std::map<afs::task_id, task_record*> task_records;
 
-    void cancel(async_fs_task_id cancelled_task_id)
+    void cancel(afs::task_id cancelled_task_id)
     {
         task_record* cancelled_task_record = get_task_record(cancelled_task_id);
         assert( cancelled_task_record != 0 );
@@ -175,28 +128,29 @@ private:
         }
     }
     
-    void completed(async_fs_task_id id)
+    void completed(afs::task_id task_to_cancel)
     {
         tinfra::guard g(this->lock);
         
-        task_record* cancelled_task_record = get_task_record_unlocked(id);
+        task_record* cancelled_task_record = get_task_record_unlocked(task_to_cancel);
         assert( cancelled_task_record != 0 );
+        assert( task_to_cancel == cancelled_task_record->id );
         
-        task_records.erase(cancelled_task_id->id);
+        task_records.erase(task_to_cancel);
         
         delete cancelled_task_record;
     }
     
-    task_record* get_task_record(async_fs_task_id id)
+    task_record* get_task_record(afs::task_id id)
     {
         tinfra::guard g(this->lock);
         
         return get_task_record_unlocked(id);
     }
     
-    task_record* get_task_record_unlocked(async_fs_task_id id)
+    task_record* get_task_record_unlocked(afs::task_id id)
     {
-        std::map<async_fs_task_id, task_record*>::const_iterator i = task_records.find(id);
+        std::map<afs::task_id, task_record*>::const_iterator i = task_records.find(id);
         
         if( i != task_records.end() )
             return i->second;
@@ -205,45 +159,27 @@ private:
     }
     
     /// creates and stores new task record (with unique id)
-    task_record* create_new_task_record(async_fs_task_id id)
+    task_record* create_new_task_record()
     {
-        tinfra::guard g(this->lock);
         std::auto_ptr<task_record> ptr(new task_record());
-        
-        async_fs_task_id result_id = ++last_task_id;
-        
         ptr->parent    = this;
-        ptr->id        = result_id;
         ptr->cancelled = false;
         ptr->notified  = false;
-        
-        task_records[result_id]  = ptr.get();
+        {
+            tinfra::guard g(this->lock);
+
+            afs::task_id result_id = ++last_task_id;
+            ptr->id        = result_id;
+            task_records[result_id]  = ptr.get();
+        }
     
         return ptr.release();
     }
 };
 
-struct default_async_fs_client: public async_fs_client {
-    virtual async_fs_task_id   read_file(string const& name, callback<content_completion> callback)
-    {
-    }
-    virtual async_fs_task_id   list_folder(string const& name, callback<listing_completion> callback)
-    {
-    }
-
-    virtual void cancel(async_fs_task_id task_id) = 0;
-    
-    virtual async_fs_client() {}
-};
-
 
 int main(int argc, char** argv)
 {
-	async_fs fs;
-	writer wr;
-	callfwd::call_sender<writer> target(wr);
-	fs.read_file("test", make_callback<read_file_completion>(target));
-	fs.process();
 	return 0;
 }
 
