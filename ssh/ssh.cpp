@@ -1,4 +1,4 @@
-#include "tinfra/tinfra.h"
+#include "tinfra/typeinfo.h" // for tinfra::type_name
 #include "tinfra/symbol.h"
 
 #include "tinfra/io/stream.h"
@@ -11,47 +11,6 @@
 #include <stdexcept>
 #include <iostream>
 
-// TODO: move to specific utility module
-class field_printer {
-    std::ostream& out;
-    bool need_separator;
-public:
-    field_printer(std::ostream& o) : out(o), need_separator(false) {}
-    
-    template <class T>
-    void operator () (const tinfra::symbol& s, T const& t) 
-    {
-        if( need_separator ) {
-            out << ", ";
-        }
-        out << s.str() << " = " << t;
-        need_separator = true;
-    }
-    
-    template <typename T>
-    void managed_struct(T const& v, tinfra::symbol const& s)
-    {
-        if( need_separator ) 
-            out << ", ";
-        out << tinfra::TypeTraitsGeneric<T>::name() << " { ";
-        need_separator = false;
-        tinfra::tt_process<T>(v, *this);
-        out << " }";
-        need_separator = true;
-    }
-};
-
-template<typename T>
-std::string struct_to_string(T const& v)
-{
-    std::ostringstream s;
-    field_printer printer(s);
-    
-    s << tinfra::TypeTraitsGeneric<T>::name() << " { ";
-    tinfra::tt_process(v, printer);
-    s << "}";
-    return s.str();
-}
 
 std::string hexify(const char* buf, size_t length)
 {
@@ -160,4 +119,5 @@ int ssh_main(int argc, char** argv)
 	ssh::perform_invitation(connection.get(), ps);
 	return 0;
 }
+
 TINFRA_MAIN(ssh_main);

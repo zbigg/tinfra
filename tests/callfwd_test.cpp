@@ -6,7 +6,6 @@
 #include <iostream>
 #include <sstream>
 
-#include "tinfra/tinfra.h"
 
 struct signal_type {};
 struct shutdown_signal: public signal_type {};

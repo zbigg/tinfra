@@ -157,7 +157,7 @@ void call_sender<W>::operator() (P1 const& p1, P2 const& p2) {
 //
 
 template <typename IMPL, typename R>
-dispatch_map<IMPL,R>::~dispatch_map() {
+dispatch_map<IMPL,R>::~dispatch_map<IMPL,R>() {
     detail::clear_pointer_map(dispatch_map);
     detail::clear_pointer_map(parser_map);
 }
