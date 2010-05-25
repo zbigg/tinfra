@@ -1,6 +1,7 @@
 #include <unittest++/UnitTest++.h>
 #include "tinfra/test.h"
 #include "tinfra/cmd.h"
+#include "lr_parser.h"
 #include "lr_parser_detail.h"
 
 using namespace tinfra::lr_parser;
@@ -33,12 +34,12 @@ bool contains(std::set<T> const& s, T const& k)
     return s.find(k) != s.end();
 }
 
-TEST(lr_parser_close_item_set)
+TEST(lr_parser_close_item_set1)
 {
     using generator::item;
     rule_list rules = get_test_grammar();
     generator::item_set iset;
-    iset.insert(item({ GRAMMAR, 0 }));
+    iset.insert(item({ 0, 0 }));
     
     generator::close_item_set(rules, iset);
     
@@ -49,6 +50,21 @@ TEST(lr_parser_close_item_set)
     CHECK( contains(iset, item({ 4, 0 })));
     CHECK( contains(iset, item({ 5, 0 })));
     CHECK_EQUAL(6, iset.size());
+}
+
+TEST(lr_parser_close_item_set2)
+{
+    using generator::item;
+    rule_list rules = get_test_grammar();
+    generator::item_set iset;
+    iset.insert(item({ 1, 2 }));
+    
+    generator::close_item_set(rules, iset);
+    
+    CHECK( contains(iset, item({ 1, 2 })));
+    CHECK( contains(iset, item({ 4, 0 })));
+    CHECK( contains(iset, item({ 5, 0 })));
+    CHECK_EQUAL(3, iset.size());
 }
 
 TINFRA_MAIN(tinfra::test::test_main);

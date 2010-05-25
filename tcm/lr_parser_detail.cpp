@@ -1,3 +1,4 @@
+#include "lr_parser.h"
 #include "lr_parser_detail.h"
 
 #include "tinfra/fmt.h"
