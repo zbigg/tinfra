@@ -13,8 +13,7 @@ enum test_grammar {
     PLUS     = 3,
     STAR     = 4,
     E        = 5,
-    B        = 6,
-    EOI
+    B        = 6
 };
 
 rule_list get_test_grammar() {
@@ -26,6 +25,35 @@ rule_list get_test_grammar() {
     add_rule(G, B, ZERO);
     add_rule(G, B, ONE);
     return G;
+}
+
+parser_table get_test_parser_table()
+{
+    parser_table table;
+    table.add_shift (0, ZERO, 1);
+    table.add_shift (0, ONE,  2);
+    table.add_shift (3, STAR, 5);
+    table.add_shift (3, PLUS, 6);
+    table.add_action(3, parser_table::END_OF_INPUT,  parser_table::ACCEPT, 0);
+    table.add_shift (5, ZERO, 1);
+    table.add_shift (5, ONE,  2);
+    table.add_shift (6, ZERO, 1);
+    table.add_shift (6, ONE,  2);
+    
+    // gotos
+    table.add_goto  (0, E,    3);
+    table.add_goto  (0, B,    4);
+    table.add_goto  (5, B,    7);
+    table.add_goto  (6, B,    8);
+    
+    // reduces
+    table.add_reduce(1, 4);
+    table.add_reduce(2, 5);
+    table.add_reduce(4, 3);
+    table.add_reduce(7, 1);
+    table.add_reduce(8, 2);
+    
+    return table;
 }
 
 template <typename T>
@@ -65,6 +93,22 @@ TEST(lr_parser_close_item_set2)
     CHECK( contains(iset, item({ 4, 0 })));
     CHECK( contains(iset, item({ 5, 0 })));
     CHECK_EQUAL(3, iset.size());
+}
+
+TEST(lr_parser_check_syntax_basic)
+{
+    rule_list rules = get_test_grammar();
+    parser_table table = get_test_parser_table();
+    
+    std::vector<int> input;
+    input.push_back(ONE);
+    input.push_back(PLUS);
+    input.push_back(ONE);
+    input.push_back(STAR);
+    input.push_back(ZERO);
+    input.push_back(parser_table::END_OF_INPUT);
+    
+    check_syntax(input, rules, table);
 }
 
 TINFRA_MAIN(tinfra::test::test_main);

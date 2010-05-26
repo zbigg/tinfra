@@ -11,44 +11,6 @@ using tinfra::fmt;
 
 namespace tinfra {
 namespace lr_parser {
-
-void add_rule(rule_list& rules, symbol out, symbol in) {
-    rule r;
-    r.output = out;
-    r.inputs.push_back(in);
-    
-    rules.push_back(r);
-}
-
-void add_rule(rule_list& rules, symbol out, symbol in1, symbol in2) {
-    rule r;
-    r.output = out;
-    r.inputs.push_back(in1);
-    r.inputs.push_back(in2);
-    
-    rules.push_back(r);
-}
-
-void add_rule(rule_list& rules, symbol out, symbol in1, symbol in2, symbol in3) {
-    rule r;
-    r.output = out;
-    r.inputs.push_back(in1);
-    r.inputs.push_back(in2);
-    r.inputs.push_back(in3);
-    
-    rules.push_back(r);
-}
-
-bool is_terminal(rule_list const& rules, symbol sym)
-{
-    for( rule_list::const_iterator i = rules.begin(); i != rules.end(); ++i)
-    {
-        if( i->output == sym ) 
-            return false;
-    }
-    return true;
-}
-
 namespace generator {
 
 void close_item_set(rule_list const& rules, item_set& is)
