@@ -9,8 +9,8 @@ namespace lr_parser {
 namespace generator {
     
 struct item {
-    int rule_idx;
-    int position;
+    unsigned int rule_idx;
+    unsigned int position;
     
     bool operator <(item const& other) const {
         if( this->rule_idx < other.rule_idx) 

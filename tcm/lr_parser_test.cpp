@@ -95,6 +95,48 @@ TEST(lr_parser_close_item_set2)
     CHECK_EQUAL(3, iset.size());
 }
 
+template <typename K, typename V>
+void check_map_equal(std::map<K,V> const& A, std::map<K,V> const& B, std::string const& b_name, int line)
+{
+    typedef typename std::map<K,V>::const_iterator iter;
+    
+    for( iter ia = A.begin(); ia != A.end(); ++ia ) {
+        iter ib = B.find(ia->first);
+        if( ib == B.end() ) {
+            std::string msg = tinfra::fmt("expected (%s->%s) not found in %s") % ia->first %ia->second % b_name;
+            UnitTest::CurrentTest::Results()->OnTestFailure(UnitTest::TestDetails(*UnitTest::CurrentTest::Details(), line), msg.c_str()); 
+        } else if ( !( ia->second == ib->second) ) {
+            std::string msg = tinfra::fmt("expected (%s->%s) but found (%s->%s) found in %s") 
+                % ia->first %ia->second 
+                % ib->first %ib->second 
+                % b_name;
+            UnitTest::CurrentTest::Results()->OnTestFailure(UnitTest::TestDetails(*UnitTest::CurrentTest::Details(), line), msg.c_str()); 
+        }
+    }
+    
+    for( iter ib = B.begin(); ib != B.end(); ++ib ) {
+        iter ia = A.find(ib->first);
+        if( ia == A.end() ) {
+            std::string msg = tinfra::fmt("extra (%s->%s) found in %s") % ib->first %ib->second % b_name;
+            UnitTest::CurrentTest::Results()->OnTestFailure(UnitTest::TestDetails(*UnitTest::CurrentTest::Details(), line), msg.c_str()); 
+        } 
+    }
+}
+
+
+#define CHECK_EQUAL_MAPS(a,b) \
+    check_map_equal(a,b, #b, __LINE__)
+
+TEST(lr_parser_generate_table)
+{
+    rule_list rules = get_test_grammar();
+    parser_table expected_table = get_test_parser_table();
+    
+    parser_table generated_table = generate_table(rules);
+    
+    CHECK_EQUAL_MAPS(expected_table.actions, generated_table.actions);
+    CHECK_EQUAL_MAPS(expected_table.gotos, generated_table.gotos);
+}
 TEST(lr_parser_check_syntax_basic)
 {
     rule_list rules = get_test_grammar();

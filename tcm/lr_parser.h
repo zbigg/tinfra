@@ -46,20 +46,16 @@ struct parser_table {
     struct action {
         parser_action_type type;
         int                param;
+        
+        bool operator ==(action const& other) const;
     };
     
     struct table_key {
         int      state;
         symbol   input;
         
-        bool operator <(table_key const& other) const {
-            if( this->state < other.state ) 
-                return true;
-            if(    (this->state == other.state)
-                && (this->input < other.input) )
-                return true;
-            return false;
-        }
+        bool operator <(table_key const& other) const;
+        bool operator ==(table_key const& other) const;
     };
     
     typedef std::map<table_key, action> action_table;
@@ -167,8 +163,34 @@ void check_syntax(std::vector<symbol> const& input,
 
 
 std::ostream& operator <<(std::ostream& s, parser_table::action const& a);
+std::ostream& operator <<(std::ostream& s, parser_table::table_key const& a);
 
+//
+// inline functions
+//
 
+inline bool
+parser_table::action::operator ==(parser_table::action const& other) const 
+{
+    return type == other.type && param == other.param;
+}
+
+inline bool
+parser_table::table_key::operator <(parser_table::table_key const& other) const 
+{
+    if( this->state < other.state ) 
+        return true;
+    if(    (this->state == other.state)
+        && (this->input < other.input) )
+        return true;
+    return false;
+}
+
+inline bool
+parser_table::table_key::operator ==(parser_table::table_key const& other) const 
+{
+    return state == other.state && input == other.input;
+}
 } } // end namespace tinfra::lr_parser
 
 #endif

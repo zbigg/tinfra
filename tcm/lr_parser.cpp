@@ -146,4 +146,9 @@ std::ostream& operator <<(std::ostream& s, parser_table::action const& a)
     return s;
 }
 
+std::ostream& operator <<(std::ostream& s, parser_table::table_key const& a)
+{
+    return s << "(" << a.state << ", " << a.input << ")";
+}
+
 }} // end namespace tinfra::lr_parser
