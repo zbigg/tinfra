@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <iosfwd>
+#include <stack>
 
 #include <stdexcept>
 #include "tinfra/fmt.h"
@@ -126,6 +127,32 @@ struct parser_table {
     }
 };
 
+namespace detail {
+    struct stack_element {
+        int     state;
+        symbol  input;
+        
+        stack_element(int st, symbol in):
+            state(st),
+            input(in)
+        {}
+};
+}
+
+class parser {
+public:
+    parser(rule_list const& rules, 
+           parser_table const& table);
+    ~parser();
+
+    void operator()(symbol input);
+private:
+    typedef detail::stack_element stack_element;
+
+    rule_list const& rules;
+    parser_table const& table;
+    std::stack<stack_element> stack;
+};
 parser_table generate_table(rule_list const& rules);
 
 /// Checks syntax of input.

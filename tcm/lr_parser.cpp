@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <stack>
-#include <iostream>
+#include <algorithm>
 
 using tinfra::fmt;
 
@@ -76,44 +76,38 @@ parser_table generate_table(rule_list const& rules)
     return result;
 }
 
-struct stack_element {
-    int     state;
-    symbol  input;
-    
-    stack_element(int st, symbol in):
-        state(st),
-        input(in)
-    {}
-};
+//
+// parsers
+//
 
-void check_syntax(std::vector<int> const& input, 
-                  rule_list const& rules, 
-                  parser_table const& table)
+parser::parser(rule_list const& rules, 
+      parser_table const& table): 
+    rules(rules),
+    table(table)
 {
-    std::stack<stack_element>  stack;
     stack.push(stack_element(0, parser_table::END_OF_INPUT));
-    
-    std::vector<int>::const_iterator IIN = input.begin();
-    bool accepted = false;
-    while( ! accepted && IIN != input.end()) {
+}
+parser::~parser()
+{
+}
+
+void parser::operator()(symbol input)
+{
+    while( true ) {
         const int S = stack.top().state;
         TINFRA_TRACE_VAR(S);
-        TINFRA_TRACE_VAR(*IIN);
-        parser_table::action A = table.get_action(S, *IIN);
+        TINFRA_TRACE_VAR(input);
+        parser_table::action A = table.get_action(S, input);
         TINFRA_TRACE_VAR(A);
         
         if( A.type == parser_table::REDUCE ) {
             rule const& R = rules[A.param];
-            //std::cout << "(";
             TINFRA_TRACE_MSG("reducing");
             for( size_t i = 0; i < R.inputs.size(); ++i ) {
                 symbol sym = stack.top().input;
                 TINFRA_TRACE_VAR(sym);
-                //if( i > 0 ) std::cout << ", ";
-                //std::cout << sym;
                 stack.pop();
             }
-            //std::cout << ") -> " << R.output << "\n";
             TINFRA_TRACE_VAR(R.output);
             
             const int TS = stack.top().state;
@@ -123,16 +117,22 @@ void check_syntax(std::vector<int> const& input,
             continue;
         }
         if( A.type == parser_table::SHIFT ) {
-            stack.push(stack_element(A.param, *IIN));
-            ++IIN;
-            continue;
+            stack.push(stack_element(A.param, input));
+            return;
         }
         if( A.type == parser_table::ACCEPT ) {
-            accepted = true;
-            continue;
+            return;
         }
         assert(false);
     }
+}
+
+void check_syntax(std::vector<int> const& input, 
+                  rule_list const& rules, 
+                  parser_table const& table)
+{
+    parser P(rules, table);
+    std::for_each(input.begin(), input.end(), P);
 }
 
 std::ostream& operator <<(std::ostream& s, parser_table::action const& a) 

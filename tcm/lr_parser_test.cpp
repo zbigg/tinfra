@@ -111,4 +111,18 @@ TEST(lr_parser_check_syntax_basic)
     check_syntax(input, rules, table);
 }
 
+TEST(lr_parser_parse_basic)
+{
+    rule_list rules = get_test_grammar();
+    parser_table table = get_test_parser_table();
+    
+    parser P(rules, table);
+    P(ONE);
+    P(PLUS);
+    P(ONE);
+    P(STAR);
+    P(ZERO);
+    P(parser_table::END_OF_INPUT);
+}
+
 TINFRA_MAIN(tinfra::test::test_main);
