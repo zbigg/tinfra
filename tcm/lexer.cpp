@@ -9,7 +9,7 @@ static const int count_groups(std::string const& regexp)
 {
     int result = 0;
     bool in_quote = false;
-    for(int i = 0; i < regexp.size(); ++i ) {
+    for(size_t i = 0; i < regexp.size(); ++i ) {
         const char c = regexp[i];
         if( c == '\\' ) {
             ++i;
@@ -64,7 +64,7 @@ std::string string_lexer::create_regexp(lexer_info const& li)
 {
     std::ostringstream s;
     s << "^(";
-    for( int i = 0; i < li.entries.size(); ++i ) {
+    for( size_t i = 0; i < li.entries.size(); ++i ) {
         lexer_info::entry const& e = li.entries[i];
         if( i != 0 )
             s << "|";
@@ -97,7 +97,7 @@ bool string_lexer::next(string_lexer::token& tok)
         
         // iterate through match groups and entries
         // second group contains entries
-        for( int ig = 2,ie = 0; 
+        for( size_t ig = 2,ie = 0; 
              ig < match_result.groups.size(); 
              ++ig,++ie ) 
         {
