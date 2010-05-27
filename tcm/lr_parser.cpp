@@ -8,6 +8,7 @@
 #include <cassert>
 #include <stack>
 #include <algorithm>
+#include <iterator>
 
 using tinfra::fmt;
 
@@ -72,7 +73,6 @@ parser_table generate_table(rule_list const& rules)
     item_set initial;
     initial.insert(item({0,0}));
     close_item_set(rules, initial);
-    
     unsigned current_state = 0;
     item_sets.push_back(initial);
     
@@ -80,6 +80,7 @@ parser_table generate_table(rule_list const& rules)
         std::map<symbol, item_set> new_item_sets;
         {
             item_set const& current = item_sets[current_state];
+            
             for(item_set::const_iterator ic = current.begin(); ic != current.end(); ++ic ) {
                 item const& i = *ic;
                 rule const& r = rules[i.rule_idx];
@@ -101,9 +102,19 @@ parser_table generate_table(rule_list const& rules)
         {
             int input           = inis->first;
             item_set nis        = inis->second;
+            
             close_item_set(rules, nis);
-            unsigned nis_state = item_sets.size();
-            item_sets.push_back(nis);
+            unsigned nis_state;
+            {
+                std::vector<item_set>::iterator iexising = std::find(item_sets.begin(), item_sets.end(), nis);
+                if( iexising != item_sets.end() ) {
+                    nis_state = distance(item_sets.begin(), iexising);
+                } else {
+                    nis_state = item_sets.size();
+                    item_sets.push_back(nis);
+                }
+            }
+            
             if( is_terminal(rules, input) ) {
                 TINFRA_TRACE_MSG(tinfra::fmt("(%s,%s)->shift(%s)") % current_state % input % nis_state);
                 result_table.add_shift(current_state, input, nis_state);

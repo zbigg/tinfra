@@ -9,7 +9,7 @@ all: calc tcm_parse lr_parser_test
 #programs
 tcm_parse: tcm_parse.o lexer.o
 calc: calc.o lexer.o
-lr_parser_test: lr_parser_test.o lr_parser_detail.o lr_parser.o
+lr_parser_test: lr_parser_test.o lr_parser_detail.o lr_parser.o lr_parser_expr_test.o
 
 #some other rules
 tcm_parse.cpp: lexer.h parser.h
@@ -17,6 +17,7 @@ lexer.cpp: lexer.h
 calc.cpp: lexer.h parser.h
 lr_parser_detail.cpp: lr_parser_detail.h lr_parser.h
 lr_parser_test.cpp: lr_parser_detail.h lr_parser.h
+lr_parser_expr_test.cpp: lr_parser_detail.h lr_parser.h
 lr_parser.cpp: lr_parser.h lr_parser_detail.h
 
 clean:
