@@ -45,6 +45,30 @@ void add_rule(rule_list& rules, symbol out, symbol in1, symbol in2, symbol in3) 
     rules.push_back(r);
 }
 
+void add_rule(rule_list& rules, symbol out, symbol in1, symbol in2, symbol in3, symbol in4)
+{
+    rule r;
+    r.output = out;
+    r.inputs.push_back(in1);
+    r.inputs.push_back(in2);
+    r.inputs.push_back(in3);
+    r.inputs.push_back(in4);
+    
+    rules.push_back(r);
+}
+void add_rule(rule_list& rules, symbol out, symbol in1, symbol in2, symbol in3, symbol in4, symbol in5)
+{
+    rule r;
+    r.output = out;
+    r.inputs.push_back(in1);
+    r.inputs.push_back(in2);
+    r.inputs.push_back(in3);
+    r.inputs.push_back(in4);
+    r.inputs.push_back(in5);
+    
+    rules.push_back(r);
+}
+
 bool is_terminal(rule_list const& rules, symbol sym)
 {
     for( rule_list::const_iterator i = rules.begin(); i != rules.end(); ++i)

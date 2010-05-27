@@ -7,7 +7,7 @@ CFLAGS=-fefwe
 all: calc tcm_parse lr_parser_test
 
 #programs
-tcm_parse: tcm_parse.o lexer.o
+tcm_parse: tcm_parse.o lexer.o lr_parser_detail.o lr_parser.o
 calc: calc.o lexer.o
 lr_parser_test: lr_parser_test.o lr_parser_detail.o lr_parser.o lr_parser_expr_test.o
 

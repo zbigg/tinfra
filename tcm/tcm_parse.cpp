@@ -1,5 +1,5 @@
 #include "lexer.h"
-#include "parser.h"
+#include "lr_parser.h"
 
 #include <tinfra/cmd.h>
 #include <iostream>
@@ -25,7 +25,7 @@ enum {
     ENUM_DEFINITION,
     STRUCT_MEMBERS,
     STRUCT_MEMBER,
-    TYPE,
+    COMPLEX_TYPE,
     ENUM_MEMBERS
 };
 
@@ -49,37 +49,42 @@ int tcm_parse_main(int argc, char** argv)
         li.ignore("[ \t\r\n]+");
     }
     
-    parser_rules rules;
+    tinfra::lr_parser::rule_list rules;
     {
-        rules.add(COMPILATION_UNIT, MODULE, IDENTIFIER, OPEN_BRACE, DEFINITIONS, CLOSE_BRACE);
+        using tinfra::lr_parser::add_rule;
+        add_rule(rules, COMPILATION_UNIT, MODULE, IDENTIFIER, OPEN_BRACE, DEFINITIONS, CLOSE_BRACE);
         
-        rules.add(DEFINITIONS,       DEFINITION);
-        rules.add(DEFINITIONS,       DEFINITIONS, DEFINITION);
+        add_rule(rules, DEFINITIONS,       DEFINITION);
+        add_rule(rules, DEFINITIONS,       DEFINITIONS, DEFINITION);
         
-        rules.add(DEFINITION,        STRUCT_DEFINITION);
-        rules.add(DEFINITION,        ENUM_DEFINITION);
+        add_rule(rules, DEFINITION,        STRUCT_DEFINITION);
+        add_rule(rules, DEFINITION,        ENUM_DEFINITION);
         
-        rules.add(STRUCT_DEFINITION, STRUCT, IDENTIFIER, OPEN_BRACE, STRUCT_MEMBERS, CLOSE_BRACE);
+        add_rule(rules, STRUCT_DEFINITION, STRUCT, IDENTIFIER, OPEN_BRACE, STRUCT_MEMBERS, CLOSE_BRACE);
         
-        rules.add(STRUCT_MEMBERS,    STRUCT_MEMBER);
-        rules.add(STRUCT_MEMBERS,    STRUCT_MEMBERS, SEMICOLON, STRUCT_MEMBER);
+        add_rule(rules, STRUCT_MEMBERS,    STRUCT_MEMBER);
+        add_rule(rules, STRUCT_MEMBERS,    STRUCT_MEMBERS, SEMICOLON, STRUCT_MEMBER);
         
-        rules.add(STRUCT_MEMBER,     TYPE, IDENTIFIER);
+        add_rule(rules, STRUCT_MEMBER,     IDENTIFIER, IDENTIFIER);
+        add_rule(rules, STRUCT_MEMBER,     COMPLEX_TYPE, IDENTIFIER);
         
-        rules.add(TYPE,              IDENTIFIER);
-        rules.add(TYPE,              IDENTIFIER, LESS_THAN, TYPE, GREAT_THAN);
+        add_rule(rules, COMPLEX_TYPE,      IDENTIFIER, LESS_THAN, IDENTIFIER, GREAT_THAN);
+        add_rule(rules, COMPLEX_TYPE,      IDENTIFIER, LESS_THAN, COMPLEX_TYPE, GREAT_THAN);
         
-        rules.add(ENUM_DEFINITION,   ENUM, OPEN_BRACE, ENUM_MEMBERS, CLOSE_BRACE);
-        rules.add(ENUM_MEMBERS,      IDENTIFIER);
-        rules.add(ENUM_MEMBERS,      ENUM_MEMBERS, COLON, IDENTIFIER  );
+        add_rule(rules, ENUM_DEFINITION,   ENUM, IDENTIFIER, OPEN_BRACE, ENUM_MEMBERS, CLOSE_BRACE);
+        add_rule(rules, ENUM_MEMBERS,      IDENTIFIER);
+        add_rule(rules, ENUM_MEMBERS,      ENUM_MEMBERS, COLON, IDENTIFIER  );
     }
+    tinfra::lr_parser::parser_table parser_table = tinfra::lr_parser::generate_table(rules);
     
     string_lexer L(li, argv[1]);
     string_lexer::token tok;
     
-    //parser p(rules);
-    while( L.next(tok) ) 
-        std::cout << "token: " << tok.text << "\n";
+    tinfra::lr_parser::parser p(rules, parser_table);
+    while( L.next(tok) ) {
+        std::cout << "token: " << tok.text << "(" << tok.token_id << ")" << "\n";
+        p(tok.token_id);
+    }
     
     return 0;
 }

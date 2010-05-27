@@ -29,6 +29,8 @@ bool is_terminal(rule_list const& rules, symbol sym);
 void add_rule(rule_list& rules, symbol out, symbol in);
 void add_rule(rule_list& rules, symbol out, symbol in1, symbol in2);
 void add_rule(rule_list& rules, symbol out, symbol in1, symbol in2, symbol in3);
+void add_rule(rule_list& rules, symbol out, symbol in1, symbol in2, symbol in3, symbol in4);
+void add_rule(rule_list& rules, symbol out, symbol in1, symbol in2, symbol in3, symbol in4, symbol in5);
 
 struct parser_table {
 
