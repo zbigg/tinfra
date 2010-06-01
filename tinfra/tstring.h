@@ -94,6 +94,7 @@ public:
     char        operator[](size_t n) const { return tstring::data()[n]; }
     
     size_t size()       const { return length_; }
+    bool   empty()      const { return length_ == 0; }
 
     typedef char   char_type;
     typedef size_t size_type;

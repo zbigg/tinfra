@@ -4,7 +4,6 @@
 //
 
 #include "tinfra/io/stream.h"
-#include "tinfra/io/socket.h"
 #include "tinfra/fmt.h"
 
 #include <sstream>
@@ -21,11 +20,6 @@ namespace io {
 //
 // general IO connectors
 //
-
-stream* open_socket(char const* address, int port)
-{
-    return socket::open_client_socket(address, port);
-}
 
 stream* open_command_pipe(char const*, openmode)
 {
@@ -120,14 +114,6 @@ zstreambuf& zstreambuf::open_file(char const* name, openmode mode)
 {
     close();
     stream_ = tinfra::io::open_file(name, mode);
-    own_ = true;
-    return *this;
-}
-
-zstreambuf& zstreambuf::open_socket(char const* target, int port)
-{
-    close();
-    stream_ = tinfra::io::open_socket(target, port);    
     own_ = true;
     return *this;
 }

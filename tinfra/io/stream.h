@@ -93,9 +93,6 @@ public:
     /** Open a file in native filesystem */
     zstreambuf& open_file(char const* filename, std::ios::openmode mode = std::ios::in);
 
-    /** Opens a client tcp connection. */
-    zstreambuf& open_socket(char const* target, int port);
-
     /** Opens a pipe to command.
 
         Spawns a 'command' with stdout and/or stdin hijacked by this streambuf.

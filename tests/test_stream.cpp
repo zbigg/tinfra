@@ -4,7 +4,7 @@
 //
 
 #include "tinfra/io/stream.h"
-#include "tinfra/io/socket.h"
+#include "tinfra/tcp_socket.h"
 #include <ostream>
 #include <istream>
 #include <iostream>
@@ -42,8 +42,7 @@ SUITE(tinfra)
 
     TEST(io_open_bad_socket)
     {
-        tinfra::io::zstreambuf buf;
-        CHECK_THROW( buf.open_socket("this_host_doesnt_exist", 80), std::runtime_error);
+        CHECK_THROW( tinfra::tcp_client_socket("this_host_doesnt_exist", 80), std::runtime_error);
     }
 
     TEST(io_basic)

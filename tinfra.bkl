@@ -35,7 +35,6 @@
             tinfra/cmd.cpp
             tinfra/io/stream.cpp
             tinfra/subprocess.cpp
-            tinfra/io/socket.cpp
             tinfra/server.cpp
             <!-- tinfra/io/zcompat.cpp -->
             tinfra/fmt.cpp
@@ -56,6 +55,7 @@
             tinfra/typeinfo.cpp
             tinfra/stream.cpp
             tinfra/inifile.cpp
+            tinfra/tcp_socket.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -94,8 +94,7 @@
             tinfra/fmt.h
             tinfra/string.h
             tinfra/tstring.h
-            tinfra/io/stream.h            
-            tinfra/io/socket.h
+            tinfra/io/stream.h
             tinfra/subprocess.h
             tinfra/server.h
             <!--tinfra/io/zcompat.h-->
@@ -140,6 +139,7 @@
             tinfra/typeinfo.h
             tinfra/win32.h
             tinfra/inifile.h
+            tinfra/tcp_socket.h
         </files>
     </data-files-tree>
     

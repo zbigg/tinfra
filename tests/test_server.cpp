@@ -3,11 +3,15 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/io/stream.h"
-#include "tinfra/io/socket.h"
 #include "tinfra/thread.h"
 #include "tinfra/string.h"
 #include "tinfra/server.h"
+#include "tinfra/stream.h"
+#include "tinfra/tcp_socket.h"
+
+#include "tinfra/trace.h"
+#include "tinfra/fmt.h"
+
 #include <ostream>
 #include <istream>
 #include <iostream>
@@ -17,11 +21,41 @@
 #include <unittest++/UnitTest++.h>
 #include "tinfra/test.h"
 
+using tinfra::fmt;
+using tinfra::output_stream;
+using tinfra::input_stream;
+using tinfra::tcp_client_socket;
+using tinfra::tstring;
+
+static void writeline(output_stream& out, tstring const& str)
+{
+    TINFRA_TRACE_MSG(fmt("wrote '%s'") % tinfra::escape_c(str));
+    out.write(str.data(), str.size());
+    out.write("\n",1);
+}
+
+static std::string readline(input_stream& in)
+{
+    std::string result;
+    char c;
+    while( true ) {
+        int r = in.read(&c, 1);
+        if( r == 0 )
+            break;
+        if( c == '\n' )
+            break;
+        
+        result.append(1, c);
+    }
+    TINFRA_TRACE_MSG(fmt("readed '%s'") % tinfra::escape_c(result));
+    return result;
+}
+
 class Client {
-    std::auto_ptr<tinfra::io::stream> client;
+    std::auto_ptr<tcp_client_socket> client;
     tinfra::net::Server& server;
 public:
-    Client(std::auto_ptr<tinfra::io::stream> _client, tinfra::net::Server& _server)
+    Client(std::auto_ptr<tcp_client_socket> _client, tinfra::net::Server& _server)
         : client(_client), server(_server) {}
         
     virtual void run()
@@ -29,22 +63,12 @@ public:
         
         bool connected = true;
         std::string response;
-        //response = "hello!";
-        //client->write(response.c_str(), response.size());
-        //client->write("\r\n",2);
         while( connected ) {            
+            std::string cmd = readline(*client);
             {
-                tinfra::io::zstreambuf buf(client.get());
-                std::istream in(&buf);
-                std::string cmd;
-                std::getline(in, cmd);
-                if( !in )
-                    break;
-
                 tinfra::strip_inplace(cmd);                
                 //std::cerr << "S<" << cmd << std::endl;
                 if( cmd == "stop") {
-                    server.stop();
                     connected = false;
                     response = "quitting";
                 } else if( cmd == "close" ) {
@@ -54,10 +78,10 @@ public:
                     response = cmd;
                 }
             }
-            {   
-                //std::cerr << "S>" << response << std::endl;
-                client->write(response.c_str(), response.size());
-                client->write("\r\n",2);
+            writeline(*client, response);
+            
+            if( !connected ) {
+                server.stop();
             }
         }
         delete this;
@@ -66,8 +90,8 @@ public:
 
 class TestServer: public tinfra::net::Server {
 public:
-    virtual void onAccept(std::auto_ptr<tinfra::io::stream> client, std::string const&) {
-        Client* worker = new Client(client, *this);        
+    virtual void onAccept(std::auto_ptr<tinfra::tcp_client_socket> client, std::string const&) {
+        Client* worker = new Client(client, *this);
         //tinfra::Thread::start_detached(*worker);
         worker->run();
     }
@@ -78,15 +102,12 @@ public:
     }
 };
 
-std::string invoke(std::istream& in, std::ostream& out, std::string const& msg)
+std::string invoke(tcp_client_socket& socket, tstring const& msg)
 {
-    out << msg << std::endl;
-    out.flush();
-    //std::cerr << "C>'" << tinfra::escape_c(msg) << "'" << std::endl;
-    std::string tmp;
-    std::getline(in, tmp);
+    writeline(socket, msg);
+    socket.sync();
+    std::string tmp = readline(socket);
     tinfra::strip_inplace(tmp);
-    //std::cerr << "C<'" << tinfra::escape_c(tmp) << "'" << std::endl;
     return tmp;
 }
 
@@ -99,32 +120,15 @@ SUITE(tinfra)
         tinfra::thread::thread_set ts;
         tinfra::thread::thread server_thread = ts.start(tinfra::runnable_ref(server));
         {        
-            std::auto_ptr<tinfra::io::stream> client(tinfra::io::socket::open_client_socket("localhost",10900));
-            
-            tinfra::io::zstreambuf ibuf(client.get());
-            tinfra::io::zstreambuf obuf(client.get());
-            
-            std::istream in(&ibuf);
-            std::ostream out(&obuf);
-	    
-            // TODO: this test fails with "zyszek" sometimes
-	    //       because zstreambuf is broken
-	    //       in following read sequence: 
-	    //  sendto(4, "zbyszek", 7, 0, NULL, 0)     = 7
-	    //  sendto(4, "\n", 1, 0, NULL, 0)          = 1
-	    //  recvfrom(4, "z", 1, 0, NULL, NULL)      = 1
-	    //  recvfrom(4, "byszek", 32768, 0, NULL, NULL) = 6
-	    //  recvfrom(4, "\r\n", 32768, 0, NULL, NULL) = 2
-	    //
-	    // and thus std::getline( returns "zyszek\r\n")
+            tcp_client_socket client("localhost",10900);
 		
-            CHECK_EQUAL( "zbyszek", invoke(in,out, "zbyszek"));
+            CHECK_EQUAL( "zbyszek", invoke(client, "zbyszek"));
 	    
-            CHECK_EQUAL( "A", invoke(in,out, "A"));
-            CHECK_EQUAL( "", invoke(in,out, ""));
-            CHECK_EQUAL( "quitting", invoke(in,out, "stop"));
+            CHECK_EQUAL( "A", invoke(client, "A"));
+            CHECK_EQUAL( "", invoke(client, ""));
+            CHECK_EQUAL( "quitting", invoke(client, "stop"));
         }
-        server.stop();
+        //server.stop();
     }
 
     // check if Server::stop can abort blocking accept call

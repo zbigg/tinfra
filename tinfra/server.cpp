@@ -5,8 +5,8 @@
 
 #include "tinfra/platform.h"
 
-#include "tinfra/io/socket.h"
 #include "tinfra/server.h"
+#include "tinfra/trace.h"
 
 #include "tinfra/fmt.h"
 
@@ -16,8 +16,6 @@ namespace tinfra { namespace net {
 //
 // Server implementation
 //
-using namespace tinfra::io::socket;
-using namespace tinfra::io;
 
 Server::Server()
     : stopped_(false), stopping_(false), bound_port_(0)
@@ -42,7 +40,7 @@ Server::~Server()
 
 void Server::bind(const char* address, int port)
 {
-    server_socket_ = std::auto_ptr<stream>(open_server_socket(address,port));
+    server_socket_ = std::auto_ptr<tcp_server_socket>(new tcp_server_socket(address, port));
     if( address ) {
         bound_address_ = address;
     }
@@ -53,13 +51,16 @@ void Server::run()
 {
     while( !stopped_ ) {
         std::string peer_address;
-        std::auto_ptr<stream> client_socket(accept_client_connection(server_socket_.get(), &peer_address));
+        std::auto_ptr<tcp_client_socket> client_socket(server_socket_->accept(peer_address));
+        TINFRA_TRACE_MSG(fmt("server %s:%s: accepted new connection from %s (stopping=%s)") 
+            %  bound_address_ % bound_port_ % peer_address % stopping_);
         if( !stopping_ ) 
             onAccept(client_socket, peer_address);
-        else 
+        else  {
             stopped_ = true;
+        }
     }
-    server_socket_->close();
+    server_socket_.reset();
 }
 
 void Server::stop()
@@ -72,18 +73,14 @@ void Server::stop()
         connect_address = "localhost";
     
     try {
-        
-        //std::cerr << "atempting to stop SERVER" << std::endl;
+        TINFRA_TRACE_MSG(fmt("stopping server %s:%s") %  connect_address % bound_address_);
         stopping_ = true;
-        stream* f = open_client_socket(connect_address.c_str(), bound_port_);
-        if( f ) {
-            delete f;
-            stopped_ = true;
+        {
+            tcp_client_socket fake_client(connect_address, bound_port_);
         }
     } catch( std::exception& e)  {
         throw std::runtime_error(fmt("unable to stop server %s:%s: %s") %  connect_address % bound_address_ % e.what());
     }
-    stopping_ = false;
 }
 
 } }
