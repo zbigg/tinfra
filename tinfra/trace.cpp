@@ -49,42 +49,22 @@ void tracer::trace(location const& loc, const char* message)
 // tracer registry
 //
 
-typedef std::list<tracer*> tracer_registry;
-
-static tracer_registry& global_tracer_registry()
+auto_register_tracer::auto_register_tracer(const char* name, bool enabled):
+        tracer(name, enabled)
 {
-    static tracer_registry iii;
-    return iii;
+    static_registry<tracer>::register_element(this);
+}
+
+auto_register_tracer::~auto_register_tracer()
+{
+    static_registry<tracer>::register_element(this);
 }
 
 std::vector<tracer*> get_global_tracers()
 {
-    std::vector<tracer*> result;
-    
-    {
-        // TODO with lock
-        tracer_registry& r = global_tracer_registry();
-        std::copy(r.begin(), r.end(), 
-            std::back_insert_iterator< std::vector<tracer*> >(result));
-    }
-    return result;
+    return static_registry<tracer>::elements();
 }
 
-//
-// auto_register_tracer
-//
-auto_register_tracer::auto_register_tracer(const char* name, bool enabled)
-    : tracer(name, enabled) 
-{
-    // TODO with lock
-    global_tracer_registry().push_back(this);
-}
-
-auto_register_tracer::~auto_register_tracer() 
-{
-    // TODO with lock
-    global_tracer_registry().remove(this);
-}
 
 void print_tracer_usage(tstring const&)
 {
@@ -94,8 +74,8 @@ void print_tracer_usage(tstring const&)
            "    --tracer-enable=name enable specific tracer\n"
            "\n"
            "Available tracers:\n";;
-    tracer_registry& r = global_tracer_registry();
-    for(tracer_registry::const_iterator i = r.begin(); i != r.end(); ++i ) {
+    std::vector<tracer*> const r = get_global_tracers();
+    for(std::vector<tracer*>::const_iterator i = r.begin(); i != r.end(); ++i ) {
         tracer* t = *i;
         tmp << "    " << t->name() << std::endl;
     }
@@ -118,9 +98,9 @@ static bool matches(tstring const& mask, tstring const& str)
 
 bool enable_tracer_by_mask(tstring const& mask)
 {
-    tracer_registry& r = global_tracer_registry();
+    std::vector<tracer*> const r = get_global_tracers();
     bool anything = false;
-    for(tracer_registry::const_iterator i = r.begin(); i != r.end(); ++i )
+    for(std::vector<tracer*>::const_iterator i = r.begin(); i != r.end(); ++i )
     {
         tracer* t = *i;
         if( !matches(mask,t->name()) ) 

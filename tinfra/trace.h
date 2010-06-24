@@ -9,7 +9,7 @@
 #include <vector>
 #include "tinfra/platform.h"
 #include "tinfra/tstring.h"
-
+#include "static_registry.h"
 #if defined _MSC_VER
 //
 // excerpt from MSDN:
@@ -71,7 +71,8 @@ private:
     bool        enabled_;
 };
 
-class auto_register_tracer: public tracer {
+class auto_register_tracer: public tracer                       
+{
 public:
     auto_register_tracer(const char* name, bool enabled = false);
     ~auto_register_tracer();
@@ -109,6 +110,7 @@ void print_tracer_usage(tstring const& msg = "");
 bool enable_tracer_by_mask(tstring const& mask);
 
 extern tinfra::trace::auto_register_tracer error_tracer;
+
 
 } } // end of namespace tinfra::trace
 
