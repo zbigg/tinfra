@@ -13,12 +13,18 @@
 #include "tinfra/fmt.h"
 
 namespace tinfra {
-    
+
+std::string errno_to_string(int e)
+{
+    std::string error_str = ::strerror(e);
+    return error_str;
+}
+
 template <typename E>
 static void throw_errno(int error, const std::string& message)
 {
-    std::string error_str = ::strerror(error);
-    std::string full_message = tinfra::fmt("%s: %s") % message % error_str;
+    const std::string error_str = errno_to_string(error);
+    const std::string full_message = tinfra::fmt("%s: %s") % message % error_str;
     throw E(full_message);
 }
 

@@ -1,62 +1,24 @@
 #ifndef tinfra_tcp_socket_h_included
 #define tinfra_tcp_socket_h_included
 
-#include "stream.h"
+#include "socket.h"
 #include "tstring.h"
 
 #include <memory>
 
 namespace tinfra {
 
-class tcp_socket {    
-public:
-    typedef intptr_t handle_type;
-
-    /// Create socket object with newly allocated handle.
-    tcp_socket();
-
-    /// Create socket object from already opened socket.
-    ///
-    /// Ownership of handle h is taken by tcp_socket instance.
-    tcp_socket(handle_type h);
-
-    /// Destroy socket object and underlying handle.
-    virtual ~tcp_socket();
-
-    /// Retrieve socket object handle.
-    handle_type handle() const { return this->handle_; }
-    
-    void set_blocking(bool blocking);
-
-protected:
-    
-    handle_type handle_;
-private:
-    // noncopyable
-    tcp_socket(tcp_socket const&);
-    tcp_socket& operator=(tcp_socket const& other);
-};
-
-class tcp_client_socket: public tcp_socket, public input_stream, public output_stream
+class tcp_client_socket: public client_stream_socket
 {
 public:
     tcp_client_socket(handle_type h);
     tcp_client_socket(tstring const& address, int port);
     ~tcp_client_socket();
-    
-    // input_stream interface
-    int read(char* dest, int size);
-
-    // output_stream interface
-    int write(const char* data, int size);
-    void sync();
-    
-    // shared interface
-    void close();
 };
 
-class tcp_server_socket: public tcp_socket {
+class tcp_server_socket: public socket {
 public:
+    tcp_server_socket(handle_type h);
     tcp_server_socket(tstring const& address, int port);
     ~tcp_server_socket();
 

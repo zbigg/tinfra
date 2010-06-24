@@ -37,26 +37,14 @@ typedef int socklen_t;
 
 namespace tinfra {
 
-#ifdef TS_WINSOCK
-typedef SOCKET socket_type;
-#else
-typedef int    socket_type;
-#endif
-
-static const socket_type invalid_socket = static_cast<socket_type>(-1);
-
-// local helpers
-static void ensure_socket_subsystem_initialized();
-static int  close_socket_nothrow(socket_type socket);
-static void close_socket(socket_type socket);
-static void throw_socket_error(const char* message);
-static void throw_socket_error(int error_code, const char* message);
-
+using detail::throw_socket_error;
+    
 static void ensure_socket_subsystem_initialized()
 {
 #ifdef TS_WINSOCK
     static bool winsock_initialized = false;
-    if( winsock_initialized ) return;
+    if( winsock_initialized ) 
+        return;
     WORD wVersionRequested;
     WSADATA wsaData;
     int err;
@@ -77,45 +65,6 @@ static void ensure_socket_subsystem_initialized()
 #endif
 }
 
-static int  socket_get_last_error()
-{
-#ifdef TS_WINSOCK
-    return WSAGetLastError();
-#else
-    return errno;
-#endif
-}
-
-static void throw_socket_error(int error_code, const char* message)
-{
-#ifdef TS_WINSOCK
-    tinfra::win32::throw_system_error(error_code, message);
-#else
-    throw_errno_error(errno, message);
-#endif
-}
-
-static void throw_socket_error(const char* message)
-{
-    throw_socket_error(socket_get_last_error(), message);
-}
-
-static int close_socket_nothrow(socket_type socket)
-{
-#ifdef TS_WINSOCK
-    return ::closesocket(socket);
-#else
-    return ::close(socket);
-#endif    
-}
-
-static void close_socket(socket_type socket)
-{
-    int rc = close_socket_nothrow(socket);
-    if( rc == -1 ) 
-        throw_socket_error("unable to close socket");
-}
-
 #ifndef INADDR_NONE
 #define INADDR_NONE -1
 #endif
@@ -123,14 +72,15 @@ static void close_socket(socket_type socket)
 #if !defined(TS_WINSOCK) && !defined(HAVE_HSTRERROR)
 static const char* hstrerror(int error_code)
 {
-	return "host not found";
+    return "host not found";
 }
 #endif
 
 static void get_inet_address(tstring const& address, int rport, struct sockaddr_in* sa)
 {
     string_pool local_pool;
-    if( address.empty() ) throw std::invalid_argument("null address pointer");
+    if( address.empty() ) 
+        throw std::invalid_argument("null address pointer");
     
     std::memset(sa,0,sizeof(*sa));
     sa->sin_family = AF_INET;
@@ -180,68 +130,41 @@ static std::string get_peer_address_string(sockaddr_in const& address)
 }
 
 
-//
-// tcp_socket
-//
-
-tcp_socket::tcp_socket()
+static int create_tcp_socket()
 {
     ensure_socket_subsystem_initialized();
-    socket_type result = ::socket(AF_INET,SOCK_STREAM,0);
-    if( result == invalid_socket ) 
-        throw_socket_error("socket creation failed");
-    this->handle_ = result;
+    socket::handle_type result = ::socket(AF_INET,SOCK_STREAM,0);
+    if( result == -1 ) 
+        detail::throw_socket_error("socket creation failed");
+    return result;
 }
 
-tcp_socket::tcp_socket(tcp_socket::handle_type h):
-    handle_(h)
-{
-}
-
-tcp_socket::~tcp_socket()
-{
-    if( handle_ != invalid_socket )
-        close_socket_nothrow(handle());
-}
-
-void tcp_socket::set_blocking(bool blocking)
-{
-    
-#ifdef TS_WINSOCK
-    unsigned long block = blocking ? 0 : 1;
-    if( ioctlsocket(handle(), FIONBIO, &block) < 0 )
-        throw_socket_error("set_blocking: ioctlsocket(FIONBIO) failed");
-#else
-    int flags = fcntl( handle(), F_GETFL );
-    if( flags < 0 )
-        throw_socket_error("set_blocking: fcntl(F_GETFL) failed");
-    if( !blocking )
-        flags |= O_NONBLOCK;
-    else
-        flags &= ~(O_NONBLOCK);
-    if( fcntl( handle(), F_SETFL, flags ) < 0 )
-        throw_socket_error("set_blocking: fcntl(F_SETFL) failed");
-#endif
-
-}
 
 //
 // tcp_client_socket
 //
 
-tcp_client_socket::tcp_client_socket(tcp_socket::handle_type h):
-    tcp_socket(h)
+tcp_client_socket::tcp_client_socket(socket::handle_type h):
+    client_stream_socket(h)
 {
 }
 
-tcp_client_socket::tcp_client_socket(tstring const& address, int port)
+tcp_client_socket::tcp_client_socket(tstring const& address, int port):
+    client_stream_socket(create_tcp_socket())
 {
     ::sockaddr_in sock_addr;
     get_inet_address(address, port, &sock_addr);
     
-    if( ::connect(handle(), (struct sockaddr*)&sock_addr,sizeof(sock_addr)) != 0 ) {
-        int error_code = socket_get_last_error();
-	throw_socket_error(error_code, fmt("unable to connect to '%s:%i'") % address % port);
+    while( true ) {
+        int rc = ::connect(handle(), (struct sockaddr*)&sock_addr,sizeof(sock_addr));
+        if( rc != 0 && detail::last_socket_error_is_interruption() ) {
+            TINFRA_TRACE_MSG("connect() call interrupted (EINTR), retrying");
+            continue;
+        }
+        if( rc != 0 ) {
+            throw_socket_error(fmt("connection to '%s:%i' failed") % address % port);
+        }
+        break;
     }
 }
 
@@ -249,44 +172,12 @@ tcp_client_socket::~tcp_client_socket()
 {
 }
     
-    // input_stream interface
-int 
-tcp_client_socket::read(char* dest, int size)
-{
-    int result = ::recv(handle(), dest ,size, 0);
-    if( result == -1 ) {
-        throw_socket_error("unable to read from socket");
-    }
-    return result;
-}
-
-    // output_stream interface
-int 
-tcp_client_socket::write(const char* data, int size)
-{
-    int result = ::send(handle(), data, size, 0);
-    if( result == -1 ) {
-        throw_socket_error("unable to write to socket");
-    }
-    return result;
-}
-
-void 
-tcp_client_socket::sync()
-{
-}
-    
-    // shared interface
-void 
-tcp_client_socket::close()
-{
-}
 
 //
 // tcp_server_socket
 //
 tcp_server_socket::tcp_server_socket(tstring const& address, int port):
-    tcp_socket()
+    socket(create_tcp_socket())
 {
     ::sockaddr_in sock_addr;
     std::memset(&sock_addr,0,sizeof(sock_addr));
@@ -307,13 +198,11 @@ tcp_server_socket::tcp_server_socket(tstring const& address, int port):
         }
     }   
     if( ::bind(handle(),(struct sockaddr*)&sock_addr, sizeof(sock_addr)) != 0 ) {
-        int error_code = socket_get_last_error();
-        throw_socket_error(error_code, fmt("bind to '%s:%i' failed") % actual_address % port );
+        throw_socket_error(fmt("bind to '%s:%i' failed") % actual_address % port );
     }
 
     if( ::listen(handle(),5) != 0 ) {
-        int error_code = socket_get_last_error();
-        throw_socket_error(error_code, "listen failed");
+        throw_socket_error("listen failed");
     }
 }
 
@@ -326,13 +215,20 @@ tcp_server_socket::accept(std::string& address)
 {
     socklen_t addr_size = sizeof(sockaddr_in);
     sockaddr_in client_address;
-    socket_type accept_sock = ::accept(handle(), (struct sockaddr*)&client_address, &addr_size );
     
-    if( accept_sock == invalid_socket ) {
-        int error_code = socket_get_last_error();
-	//if( error_means_blocked(error_code) )
-	//    return std::auto_ptr<tcp_client_socket>();
-        throw_socket_error(error_code, "accept failed");
+    socket::handle_type accept_sock;
+    while( true ) {
+        accept_sock = ::accept(handle(), (struct sockaddr*)&client_address, &addr_size );
+        
+        if( accept_sock == -1 && detail::last_socket_error_is_interruption()) {
+            TINFRA_TRACE_MSG("accept() call interrupted (EINTR), retrying");
+            continue;
+        }
+        
+        if( accept_sock == -1 ) {
+            throw_socket_error("accept failed");
+        }
+        break;
     }
     
     address = get_peer_address_string(client_address);
@@ -340,4 +236,3 @@ tcp_server_socket::accept(std::string& address)
 }
 
 } //end namespace tinfra
-

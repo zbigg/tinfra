@@ -8,7 +8,7 @@
 
 namespace tinfra {
     
-
+std::string errno_to_string(int error);
 void throw_errno_error(int error, const std::string& message);
     
 }

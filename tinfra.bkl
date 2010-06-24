@@ -55,6 +55,7 @@
             tinfra/typeinfo.cpp
             tinfra/stream.cpp
             tinfra/inifile.cpp
+            tinfra/socket.cpp
             tinfra/tcp_socket.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
@@ -139,6 +140,7 @@
             tinfra/typeinfo.h
             tinfra/win32.h
             tinfra/inifile.h
+            tinfra/socket.h
             tinfra/tcp_socket.h
         </files>
     </data-files-tree>
@@ -183,6 +185,7 @@
             tests/test_structure_printer.cpp
             tests/lex_test.cpp
             tests/inifile_test.cpp
+	    tests/tcp_socket_test.cpp
         </sources>
         <define>UNITTEST_IGNORE_SIGNALS</define>
         <library>tinfra-test</library>
