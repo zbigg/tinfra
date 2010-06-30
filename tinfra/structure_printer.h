@@ -6,7 +6,6 @@
 #ifndef tinfra_structure_printer_h_included_
 #define tinfra_structure_printer_h_included_
 
-#include "tinfra/symbol.h"
 #include "tinfra/mo.h"
 
 #include <ostream> // for std::ostream
@@ -50,47 +49,47 @@ public:
     }
     
     // MO contract
-    template <class T>
-    void operator () (const tinfra::symbol& sym, T const& t) 
+    template <class V>
+    void operator () (tinfra::mo_named_value<T const&> v)
     {
         separate();
         apply_indent();
-        name(sym);
-        out << t;
+        name(v.name);
+        out << t.value;
         need_separator = true;
     }
     
-    template <typename T>
-    void mstruct(tinfra::symbol const& sym, T const& v)
+    template <typename TV>
+    void mstruct(tinfra::mo_named_value<T const&> v)
     {
         separate();
-        enter(sym, '{');
+        enter(v.name, '{');
         push_showing_name(true);
         
-        tinfra::mo_process(v, *this);
+        tinfra::mo_process(v.value, *this);
         
         pop_showing_name();
         need_separator = false;
         separate();
-        exit(sym,'}');
+        exit(v.name,'}');
     }
     
-    template <typename T>
-    void container(tinfra::symbol const& sym, T const& v)
+    template <typename V>
+    void container(tinfra::mo_named_value<V const&> v)
     {
         separate();
-        enter(sym, '[');
+        enter(v.name, '[');
         push_showing_name(false);
         
-        typedef typename T::const_iterator  iterator;
-        for( iterator i = v.begin(); i != v.end(); ++i ) {
-            tinfra::process(symbol(0),*i, *this);
+        typedef typename V::const_iterator  iterator;
+        for( iterator i = v.value.begin(); i != v.value.end(); ++i ) {
+            tinfra::process(*i, *this);
         }
         
         pop_showing_name();
         need_separator = false;
         separate();
-        exit(sym,']');
+        exit(v.name,']');
     }
 private:
     void push_showing_name(bool new_value) {
@@ -101,9 +100,9 @@ private:
         showing_name = sn_history.at(sn_history.size()-1);
         sn_history.erase(sn_history.end()-1);
     }
-    void name(symbol const& sym) {
+    void name(const char* name) {
         if( showing_name ) {
-            out << sym << '=';
+            out << name << '=';
         }
     }
     void separate() {
@@ -121,9 +120,9 @@ private:
                 out << " ";
         }
     }
-    void enter(tinfra::symbol const& sym, char sep) {
+    void enter(const char* name, char sep) {
         apply_indent();
-        name(sym);
+        name(name);
         out << sep;
         indent_level+=1;
         if( !multiline )
@@ -131,7 +130,7 @@ private:
         need_separator = false;
     }
     
-    void exit(tinfra::symbol const&, char sep) {
+    void exit(const char*, char sep) {
         indent_level -= 1;
         apply_indent();
         if( !multiline )
