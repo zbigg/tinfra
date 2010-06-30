@@ -25,40 +25,40 @@ mo_traits<V> and provide specialized walk mechanism:
 */
 template <typename T>
 struct mo_traits {
-    template <typename F>
-    static void process(const symbol& s, const T& v, F& f) { 
+    template <typename S, typename F>
+    static void process(S const& s, const T& v, F& f) { 
         f(s,v);
     }
     
-    template <typename F>
-    static void mutate(const symbol& s, T& v, F& f) { 
+    template <typename S, typename F>
+    static void mutate(S const& s, T& v, F& f) { 
         f(s,v);
     }
 };
 
 template <typename T>
 struct struct_mo_traits {
-    template <typename Functor>
-    static void process(const symbol& s, const T& v, Functor& f) { 
+    template <typename S, typename Functor>
+    static void process(S const& s, const T& v, Functor& f) { 
         f.mstruct(s, v);
     }
     
-    template <typename Functor>
-    static void mutate(const symbol& s, T& v, Functor& f) { 
+    template <typename S, typename Functor>
+    static void mutate(S const& s, T& v, Functor& f) { 
         f.mstruct(s, v);
     }
 };
 
 template <typename T>
 struct container_mo_traits{
-    template <typename Functor>
-    static void process(const symbol& s, const T& v, Functor& f) {
+    template <typename S, typename Functor>
+    static void process(S const& s, const T& v, Functor& f) {
         f.container(s, v);
     }
     
     
-    template <typename Functor>
-    static void mutate(const symbol& s, T& v, Functor& f) { 
+    template <typename S, typename Functor>
+    static void mutate(S const& s, T& v, Functor& f) { 
         f.container(s, v);
     }
 };
@@ -77,13 +77,13 @@ struct dispatcher{
     Functor& f;
     dispatcher(Functor& _f) : f(_f) {}
             
-    template <typename V>
-    void operator() (const symbol& s, const V& v)  { 
+    template <typename S, typename V>
+    void operator() (S const& s, const V& v)  { 
         mo_traits<V>::process(s, v, f); 
     }
     
-    template <typename V>
-    void operator() (const symbol& s, V& v)  { 
+    template <typename S, typename V>
+    void operator() (S const& s, V& v)  { 
         mo_traits<V>::mutate(s, v, f); 
     }
 };
@@ -93,14 +93,14 @@ struct mutate_helper {
     Functor& mutator_;
     mutate_helper(Functor& mutator) : mutator_(mutator) {}
     
-    template <class V>
-    void operator () (const symbol& sym, const V& v) {
+    template <typename S, class V>
+    void operator () (S const& sym, const V& v) {
         mutator_(sym, const_cast<V&>(v));
     }
     
-    template <typename T>
-    void mstruct(symbol const&, T& v) {
-        mo_mutate(v, mutator_);
+    template <typename S, typename T>
+    void mstruct(S const& sym, T const& v) {
+        mutator_.mstruct(sym, const_cast<T&>(v));
     }
 };
 
@@ -121,15 +121,15 @@ void mo_mutate(T& value, F& functor)
     value.apply(functor_disp);
 }
 
-template <typename T, typename F>
-void process(symbol const& sym,  T const& value, F& functor)
+template <typename S, typename T, typename F>
+void process(S const& sym,  T const& value, F& functor)
 {
     mo::dispatcher<F> functor_disp(functor);
     functor_disp(sym, value);
 }
 
-template <typename T, typename F>
-void mutate(symbol const& sym,  T& value, F& functor)
+template <typename S, typename T, typename F>
+void mutate(S const& sym,  T& value, F& functor)
 {
     mo::dispatcher<F> functor_disp(functor);
     functor_disp(sym, value);
@@ -138,7 +138,8 @@ void mutate(symbol const& sym,  T& value, F& functor)
 
 #define TINFRA_MO_MANIFEST(a)  template <typename F> void apply(F& f) const
 
-#define TINFRA_MO_FIELD(a)    f(S::a, a)
+#define TINFRA_MO_FIELD(a)    f(#a, a)
+#define TINFRA_MO_SYMBOL_FIELD(a)    f(S::a, a)
     
 #define TINFRA_SYMBOL_DECL(a) namespace S { extern tinfra::symbol a; } extern int TINFRA_SYMBOL_DECL_ ## a
 #define TINFRA_SYMBOL_IMPL(a) namespace S { tinfra::symbol a(#a); } extern int TINFRA_SYMBOL_IMPL_ ## a
