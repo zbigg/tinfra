@@ -27,12 +27,12 @@ template <typename T>
 struct mo_traits {
     template <typename S, typename F>
     static void process(S const& s, const T& v, F& f) { 
-        f(s,v);
+        f.leaf(s,v);
     }
     
     template <typename S, typename F>
     static void mutate(S const& s, T& v, F& f) { 
-        f(s,v);
+        f.leaf(s,v);
     }
 };
 
@@ -40,12 +40,12 @@ template <typename T>
 struct struct_mo_traits {
     template <typename S, typename Functor>
     static void process(S const& s, const T& v, Functor& f) { 
-        f.mstruct(s, v);
+        f.record(s, v);
     }
     
     template <typename S, typename Functor>
     static void mutate(S const& s, T& v, Functor& f) { 
-        f.mstruct(s, v);
+        f.record(s, v);
     }
 };
 
@@ -53,13 +53,13 @@ template <typename T>
 struct container_mo_traits{
     template <typename S, typename Functor>
     static void process(S const& s, const T& v, Functor& f) {
-        f.container(s, v);
+        f.sequence(s, v);
     }
     
     
     template <typename S, typename Functor>
     static void mutate(S const& s, T& v, Functor& f) { 
-        f.container(s, v);
+        f.sequence(s, v);
     }
 };
 
@@ -73,17 +73,17 @@ void mo_mutate(T& value, F& functor);
 namespace mo {
 
 template <typename Functor>
-struct dispatcher{
+struct dispatcher {
     Functor& f;
     dispatcher(Functor& _f) : f(_f) {}
             
     template <typename S, typename V>
-    void operator() (S const& s, const V& v)  { 
+    void dispatch(S const& s, const V& v)  { 
         mo_traits<V>::process(s, v, f); 
     }
     
     template <typename S, typename V>
-    void operator() (S const& s, V& v)  { 
+    void dispatch(S const& s, V& v)  { 
         mo_traits<V>::mutate(s, v, f); 
     }
 };
@@ -94,13 +94,18 @@ struct mutate_helper {
     mutate_helper(Functor& mutator) : mutator_(mutator) {}
     
     template <typename S, class V>
-    void operator () (S const& sym, const V& v) {
-        mutator_(sym, const_cast<V&>(v));
+    void leaf(S const& sym, const V& v) {
+        mutator_.leaf(sym, const_cast<V&>(v));
+    }
+    
+    template <typename S, typename T>
+    void record(S const& sym, T const& v) {
+        mutator_.record(sym, const_cast<T&>(v));
     }
     
     template <typename S, typename T>
     void mstruct(S const& sym, T const& v) {
-        mutator_.mstruct(sym, const_cast<T&>(v));
+        mutator_.sequence(sym, const_cast<T&>(v));
     }
 };
 
@@ -125,21 +130,22 @@ template <typename S, typename T, typename F>
 void process(S const& sym,  T const& value, F& functor)
 {
     mo::dispatcher<F> functor_disp(functor);
-    functor_disp(sym, value);
+    functor_disp.dispatch(sym, value);
 }
 
 template <typename S, typename T, typename F>
 void mutate(S const& sym,  T& value, F& functor)
 {
     mo::dispatcher<F> functor_disp(functor);
-    functor_disp(sym, value);
+    functor_disp.dispatch(sym, value);
 }
 
 
 #define TINFRA_MO_MANIFEST(a)  template <typename F> void apply(F& f) const
+#define TINFRA_MO_FIELD(a)    f.dispatch(#a, a)
 
-#define TINFRA_MO_FIELD(a)    f(#a, a)
-#define TINFRA_MO_SYMBOL_FIELD(a)    f(S::a, a)
+// symbol based manifests are deprecated
+#define TINFRA_MO_SYMBOL_FIELD(a)    f.dispatch(S::a, a)
     
 #define TINFRA_SYMBOL_DECL(a) namespace S { extern tinfra::symbol a; } extern int TINFRA_SYMBOL_DECL_ ## a
 #define TINFRA_SYMBOL_IMPL(a) namespace S { tinfra::symbol a(#a); } extern int TINFRA_SYMBOL_IMPL_ ## a

@@ -63,8 +63,8 @@ namespace tinfra_mo_test {
         template <typename F>
         void apply(F& f) const
         {
-            f("x", &point_bean::getX, &point_bean::setX);
-            f("y", &point_bean::getY, &point_bean::setY);
+            f.leaf("x", &point_bean::getX, &point_bean::setX);
+            f.leaf("y", &point_bean::getY, &point_bean::setY);
         }
     };
 }
@@ -84,9 +84,9 @@ namespace tinfra {
         MO const& mo;
         F&  f;
         template <typename S, typename T, typename X>
-        void operator()(S const& sym, T (MO::*getter)() const, X)
+        void leaf(S const& sym, T (MO::*getter)() const, X)
         {
-            f(sym, (mo.*getter)());
+            f.leaf(sym, (mo.*getter)());
         }
     };
     
@@ -95,22 +95,22 @@ namespace tinfra {
         MO& mo;
         F&  f;
         template <typename S, typename T>
-        void operator()(S const& sym, T (MO::*getter)() const, void (MO::*setter)(T const& v))
+        void leaf(S const& sym, T (MO::*getter)() const, void (MO::*setter)(T const& v))
         {
             T orig = (mo.*getter)();
             T victim(orig);
-            f(sym, victim);
+            f.leaf(sym, victim);
             if( !(victim == orig) ) {
                 mo.*setter(victim);
             }
         }
         
         template <typename S, typename T>
-        void operator()(S const& sym, T (MO::*getter)() const, void (MO::*setter)(T v))
+        void leaf(S const& sym, T (MO::*getter)() const, void (MO::*setter)(T v))
         {
             T orig = (mo.*getter)();
             T victim(orig);
-            f(sym, victim);
+            f.leaf(sym, victim);
             if( !(victim == orig) ) {
                 (mo.*setter)(victim);
             }
@@ -142,12 +142,12 @@ SUITE(tinfra)
     struct dummy_functor {
         int sum;
         int count;
-        void operator()(const char*, int const& v) {
+        void leaf(const char*, int const& v) {
             sum+=v;
             count++;
         }
         template <typename T>
-        void mstruct(const char*, T const& v) {
+        void record(const char*, T const& v) {
             tinfra::mo_process(v, *this);
         }
     };
@@ -183,14 +183,14 @@ SUITE(tinfra)
     struct foo_modifier {
         int leaf_count;
         int struct_count;
-        void operator()(const char*, int& v ) { 
+        void leaf(const char*, int& v ) { 
             v = 1; 
             leaf_count++;
         }
         
         
         template <typename T>
-        void mstruct(const char*, T& v) {
+        void record(const char*, T& v) {
             struct_count++;
             tinfra::mo_mutate(v, *this);
         }
@@ -241,13 +241,13 @@ SUITE(tinfra)
     
     struct sfinae_functor {
         int sum;
-        void operator()(const char*, int const& v ) {
+        void leaf(const char*, int const& v ) {
             sum += v;
         }
         
         bool sfinae_matched;
         template <typename T>
-        void operator()(const char*, T const& v, typename T::tinfra_is_mo = true_type()) {
+        void leaf(const char*, T const& v, typename T::tinfra_is_mo = true_type()) {
             sfinae_matched = true;
             tinfra::mo_process(v, *this);
         }
@@ -266,13 +266,13 @@ SUITE(tinfra)
     }
     
     struct sfinae_mutator {
-        void operator()(const char*, int& v ) {
+        void leaf(const char*, int& v ) {
             v = 0;
         }
         
         bool sfinae_matched;
         template <typename T>
-        void operator()(const char*, T& v, typename T::tinfra_is_mo = true_type()) {
+        void leaf(const char*, T& v, typename T::tinfra_is_mo = true_type()) {
             sfinae_matched = true;
             //v.foo =2; uncomment to see how unreadable error is
             tinfra::mo_mutate(v, *this);

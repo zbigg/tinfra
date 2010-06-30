@@ -51,7 +51,7 @@ public:
     
     // MO contract
     template <typename S, class T>
-    void operator () (S sym, T const& t) 
+    void leaf(S sym, T const& t) 
     {
         separate();
         apply_indent();
@@ -61,7 +61,7 @@ public:
     }
     
     template <typename S, typename T>
-    void mstruct(S sym, T const& v)
+    void record(S sym, T const& v)
     {
         separate();
         enter(sym, '{');
@@ -76,7 +76,7 @@ public:
     }
     
     template <typename S, typename T>
-    void container(S sym, T const& v)
+    void sequence(S sym, T const& v)
     {
         separate();
         enter(sym, '[');
@@ -84,7 +84,7 @@ public:
         
         typedef typename T::const_iterator  iterator;
         for( iterator i = v.begin(); i != v.end(); ++i ) {
-            tinfra::process(symbol(0),*i, *this);
+            tinfra::process(S(0),*i, *this);
         }
         
         pop_showing_name();
