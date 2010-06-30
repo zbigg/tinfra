@@ -111,6 +111,11 @@ struct mutate_helper {
 
 } // end namespace mo_detail
 
+/// Process all record fields using MO dispatcher.
+///
+/// All MO record fields are processed by functors appropriate methods
+/// (leaf, record, sequence). Dispatching is done using mo_traits.
+
 template <typename T, typename F>
 void mo_process(T const& value, F& functor)
 {
@@ -118,6 +123,10 @@ void mo_process(T const& value, F& functor)
     value.apply(functor_disp);
 }
 
+/// Mutate record fields using MO dispatcher.
+///
+/// All MO record fields are processed by appropriate possibly mutating 
+/// methods (leaf, record, sequence). Dispatching is done using mo_traits.
 template <typename T, typename F>
 void mo_mutate(T& value, F& functor)
 {
@@ -126,12 +135,21 @@ void mo_mutate(T& value, F& functor)
     value.apply(functor_disp);
 }
 
+/// Process value using MO dispatcher.
+///
+/// Value is processed by appropriate functor methods
+/// (leaf, record, sequence). Dispatching is done using mo_traits.
 template <typename S, typename T, typename F>
 void process(S const& sym,  T const& value, F& functor)
 {
     mo::dispatcher<F> functor_disp(functor);
     functor_disp.dispatch(sym, value);
 }
+
+/// Mutate value using MO dispatcher.
+///
+/// Value is potentially mutated by appropriate functor methods
+/// (leaf, record, sequence). Dispatching is done using mo_traits.
 
 template <typename S, typename T, typename F>
 void mutate(S const& sym,  T& value, F& functor)
@@ -140,6 +158,27 @@ void mutate(S const& sym,  T& value, F& functor)
     functor_disp.dispatch(sym, value);
 }
 
+/// Declare structure/class manifest template function.
+///
+/// This macro declares <pre>
+///
+///   template <typename F> void apply(F& f) const
+/// </pre>
+/// method where F is template type of dispatcher/functor that
+/// processes compound record object.
+///
+/// Intended use:
+/// <pre>struct Foo {
+///   int a;
+///   std::string b;
+///   std::vector<int> c;
+///
+///   TINFRA_MO_MANIFEST(Foo) {
+///      TINFRA_MO_FIELD(a);
+///      TINFRA_MO_FIELD(b);
+///      TINFRA_MO_FIELD(c);
+///   }
+/// }</pre>
 
 #define TINFRA_MO_MANIFEST(a)  template <typename F> void apply(F& f) const
 #define TINFRA_MO_FIELD(a)    f.dispatch(#a, a)
