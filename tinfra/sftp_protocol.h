@@ -155,78 +155,19 @@ enum status_code {
 // symbol definitions
 //
 
-#define DECL_SYMBOL(a) extern const tinfra::symbol a;
-
-namespace S {    
-    DECL_SYMBOL(length);
-    DECL_SYMBOL(type);
-    DECL_SYMBOL(request_id);
-    
-    DECL_SYMBOL(version);
-    DECL_SYMBOL(extensions);
-    
-    DECL_SYMBOL(valid_attribute_flags);
-    DECL_SYMBOL(type);
-    DECL_SYMBOL(size);
-    DECL_SYMBOL(allocation_size);
-    DECL_SYMBOL(uid);
-    DECL_SYMBOL(gid);
-    DECL_SYMBOL(owner);
-    DECL_SYMBOL(group);
-    DECL_SYMBOL(permissions);
-    DECL_SYMBOL(atime);
-    DECL_SYMBOL(atime_nseconds);
-    DECL_SYMBOL(createtime);
-    DECL_SYMBOL(createtime_nseconds);
-    DECL_SYMBOL(mtime);
-    DECL_SYMBOL(mtime_nseconds);
-    DECL_SYMBOL(ctime);
-    DECL_SYMBOL(ctime_nseconds);
-    DECL_SYMBOL(acl);
-    DECL_SYMBOL(attrib_bits);
-    DECL_SYMBOL(attrib_bits_valid);
-    DECL_SYMBOL(text_hint);
-    DECL_SYMBOL(mime_type);
-    DECL_SYMBOL(link_count);
-    DECL_SYMBOL(untranslated_name);
-    DECL_SYMBOL(extended_count);
-    
-    DECL_SYMBOL(filename);
-    DECL_SYMBOL(longname);
-    DECL_SYMBOL(desired_access);
-    DECL_SYMBOL(flags);
-    DECL_SYMBOL(attrs);
-    DECL_SYMBOL(path);
-    DECL_SYMBOL(handle);
-    DECL_SYMBOL(offset);
-    DECL_SYMBOL(data);
-    
-    DECL_SYMBOL(name);
-    DECL_SYMBOL(oldpath);
-    DECL_SYMBOL(newpath);
-    
-    DECL_SYMBOL(status_code);
-    DECL_SYMBOL(error_message);
-    DECL_SYMBOL(language_tag);
-    
-    DECL_SYMBOL(end_of_file);
-    DECL_SYMBOL(elements);
-};
-
 //
 // compund types
 //
 
-#define TINFRA_DECLARE_STRUCT template <typename F> void apply(F& field) const
-#define FIELD(a) field(S::a, a)
+#define TINFRA_DECLARE_STRUCT template <typename F> void apply(F& f) const
 
 struct extension_pair {
     string name;
     string data;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(name);
-        FIELD(data);
+        TINFRA_MO_FIELD(name);
+        TINFRA_MO_FIELD(data);
     }
 };
 
@@ -258,38 +199,38 @@ struct attr {
     prefixed_list<extension_pair> extensions;
     
     TINFRA_DECLARE_STRUCT {
-                                                         FIELD(valid_attribute_flags);
-        //                                                 FIELD(type);
+                                                         TINFRA_MO_FIELD(valid_attribute_flags);
+        //                                                 TINFRA_MO_FIELD(type);
 
-        if ( present(SSH_FILEXFER_ATTR_SIZE) )           FIELD(size);
-        //if ( present(SSH_FILEXFER_ATTR_ALLOCATION_SIZE)) FIELD(allocation_size);
-        if ( present(SSH_FILEXFER_ATTR_UIDGID) )         FIELD(uid);
-        if ( present(SSH_FILEXFER_ATTR_UIDGID) )         FIELD(gid);
-        //if ( present(SSH_FILEXFER_ATTR_OWNERGROUP) )     FIELD(owner);
-        //if ( present(SSH_FILEXFER_ATTR_OWNERGROUP) )     FIELD(group);
-        if ( present(SSH_FILEXFER_ATTR_PERMISSIONS) )    FIELD(permissions);
-        if ( present(SSH_FILEXFER_ATTR_ACMODTIME) )     FIELD(atime);
-        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES)) FIELD(atime_nseconds);
-        //if ( present(SSH_FILEXFER_ATTR_CREATETIME) )     FIELD(createtime);
-        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )FIELD(createtime_nseconds);
-        if ( present(SSH_FILEXFER_ATTR_ACMODTIME) )     FIELD(mtime);
-        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )FIELD(mtime_nseconds);
-        //if ( present(SSH_FILEXFER_ATTR_CTIME) )          FIELD(ctime);
-        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )FIELD(ctime_nseconds);
-        //if ( present(SSH_FILEXFER_ATTR_ACL) )            FIELD(acl);
-        //if ( present(SSH_FILEXFER_ATTR_BITS) )           FIELD(attrib_bits);
-        //if ( present(SSH_FILEXFER_ATTR_BITS) )           FIELD(attrib_bits_valid);
-        //if ( present(SSH_FILEXFER_ATTR_TEXT_HINT) )      FIELD(text_hint);
-        //if ( present(SSH_FILEXFER_ATTR_MIME_TYPE) )      FIELD(mime_type);
-        //if ( present(SSH_FILEXFER_ATTR_LINK_COUNT) )     FIELD(link_count);
-        //if ( present(SSH_FILEXFER_ATTR_UNTRANSLATED_NAME) )     FIELD(untranslated_name);
-        if ( present(SSH_FILEXFER_ATTR_EXTENDED) )       FIELD(extensions);
+        if ( present(SSH_FILEXFER_ATTR_SIZE) )           TINFRA_MO_FIELD(size);
+        //if ( present(SSH_FILEXFER_ATTR_ALLOCATION_SIZE)) TINFRA_MO_FIELD(allocation_size);
+        if ( present(SSH_FILEXFER_ATTR_UIDGID) )         TINFRA_MO_FIELD(uid);
+        if ( present(SSH_FILEXFER_ATTR_UIDGID) )         TINFRA_MO_FIELD(gid);
+        //if ( present(SSH_FILEXFER_ATTR_OWNERGROUP) )     TINFRA_MO_FIELD(owner);
+        //if ( present(SSH_FILEXFER_ATTR_OWNERGROUP) )     TINFRA_MO_FIELD(group);
+        if ( present(SSH_FILEXFER_ATTR_PERMISSIONS) )    TINFRA_MO_FIELD(permissions);
+        if ( present(SSH_FILEXFER_ATTR_ACMODTIME) )     TINFRA_MO_FIELD(atime);
+        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES)) TINFRA_MO_FIELD(atime_nseconds);
+        //if ( present(SSH_FILEXFER_ATTR_CREATETIME) )     TINFRA_MO_FIELD(createtime);
+        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )TINFRA_MO_FIELD(createtime_nseconds);
+        if ( present(SSH_FILEXFER_ATTR_ACMODTIME) )     TINFRA_MO_FIELD(mtime);
+        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )TINFRA_MO_FIELD(mtime_nseconds);
+        //if ( present(SSH_FILEXFER_ATTR_CTIME) )          TINFRA_MO_FIELD(ctime);
+        //if ( present(SSH_FILEXFER_ATTR_SUBSECOND_TIMES) )TINFRA_MO_FIELD(ctime_nseconds);
+        //if ( present(SSH_FILEXFER_ATTR_ACL) )            TINFRA_MO_FIELD(acl);
+        //if ( present(SSH_FILEXFER_ATTR_BITS) )           TINFRA_MO_FIELD(attrib_bits);
+        //if ( present(SSH_FILEXFER_ATTR_BITS) )           TINFRA_MO_FIELD(attrib_bits_valid);
+        //if ( present(SSH_FILEXFER_ATTR_TEXT_HINT) )      TINFRA_MO_FIELD(text_hint);
+        //if ( present(SSH_FILEXFER_ATTR_MIME_TYPE) )      TINFRA_MO_FIELD(mime_type);
+        //if ( present(SSH_FILEXFER_ATTR_LINK_COUNT) )     TINFRA_MO_FIELD(link_count);
+        //if ( present(SSH_FILEXFER_ATTR_UNTRANSLATED_NAME) )     TINFRA_MO_FIELD(untranslated_name);
+        if ( present(SSH_FILEXFER_ATTR_EXTENDED) )       TINFRA_MO_FIELD(extensions);
 
                                                          
     }
     
-    bool present(fileattr field) const {
-        return (valid_attribute_flags & field) != 0;
+    bool present(fileattr TINFRA_MO_FIELD) const {
+        return (valid_attribute_flags & TINFRA_MO_FIELD) != 0;
     }
 };
 
@@ -302,8 +243,8 @@ struct packet_header {
     byte    type;   	 
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(length);
-        FIELD(type);
+        TINFRA_MO_FIELD(length);
+        TINFRA_MO_FIELD(type);
     }
 };
 
@@ -313,7 +254,7 @@ struct init_packet {
     uint32 version;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(version);
+        TINFRA_MO_FIELD(version);
     }
 };
 
@@ -324,8 +265,8 @@ struct version_packet {
     fill_list<extension_pair> extensions;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(version);
-        FIELD(extensions);
+        TINFRA_MO_FIELD(version);
+        TINFRA_MO_FIELD(extensions);
     }
 };
 
@@ -339,11 +280,11 @@ struct open_packet {
     attr   attrs;  // ???
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(filename);
-        //FIELD(desired_access);
-        FIELD(flags);
-        FIELD(attrs);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(filename);
+        //TINFRA_MO_FIELD(desired_access);
+        TINFRA_MO_FIELD(flags);
+        TINFRA_MO_FIELD(attrs);
     }
 };
 
@@ -354,8 +295,8 @@ struct open_dir_packet {
     string path; // UTF
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(path);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(path);
     }
 };
 
@@ -366,8 +307,8 @@ struct close_packet {
     string handle;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(handle);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(handle);
     }
 };
 
@@ -380,10 +321,10 @@ struct read_packet {
     uint32 length;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(handle);
-        FIELD(offset);
-        FIELD(length);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(handle);
+        TINFRA_MO_FIELD(offset);
+        TINFRA_MO_FIELD(length);
     }
 };
 
@@ -394,8 +335,8 @@ struct read_dir_packet {
     string handle;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(handle);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(handle);
     }
 };
 
@@ -408,10 +349,10 @@ struct write_packet {
     string data;
 
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(handle);
-        FIELD(offset);
-        FIELD(data);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(handle);
+        TINFRA_MO_FIELD(offset);
+        TINFRA_MO_FIELD(data);
     }
 };
 
@@ -422,8 +363,8 @@ struct remove_packet {
     string filename;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(filename);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(filename);
     }
 };
 
@@ -436,10 +377,10 @@ struct rename_packet {
     //uint32 flags;
 
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(oldpath);
-        FIELD(newpath);
-        //FIELD(flags);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(oldpath);
+        TINFRA_MO_FIELD(newpath);
+        //TINFRA_MO_FIELD(flags);
     }
 };
 
@@ -451,9 +392,9 @@ struct mkdir_packet {
     //attr   attrs;
 
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(path);
-        //FIELD(attrs);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(path);
+        //TINFRA_MO_FIELD(attrs);
     }
 };
 
@@ -464,8 +405,8 @@ struct rmdir_packet {
     string path;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(path);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(path);
     }
 };
 
@@ -477,9 +418,9 @@ struct stat_packet {
     //uint32 flags;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(path);
-        //FIELD(flags);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(path);
+        //TINFRA_MO_FIELD(flags);
     }
 };
 
@@ -490,8 +431,8 @@ struct fstat_packet {
     string handle;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(handle);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(handle);
     }
 };
 struct set_stat_packet {
@@ -502,9 +443,9 @@ struct set_stat_packet {
     attr   attrs;
 
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(path);
-        FIELD(attrs);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(path);
+        TINFRA_MO_FIELD(attrs);
     }
 };
 
@@ -521,10 +462,10 @@ struct status_packet {
     ///string language_tag;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(status_code);
-        //FIELD(error_message);
-        //FIELD(language_tag);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(status_code);
+        //TINFRA_MO_FIELD(error_message);
+        //TINFRA_MO_FIELD(language_tag);
     }
 };
 
@@ -535,8 +476,8 @@ struct handle_packet {
     string handle;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(handle);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(handle);
     }
 };
 
@@ -550,9 +491,9 @@ struct data_packet {
                         //      this
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(data);
-        //FIELD(end_of_file);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(data);
+        //TINFRA_MO_FIELD(end_of_file);
     }
 };
 
@@ -562,9 +503,9 @@ struct name_element {
     attr   attrs;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(filename);
-        FIELD(longname);
-        FIELD(attrs);
+        TINFRA_MO_FIELD(filename);
+        TINFRA_MO_FIELD(longname);
+        TINFRA_MO_FIELD(attrs);
     }
 };
 
@@ -578,9 +519,9 @@ struct name_packet {
     //bool   end_of_file; // WARNING: optional
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(elements);
-        //FIELD(end_of_file);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(elements);
+        //TINFRA_MO_FIELD(end_of_file);
     }
 };
 
@@ -591,8 +532,8 @@ struct attrs_packet {
     attr   attrs;
     
     TINFRA_DECLARE_STRUCT {
-        FIELD(request_id);
-        FIELD(attrs);
+        TINFRA_MO_FIELD(request_id);
+        TINFRA_MO_FIELD(attrs);
     }
 };
 
@@ -622,13 +563,13 @@ public:
     }
     */
     
-    void operator()(tinfra::symbol const&, extension_pair& r) {
+    void operator()(const char*, extension_pair& r) {
         read_string(r.name);
         read_string(r.data);
     }    
     
     template <typename T>
-    void operator()(tinfra::symbol const&, fill_list<T> & r) {
+    void operator()(const char*, fill_list<T> & r) {
         while( true ) {
             try {
                 T instance;
@@ -640,7 +581,7 @@ public:
         }
     }
     template <typename T>
-    void operator()(tinfra::symbol const&, prefixed_list<T> & r) {
+    void operator()(const char*, prefixed_list<T> & r) {
         uint32 size = read_uint32();        
         r.reserve(size);
         for( uint32 i = 0; i != size; ++i ) {
@@ -650,7 +591,7 @@ public:
         }
     }
     template <typename T>
-    void mstruct(tinfra::symbol const& s, T& v)
+    void mstruct(const char* s, T& v)
     {    
         tinfra::mo_mutate<T>(v, *this);
     }
@@ -675,29 +616,29 @@ public:
         write_uint64(static_cast<uint64>(v));
     }
     */
-    void operator()(tinfra::symbol const&, extension_pair const& v) {
+    void operator()(const char*, extension_pair const& v) {
         write_string(v.name);
         write_string(v.data);
     }
 
     template <typename T>
-    void operator()(tinfra::symbol const&, fill_list<T> const& v) {
+    void operator()(const char*, fill_list<T> const& v) {
         for( typename fill_list<T>::const_iterator i = v.begin(); i != v.end(); ++i ) {
             tinfra::mo_process(*i, *this);
         }
     }
     
     template <typename T>
-    void operator()(tinfra::symbol const&, prefixed_list<T> const& v) {    
+    void operator()(const char*, prefixed_list<T> const& v) {    
         write_uint32(v.size());
         
         for( typename fill_list<T>::const_iterator i = v.begin(); i != v.end(); ++i ) {
-            tinfra::mo_process(*i, *this);
+            tinfra::process("", *i, *this);
         }
     }
     
     template <typename T>
-    void mstruct(tinfra::symbol const& s, T const& v)
+    void mstruct(const char* s, T const& v)
     {    
         tinfra::mo_process<T>(v, *this);
     }

@@ -26,12 +26,12 @@ SUITE(tinfra_ssh)
     };
     TEST(sftp_vfs)
     {
-        std::string base_command;
-        std::string target;
-        base_command = "ssh -s";
-        target = "localhost";
+        //std::string base_command;
+        //std::string target;
+        //base_command = "plink.exe";
+        //target = "localhost";
         std::auto_ptr<tinfra::vfs> fs;
-        fs = std::auto_ptr<tinfra::vfs>(tinfra::sftp::create("/usr/lib/sftp-server"));
+        fs = std::auto_ptr<tinfra::vfs>(tinfra::sftp::create("plink -s localhost sftp"));
         
         fs->stat("/");
         

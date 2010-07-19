@@ -135,7 +135,7 @@ void send(tinfra::io::stream* to_server, T const& packet)
     packet_header header;    
     header.type       = T::type;    
     
-    tinfra::process(tinfra::symbol::null, header, sink);
+    tinfra::process("header", header, sink);
     tinfra::mo_process(packet, sink);
     
     uint32 real_size = packet_buffer.size() - sizeof(uint32);
