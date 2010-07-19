@@ -8,7 +8,6 @@
 #define tinfra_rfc4251_h_included
 
 #include <string>
-#include "tinfra/symbol.h"
 #include "tinfra/mo.h"
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
@@ -55,14 +54,18 @@ public:
         end(data+length)
     {}
     
-    void operator()(tinfra::symbol const&, byte& v)      { v = read_octet(); }    
+    template <typename S, typename T>
+    void operator() (S const&, T& v) {
+        (*this)(v);
+    }
+    void operator()(byte& v)      { v = read_octet(); }    
     //void operator()(tinfra::symbol const&, boolean& v)   { v = read_octet<boolean>(); }
-    void operator()(tinfra::symbol const&, uint32& v)    { v = read_uint32(); }
+    void operator()(uint32& v)    { v = read_uint32(); }
     
-    void operator()(tinfra::symbol const&, uint64& v)    { v = read_uint64(); }
-    void operator()(tinfra::symbol const&, string& v)    { read_string(v); }
+    void operator()(uint64& v)    { v = read_uint64(); }
+    void operator()(string& v)    { read_string(v); }
     
-    void operator()(tinfra::symbol const&, name_list& v) { read_name_list(v); }    
+    void operator()(name_list& v) { read_name_list(v); }    
     
 protected:
     const char* data;
@@ -144,14 +147,19 @@ class writer {
 public:    
     writer(std::string& out): out(out) {}
     
-    void operator()(tinfra::symbol const&, byte v)             { write_octet<byte>(v); }    
+    template <typename S, typename T>
+    void operator() (S const&, T const& v) {
+        (*this)(v);
+    }
+    
+    void operator()(byte v)             { write_octet<byte>(v); }    
     //void operator()(tinfra::symbol const&, boolean v)          { v = write_octet<boolean>(v); }
-    void operator()(tinfra::symbol const&, uint32 v)           { write_uint32(v); }
+    void operator()(uint32 v)           { write_uint32(v); }
     
-    void operator()(tinfra::symbol const&, uint64 v)           { write_uint64(v); }
-    void operator()(tinfra::symbol const&, string const& v)    { write_string(v); }
+    void operator()(uint64 v)           { write_uint64(v); }
+    void operator()(string const& v)    { write_string(v); }
     
-    void operator()(tinfra::symbol const&, name_list const& v) { write_name_list(v); }  
+    void operator()(name_list const& v) { write_name_list(v); }  
         
     const std::string& str() { return out; }
     

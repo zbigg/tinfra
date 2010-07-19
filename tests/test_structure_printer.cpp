@@ -11,8 +11,6 @@
 #include "tinfra/structure_printer.h"
 
 namespace tinfra_sp_test {
-    TINFRA_SYMBOL_IMPL(x);
-    TINFRA_SYMBOL_IMPL(y);
     struct point {
         int x;
         int y;
