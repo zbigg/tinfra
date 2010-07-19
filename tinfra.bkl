@@ -208,6 +208,6 @@
     <action id="check" depends="unittests">
         <depends>unittests</depends>
         <depends>test_fatal_exception</depends>
-        <command>sh $(SRCDIR)/check.sh $(BUILDDIR)</command>
+        <command>sh $(SRCDIR)/check.sh $(DOLLAR)(top_srcdir)</command>
     </action>
 </makefile>
