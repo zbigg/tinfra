@@ -84,7 +84,7 @@ class const_replacer {
 public:
 	const_replacer(tstring const& r): replacement(r) {}
 	
-	std::wstring operator()(tstring const& i) {
+	std::string operator()(tstring const& i) {
 		//std::cerr << tinfra::fmt("replacer(%s)->%s") % i % replacement << std::endl;
 		return replacement.str();
 	}
