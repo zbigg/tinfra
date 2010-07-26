@@ -34,15 +34,9 @@ callfwd_test.o callfwd.o: callfwd.h callfwd_detail.h
 test_gui: test_gui.o tinfra/gui/context.o
 
 UNITESTS_OBJECTS=\
-	tests/shared_ptr_test.o \
-	tests/runner_test.o \
 	tests/callfwd_test.o
 	
 unittests: unittests.o $(UNITESTS_OBJECTS) $(TINFRA_SANDBOX_OBJECTS)
-
-tests/shared_ptr_test.o: tinfra/shared_ptr.h
-tests/runner_test.o: tinfra/runner2.h tinfra/thread_runner.h
-tinfra/runner2.cpp: tinfra/runner2.h tinfra/thread_runner.h
 
 async_fs_poc: async_fs_poc.o $(TINFRA_SANDBOX_OBJECTS)
 
