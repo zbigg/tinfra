@@ -1,0 +1,4 @@
+downloaded gSOAP
+	http://downloads.sourceforge.net/project/gsoap2/gSOAP/gsoap_2.7.17.zip?use_mirror=garr&ts=1280147787
+
+
