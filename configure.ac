@@ -35,7 +35,7 @@ AC_CHECK_FUNCS([opendir nanosleep usleep])
 
 case "$target" in
 *-mingw*|*-mingw32*)
-	LIBS="$LIBS -lwsock32"
+	LIBS="$LIBS -lws2_32"
         CXXFLAGS="$CXXFLAGS -mthreads"
         CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -mthreads"
         LDFLAGS="$LDFLAGS -mthreads"
