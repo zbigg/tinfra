@@ -101,9 +101,15 @@ private:
         EXPECTING_RESPONSE_LINE,
         EXPECTING_REQUEST_LINE,
         EXPECTING_HEADER,
+        EXPECTING_TRAILER,
         EXPECTING_CONTENT,
         EXPECTING_RESET
     } state;
+    
+    enum {
+        IDENTITY,
+        CHUNKED
+    } transfer_encoding;
     
     // state updaters
     void setup_content_retrieval();
@@ -112,17 +118,18 @@ private:
     // byte handlers
     int request_line(tstring const& s);
     int header_line(tstring const& s);
+    int trailer_line(tstring const& s);
     int content_bytes(tstring const& s);
     
     void handle_protocol_header(tstring const& name, tstring const& value);
-    void check_content_length(size_t length);
+    void check_message_length(size_t length);
     
-    
+    int process_content_further(tstring const& s, bool eof);
     protocol_listener& sink_;
     parse_mode mode_;
     
-    size_t parsed_content_length;
-    size_t readed_content_length;
+    size_t current_body_chunk_length;
+    size_t current_body_chunk_readed;
     
     tinfra::lazy_byte_consumer<protocol_parser> dispatch_helper_;
 };

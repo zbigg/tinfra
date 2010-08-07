@@ -147,7 +147,7 @@ SUITE(tinfra_http) {
         CHECK(mh == m2);
     }
     
-    TEST(request_simple) {
+    TEST(parse_request_simple) {
         
         mock_http_listener result;
         feed(protocol_parser::SERVER, result, 
@@ -161,7 +161,7 @@ SUITE(tinfra_http) {
         CHECK_EQUAL(0,          result.readed_contents.size());
     }
     
-    TEST(request_complex_with_content) {
+    TEST(parse_request_complex_with_content) {
         
         mock_http_listener result;
         feed(protocol_parser::SERVER, result, 
@@ -187,6 +187,30 @@ SUITE(tinfra_http) {
         CHECK_EQUAL(32,                result.readed_contents.size());
         CHECK_EQUAL("0123456789abcdef"
                     "0123456789ABCDEF",result.readed_contents);
+    }
+    
+    TEST(parse_request_chunked)
+    {
+        mock_http_listener result;
+        feed(protocol_parser::SERVER, result, 
+            "GET / HTTP/1.0\r\n"
+            "Transfer-Encoding: chunked\r\n"
+            "\r\n"
+            "5\r\n"
+            "abcde\r\n"
+            "10 ; something\r\n"
+            "0123456789abcdef\r\n"
+            "0\r\n" // last chunk
+            "\r\n" // chunked encoding end line
+        ); 
+        
+        CHECK_EQUAL("GET",      result.method);
+        CHECK_EQUAL("/",        result.request_uri);
+        CHECK_EQUAL("HTTP/1.0", result.protocol_version);
+        CHECK_EQUAL(1,          result.headers.size());
+        CHECK_EQUAL(21,          result.readed_contents.size());
+        CHECK_EQUAL("abcde"
+                    "0123456789abcdef",result.readed_contents);
     }
 }
 

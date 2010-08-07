@@ -3,6 +3,7 @@
 #include <tinfra/regexp.h>
 
 #include <limits>
+#include <cstdlib>
 
 namespace tinfra { namespace http {
 
@@ -31,8 +32,8 @@ protocol_listener::~protocol_listener()
 protocol_parser::protocol_parser(protocol_listener& pl, parse_mode pm)
     : sink_(pl), 
       mode_(pm),
-      parsed_content_length(0), 
-      readed_content_length(0),
+      current_body_chunk_length(0), 
+      current_body_chunk_readed(0),
       dispatch_helper_(*this)
 {
     setup_initial_state();
@@ -54,7 +55,7 @@ void protocol_parser::eof(tinfra::tstring const& unparsed_input)
         if( unparsed_input.size() > 0 ) {
             // TODO:
             // if we
-            sink_.content(unparsed_input, true);
+            process_content_further(unparsed_input, true);
         }
         state = EXPECTING_RESET;
         return;
@@ -64,7 +65,8 @@ void protocol_parser::eof(tinfra::tstring const& unparsed_input)
         throw protocol_error("expecting response line");
     case EXPECTING_HEADER:
         throw protocol_error("expecting header");
-    
+    case EXPECTING_TRAILER:
+        throw protocol_error("expecting trailer");
     }
 }
 
@@ -73,7 +75,8 @@ void protocol_parser::setup_initial_state()
     dispatch_helper_.wait_for_delimiter("\r\n", &protocol_parser::request_line);
     state = (mode_ == SERVER) ? EXPECTING_REQUEST_LINE
                               : EXPECTING_RESPONSE_LINE;
-    parsed_content_length = tstring::npos;
+    current_body_chunk_length = tstring::npos;
+    transfer_encoding = IDENTITY;
 }
 
 int protocol_parser::request_line(tstring const& s) {
@@ -105,11 +108,12 @@ int protocol_parser::header_line(tstring const& s) {
     if( end == tstring::npos )
         throw protocol_error("bad header");
     if( end == 0 ) {
-         sink_.finished_headers();
+        sink_.finished_headers();
         // headers ENDED
         // somehow find content-length
-        readed_content_length = 0;
-        
+        this->current_body_chunk_readed = 0;
+        if( transfer_encoding == CHUNKED )
+            this->current_body_chunk_length = 0;
         setup_content_retrieval();
         return 2;
     }
@@ -136,11 +140,22 @@ int protocol_parser::header_line(tstring const& s) {
     return header_line.size()+2;
 }
 
+int protocol_parser::trailer_line(tstring const& s) {
+    const size_t end = s.find("\r\n");
+    if( end == tstring::npos ) 
+        throw protocol_error("bad trailer");
+    if( end == 0 ) {
+        state = EXPECTING_RESET; 
+        setup_initial_state();
+        return 2;
+    }
+    return 0;
+}
 void protocol_parser::setup_content_retrieval()
 {        
-    size_t remaining_size = parsed_content_length - readed_content_length;
+    size_t remaining_size = current_body_chunk_length - current_body_chunk_readed;
     
-    if( false /* && is_keep_alive() */ ) {
+    if( remaining_size == 0 && transfer_encoding == IDENTITY /* && is_keep_alive() */ ) {
         state = EXPECTING_RESET;
         setup_initial_state();
         return;
@@ -159,14 +174,19 @@ void protocol_parser::handle_protocol_header(tstring const& name, tstring const&
         if( n < 0 ) {
             throw std::runtime_error("invalid (negative) content-length");
         }
-        parsed_content_length = n;                        
-        check_content_length(parsed_content_length);
+        current_body_chunk_length = n;                        
+        check_message_length(current_body_chunk_length);
         return;
+    }
+    if( name == "Transfer-Encoding" ) {
+        if( value.find("chunked") == 0 ) {
+            transfer_encoding = CHUNKED;
+        }
     }
     
 }
 
-void protocol_parser::check_content_length(size_t length)
+void protocol_parser::check_message_length(size_t length)
 {
     const size_t max_content_length = 1024*1024*10;
     if( length >= max_content_length ) {
@@ -175,18 +195,64 @@ void protocol_parser::check_content_length(size_t length)
 }
 
 int protocol_parser::content_bytes(tstring const& s) {
-    size_t remaining_size = parsed_content_length - readed_content_length;        
-    size_t current_size = std::min(remaining_size, s.size());
+    return process_content_further(s, false);
+}
+
+static unsigned int parse_hex(tstring const& input)
+{
+    return std::strtol(input.data(), 0, 16);
+}
+
+int protocol_parser::process_content_further(tstring const& input, bool eof)
+{
+
+    if( this->transfer_encoding == CHUNKED && 
+        current_body_chunk_length == current_body_chunk_readed ) 
+    {
+        const size_t end = input.find("\r\n");
+        if( end == tstring::npos ) {
+            setup_content_retrieval();
+            return 0;
+        }
+        
+        this->current_body_chunk_length = parse_hex(input);
+        this->current_body_chunk_readed = 0;
+        if( this->current_body_chunk_length == 0 ) {
+            state = EXPECTING_TRAILER;
+            dispatch_helper_.wait_for_delimiter("\r\n", &protocol_parser::trailer_line);
+        } else {
+            setup_content_retrieval();
+        }
+        this->current_body_chunk_length+=2;
+        return end+2;
+    }
     
-    readed_content_length += current_size;
+    const size_t remaining_size = (this->current_body_chunk_length - this->current_body_chunk_readed);
+    const size_t consumed_bytes = std::min(remaining_size, input.size());
     
-    check_content_length(readed_content_length);
+    const size_t next_chunk_readed = this->current_body_chunk_readed + consumed_bytes;
+    size_t chunk_read_size = consumed_bytes;
+    if(    this->transfer_encoding == CHUNKED
+        && next_chunk_readed > current_body_chunk_length-2)
+    {
+        if( current_body_chunk_readed > current_body_chunk_length-2 )
+            chunk_read_size = 0;
+        else
+            chunk_read_size -= next_chunk_readed - (current_body_chunk_length-2);
+    }
+
+    this->current_body_chunk_readed += consumed_bytes;
     
-    bool last = (readed_content_length == parsed_content_length);        
-    sink_.content(tstring(s.data(), current_size), last);
-            
+    tstring current_result = input.substr(0, chunk_read_size);
+    
+    const bool message_body_ready = 
+        eof || (this->transfer_encoding == IDENTITY 
+                && this->current_body_chunk_readed == this->current_body_chunk_length);
+    
+    sink_.content(current_result, message_body_ready);
+    
     setup_content_retrieval();
-    return current_size;
+    return consumed_bytes;
 }
 
 static void write_headers(std::ostream& out, std::vector<request_header_entry> const& hv, size_t content_length)
