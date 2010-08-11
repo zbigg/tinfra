@@ -15,6 +15,7 @@
     </add-flags>
     <add-flags formats="msvc">
         -omakefile.vc
+        -DFORMAT_HAS_MAKE_INSTALL=1
     </add-flags>    
     <add-flags formats="msvs2003prj">
         -otinfra.sln

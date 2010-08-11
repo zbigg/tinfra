@@ -142,6 +142,7 @@
             tinfra/inifile.h
             tinfra/socket.h
             tinfra/tcp_socket.h
+            tinfra/static_registry.h
         </files>
     </data-files-tree>
     
