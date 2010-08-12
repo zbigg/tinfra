@@ -3,18 +3,17 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "tstring.h"
+
 #include <stdexcept>
 #include <cstdlib>
 #include <algorithm>
 #include <cassert>
-
-#include "tinfra/thread.h"
-#include "tinfra/cmd.h"
+#include <ostream>
 
 #include <cstdlib>
 #include <cassert>
 
-#include "tstring.h"
 
 namespace tinfra {
 

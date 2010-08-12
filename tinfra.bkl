@@ -33,6 +33,7 @@
             tinfra/runtime.cpp
             tinfra/exeinfo.cpp
             tinfra/cmd.cpp
+            tinfra/cli.cpp
             tinfra/io/stream.cpp
             tinfra/subprocess.cpp
             tinfra/server.cpp
@@ -91,6 +92,7 @@
         <files>
             tinfra/StaticCacheObject.h
             tinfra/cmd.h
+            tinfra/cli.h
             tinfra/exeinfo.h
             tinfra/fmt.h
             tinfra/string.h

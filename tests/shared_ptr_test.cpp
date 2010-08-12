@@ -65,4 +65,27 @@ SUITE(tinfra) {
 	ts.join();
 	CHECK_EQUAL(2, * (x.get()) );
     }
+    
+    struct FOO {
+        
+        FOO() { instance_count++; }
+        ~FOO() { instance_count--; }
+        static int instance_count;
+    };
+    
+    int FOO::instance_count = 0;
+    TEST(shared_ptr_construct_from_auto_ptr)
+    {
+        CHECK_EQUAL(0, FOO::instance_count);
+        std::auto_ptr<FOO> foo_orig(new FOO());
+        CHECK_EQUAL(1, FOO::instance_count);
+        {
+            tinfra::shared_ptr<FOO> foo_shared(foo_orig); // should take away reference from foo_orig
+            
+            CHECK(foo_orig.get() == 0);
+            CHECK_EQUAL(1, FOO::instance_count);
+        }
+        
+        CHECK_EQUAL(0, FOO::instance_count);
+    }
 }

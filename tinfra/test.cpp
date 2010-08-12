@@ -14,6 +14,8 @@
 #include "tinfra/option.h"
 #include "tinfra/stream.h"
 #include "tinfra/exeinfo.h"
+
+#include "cli.h"
 #include <algorithm>
 #include <stdexcept>
 
@@ -191,27 +193,9 @@ static std::string DEFAULT_TEST_RESOURCES_DIR =  "tests/resources";
 tinfra::option<std::string> 
                       opt_test_resources_dir(DEFAULT_TEST_RESOURCES_DIR, 'D',"test-resources-dir", "set folder with file resources");
 tinfra::option_switch opt_list('l', "test-list", "list available test cases");
-tinfra::option_switch opt_help('h', "help", "show available options");
 
-int test_main(int argc, char** argv)
+int test_main_real(tstring const&, std::vector<tinfra::tstring>& args)
 {
-    TinfraTestReporter reporter;
-    UnitTest::TestRunner runner(reporter);
-    
-    std::vector<tinfra::tstring> args(argv+1, argv+argc);
-    tinfra::option_registry::get().parse(args);
-    
-    if( opt_help.enabled() ) {
-        using tinfra::path::basename;
-        using tinfra::get_exepath;
-        std::string usage_header = fmt(
-            "Usage: %s [options] [ test_case ... ]\n"
-            "Available options:\n") % basename(get_exepath());
-        
-        tinfra::out.write(tstring(usage_header));
-        tinfra::option_registry::get().print_help(tinfra::out);
-        return 0;
-    }
     if( opt_list.enabled() ) {
         list_available_tests();
         return 0;
@@ -220,13 +204,23 @@ int test_main(int argc, char** argv)
     set_test_resources_dir(opt_test_resources_dir.value());
 
     test_name_list test_names(args.begin(), args.end());
-        
+    
+    TinfraTestReporter reporter;
+    UnitTest::TestRunner runner(reporter);
+    
     if( ! test_names.empty() ) {        
         test_name_matcher predicate(test_names);        
         return runner.RunTestsIf(UnitTest::Test::GetTestList(), 0, predicate, 0);
     } else {
         return runner.RunTestsIf(UnitTest::Test::GetTestList(), 0, UnitTest::True(), 0);
     }
+}
+
+int test_main(int argc, char** argv)
+{
+
+    tinfra::cli_main(argc, argv, &test_main_real);
+    
 }
 
 } } // end namespace tinfra::test
