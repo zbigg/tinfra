@@ -5,7 +5,7 @@
 #include <tinfra/parser.h>
 #include <tinfra/lazy_byte_consumer.h>
 #include <tinfra/symbol.h>
-#include <tinfra/io/stream.h>
+#include <tinfra/stream.h>
 
 //#include <tinfra/optional.h>    
 
@@ -47,14 +47,14 @@ struct response_data {
     std::string   content;
 };
 
-//void write(tinfra::io::stream*, response_header_data const&, optional<size_t> const& content_length);
-//void write(tinfra::io::stream*, request_header_data const&, optional<size_t> const& content_length);
+//void write(tinfra::output_stream&, response_header_data const&, optional<size_t> const& content_length);
+//void write(tinfra::output_stream&, request_header_data const&, optional<size_t> const& content_length);
 
-void write(tinfra::io::stream*, response_header_data const&, size_t content_length);
-void write(tinfra::io::stream*, request_header_data const&, size_t content_length);
+void write(tinfra::output_stream&, response_header_data const&, size_t content_length);
+void write(tinfra::output_stream&, request_header_data const&, size_t content_length);
 
-void write(tinfra::io::stream*, request_data const&);
-void write(tinfra::io::stream*, response_data const& d);
+void write(tinfra::output_stream&, request_data const&);
+void write(tinfra::output_stream&, response_data const& d);
 
 namespace S {
     extern symbol content_length;

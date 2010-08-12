@@ -270,8 +270,8 @@ static void write_headers(std::ostream& out, std::vector<request_header_entry> c
     }
 }
 
-//void write(tinfra::io::stream*, response_header_data const&, optional<size_t> const& content_length)
-void write(tinfra::io::stream* out, response_header_data const& rhd, size_t content_length)
+//void write(tinfra::output_stream&, response_header_data const&, optional<size_t> const& content_length)
+void write(tinfra::output_stream& out, response_header_data const& rhd, size_t content_length)
 {
     const char* proto_string = rhd.proto == HTTP_1_0 ? "HTTP/1.0"
                                                      : "HTTP/1.1";
@@ -281,11 +281,11 @@ void write(tinfra::io::stream* out, response_header_data const& rhd, size_t cont
     write_headers(formatter, rhd.headers, content_length);
     
     std::string const& r = formatter.str();
-    out->write(r.data(), r.size());
+    out.write(r.data(), r.size());
 }
 
-//void write(tinfra::io::stream*, request_header_data const&, optional<size_t> const& content_length)
-void write(tinfra::io::stream* out, request_header_data const& rhd, size_t content_length)
+//void write(tinfra::output_stream&, request_header_data const&, optional<size_t> const& content_length)
+void write(tinfra::output_stream& out, request_header_data const& rhd, size_t content_length)
 {
     const char* proto_string = rhd.proto == HTTP_1_0 ? "HTTP/1.0"
                                                      : "HTTP/1.1";
@@ -296,21 +296,21 @@ void write(tinfra::io::stream* out, request_header_data const& rhd, size_t conte
     write_headers(formatter, rhd.headers, content_length);
     
     std::string const& r = formatter.str();
-    out->write(r.data(), r.size());
+    out.write(r.data(), r.size());
 }
 
-void write(tinfra::io::stream* out, request_data const& rf)
+void write(tinfra::output_stream& out, request_data const& rf)
 {
     write(out, rf.header, rf.content.size());
     
-    out->write(rf.content.data(), rf.content.size());
+    out.write(rf.content.data(), rf.content.size());
 }
 
-void write(tinfra::io::stream* out, response_data const& rd)
+void write(tinfra::output_stream& out, response_data const& rd)
 {
     write(out, rd.header, rd.content.size());
     
-    out->write(rd.content.data(), rd.content.size());
+    out.write(rd.content.data(), rd.content.size());
 }
 
 } } // end namespace tinfra::http
