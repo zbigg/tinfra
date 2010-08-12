@@ -20,6 +20,8 @@
 #include "tinfra/guard.h"
 #endif
 
+#include <memory>
+
 namespace tinfra {
 
 #ifdef TINFRA_SHARED_PTR_USE_BOOST
@@ -117,6 +119,7 @@ public:
         
     shared_ptr(shared_ptr const& p);    
     template <typename Y> explicit shared_ptr(shared_ptr<Y> const& p);
+    template <typename Y> explicit shared_ptr(std::auto_ptr<Y>& p);
     
     shared_ptr<T>& operator=(shared_ptr const& p);
     template <typename Y> shared_ptr<T>& operator=(shared_ptr<Y> const& p);
@@ -206,6 +209,14 @@ shared_ptr<T>::shared_ptr(shared_ptr<Y> const& p)
 {
     TINFRA_TRACE_MSG("tinfra::shared_ptr: copy_const template");
     refcount_.attach();
+}
+template <typename T>
+template <typename Y> 
+shared_ptr<T>::shared_ptr(std::auto_ptr<Y>& p)
+    : ptr_(p.get()),
+      refcount_( new shared_ptr_atomic::atomic_long(1))
+{
+    p.release();
 }
 
 template <typename T>
