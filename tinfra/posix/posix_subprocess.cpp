@@ -251,12 +251,14 @@ struct posix_subprocess: public subprocess {
                 int tty_fd = open("/dev/tty", O_RDWR);
                 if (tty_fd >= 0) {
                     int ret = ioctl(tty_fd, TIOCNOTTY, 0);
-                    if (ret == -1) 
+                    if (ret == -1) {
                         perror("ioctl  (disabling tty)");
+			TINFRA_LOG_ERROR(fmt("warning: detaching from tty failed: ioctl(/dev/tty,TIOCNOTTY) returned errno: %s") % errno_to_string(errno));
+		    }
                     close(tty_fd);
                 }
                 else {
-                    perror("open (disabling tty)");
+		    TINFRA_LOG_ERROR(fmt("warning: detaching from tty failed: open(/dev/tty) returned errno: %s)") % errno_to_string(errno));
                 }
             } else if( stdin_mode == NONE) { 
                 ::close(0);

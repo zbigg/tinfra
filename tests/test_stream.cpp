@@ -42,7 +42,7 @@ SUITE(tinfra)
 
     TEST(io_open_bad_socket)
     {
-        CHECK_THROW( tinfra::tcp_client_socket("this_host_doesnt_exist", 80), std::runtime_error);
+        CHECK_THROW( tinfra::tcp_client_socket("this_host_doesnt_exist.edu.", 80), std::runtime_error);
     }
 
     TEST(io_basic)

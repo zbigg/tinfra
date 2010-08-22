@@ -90,7 +90,6 @@
         <srcdir>$(SRCDIR)</srcdir>
         <install-to>$(INCLUDEDIR)</install-to> 
         <files>
-            tinfra/StaticCacheObject.h
             tinfra/cmd.h
             tinfra/cli.h
             tinfra/exeinfo.h
@@ -100,7 +99,6 @@
             tinfra/io/stream.h
             tinfra/subprocess.h
             tinfra/server.h
-            <!--tinfra/io/zcompat.h-->
             tinfra/multitype_map.h
             tinfra/symbol.h
             tinfra/path.h
