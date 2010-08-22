@@ -50,8 +50,8 @@ public:
     }
     
     // MO contract
-    template <class T>
-    void operator () (const tinfra::symbol& sym, T const& t) 
+    template <typename S, class T>
+    void leaf(S sym, T const& t) 
     {
         separate();
         apply_indent();
@@ -60,8 +60,8 @@ public:
         need_separator = true;
     }
     
-    template <typename T>
-    void mstruct(tinfra::symbol const& sym, T const& v)
+    template <typename S, typename T>
+    void record(S sym, T const& v)
     {
         separate();
         enter(sym, '{');
@@ -75,8 +75,8 @@ public:
         exit(sym,'}');
     }
     
-    template <typename T>
-    void container(tinfra::symbol const& sym, T const& v)
+    template <typename S, typename T>
+    void sequence(S sym, T const& v)
     {
         separate();
         enter(sym, '[');
@@ -84,7 +84,7 @@ public:
         
         typedef typename T::const_iterator  iterator;
         for( iterator i = v.begin(); i != v.end(); ++i ) {
-            tinfra::process(symbol(0),*i, *this);
+            tinfra::process(S(0),*i, *this);
         }
         
         pop_showing_name();
@@ -101,7 +101,8 @@ private:
         showing_name = sn_history.at(sn_history.size()-1);
         sn_history.erase(sn_history.end()-1);
     }
-    void name(symbol const& sym) {
+    
+    void name(const char* sym) {
         if( showing_name ) {
             out << sym << '=';
         }
@@ -121,7 +122,7 @@ private:
                 out << " ";
         }
     }
-    void enter(tinfra::symbol const& sym, char sep) {
+    void enter(const char* sym, char sep) {
         apply_indent();
         name(sym);
         out << sep;
@@ -131,7 +132,7 @@ private:
         need_separator = false;
     }
     
-    void exit(tinfra::symbol const&, char sep) {
+    void exit(const char*, char sep) {
         indent_level -= 1;
         apply_indent();
         if( !multiline )
