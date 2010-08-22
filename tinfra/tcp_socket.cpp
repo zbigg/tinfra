@@ -96,16 +96,9 @@ static void get_inet_address(tstring const& address, int rport, struct sockaddr_
 #ifdef TS_WINSOCK
             throw_socket_error(fmt("unable to resolve '%s'") % address);
 #else
-            std::string message = fmt("unable to resolve '%s': %s") % address % hstrerror(h_errno);
-            switch( h_errno ) {
-            case HOST_NOT_FOUND:
-            case NO_ADDRESS:
-            // TODO: check on uix machine: NO_DATA should be also domain error
-            // case NO_DATA: 
-                throw std::domain_error(message);
-            default:
-                throw std::runtime_error(message);
-            }
+            const int e = h_errno;
+            const std::string message = fmt("unable to resolve '%s': %s (%s)") % address % hstrerror(e) %  e;
+            throw std::runtime_error(message);
 #endif
         }            
     	std::memcpy(&sa->sin_addr, ha->h_addr, ha->h_length);
