@@ -55,17 +55,17 @@ public:
     {}
     
     template <typename S, typename T>
-    void operator() (S const&, T& v) {
-        (*this)(v);
+    void leaf (S const&, T& v) {
+        leaf(v);
     }
-    void operator()(byte& v)      { v = read_octet(); }    
-    //void operator()(tinfra::symbol const&, boolean& v)   { v = read_octet<boolean>(); }
-    void operator()(uint32& v)    { v = read_uint32(); }
+    void leaf(byte& v)      { v = read_octet(); }    
+    //void leaf(tinfra::symbol const&, boolean& v)   { v = read_octet<boolean>(); }
+    void leaf(uint32& v)    { v = read_uint32(); }
     
-    void operator()(uint64& v)    { v = read_uint64(); }
-    void operator()(string& v)    { read_string(v); }
+    void leaf(uint64& v)    { v = read_uint64(); }
+    void leaf(string& v)    { read_string(v); }
     
-    void operator()(name_list& v) { read_name_list(v); }    
+    void leaf(name_list& v) { read_name_list(v); }    
     
 protected:
     const char* data;
@@ -148,18 +148,18 @@ public:
     writer(std::string& out): out(out) {}
     
     template <typename S, typename T>
-    void operator() (S const&, T const& v) {
-        (*this)(v);
+    void leaf (S const&, T const& v) {
+        this->leaf(v);
     }
     
-    void operator()(byte v)             { write_octet<byte>(v); }    
-    //void operator()(tinfra::symbol const&, boolean v)          { v = write_octet<boolean>(v); }
-    void operator()(uint32 v)           { write_uint32(v); }
+    void leaf(byte v)             { write_octet<byte>(v); }    
+    //void leaf(tinfra::symbol const&, boolean v)          { v = write_octet<boolean>(v); }
+    void leaf(uint32 v)           { write_uint32(v); }
     
-    void operator()(uint64 v)           { write_uint64(v); }
-    void operator()(string const& v)    { write_string(v); }
+    void leaf(uint64 v)           { write_uint64(v); }
+    void leaf(string const& v)    { write_string(v); }
     
-    void operator()(name_list const& v) { write_name_list(v); }  
+    void leaf(name_list const& v) { write_name_list(v); }  
         
     const std::string& str() { return out; }
     
