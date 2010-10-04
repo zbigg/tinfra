@@ -1,19 +1,21 @@
 #include "internal_pipe.h" // we implement this
 
 #include <tinfra/thread.h>
-#include <deque>
+#include <deque>        // implementation underlying buffer
+#include <iterator>     // for std::advance
+#include <algorithm>    // for std::copy
 
 namespace tinfra {
 
 struct internal_pipe::implementation_detail
 {
-    tinfra::monitor monitor;
-    int  requested_buffer_size; // read_only
-    bool closed;
+    tinfra::monitor  monitor;
+    //int              requested_buffer_size; // read_only, not implemented!!!
+    bool             closed;
     std::deque<char> buffer;
 public:
     implementation_detail(int _buffer_size):
-        requested_buffer_size(_buffer_size),
+        //requested_buffer_size(_buffer_size),
         closed(false)
     {
     }
@@ -22,36 +24,45 @@ public:
     {
         tinfra::synchronizator lock(this->monitor);
         
-        if( buffer.size() == 0 && closed )
-            return 0; // EOF
-        
-        while (buffer.size() == 0 ) {
-            lock.wait();
+        while (this->buffer.size() == 0 ) {
+            if( this->closed )
+                return 0; // EOF
+            this->monitor.wait();
         }
         
-        const int actual_read_size = std::min(requested_read_size);
+        const int actual_read_size = std::min(buffer.size, requested_read_size);
         
-        buffer.remove(buffer.begin()
-        return actual;
-        
+        deque::iterator copy_begin = this->buffer.begin();
+        deque::iterator copy_end = this->buffer.begin();
+        advance(copy_end, actual_read_size);
+        std::copy(copy_begin, copy_end, dest);
+        this->buffer.erase(copy_begin, copy_end);
+        return actual_read_size;        
     }
     
     int write(const char* data, int size)
     {
         tinfra::synchronizator lock(this->monitor);
-        if( closed ) 
+        
+        if( this->closed ) // TODO: it should be TINFRA_LOGIC_INVARIANT
             throw std::logic_error("internal_pipe: attempt to write() after close()");
         
-        const bool should_signal = (buffer.size() == 0);
+        const bool should_signal = (this->buffer.size() == 0);
         
+        this->buffer.insert(this->buffer.end(), data, data+size);
         
         if( should_signal )
-            lock.broadcast();
+            this->monitor.broadcast();
+        
+        return size;
     }
     
     void close()
     {
+        tinfra::synchronizator lock(this->monitor);
         this->closed = true;
+        if( this->buffer.size() == 0 )
+            this->monitor.broadcast();
     }
 };
 

@@ -15,7 +15,6 @@ class internal_pipe: public tinfra::input_stream,
 public:
     internal_pipe(int buffer_size);
     
-    // input_stream interface
     /// Blocking read from pipe.
     ///
     /// This method may block if pipe internal buffer is empty i.e there is 
@@ -57,6 +56,10 @@ public:
     /// Throws nothing.
     void close();
 private:
+    // noncopyable
+    internal_pipe(internal_pipe const&);
+    internal_pipe& operator=(internal_pipe const&);
+
     class implementation_detail;
     std::auto_ptr<implementation_detail> impl;
 };    
