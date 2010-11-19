@@ -25,9 +25,15 @@ test_segv()
     fi
 }
 
+topsrc_dir=$1
+testresources_dir=${1}/tests/resources
+
 test_segv
-generic_test plain_unittests ./unittests -D "$1"
-generic_test valgrind_unittests valgrind --tool=memcheck ./unittests -D "$1"
+generic_test plain_unittests ./unittests -D ${testresources_dir}
+if type  valgrind ; then
+	generic_test valgrind_memcheck_unittests valgrind --tool=memcheck ./unittests -D ${testresources_dir}
+	generic_test valgrind_helgrind_unittests valgrind --tool=helgrind ./unittests -D ${testresources_dir}
+fi
 
 exit $failed
 

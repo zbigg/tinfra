@@ -49,6 +49,7 @@ void Server::bind(const char* address, int port)
 
 void Server::run()
 {
+    // FIXME: stopped_ flag has write/read race (as detected by helgrind) zbigg/2010/11/19 
     while( !stopped_ ) {
         std::string peer_address;
         std::auto_ptr<tcp_client_socket> client_socket(server_socket_->accept(peer_address));
