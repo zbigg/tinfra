@@ -6,7 +6,6 @@
 #ifndef tinfra_structure_printer_h_included_
 #define tinfra_structure_printer_h_included_
 
-#include "tinfra/symbol.h"
 #include "tinfra/mo.h"
 
 #include <ostream> // for std::ostream

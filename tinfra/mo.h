@@ -6,7 +6,7 @@
 #ifndef tinfra_mo_h_included__
 #define tinfra_mo_h_included__
 
-#include "tinfra/symbol.h"
+#include <vector> // TBD, remove for vector
 
 namespace tinfra {
 /** MO structure trait
