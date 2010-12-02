@@ -38,7 +38,7 @@ case "$target" in
 	LIBS="$LIBS -lws2_32"
         CXXFLAGS="$CXXFLAGS -mthreads"
         CLIENT_CXXFLAGS="$CLIENT_CXXFLAGS -mthreads"
-        LDFLAGS="$LDFLAGS -mthreads"
+        LDFLAGS="$LDFLAGS -mthreads -Wl,--enable-auto-import"
 	;;
 *)
         LIBS="$LIBS -lpthread"
