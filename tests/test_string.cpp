@@ -108,4 +108,27 @@ SUITE(tinfra)
         CHECK_EQUAL("a", r[0] );
         CHECK_EQUAL("b", r[1] );
     }
+    
+    TEST(string_compare_no_case_corner)
+    {
+        using tinfra::compare_no_case;
+        CHECK_EQUAL( 0, compare_no_case("","") );
+        CHECK_EQUAL( 0, compare_no_case("A","B", 0) );
+        CHECK_EQUAL( 0, compare_no_case("A","", 0) );
+        CHECK_EQUAL( 0, compare_no_case("","B", 0) );
+    }
+    
+    TEST(string_compare_no_case_basic)
+    {
+        using tinfra::compare_no_case;
+        CHECK_EQUAL( 0, compare_no_case("abc","ABC") );
+        CHECK_EQUAL( 0, compare_no_case("abc ZXY","ABC zxy") );
+        CHECK_EQUAL( 0, compare_no_case("defGEG","defGEG___", 6) );
+        
+        CHECK( compare_no_case("defGEG","defGEGaa") < 0);
+        CHECK( compare_no_case("defGEGaa","defGEG") > 0);
+
+        CHECK( compare_no_case("defGEG","defGEGaa") < 0);
+        CHECK( compare_no_case("defGEGaa","defGEG") > 0);
+    }
 }

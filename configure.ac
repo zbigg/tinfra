@@ -15,6 +15,7 @@ AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
 AC_CONFIG_SRCDIR([tinfra.bkl])
 AC_CONFIG_HEADER([tinfra/config.h])
 
+#CXXFLAGS="$CXXFLAGS -std=c++0x"
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
@@ -49,7 +50,8 @@ AC_SUBST(CLIENT_CXXFLAGS)
 
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(nsl,gethostbyname)
-
+AC_CHECK_FUNC(strncasecmp)
+AC_CHECK_FUNC(strnicmp)
 AC_CHECK_FUNC(hstrerror)
 
 AC_CONFIG_FILES([Makefile  tinfra.pc tinfra-test.pc])

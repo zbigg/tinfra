@@ -24,7 +24,29 @@ std::string chop(tstring const& s);
 
 std::vector<std::string> split(tstring const& in, tstring const& delimiters);
 std::vector<std::string> split_lines(tstring const& in);
-    
+
+/// Compare strings ignoring case.
+///
+/// Compare strings ignoring case (strnicmp, strncasecmp) functions are used
+/// or std::tolower fallback if former are not availabled.
+///
+/// If strings are equal up to common length then longer string is considered
+/// "bigger".
+///
+/// @return less than 0 when a appears to be "less" than b, 0 if they're equal, greater than 0 otherwise
+int         compare_no_case(tstring const& a, tstring const& b);
+
+/// Compare strings ignoring case.
+///
+/// Compare strings ignoring case (strnicmp, strncasecmp) functions are used
+/// or std::tolower fallback if former are not availabled.
+///
+/// If strings are equal up to <upto> paramerer then 0 is returned and
+/// as they would be equal.
+///
+/// @return less than 0 when a appears to be "less" than b, 0 if they're equal, greater than 0 otherwise
+int         compare_no_case(tstring const& a, tstring const& b, size_t upto);
+
 }
 
 #endif

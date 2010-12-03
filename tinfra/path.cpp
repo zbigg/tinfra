@@ -138,7 +138,7 @@ bool is_executable(tstring const& name, std::vector<std::string> const& extensio
             continue;
         
         const tstring actual_ext = name.substr(name_len-extlen, extlen);
-        if( strnicmp(actual_ext.data(), ext.data(), extlen) == 0 ) {
+        if( compare_no_case(actual_ext.data(), ext.data(), extlen) == 0 ) {
             return true;
         }
     }

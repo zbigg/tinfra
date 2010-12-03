@@ -11,6 +11,11 @@
 #include <cstring>
 #include <cctype>
 
+#if defined(HAVE_STRICMP) || defined(_MSC_VER) || defined(HAVE_STRCASECMP)
+#include <string.h>
+#endif
+
+
 namespace tinfra {
  
 //
@@ -127,6 +132,42 @@ std::vector<std::string> split(tstring const& in, tstring const& delimiters)
 std::vector<std::string> split_lines(tstring const& in)
 {
     return split(in, "\r\n");
+}
+
+static int local_strcasecmp(const char* a, const char* b, size_t len)
+{
+#if defined(HAVE_STRICMP) || defined(_MSC_VER)
+    return strnicmp(a, b, len);
+#elif defined(HAVE_STRCASECMP)
+    return strncasecmp(a, b, len);
+#else
+    size_t idx = 0;
+    while( idx != len ) {
+        const char ca = std::tolower(*a);
+        const char cb = std::tolower(*b);
+        if( ca != cb )
+            return ca - cb;
+        ++b, ++a, ++idx;
+    }
+    return 0;
+#endif
+}
+
+int         compare_no_case(tstring const& a, tstring const& b)
+{
+    const size_t common_length = std::min(a.size(), b.size());
+    const int result = local_strcasecmp(a.data(), b.data(), common_length);
+    if( result != 0 )
+        return result;
+    else if( a.size() == b.size() )
+        return 0;
+    else
+        return a.size() > b.size() ? 1 : -1;
+}
+
+int         compare_no_case(tstring const& a, tstring const& b, size_t upto)
+{
+    return local_strcasecmp(a.data(), b.data(), upto);
 }
 
 } // end namespace tinfra
