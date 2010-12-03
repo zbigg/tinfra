@@ -21,16 +21,17 @@ environment_t get_environment()
     const char* p = es;
     environment_t result;
     while( *p ) {
-        const tstring current(p);
-        const size_t eq_pos = current.find_first_of('=');
-        if( eq_pos != tstring::npos ) {
+        const tstring env_entry(p);
+        const size_t eq_pos = env_entry.find_first_of('=');
+        
+        if( eq_pos != tstring::npos && eq_pos > 0) {
             
-            const tstring name = current.substr(0, eq_pos);
-            const tstring value = current.substr(eq_pos+1);
+            const tstring name = env_entry.substr(0, eq_pos);
+            const tstring value = env_entry.substr(eq_pos+1);
             
             result[name.str()] = value.str();
         }
-        p += current.size() + 1;
+        p += env_entry.size() + 1;
     }
     
     FreeEnvironmentStrings(es);

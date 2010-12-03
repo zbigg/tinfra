@@ -17,8 +17,9 @@ SUITE(tinfra) {
         
         
         for( environment_t::const_iterator ie = env.begin(); ie != env.end(); ++ie ) {
-            const char* getenv_value = getenv(ie->first.c_str());
-            
+            const char* name = ie->first.c_str();
+            const char* getenv_value = getenv(name);
+            CHECK( 0 != getenv_value);
             CHECK_EQUAL(getenv_value, ie->second.c_str());
         }
     }
