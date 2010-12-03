@@ -31,7 +31,25 @@
 extern "C" void tinfra_fatal_sighandler(int signo);
 extern "C" void tinfra_interrupt_sighandler(int);
 
+extern char** environ;
+
 namespace tinfra {
+
+environment_t get_environment()
+{
+    environment_t result;
+    for( char** ie = environ; *ie != 0; ++ie ) {
+        tstring all(*ie);
+        size_t eq_pos = all.find_first_of('=');
+        if( eq_pos == tstring::npos ) 
+            continue;
+        tstring name = all.substr(0, eq_pos);
+        tstring value = all.substr(eq_pos+1);
+        
+        result[name.str()] = value.str();
+    }
+    return result;
+}
 
 bool is_stacktrace_supported()
 {
