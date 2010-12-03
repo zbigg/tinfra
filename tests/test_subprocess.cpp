@@ -108,7 +108,7 @@ SUITE(tinfra) {
     /// returns command string that echoes a env variable
     static std::string get_echo_var_command(tstring const& varname)
     {
-#ifdef WIN32
+#ifdef _WIN32
         return tinfra::fmt("cmd /c \"echo %%%s%%\"") % varname;
 #else
         return tinfra::fmt("echo $%s") % varname;
@@ -119,7 +119,7 @@ SUITE(tinfra) {
     /// that is unknown
     static std::string unknown_variable_output(tstring const& name)
     {
-#ifdef WIN32
+#ifdef _WIN32
             return tinfra::fmt("%%%s%%") % name;
 #else
             return "";
