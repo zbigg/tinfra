@@ -58,6 +58,7 @@
             tinfra/inifile.cpp
             tinfra/socket.cpp
             tinfra/tcp_socket.cpp
+            tinfra/internal_pipe.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -143,6 +144,7 @@
             tinfra/socket.h
             tinfra/tcp_socket.h
             tinfra/static_registry.h
+            tinfra/internal_pipe.h
         </files>
     </data-files-tree>
     
@@ -187,6 +189,7 @@
             tests/lex_test.cpp
             tests/inifile_test.cpp
 	    tests/tcp_socket_test.cpp
+            tests/internal_pipe_test.cpp
         </sources>
         <define>UNITTEST_IGNORE_SIGNALS</define>
         <library>tinfra-test</library>
