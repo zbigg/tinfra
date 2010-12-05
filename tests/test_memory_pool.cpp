@@ -3,9 +3,8 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include <unittest++/UnitTest++.h>
 #include "tinfra/memory_pool.h"
-#include "tinfra/fmt.h"
+#include "tinfra/test.h"
 
 
 SUITE(tinfra)

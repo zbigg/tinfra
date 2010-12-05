@@ -6,7 +6,7 @@
 #include "tinfra/runtime.h"
 #include <cstdlib>
 
-#include <unittest++/UnitTest++.h>
+#include "tinfra/test.h" // test infra
 
 SUITE(tinfra) {
     TEST(get_environment_vs_getenv)

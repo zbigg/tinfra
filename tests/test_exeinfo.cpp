@@ -3,10 +3,9 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include <unittest++/UnitTest++.h>
-
 #include "tinfra/exeinfo.h"
-#include "tinfra/test.h"
+#include "tinfra/test.h" // for test infra
+
 #include <string>
 #include <fstream>
 #include <iostream>

@@ -3,11 +3,10 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/inifile.h"
+#include "tinfra/inifile.h" // we test this API
+#include "tinfra/test.h"    // for test infra
 
 #include <sstream>
-
-#include <unittest++/UnitTest++.h>
 
 SUITE(tinfra) {
     TEST(inifile_test_parse)

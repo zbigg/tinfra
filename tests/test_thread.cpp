@@ -8,7 +8,7 @@
 
 #include <sstream>
 
-#include <unittest++/UnitTest++.h>
+#include "tinfra/test.h" // test infra
 
 using namespace tinfra;
 

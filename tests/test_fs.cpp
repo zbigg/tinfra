@@ -4,15 +4,15 @@
 //
 
 #include "tinfra/fs.h"
+#include "tinfra/test.h"
+
 #include "tinfra/vfs.h"
 #include "tinfra/path.h"
-#include "tinfra/test.h"
 #include "tinfra/io/stream.h"
-#include <iostream>
 
+#include <iostream>
 #include <stdexcept>
 
-#include <unittest++/UnitTest++.h>
 
 using namespace tinfra;
 

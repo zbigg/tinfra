@@ -5,7 +5,8 @@
 
 #include "tinfra/fmt.h"
 
-#include <unittest++/UnitTest++.h>
+#include "tinfra/test.h" // for test infra
+
 #include <sstream>
 
 using tinfra::fmt;

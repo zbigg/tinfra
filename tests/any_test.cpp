@@ -3,9 +3,8 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/any.h"
-
-#include <unittest++/UnitTest++.h>
+#include "tinfra/any.h"  // we test this
+#include "tinfra/test.h" // for test infra
 
 SUITE(tinfra) {
     

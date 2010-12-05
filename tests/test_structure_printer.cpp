@@ -5,7 +5,7 @@
 
 #include "tinfra/symbol.h"
 
-#include <unittest++/UnitTest++.h>
+#include "tinfra/test.h" // test infra
 
 #include "tinfra/mo.h"
 #include "tinfra/structure_printer.h"

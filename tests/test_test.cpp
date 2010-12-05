@@ -3,12 +3,13 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include <unittest++/UnitTest++.h>
 #include <string>
 
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
 #include "tinfra/test.h"
+
+#include "tinfra/test.h" // test infra
 
 using namespace tinfra;
     

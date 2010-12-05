@@ -7,7 +7,7 @@
 
 #include "tinfra/thread.h"
 
-#include <unittest++/UnitTest++.h>
+#include "tinfra/test.h" // for test infra
 
 SUITE(tinfra) {
     using tinfra::tcp_client_socket;

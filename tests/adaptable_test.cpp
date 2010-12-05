@@ -3,13 +3,13 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/adaptable.h"
+#include "tinfra/adaptable.h" // we test this api
+#include "tinfra/test.h" // for test infra
 
 #include "tinfra/shared_ptr.h"
 #include <string>
 #include <vector>
 
-#include <unittest++/UnitTest++.h>
 
 SUITE(tinfra) {
 

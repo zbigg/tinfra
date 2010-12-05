@@ -3,11 +3,10 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/symbol.h"
-
-#include <unittest++/UnitTest++.h>
-
 #include "tinfra/mo.h"
+#include "tinfra/test.h"
+
+#include "tinfra/symbol.h"
 
 struct true_type { enum { value = 1 } ; };
 

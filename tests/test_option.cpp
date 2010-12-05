@@ -3,11 +3,10 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/option.h"
+#include "tinfra/option.h" // API under test
+#include "tinfra/test.h" // test infra
 
 #include <string>
-
-#include <unittest++/UnitTest++.h>
 
 SUITE(tinfra) {
     TEST(option_registry_api)

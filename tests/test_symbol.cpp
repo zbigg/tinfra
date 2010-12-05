@@ -4,8 +4,7 @@
 //
 
 #include "tinfra/symbol.h"
-
-#include <unittest++/UnitTest++.h>
+#include "tinfra/test.h" // test infra
 
 using tinfra::symbol;
 

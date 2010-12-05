@@ -3,11 +3,10 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/multitype_map.h"
+#include "tinfra/multitype_map.h" // API under test
+#include "tinfra/test.h" // test infra
+
 #include <string>
-
-#include <unittest++/UnitTest++.h>
-
 
 using namespace std;
 

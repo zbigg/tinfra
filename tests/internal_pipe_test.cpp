@@ -3,9 +3,10 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include <unittest++/UnitTest++.h>
 #include "tinfra/internal_pipe.h"
 #include "tinfra/tstring.h"
+
+#include "tinfra/test.h"
 
 #include <stdexcept>
 

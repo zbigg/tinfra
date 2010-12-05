@@ -3,11 +3,11 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/subprocess.h"
+#include "tinfra/subprocess.h" // API under test
 
 #include "tinfra/fmt.h"
 
-#include <unittest++/UnitTest++.h>
+#include "tinfra/test.h" // test infra
 
 #include "tinfra/string.h"
 #include "tinfra/tstring.h"

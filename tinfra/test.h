@@ -6,6 +6,8 @@
 #ifndef tinfra_test_h_included
 #define tinfra_test_h_included
 
+#include "test_macros.h"
+
 #include "tinfra/tstring.h"
 #include "tinfra/fs_sandbox.h"
 #include "tinfra/vfs.h"

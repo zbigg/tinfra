@@ -3,10 +3,10 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/path.h"
+#include "tinfra/path.h" // API under test
 #include "tinfra/fs.h"
 
-#include <unittest++/UnitTest++.h>
+#include "tinfra/test.h" // test infra
 
 using std::string;
 

@@ -12,7 +12,6 @@
 #include <string>
 #include <stdexcept>
 
-#include <unittest++/UnitTest++.h>
 #include "tinfra/test.h"
 
 void write_file(const char* name, std::string const& data)

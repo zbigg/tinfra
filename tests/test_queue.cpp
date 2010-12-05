@@ -4,11 +4,11 @@
 //
 
 #include "tinfra/thread.h"
-#include "tinfra/queue.h"
+#include "tinfra/queue.h" // API under test
+
+#include "tinfra/test.h" // test infra
 
 #include <sstream>
-
-#include <unittest++/UnitTest++.h>
 
 SUITE(tinfra)
 {

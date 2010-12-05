@@ -18,8 +18,7 @@
 #include <sstream>
 #include <string>
 
-#include <unittest++/UnitTest++.h>
-#include "tinfra/test.h"
+#include "tinfra/test.h" // test infra
 
 using tinfra::fmt;
 using tinfra::output_stream;

@@ -3,9 +3,8 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/lex.h"
-
-#include <unittest++/UnitTest++.h>
+#include "tinfra/lex.h"  // we test this API
+#include "tinfra/test.h" // for test infra
 
 SUITE(tinfra) {
     

@@ -3,12 +3,11 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/buffer.h"
+#include "tinfra/buffer.h" // we test this API
+#include "tinfra/test.h"   // for test infra
 
 #include <vector>
 #include <string>
-
-#include <unittest++/UnitTest++.h>
 
 SUITE(tinfra) {
     

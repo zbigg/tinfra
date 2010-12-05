@@ -5,10 +5,9 @@
 
 #include "tinfra/runner.h"
 #include "tinfra/thread_runner.h"
+#include "tinfra/test.h" // for test infra
 
 #include "tinfra/trace.h"
-
-#include <unittest++/UnitTest++.h>
 
 SUITE(tinfra) {
     

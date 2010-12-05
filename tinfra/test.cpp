@@ -218,9 +218,7 @@ int test_main_real(tstring const&, std::vector<tinfra::tstring>& args)
 
 int test_main(int argc, char** argv)
 {
-
-    tinfra::cli_main(argc, argv, &test_main_real);
-    
+    return tinfra::cli_main(argc, argv, &test_main_real);
 }
 
 } } // end namespace tinfra::test
