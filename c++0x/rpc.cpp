@@ -53,28 +53,25 @@ struct remote_call_params {
 template <typename PROTO, typename RET, typename... Arguments>
 class remote_function;
 
-template <typename PROTO, typename RET, typename... Arguments>
-class remote_function<PROTO, RET (Arguments...)> {
-	
-public:
-	remote_function(typename PROTO::connection const& connection_)
-		: connection(connection_)
-	{
-	}
-	remote_function(typename PROTO::address const& address)
-		: connection(address)
+template <typename PROTO>
+class remote_function_base {
+	typedef typename PROTO::request_type  request_type;
+	typedef typename PROTO::response_type response_type;
+protected:
+	remote_function_base(typename PROTO::connection_type const& connection_):
+		connection(connection_)
 	{
 	}
 
-	RET operator()(Arguments... args) {
-		typename PROTO::serializer serializer;
-		// serialize and make request
-		typename PROTO::request_type remote_request;
-		serializer.serialize_to(remote_request, 0, std::forward<Arguments>(args)...);
+	remote_function_base(typename PROTO::address const& address_):
+		connection(address_)
+	{
+	}
 
-		// call it!
-		typename PROTO::response_type remote_response;
-		remote_response = this->connection.send_request( remote_request );
+	void send_request(request_type const& req, response_type& resp)
+	{
+		resp  = this->connection.send_request( req);
+
 		/*
 		remote_failure_info fi;
 		if( PROTO::get_failure_info(remote_response, fi) ) {
@@ -112,15 +109,47 @@ public:
 		//      -> will handle transport_error
 		//      -> will handle protocol_error
 		//      -> will handle application error? ... how!?
+	}
 
-
+	template <typename RET>
+	RET call(typename PROTO::request_type remote_request)
+	{
+		response_type remote_response;
+		this->send_request( remote_request, remote_response );
+		
 		// deserialize response
+		typename PROTO::serializer serializer;
 		RET response;
 		serializer.serialize_from(remote_response, response);
 		return response;
 	}
 private:
 	typename PROTO::connection_type connection;
+};
+template <typename PROTO, typename RET, typename... Arguments>
+class remote_function<PROTO, RET (Arguments...)> 
+	: private remote_function_base<PROTO>
+{
+	
+public:
+	remote_function(typename PROTO::connection const& connection_)
+		: remote_function_base<PROTO>(connection_)
+	{
+	}
+	remote_function(typename PROTO::address const& address)
+		: remote_function_base<PROTO>(address)
+	{
+	}
+
+	RET operator()(Arguments... args)
+	{
+		typename PROTO::serializer serializer;
+		// serialize and make request
+		typename PROTO::request_type remote_request;
+		serializer.serialize_to(remote_request, 0, std::forward<Arguments>(args)...);
+
+		return this-> template call<RET>(remote_request);
+	}
 };
 
 struct XMLRPCProtocol {
@@ -158,6 +187,8 @@ XMLRPCProtocol::response_type XMLRPCProtocol::connection::send_request(XMLRPCPro
 int main()
 {
 	remote_function<XMLRPCProtocol, int(int,std::string,int)> xxx("http://localhost/xmlrpc");
+
+
 	std::function<int(int, std::string, int)> fff = xxx;
 
 	std::string result("zbyszek");
