@@ -221,6 +221,14 @@ int test_main(int argc, char** argv)
     return tinfra::cli_main(argc, argv, &test_main_real);
 }
 
+void report_test_failure(const char* /*filename*/, int line, const char* message)
+{
+    UnitTest::TestResults* results = UnitTest::CurrentTest::Results();
+    assert(results);
+    const UnitTest::TestDetails details(*UnitTest::CurrentTest::Details(), line);
+    results->OnTestFailure(details, message);
+}
+
 } } // end namespace tinfra::test
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++

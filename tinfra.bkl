@@ -134,6 +134,7 @@
             tinfra/mo.h
             tinfra/structure_printer.h
 	    tinfra/test.h
+            tinfra/test_macros.h
             tinfra/adaptable.h
             tinfra/stream.h
             tinfra/any.h
