@@ -120,6 +120,7 @@
             tinfra/lazy_protocol.h
             tinfra/posix/thread.h
             tinfra/posix/posix_mutex.h
+	    tinfra/posix/posix_stream.h
             tinfra/win32/thread.h
             tinfra/win32/w32_mutex.h
             tinfra/win32/w32_stream.h
