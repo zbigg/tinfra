@@ -6,16 +6,17 @@
 
 #include <expat.h>
 #include <deque>
+#include <stdexcept>
 
 namespace tinfra {
 
 class xml_stream_reader_expat: public xml_input_stream {
-    tinfra::io::stream* input_;
+    tinfra::input_stream* input_;
     XML_Parser parser;
     std::deque<xml_event> queue;
     string_pool pool;
 public:    
-    xml_stream_reader_expat(tinfra::io::stream* input):
+    xml_stream_reader_expat(tinfra::input_stream* input):
         input_(input)
     {
         parser = XML_ParserCreate("UTF-8");        
@@ -150,7 +151,7 @@ public:
     }
 };
 
-std::auto_ptr<xml_input_stream> xml_stream_reader(tinfra::io::stream* in)
+std::auto_ptr<xml_input_stream> xml_stream_reader(tinfra::input_stream* in)
 {
     return std::auto_ptr<xml_input_stream>(new xml_stream_reader_expat(in));
 }

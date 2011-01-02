@@ -15,12 +15,14 @@ struct xml_event_arg {
 typedef std::vector<xml_event_arg> xml_event_arg_list;
 
 struct xml_event {
-    enum { 
+    enum xml_event_type { 
         END,
         START_ELEMENT,
         END_ELEMENT,
         CDATA
-    } type;
+    };
+    
+    xml_event_type type;
     
     tstring            content;
     xml_event_arg_list attributes;

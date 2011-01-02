@@ -13,6 +13,7 @@
             tinfra/xml/XMLStreamReader.cpp
             -->
             tinfra/xml_parser.cpp
+            tinfra/xml_writer.cpp
         </sources>
         <install-to>$(LIBDIR)</install-to> 
     </lib>
@@ -41,7 +42,8 @@
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
-            tests/test_main.cpp            
+            tests/test_main.cpp
+            tests/xml_writer_test.cpp
         </sources>
         <library>tinfra-xml</library>
         
