@@ -2,6 +2,7 @@
 #define tinfra_xml_xml_event_buffer_h_included
 
 #include "xml_stream.h"
+#include "tinfra/tstring.h"
 
 namespace tinfra {
 
@@ -29,11 +30,18 @@ public:
 template <typename Container>
 class xml_buffer_output_stream: public xml_output_stream {
 	Container& out_;
+	string_pool& pool_;
 public:
-	xml_buffer_output_stream(Container& out): out_(out) {}
+	xml_buffer_output_stream(Container& out, string_pool& pool): 
+		out_(out), 
+		pool_(pool) 
+	{
+	}
+	
 	virtual void write(xml_event const& ev)
 	{
-		this->out_.push_back(ev);
+		xml_event copy = ev.make_copy(pool_);
+		this->out_.push_back(copy);
 	}
 };
 

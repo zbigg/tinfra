@@ -15,7 +15,7 @@ namespace tinfra {
 class xml_builder {
 	xml_output_stream& out_;
 public:
-	xml_builder(xml_output_stream& out): out_(out) {}
+	xml_builder(xml_output_stream& out);
 	~xml_builder();
 	
 	void close();

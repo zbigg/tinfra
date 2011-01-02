@@ -6,14 +6,15 @@
 
 SUITE(tinfra_xml) {
 	
-TEST(xml_builder_basic1)
+TEST(xml_builder_basic_one_tag)
 {
 	using tinfra::xml_event;
 	using tinfra::xml_builder;
 	using tinfra::xml_buffer_output_stream;
 	
 	std::vector<xml_event> result;
-	xml_buffer_output_stream< std::vector<xml_event> > out(result);
+	tinfra::string_pool pool;
+	xml_buffer_output_stream< std::vector<xml_event> > out(result, pool);
 	{
 		xml_builder writer(out);
 		writer.start("root").attr("arg", "value").end();

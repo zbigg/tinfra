@@ -44,6 +44,7 @@
         <include>$(SRCDIR)</include>
         <sources>
             tests/test_main.cpp
+            tests/xml_builder_test.cpp
             tests/xml_writer_test.cpp
         </sources>
         <library>tinfra-xml</library>

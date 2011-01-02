@@ -4,6 +4,11 @@
 
 namespace tinfra {
 
+xml_builder::xml_builder(xml_output_stream& out):
+	out_(out),
+	state(NO_CONTENT)
+{
+}
 xml_builder::~xml_builder()
 {
 	close();
@@ -47,6 +52,8 @@ xml_builder& xml_builder::end()
 
 xml_builder& xml_builder::start_element(tstring const& name, xml_event_arg_list const& args)
 {
+	flush_opened_tag();
+	
 	xml_event ev;
 	ev.type = xml_event::START_ELEMENT;
 	ev.content = name;
@@ -112,10 +119,10 @@ void xml_builder::flush_opened_tag()
 			args.push_back(arg); 
 		}
 		// officially flush
-		start_element( this->opened_tag, args );
-		
-		current_attrs.clear();
 		state = NO_CONTENT;
+		start_element( this->opened_tag, args );
+		this->opened_tag = "";
+		this->current_attrs.clear();
 	}
 }
 

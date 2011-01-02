@@ -26,6 +26,8 @@ struct xml_event {
     
     tstring            content;
     xml_event_arg_list attributes;
+    
+    xml_event make_copy(tinfra::string_pool& pool) const;
 };
 
 struct xml_input_stream {

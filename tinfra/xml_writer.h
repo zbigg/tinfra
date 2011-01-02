@@ -10,6 +10,8 @@
 namespace tinfra {
     
 struct xml_writer_options {
+	bool start_document;
+	
 	bool human_readable;
 	bool short_string_inline;
 	

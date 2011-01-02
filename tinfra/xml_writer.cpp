@@ -1,9 +1,26 @@
-#include "xml_parser.h" // we implement this
+#include "xml_writer.h" // we implement this
 
 namespace tinfra {
 
+// TODO it should be moved to some other compilation unit
+xml_event xml_event::make_copy(tinfra::string_pool& pool) const
+{
+	xml_event result;
+	result.type = this->type;
+	result.content = pool.alloc(this->content);
+	result.attributes.reserve(this->attributes.size());
+	for( int i = 0; i < this->attributes.size(); ++i ) {
+		xml_event_arg arg;
+		arg.name = pool.alloc( this->attributes[i].name );
+		arg.value = pool.alloc( this->attributes[i].value );
+		result.attributes.push_back(arg);
+	}
+	return result;
+}
+
 xml_writer_options::xml_writer_options()
 {
+	start_document = true;
 	human_readable = true;
 	short_string_inline = true;
 	indentation_size = 4;
@@ -120,7 +137,7 @@ private:
 
 	void ensure_tag_start_closed()
 	{
-	    if( !this->xml_document_started_ ) {
+	    if( !this->xml_document_started_ && options.start_document ) {
 		start_document();
 	    }
 	    if( this->in_start_tag_ ) {
