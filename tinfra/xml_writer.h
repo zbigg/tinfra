@@ -1,53 +1,27 @@
-#ifndef tinfra_xml_xml_writer_h_included
-#define tinfra_xml_xml_writer_h_included
+#ifndef tinfra_xml_writer_h_included
+#define tinfra_xml_writer_h_included
 
 #include "xml_stream.h"
 
-#include "tinfra/tstring.h"
+#include <tinfra/stream.h>
 
-#include <vector>
-#include <string>
-#include <utility>
-#include <stack>
+#include <memory>
 
 namespace tinfra {
-
-class xml_writer {
-	xml_output_stream& out_;
-public:
-	xml_writer(xml_output_stream& out): out_(out) {}
-	~xml_writer();
+    
+struct xml_writer_options {
+	bool human_readable;
+	bool short_string_inline;
 	
-	void close();
-
-	//  tag attr end method
-	xml_writer& start(tstring const& name);
-	xml_writer& attr(tstring const& name, tstring const& value);
-	xml_writer& end();
-
-	// direct tag writing	
-	xml_writer& start_element(tstring const& name, xml_event_arg_list const& args);
-	xml_writer& start_element(tstring const& name);
-	xml_writer& end_element(tstring const& name);
+	int  indentation_size;
+	char indentation_character;
 	
-	/// Character data
-	xml_writer& cdata(tstring const& name);
-	
-private:
-	enum  {
-		NO_CONTENT,
-		TAG_OPENED,
-		IN_NON_EMPTY_TAG
-	} state;
-	
-	std::string opened_tag;
-	std::stack<std::string>    element_stack;
-	std::vector<std::pair<std::string, std::string> > current_attrs;
-	
-	void flush_opened_tag();
+	/// initialize defaults;
+	xml_writer_options();
 };
+std::auto_ptr<xml_output_stream> xml_stream_writer(tinfra::output_stream* in, xml_writer_options const& options);
 
-} // namsepace tinfra
+} // end namespace tinfra
 
-#endif // tinfra_xml_xml_writer_h_included
+#endif // tinfra_xml_writer_h_included
 

@@ -12,9 +12,9 @@
             tinfra/xml/XMLStream.cpp
             tinfra/xml/XMLStreamReader.cpp
             -->
-            tinfra/xml_parser.cpp
             tinfra/xml_writer.cpp
-            tinfra/xml_stream_writer.cpp
+            tinfra/xml_builder.cpp
+            tinfra/xml_parser_expat.cpp
         </sources>
         <install-to>$(LIBDIR)</install-to> 
     </lib>

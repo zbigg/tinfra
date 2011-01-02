@@ -1,4 +1,4 @@
-#include "tinfra/xml_writer.h"
+#include "tinfra/xml_builder.h"
 #include "tinfra/xml_event_buffer.h"
 
 #include <tinfra/test.h> // for test infra
@@ -6,16 +6,16 @@
 
 SUITE(tinfra_xml) {
 	
-TEST(xml_writer_basic1)
+TEST(xml_builder_basic1)
 {
 	using tinfra::xml_event;
-	using tinfra::xml_writer;
+	using tinfra::xml_builder;
 	using tinfra::xml_buffer_output_stream;
 	
 	std::vector<xml_event> result;
 	xml_buffer_output_stream< std::vector<xml_event> > out(result);
 	{
-		xml_writer writer(out);
+		xml_builder writer(out);
 		writer.start("root").attr("arg", "value").end();
 		 
 	}
