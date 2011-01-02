@@ -100,7 +100,7 @@ private:
 	void char_data(tstring const& content)
 	{
 		ensure_tag_start_closed();
-		if( ! options.human_readable ) {
+		if( true || ! options.human_readable ) {
 			// TODO it should be escaped!	
 			write_bytes(content);
 		} else {
@@ -115,7 +115,7 @@ private:
 				
 				// TODO it should be escaped!
 				write_bytes(content.substr(pos, next_lf - pos + 1));
-				pos = next_lf + 1;	
+				pos = next_lf + 1;
 			} while( pos < content.size());
 		}
 	}
