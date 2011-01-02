@@ -40,6 +40,7 @@ struct xml_output_stream {
     virtual void write(xml_event const& ev) = 0;
 };
 
+
 } // end namespace tinfra
 
 #endif // tinfra_xml_stream_h_included

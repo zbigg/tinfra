@@ -14,6 +14,7 @@
             -->
             tinfra/xml_parser.cpp
             tinfra/xml_writer.cpp
+            tinfra/xml_stream_writer.cpp
         </sources>
         <install-to>$(LIBDIR)</install-to> 
     </lib>
