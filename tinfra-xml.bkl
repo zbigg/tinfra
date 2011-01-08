@@ -33,9 +33,10 @@
         <files>
             tinfra/xml.h
             tinfra/xml_stream.h
-            tinfra/xml_partser.h
-            <!--tinfra/xml/xml_stream.h-->
-            tinfra/xml/XMLStream.h
+            tinfra/xml_parser.h
+            tinfra/xml_writer.h
+            tinfra/xml_builder.h
+            tinfra/xml_event_buffer.h
         </files>
     </data-files-tree>
     
