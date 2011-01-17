@@ -53,29 +53,27 @@ TEST(xml_writer_basic_no_formatting)
 		, sink.str()); 
 }
 
-/*
-	this test fails currently and there is no plan
-	of implementing "pretty" XML
-TEST(xml_writer_basic_no_human_readable)
+TEST(xml_writer_basic_entities_encoding)
 {	
 	string_output_stream sink;
 	{
 		tinfra::xml_writer_options options;
 		options.start_document = false;
-		options.human_readable = true;
-		options.indentation_size = 2;
-		options.indentation_character = ' ';
+		options.human_readable = false;
 		
 		std::auto_ptr<tinfra::xml_output_stream> out(tinfra::xml_stream_writer(&sink, options));
-		build_sample_xml(*out);
+		tinfra::xml_builder xml(*out);
+		xml.start("root");
+		xml.attr("value","\"bar&you\"");
+		xml.cdata("Foo < tag >!;");
+		xml.cdata("& you?");
+		xml.end();
 	}
-	CHECK_EQUAL("<root arg=\"value\">\n"
-		    "  <item id=\"1\">spam</item>\n"
-		    "  <separator/>\n"
-		    "  <item id=\"2\">eggs</item>\n"
-		    "  <item id=\"3\"></item>\n"
+	CHECK_EQUAL("<root value=\"&quot;bar&amp;you&quot;\">"
+		    "Foo &lt; tag >!;"
+		    "&amp; you?"
 		    "</root>"
 		, sink.str()); 
 }
-*/
+
 };

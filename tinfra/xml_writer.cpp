@@ -1,5 +1,7 @@
 #include "xml_writer.h" // we implement this
 
+#include <algorithm>
+
 namespace tinfra {
 
 // TODO it should be moved to some other compilation unit
@@ -26,6 +28,48 @@ xml_writer_options::xml_writer_options()
 	indentation_size = 4;
 	indentation_character = ' ';
 }
+
+class xml_content_encoder {
+	tstring data;
+	tstring pattern;
+	const tstring* replacement;
+	int position;
+public:
+	xml_content_encoder(tstring const& _data, tstring const& _pattern, const tstring* _replacement):
+		data(_data),
+		pattern(_pattern),
+		replacement(_replacement),
+		position(0)
+	{
+	}
+	
+	bool has_next() const {
+		return this->position < this->data.size();
+	}
+	
+	tstring next() {
+		tstring current = this->data.substr(this->position);
+		typedef tstring::size_type size_type;
+		const size_type first_replacement_pos = current.find_first_of(this->pattern);
+		if( first_replacement_pos == tstring::npos ) {
+			this->position = this->data.size();
+			return current;
+		} else if ( first_replacement_pos == 0 ) {
+			// find replacement
+			this->position++;
+			const char* which = std::find(this->pattern.begin(), this->pattern.end(), current[0]);
+			assert(which != this->pattern.end());
+			int index = (which - this->pattern.data());
+			assert(index < this->pattern.size());
+			const tstring found_replacement = this->replacement[index];
+			return found_replacement;
+		} else {
+			tstring result = current.substr(0, first_replacement_pos);
+			this->position += first_replacement_pos;
+			return result;
+		}
+	}
+};
 
 class xml_streamer: public xml_output_stream {
 	tinfra::output_stream* out_;
@@ -93,7 +137,7 @@ private:
 		write_bytes(name);
 		write_bytes("=\"");
 		// TODO it should be escaped!
-		write_bytes(value);
+		write_argument_value(value);
 		write_character('"');
 	}
 	
@@ -101,20 +145,20 @@ private:
 	{
 		ensure_tag_start_closed();
 		if( true || ! options.human_readable ) {
-			// TODO it should be escaped!	
-			write_bytes(content);
+			// TODO it should be escaped!
+			write_content_bytes(content);
 		} else {
 			tstring::size_type pos = 0;
 			do {
 				maybe_indent();
 				tstring::size_type const next_lf = content.find_first_of('\n',pos);
 				if( pos == tstring::npos ) {  
-					write_bytes(content.substr(pos));
+					write_content_bytes(content.substr(pos));
 					break;
 				} 
 				
 				// TODO it should be escaped!
-				write_bytes(content.substr(pos, next_lf - pos + 1));
+				write_content_bytes(content.substr(pos, next_lf - pos + 1));
 				pos = next_lf + 1;
 			} while( pos < content.size());
 		}
@@ -139,6 +183,7 @@ private:
 	{
 	    if( !this->xml_document_started_ && options.start_document ) {
 		start_document();
+		this->xml_document_started_ = true;
 	    }
 	    if( this->in_start_tag_ ) {
 		write_character('>');
@@ -165,6 +210,37 @@ private:
 	{
 	    for(int i = 0; i < indent_size*level; ++i )
 	    	    write_character(options.indentation_character);
+	}
+	
+	void write_argument_value(tstring const& data)
+	{
+		// http://www.w3.org/TR/REC-xml/#NT-AttValue
+		// says that in att value, we escape " ' < and &
+		static const tstring patterns = "\"'<&";
+		static const tstring replacements[] = {
+			"&quot;", "&apos;", "&lt;", "&amp;"
+		};
+		xml_content_encoder encoder(data, patterns, replacements);
+		while( encoder.has_next() ) {
+			tinfra::tstring chunk = encoder.next();
+			out_->write(chunk.data(), chunk.size());
+		}
+	}
+	
+	void write_content_bytes(tstring const& data)
+	{
+		// http://www.w3.org/TR/REC-xml/#dt-chardata
+		// says that only < and & are escaped 
+		// in normal text
+		static const tstring patterns = "<&";
+		static const tstring replacements[] = {
+			"&lt;", "&amp;"
+		};
+		xml_content_encoder encoder(data, patterns, replacements); 
+		while( encoder.has_next() ) {
+			tinfra::tstring chunk = encoder.next();
+			out_->write(chunk.data(), chunk.size());
+		}
 	}
 	
 	void write_bytes(tstring const& data)
