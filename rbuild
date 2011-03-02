@@ -77,7 +77,7 @@ BUILD_HOST=${BUILD_HOST-local}
 sync()
 {
         echo "LOCAL:  rsync $1 -> $2" 1>&2
-        local RSYNC_OPTS="--exclude-from=${rbuild_root}/rbuild-rsync-exclude.txt -r -z -v --copy-links --times"
+        local RSYNC_OPTS="--exclude-from=${rbuild_root}/rbuild-rsync-exclude.txt -r -z -i --copy-links --times"
         rsync $RSYNC_OPTS $1 $2
 }
 
@@ -157,22 +157,25 @@ else
     build_scrdir=${base_srcdir}
 fi
 
-PLAMAKEFILE=Makefile.plamake
+REMOTESCRIPT=.rbuild-script
 
 init_build_area() {
     invoke_immediate mkdir -p ${created_folders}
-	
-    PLAMAKEFILE_TMP=$(mktemp)
-    cat > $PLAMAKEFILE_TMP <<EOF
--include Makefile
 
-Makefile: ./config.status
-	./config.status
-./config.status: ${build_scrdir}/configure
+    REMOTESCRIPT_TMP=$(mktemp)
+    cat > $REMOTESCRIPT_TMP <<EOF
+cd ${build_dir}
+if [ ! -f ./config.status ] ; then
 	${build_scrdir}/configure $BUILD_HOST_CONFIGURE_OPTIONS "$@"
+fi
+if [ ! -f Makefile ] ; then
+	./config.status
+fi
+exec make "\$@"
+
 EOF
-    copy $PLAMAKEFILE_TMP $(remote_path ${build_dir}/$PLAMAKEFILE)
-    rm -rf $PLAMAKEFILE_TMP
+    copy $REMOTESCRIPT_TMP $(remote_path ${build_dir}/$REMOTESCRIPT)
+    rm -rf $REMOTESCRIPT_TMP
 }
 
 remove_build_area() {
@@ -201,4 +204,5 @@ if [ -n "${remote_src}" ] ; then
 	sync ${base_srcdir}/ $(remote_path ${remote_src}/$name/)
 fi
 
-invoke_immediate ${MAKE} -C ${build_dir} -f $PLAMAKEFILE "$@"
+invoke_immediate /bin/sh ${build_dir}/$REMOTESCRIPT "$@"
+
