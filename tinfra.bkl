@@ -3,6 +3,14 @@
 <makefile>
     <include file="tinfra-support/common.bkl"/>
     
+    <set var="TINFRA_POSIX_SOURCES">
+        tinfra/posix/posix_io.cpp
+        tinfra/posix/posix_subprocess.cpp
+        tinfra/posix/thread.cpp
+        tinfra/posix/posix_runtime.cpp
+        tinfra/posix/posix_fs.cpp
+        tinfra/posix/posix_stream.cpp
+    </set>
     <set var="TINFRA_PLATFORM_SOURCES" hints="files">
         <if cond="PLATFORM_WIN32=='1'">
             tinfra/win32/w32_stacktrace.cpp
@@ -16,13 +24,12 @@
         </if>
         
         <if cond="PLATFORM_UNIX=='1'">
-            tinfra/posix/posix_io.cpp
-            tinfra/posix/posix_subprocess.cpp
-            tinfra/posix/thread.cpp
-            tinfra/posix/posix_runtime.cpp
-            tinfra/posix/posix_fs.cpp
-            tinfra/posix/posix_stream.cpp
+            $(TINFRA_POSIX_SOURCES)
         </if>
+        <if cond="PLATFORM_MACOSX=='1'">
+            $(TINFRA_POSIX_SOURCES)
+        </if>
+        
     </set>
 
     <!-- public things -->
