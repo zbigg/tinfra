@@ -27,6 +27,10 @@ csv_parser::csv_parser(char separator):
     has_result_(false)
 {
 }
+
+csv_parser::~csv_parser()
+{
+}
 //
 // IO adaptor callbacks (parser interface)
 //
@@ -166,6 +170,10 @@ void csv_parser::process_line(tstring const& line)
 raw_csv_reader::raw_csv_reader(std::istream& source, char sep) : 
     parser_(sep), 
     parser_adaptor_(source, parser_)
+{
+}
+
+raw_csv_reader::~raw_csv_reader()
 {
 }
 

@@ -46,7 +46,7 @@ namespace foobar {
 class csv_parser: public sequence_parser<csv_raw_entry> {
 public:
     csv_parser(char separator = ',');
-    virtual ~csv_parser() {}
+    virtual ~csv_parser();
     //
     // IO adaptor callbacks (parser interface)
     //
@@ -74,7 +74,7 @@ private:
 class raw_csv_reader: public generator_impl<raw_csv_reader, csv_raw_entry> {
 public:
     raw_csv_reader(std::istream& byte_source, char separator = ',');
-    
+    ~raw_csv_reader();
     bool fetch_next(csv_raw_entry&);
     
 private:
