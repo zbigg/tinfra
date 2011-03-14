@@ -7,7 +7,9 @@ LDLIBS=-g $(DEP_LDLIBS)
 
 CC=g++
 
-SOURCES=http.cpp ../tinfra/connection_handler.cpp
+SOURCES=http.cpp
+
+httpd: httpd.o http.o
 
 test_http: http.o test_http_parser.o ../unittests.o
 	$(CC) $^ $(LDFLAGS) $(LDLIBS) -o $@

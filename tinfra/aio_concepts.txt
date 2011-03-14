@@ -1,0 +1,104 @@
+
+
+example setup
+
+
+asynchronous_server_base
+    configured to poll sockets A, B, C and X(...)
+    
+    send notifications to L
+    
+    invokes poll with timeout T
+    
+    on fatal failure forgets z
+    
+    can remove z from any thread
+    
+server_listener
+    receives following events
+    
+    read event on x
+    write event on y
+    ?
+    
+    timeut no event in specified time
+    
+    fatal failure on z
+    
+in practice server_listener will
+    have struct connection info {
+        buffer   rb; which reads/stores buffer
+        buffer   wb;
+        protocol proto; which processes data
+    }
+    have map<stream, connection info>
+    
+    on each read will fill buffer rb of apropriate connection info
+    try to consume it with proto 
+    
+    on each write will try to flush buffer to socket
+    
+    on each failure will 
+        close stream, 
+        destroy buffers, 
+        protocol
+        log failure
+        
+    on each exception in reading
+        will treat is as failure
+        
+    on each exception in writing
+        will treat this as failure
+        
+    on each exception in protocol consumption
+        will send message constant for protocol + exception data
+        will postpone failure until write buffer is ready
+        will disable further read in server base
+    
+    on write buffer is empty
+        will disable write query in server base
+        if socket was failed:
+            close all for socket (buffers, protocol)
+            
+    will have to notify handler that buffer is not full
+    and we can continue filling buffer
+    
+    handler will need interface to upper layer to say 'i want to write optional<howmany>'
+
+example implementation of protocol SMTP/dialog like
+
+read buffer is set to maximum 10kb
+write buffer is set to maximum 256kb
+
+protocol
+    consume(bytes)
+        if bytes.contains(EOF)
+            consumed = beforeInclusive(bytes, EOF)
+            consumeLine(consumed)
+            return consumed.size()
+        else
+            return 0
+            
+    consumeLine(foo)
+        if( something(foo) )
+            queue_write(constant("OK\n")) - in reality fills buffer
+                // here
+            queue_write(file_data_source("someBigFile")) 
+                // and here we could except, so all writes should be transactive
+                // in context of handler calls
+                //
+                // NOTE this is a place when we have to "connect two asynchronous engines"
+                // file reading and socket dispatching
+                // REAL HELL!!!
+        else
+            raise protocol_error("bad command")
+            
+    send_error(error)
+        write(-500 protocol error, " + error)
+        
+
+
+write buffer operation
+    queue_buffer
+        if buffer not empty then
+            read and add to buffer "free buffer size" of bytes

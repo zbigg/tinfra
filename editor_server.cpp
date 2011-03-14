@@ -10,23 +10,23 @@
 
 using std::string;
 string server_auth_token;
-string editor_command = "D:\\progs\\jedit\\jedit\\jedit.cmd";
+string editor_command = "C:\\progs\\jedit\\jedit.cmd";
 
 string get_editor_command(string const& filename)
 {
     return tinfra::fmt("%s \"%s\"") % editor_command % filename;
 }
 
-int getc(tinfra::io::stream* s)
+int getc(tinfra::input_stream& s)
 {
     char b;
-    if( s->read(&b, 1) == 1 ) {        
+    if( s.read(&b, 1) == 1 ) {        
         return b;
     } else {
         return -1;
     }
 }
-void getline(tinfra::io::stream* in, std::string& s)
+void getline(tinfra::input_stream& in, std::string& s)
 {
     while( true ) {
         const int c = getc(in);
@@ -42,15 +42,16 @@ void getline(tinfra::io::stream* in, std::string& s)
 
 class editor_server: public tinfra::net::Server {
 public:
-    virtual void onAccept(std::auto_ptr<tinfra::io::stream> client, std::string const& pa) {        
+    virtual void onAccept(std::auto_ptr<tinfra::tcp_client_socket> client, std::string const& peer_address)
+    {
         // read line1 -> auth
         // read line2 -> path
-        std::cerr << "got conn: " << pa << "\n";
+        std::cerr << "got conn: " << peer_address << "\n";
         string client_auth_token;
         string path;
         try { 
-            getline(client.get(), client_auth_token);
-            getline(client.get(), path);
+            getline(*client, client_auth_token);
+            getline(*client, path);
             tinfra::strip_inplace(client_auth_token);
             tinfra::strip_inplace(path);
             

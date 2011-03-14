@@ -10,10 +10,10 @@ template <typename PROTO>
 struct remote_function_serializer {
 
 	template <typename FirstArgument, typename ...Arguments>
-	void serialize_to(typename  PROTO::request_type& request, int n, FirstArgument&& arg, Arguments&&... rest)
+	void serialize_to(typename  PROTO::RequestBuilder& rb, int n, FirstArgument&& arg, Arguments&&... rest)
 	{
-		serialize_to(request, n, std::forward<FirstArgument>(arg));
-		serialize_to(request, n+1, std::forward<Arguments>(rest)...);
+		serialize_to(rb, n, std::forward<FirstArgument>(arg));
+		serialize_to(rb, n+1, std::forward<Arguments>(rest)...);
 	}
 	/*
 	template <typename OneArgument>
@@ -32,8 +32,9 @@ struct remote_function_serializer {
 	*/
 
 	template <typename Argument>
-	void serialize_to(typename PROTO::request_type& request, int n, Argument&& arg)
+	void serialize_to(typename PROTO::RequestBuilder& request_builder, int n, Argument&& arg)
 	{
+		request_builder.addArgument<Argument>(arg);
 		std::cout << "param inout " << n << "(" << typeid(Argument).name() << ") = \"" << arg << "\"\n";
 	}
 
@@ -145,10 +146,11 @@ public:
 	{
 		typename PROTO::serializer serializer;
 		// serialize and make request
-		typename PROTO::request_type remote_request;
-		serializer.serialize_to(remote_request, 0, std::forward<Arguments>(args)...);
+		typename PROTO::RequestBuilder request_builder;
+		serializer.serialize_to(request_builder, 0, std::forward<Arguments>(args)...);
 
-		return this-> template call<RET>(remote_request);
+		PROTO::Request request = request_builder.build();
+		return this-> template call<RET>(request);
 	}
 };
 

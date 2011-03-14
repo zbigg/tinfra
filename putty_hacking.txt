@@ -1,0 +1,29 @@
+putty ideas:
+
+CTRL+Space 
+    gives "popup with list of completions, ala Scite"
+
+Alt+RClick 
+    gives list of actions connected with current keyword
+    
+    
+How to:
+
+detect RClick:
+    windows/window.c:2306  - grep case WM_LBUTTONDOWN:
+        
+    
+    
+copy all from term 
+    term_copyall(term);
+    (that might be starter for analyzing term contents
+        
+paste to term:
+    request_paste(NULL);
+    (that probably pasted clip)
+    
+    void term_do_paste(Terminal *term)
+    uses get_clip() which should fill it's parameters with command buffer
+
+    
+    

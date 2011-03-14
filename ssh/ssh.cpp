@@ -1,11 +1,16 @@
 #include "tinfra/typeinfo.h" // for tinfra::type_name
-#include "tinfra/symbol.h"
+//#include "tinfra/symbol.h"
 
-#include "tinfra/io/stream.h"
-#include "tinfra/io/socket.h"
+
+#include <botan/botan.h>
+
+#include <tinfra/tcp_socket.h>
+#include <tinfra/stream.h>
+
 #include "tinfra/string.h"
 #include "tinfra/fmt.h"
 
+#include <memory>
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
@@ -24,14 +29,14 @@ std::string hexify(const char* buf, size_t length)
 }
 
 using std::auto_ptr;
-using tinfra::io::stream;
+using tinfra::input_stream;
 
 #define DOUT(a) do { std::cerr << __FILE__ << ":" << __LINE__ << ": " << a << std::endl; } while(false)
 #define INFORM(a,b) do { std::cerr << a << ": " <<  b << std::endl; } while(false)
 
 namespace utils {
 
-void read_for_sure(stream* s, char* buffer, size_t size)
+void read_for_sure(input_stream* s, char* buffer, size_t size)
 {
     size_t readed = 0;
     while( readed < size ) {
@@ -43,7 +48,7 @@ void read_for_sure(stream* s, char* buffer, size_t size)
     }
 }
 
-void read_until(stream* s, std::string& result, std::string const& delim, size_t max_length=32768)
+void read_until(input_stream* s, std::string& result, std::string const& delim, size_t max_length=32768)
 {
 	while( true ) {
 		char c;
@@ -65,10 +70,8 @@ void read_until(stream* s, std::string& result, std::string const& delim, size_t
 
 }
 
-namespace ssh {
-	using tinfra::io::stream;
-	
-	void perform_invitation(stream* stream);
+namespace ssh {	
+	void perform_invitation(tinfra::input_stream* stream);
 }
 
 namespace ssh {
@@ -82,7 +85,7 @@ struct protocol_state {
 	protocol_version version;
 };
 
-void perform_invitation(stream* stream, protocol_state& ps)
+void perform_invitation(tinfra::input_stream* stream, protocol_state& ps)
 {
 	const std::string line_delimiter = "\n";
 	const std::string expected_begining = "SSH-";	
@@ -108,15 +111,30 @@ void perform_invitation(stream* stream, protocol_state& ps)
 	}
 }
 
+using tinfra::rfc4251::uint32;
+using tinfra::rfc4251::byte;
+
+using tinfra::tstring;
+
+struct binary_packet {
+	uint32	packet_length;
+	byte    padding_length;
+	tstring payload;
+	tstring padding;
+	tstring mac;
+};
+
 }
 
 #include "tinfra/cmd.h"
 
 int ssh_main(int argc, char** argv)
 {
-	auto_ptr<stream> connection( tinfra::io::socket::open_client_socket(argv[1],22) );
+	Botan::LibraryInitializer botan_lib;
+        assert(argc>1);
+	tinfra::tcp_client_socket socket(argv[1],22);
 	ssh::protocol_state ps;
-	ssh::perform_invitation(connection.get(), ps);
+	ssh::perform_invitation(&socket, ps);
 	return 0;
 }
 
