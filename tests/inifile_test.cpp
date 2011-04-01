@@ -11,17 +11,17 @@
 SUITE(tinfra) {
     TEST(inifile_test_parse)
     {
-        const char* text = ";comment\n"
+        const tinfra::tstring text = ";comment\n"
                            "[section]\n"
                            "name=value\n"
                            "name = value \n"
                            "empty=\n"
                            "empty= \n";
-        std::istringstream in(text);
+        std::auto_ptr<tinfra::input_stream> in(create_memory_input_stream(text.data(), text.size(), tinfra::USE_BUFFER));
         
         namespace tif = tinfra::inifile;
         
-        tif::parser p(in);
+        tif::parser p(*in);
         
         tif::entry re;
         

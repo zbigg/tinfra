@@ -4,14 +4,14 @@ namespace tinfra {
 namespace inifile {
 
 struct parser::internal_data {
-    std::istream& input;
+    tinfra::input_stream& input;
     
-    internal_data(std::istream& in): 
+    internal_data(tinfra::input_stream& in): 
         input(in)
     {}
 };
 
-parser::parser(std::istream& in):
+parser::parser(tinfra::input_stream& in):
     data_(new internal_data(in))
 {
 }
@@ -27,11 +27,27 @@ void fill_invalid_entry(entry& out, std::string const& error, std::string const&
     out.value = value;
 }
 
+static bool readline(tinfra::input_stream& in, std::string& result)
+{
+    int readed = 0;
+    while( true ) {
+        char c;
+        const int r = in.read(&c, 1);
+        if( r == 0 || c== '\n') {
+            break;
+        }
+        
+        result.append(1, c);
+        readed += 1;
+    }
+    return readed != 0;
+}
+
 bool parser::fetch_next(entry& out)
 {
     std::string line;
-    getline(data_->input, line);
-    if( !data_->input )
+    const bool have_result = readline(data_->input, line);
+    if( !have_result )
         return false;
     
     if( line.size() == 0 ) {

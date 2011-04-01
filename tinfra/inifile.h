@@ -7,10 +7,10 @@
 #define tinfra_inifile_h_included
 
 #include "tinfra/generator.h"
+#include "tinfra/stream.h"
 
 #include <memory> // for std::auto_ptr
 #include <string> // for std::string
-#include <iosfwd> // for std::istream
 
 namespace tinfra {
 namespace inifile {
@@ -32,7 +32,7 @@ struct entry {
 
 class parser: public generator_impl<parser, entry> {
 public:
-    parser(std::istream& in);
+    parser(tinfra::input_stream& in);
     ~parser();
 
     bool fetch_next(entry&);
