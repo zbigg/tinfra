@@ -15,7 +15,17 @@ namespace tinfra { namespace win32 {
 
 std::string get_error_string(unsigned int error_code);
 
+/// Throw exception for system error.
+///
+/// Windows system error code is formatted as message, concated with parameter
+/// and appropriate std::exception is thrown.
 void throw_system_error(unsigned int error_code, std::string const& message);
+
+/// Throw exception for last system error.
+///
+/// Last windows system error code (GetLastError) is formatted as message, concated 
+/// with parameter
+/// and appropriate std::exception is thrown.
 void throw_system_error(std::string const& message);
     
 void get_available_drives(std::vector<std::string>& result);

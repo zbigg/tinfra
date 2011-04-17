@@ -13,7 +13,7 @@
 #include <stdexcept>
 namespace tinfra {
     
-static void read_file(tinfra::io::stream* s, std::string& data)
+static void read_file(tinfra::input_stream* s, std::string& data)
 {
     char buf[1024];
     int r;

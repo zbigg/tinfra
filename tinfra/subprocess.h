@@ -8,7 +8,7 @@
 
 #include "tinfra/platform.h"
 
-#include "tinfra/io/stream.h"
+#include "tinfra/stream.h"
 #include "tinfra/runtime.h"
 #include "tinfra/tstring.h"
 
@@ -59,9 +59,9 @@ public:
     virtual void     terminate() = 0;
     virtual void     kill() = 0;
     
-    virtual tinfra::io::stream*  get_stdin() = 0;
-    virtual tinfra::io::stream*  get_stdout() = 0;
-    virtual tinfra::io::stream*  get_stderr() = 0;
+    virtual tinfra::output_stream*  get_stdin() = 0;
+    virtual tinfra::input_stream*   get_stdout() = 0;
+    virtual tinfra::input_stream*   get_stderr() = 0;
     
     virtual intptr_t get_native_handle() = 0;
     

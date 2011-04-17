@@ -2,11 +2,58 @@
 #define tinfra_w32_stream_h_included
 
 #include "tinfra/stream.h"
-
 #include "tinfra/win32.h"
 
 namespace tinfra {
 namespace win32 {
+
+typedef intptr_t handle_type;
+
+class file_handle {
+public:
+	typedef tinfra::win32::handle_type handle_type;
+	
+	explicit file_handle(handle_type existing, bool own = true);
+	~file_handle();
+	
+	void reset(intptr_t fd, bool own);
+	void close();
+	
+	handle_type handle() const { return this->handle2; }
+private:
+	// non-copyable
+	file_handle(const file_handle&);
+	file_handle& operator=(const file_handle&);
+	
+	handle_type handle2;
+	bool own;
+};
+
+class native_input_stream: public tinfra::input_stream {
+public:
+	explicit native_input_stream(handle_type existing, bool own = true);
+	~native_input_stream();
+	
+	// input_stream implementation
+	void close();
+	int read(char* dest, int size);
+private:
+	file_handle fd;
+};
+
+class native_output_stream: public tinfra::output_stream {
+public:
+	explicit native_output_stream(handle_type existing, bool own = true);
+	~native_output_stream();
+	
+	// output_stream implementation
+	using tinfra::output_stream::write;
+	void close();
+	int write(const char* data, int size);
+    	void sync();
+private:
+	file_handle fd;
+};
 
 struct standard_handle_input: public tinfra::input_stream {
     standard_handle_input();

@@ -46,9 +46,9 @@ static HANDLE open_null_for_subprocess(std::ios::openmode mode)
 //
 
 struct win32_subprocess: public subprocess {
-    stream* stdin_;
-    stream* stdout_;
-    stream* stderr_;
+    input_stream*  stdout_;
+    output_stream* stdin_;
+    input_stream*  stderr_;
     
     HANDLE process_handle;
     
@@ -120,9 +120,9 @@ struct win32_subprocess: public subprocess {
         }
     }
     
-    virtual stream*  get_stdin()  { return stdin_;  }
-    virtual stream*  get_stdout() { return stdout_; }
-    virtual stream*  get_stderr() { return stderr_; }
+    virtual output_stream*  get_stdin()  { return stdin_;  }
+    virtual input_stream*   get_stdout() { return stdout_; }
+    virtual input_stream*   get_stderr() { return stderr_; }
     
     virtual intptr_t get_native_handle() { return reinterpret_cast<intptr_t>(process_handle); }
 
@@ -158,7 +158,9 @@ struct win32_subprocess: public subprocess {
         const bool fwrite = (stdin_mode  == REDIRECT);
         const bool ferr  =  (stderr_mode == REDIRECT && !redirect_stderr);
         
-        stdin_ = stderr_ = stdout_ = 0;
+        stdin_ = 0;
+        stderr_ = 0;
+        stdout_ = 0;
         
         {
             SECURITY_ATTRIBUTES saAttr; 
@@ -202,7 +204,7 @@ struct win32_subprocess: public subprocess {
             /* GetStartupInfo(&si);*/
             
             if( fwrite ) {
-                stdin_ = open_native(reinterpret_cast<intptr_t>((HANDLE)out_here));
+            	stdin_ = new tinfra::win32::native_output_stream(reinterpret_cast<intptr_t>(out_here));
                 out_here = 0;
                 si.hStdInput = out_remote;
             } else if( stdin_mode == NONE) {
@@ -212,7 +214,7 @@ struct win32_subprocess: public subprocess {
             }
             
             if( fread ) {
-                stdout_ = open_native(reinterpret_cast<intptr_t>((HANDLE)in_here));
+                stdout_ = new tinfra::win32::native_input_stream(reinterpret_cast<intptr_t>(in_here));
                 in_here = 0;
                 si.hStdOutput = in_remote;
             } else if( stdout_mode == NONE) {
@@ -225,7 +227,7 @@ struct win32_subprocess: public subprocess {
                 stderr_ = stdout_;
                 si.hStdError = in_remote;
             } else if( ferr ) {
-                stderr_ = open_native(reinterpret_cast<intptr_t>((HANDLE)err_here));
+                stderr_ = new tinfra::win32::native_input_stream(reinterpret_cast<intptr_t>(err_here));
                 err_here = 0;
                 si.hStdError = err_remote;
             } else if( stderr_mode == NONE ) {

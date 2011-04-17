@@ -1,5 +1,6 @@
 #include "tinfra/win32/w32_stream.h" // we implement these
 #include "tinfra/win32.h"
+#include "tinfra/trace.h"
 
 #ifndef NOMINMAX
 #define WIN32_LEAN_AND_MEAN
@@ -19,6 +20,121 @@ win32::standard_handle_output out(false);
 win32::standard_handle_output err(true);
 
 namespace win32 {
+
+static HANDLE native_handle(handle_type h)
+{
+    return reinterpret_cast<HANDLE>(h);
+}
+static int close_nothrow(handle_type handle)
+{
+    int rc = ::CloseHandle(native_handle(handle));
+    return (rc == 0) ? -1 : 0;
+}
+
+//
+// tinfra::win32::file_handle
+//
+file_handle::file_handle(handle_type fd_, bool own_):
+    handle2(fd_),
+    own(own_)
+{
+}
+
+file_handle::~file_handle()
+{
+    if( native_handle(this->handle2) != INVALID_HANDLE_VALUE && this->own) { 
+        int r = close_nothrow(this->handle2);
+        if( r == -1 ) {
+            TINFRA_LOG_ERROR("close failed in destructor");
+        }
+    }
+}
+
+void file_handle::reset(handle_type fd_, bool own_)
+{
+    if( native_handle(this->handle2) != INVALID_HANDLE_VALUE )
+        close();
+    this->handle2 = fd_;
+    this->own = own_;
+}
+
+void file_handle::close()
+{
+    if( this->own && native_handle(this->handle2) != INVALID_HANDLE_VALUE ) {
+        if( close_nothrow(this->handle2) == -1 ) {
+            throw_system_error("close failed");
+        }
+    }
+    this->handle2 = reinterpret_cast<intptr_t>(INVALID_HANDLE_VALUE);
+}
+
+//
+// native_input_stream
+//
+native_input_stream::native_input_stream(handle_type existing, bool own):
+    fd(existing, own)
+{
+}
+native_input_stream::~native_input_stream()
+{
+}
+    
+// input_stream implementation
+void native_input_stream::close()
+{
+    fd.close();
+}
+int native_input_stream::read(char* dest, int size)
+{
+    DWORD readed;
+    if( ReadFile(native_handle(fd.handle()),
+                (LPVOID)dest,
+                (DWORD) size,
+                &readed,
+                NULL) == 0)
+    {
+        DWORD error = ::GetLastError();
+        if( error == ERROR_BROKEN_PIPE )
+            return 0;
+        throw_system_error("read failed"); 
+    }
+    return readed;
+}
+
+//
+// native_output_stream
+//
+
+native_output_stream::native_output_stream(handle_type existing, bool own):
+    fd(existing, own)
+{
+}
+
+native_output_stream::~native_output_stream()
+{
+}
+
+void native_output_stream::close()
+{
+    fd.close();
+}
+int native_output_stream::write(const char* data, int size)
+{
+    DWORD written;
+    if( WriteFile(native_handle(fd.handle()),
+                  (LPCVOID)data,
+                  (DWORD)  size,
+                  &written,
+                  NULL ) == 0 ) 
+    {        
+        throw_system_error("write failed"); 
+    }
+    return written;
+}
+
+void native_output_stream::sync()
+{
+}
 
 //
 // standard_handle_input

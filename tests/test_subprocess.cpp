@@ -16,12 +16,12 @@
 using tinfra::subprocess;
 using tinfra::io::stream;
 
-static void write_file(stream* s, std::string const& data)
+static void write_file(tinfra::output_stream* s, std::string const& data)
 {
     s->write(data.c_str(), data.size());
 }
 
-static void read_file(stream* s, std::string& data)
+static void read_file(tinfra::input_stream* s, std::string& data)
 {
     char buf[1024];
     int r;

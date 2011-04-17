@@ -14,7 +14,7 @@
 #include <sys/ioctl.h>
 #include <stdio.h>
 
-#include "tinfra/io/stream.h"
+#include "tinfra/posix/posix_stream.h"
 #include "tinfra/fmt.h"
 #include "tinfra/path.h"
 #include "tinfra/subprocess.h"
@@ -27,10 +27,9 @@ namespace tinfra {
 
 namespace posix {
 
-using tinfra::io::stream;
-using tinfra::io::io_exception;
-using tinfra::io::open_native;
-    
+using tinfra::input_stream;
+using tinfra::output_stream;
+
 enum {
     MAX_NUMBER_OF_FILES = NOFILE // defined in <sys/param.h> on linux 
 };
@@ -101,9 +100,9 @@ int execute_process(std::vector<std::string> const& args, environment_t const* e
 //
 
 struct posix_subprocess: public subprocess {
-    stream* sinput;
-    stream* soutput;
-    stream* serror;
+    input_stream*  soutput;
+    output_stream* sinput;
+    input_stream*  serror;
     
     int pid;
     
@@ -121,7 +120,7 @@ struct posix_subprocess: public subprocess {
     ~posix_subprocess() {
         delete sinput;
         delete soutput;
-        if( sinput != serror )
+        if( soutput != serror )
             delete serror;
     }
     virtual void     set_environment(environment_t const& e)
@@ -173,9 +172,9 @@ struct posix_subprocess: public subprocess {
             throw_errno_error(errno, fmt("kill(%i,SIGKILL)") % pid);
     }
     
-    virtual stream*  get_stdin()  { return sinput;  }
-    virtual stream*  get_stdout() { return soutput; }
-    virtual stream*  get_stderr() { return serror; }
+    virtual output_stream*  get_stdin()  { return sinput;  }
+    virtual input_stream*   get_stdout() { return soutput; }
+    virtual input_stream*   get_stderr() { return serror; }
     
     virtual intptr_t get_native_handle() { return pid; }
     
@@ -202,7 +201,9 @@ struct posix_subprocess: public subprocess {
         const bool fwrite = (stdin_mode == REDIRECT);
         const bool ferr  =  (stderr_mode == REDIRECT && !redirect_stderr);
         
-        sinput = serror = soutput = 0;
+        sinput = 0;
+        serror = 0;
+        soutput = 0;
         
         if( fwrite ) {            
             int boo[2];
@@ -295,17 +296,17 @@ struct posix_subprocess: public subprocess {
             _exit(result);
         } else {
             if( fwrite ) {
-                sinput = open_native(out_here);
+                sinput = new tinfra::posix::native_output_stream(out_here, true);
                 out_here = -1;
             }
             
             if( fread ) {
-                soutput = open_native(in_here);
+                soutput = new tinfra::posix::native_input_stream(in_here, true);
                 in_here = -1;
             }
             
             if( ferr ) {
-                serror = open_native(err_here);
+                serror = new tinfra::posix::native_input_stream(err_here, true);
                 err_here = -1;
             } else if( redirect_stderr ) {
                 serror = soutput;
