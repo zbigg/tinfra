@@ -92,6 +92,7 @@ void fatal_exit(const char* message, stacktrace_t& stacktrace)
         print_stacktrace(stacktrace, tmp);    
     tmp << "aborting" << std::endl;
     tinfra::err.write(tmp.str());
+    uninstall_abort_handler();
     abort();
 }
 

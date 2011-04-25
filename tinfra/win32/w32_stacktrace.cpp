@@ -182,7 +182,12 @@ void initialize_platform_runtime()
 	TINFRA_LOG_ERROR("unable to initialize contole interrupt handler");
     }
 }
-    
+
+void uninstall_abort_handler()
+{
+    // not sure, how to do this on win32
+}
+
 bool is_stacktrace_supported()
 {
     return true;

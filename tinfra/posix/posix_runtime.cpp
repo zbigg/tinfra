@@ -120,14 +120,17 @@ void initialize_platform_runtime()
     ::signal(SIGTERM, &tinfra_interrupt_sighandler);
 }
 
+void uninstall_abort_handler()
+{
+    signal(SIGABRT, SIG_DFL);
+}
+
 } // end of namespace tinfra
 
 extern "C" void tinfra_fatal_sighandler(int signo)
 {
-    signal(SIGABRT, SIG_DFL);
     char buf[64];
     snprintf(buf, sizeof(buf), "fatal signal %i received", signo);
-    
     tinfra::fatal_exit(buf);
 }
 

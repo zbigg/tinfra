@@ -73,6 +73,8 @@ bool get_debug_info(void* address, debug_info& dest);
 ///
 
 void initialize_fatal_exception_handler();
+void uninstall_abort_handler();
+
 void set_fatal_exception_handler(void (*handler) (void));
 
 /// Call this if you're in place there is no escape
