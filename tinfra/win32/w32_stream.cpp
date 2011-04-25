@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2010-2011, Zbigniew Zagorski
+// This software licensed under terms described in LICENSE.txt
+//
+
 #include "tinfra/win32/w32_stream.h" // we implement these
 #include "tinfra/win32.h"
 #include "tinfra/trace.h"

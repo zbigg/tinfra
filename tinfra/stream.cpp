@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2010-2011, Zbigniew Zagorski
+// This software licensed under terms described in LICENSE.txt
+//
+
 // we implement this
 #include "stream.h"
 

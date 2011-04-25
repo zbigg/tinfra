@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2009-2011, Zbigniew Zagorski
+// This software licensed under terms described in LICENSE.txt
+//
+
 #include "inifile.h"
 
 namespace tinfra {

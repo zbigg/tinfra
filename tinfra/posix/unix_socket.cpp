@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2010, Zbigniew Zagorski
+// This software licensed under terms described in LICENSE.txt
+//
+
 #include "tinfra/unix_socket.h"
 
 #include "tinfra/fmt.h"

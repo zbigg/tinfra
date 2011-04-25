@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2010-2011, Zbigniew Zagorski
+// This software licensed under terms described in LICENSE.txt
+//
+
 #include "internal_pipe.h" // we implement this
 
 #include <tinfra/thread.h>
