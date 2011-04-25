@@ -90,6 +90,18 @@ void check_map_equal(MapType const& A,
 #define CHECK_EQUAL_MAPS(expected,actual) \
     tinfra::test::check_map_equal(expected, actual, #actual, __FILE__, __LINE__)
 
+#define CHECK_STRING_CONTAINS(expected_substring, actual_result) \
+    tinfra::test::check_string_contains(expected_substring, actual_result, #actual_result, __FILE__, __LINE__)
+
+void check_string_contains(tstring const& expected_substring, tstring const& actual_result, tstring const& result_descr, const char* file, int line);
+
+/*
+#define CHECK_TYPES_EQUAL(expected_type, actual_type) \
+    tinfra::test::check_string_contains(typeid(expected_type), typeid(actual_type), #actual_type, __FILE__, __LINE__)
+
+void check_types_equal_contains(std::type_info const& expected_substring, std::type_info const& actual_result, tstring const& result_descr, const char* file, int line);
+*/
+
 }}  // end namespace tinfra::test
 
 #endif // tinfra_test_macros_h_included

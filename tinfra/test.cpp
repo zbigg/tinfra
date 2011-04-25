@@ -229,6 +229,21 @@ void report_test_failure(const char* /*filename*/, int line, const char* message
     results->OnTestFailure(details, message);
 }
 
+void check_string_contains(tstring const& expected_substring, 
+    tstring const& actual_result, 
+    tstring const& result_descr, 
+    const char* filename, int line)
+{
+    if( actual_result.find(expected_substring) != tstring::npos )
+        return;
+    
+    const std::string msg = tinfra::fmt("expected substring '%s' not found in actual value '%s': '%s'") 
+        % expected_substring
+        % result_descr
+        % actual_result;
+    report_test_failure(filename, line, msg.c_str()); 
+}
+
 } } // end namespace tinfra::test
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
