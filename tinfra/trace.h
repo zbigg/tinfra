@@ -7,30 +7,10 @@
 #define tinfra_trace_h_included
 
 #include <vector>
-#include "tinfra/platform.h"
+#include "tinfra/platform.h" // for TINFRA_UNLIKELY, TINFRA_SHORT_FUNCTION
 #include "tinfra/tstring.h"
 #include "static_registry.h"
-#if defined _MSC_VER
-//
-// excerpt from MSDN:
-//
-//  __FUNCDNAME__
-//      ... returns the decorated name of the enclosing function (as a string)...
-// __FUNCSIG__
-//      ... returns the signature of the enclosing function (as a string). ...
-// __FUNCTION__
-//      ... returns the undecorated name of the enclosing function (as a string). ...
-//
-#define TINFRA_PRETTY_FUNCTION __FUNCSIG__
-#define TINFRA_SHORT_FUNCTION __FUNCTION__
-#elif defined(__GNUC__)
-#define TINFRA_PRETTY_FUNCTION __PRETTY_FUNCTION__
-#define TINFRA_SHORT_FUNCTION __func__
-#else
-#define TINFRA_PRETTY_FUNCTION __func__
-#define TINFRA_SHORT_FUNCTION __func__
-#endif
-    
+
 namespace tinfra {
 namespace trace {
     

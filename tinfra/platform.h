@@ -6,6 +6,29 @@
 #ifndef tinfra_platform_h_included
 #define tinfra_platform_h_included
 
+#if defined _MSC_VER
+//
+// excerpt from MSDN:
+//
+//  __FUNCDNAME__
+//      ... returns the decorated name of the enclosing function (as a string)...
+// __FUNCSIG__
+//      ... returns the signature of the enclosing function (as a string). ...
+// __FUNCTION__
+//      ... returns the undecorated name of the enclosing function (as a string). ...
+//
+#define TINFRA_PRETTY_FUNCTION __FUNCSIG__
+#define TINFRA_SHORT_FUNCTION __FUNCTION__
+#elif defined(__GNUC__)
+#define TINFRA_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#define TINFRA_SHORT_FUNCTION __func__
+#else
+#define TINFRA_PRETTY_FUNCTION __func__
+#define TINFRA_SHORT_FUNCTION __func__
+#endif
+    
+
+
 #ifdef _MSC_VER
 #pragma warning( disable: 4512) // assignment operator could not be generated
 #pragma warning( disable: 4511) // copy constructor could not be generated
