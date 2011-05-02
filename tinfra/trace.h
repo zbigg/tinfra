@@ -107,10 +107,16 @@ extern tinfra::trace::auto_register_tracer __tinfra_global_tracer;
 #define TINFRA_TRACE_MSG(msg) do { if(TINFRA_UNLIKELY(TINFRA_TRACER.is_enabled())) { \
   TINFRA_TRACER.trace(__FILE__, __LINE__, TINFRA_SHORT_FUNCTION, (msg)); }} while(false)
 
+#define TINFRA_TRACE_STRM(cout_expr) do { if(TINFRA_UNLIKELY(TINFRA_TRACER.is_enabled())) { \
+	std::ostringstream _ojejuku_kejku_akuku;                  \
+        _ojejuku_kejku_akuku << cout_expr;  \
+        TINFRA_TRACE_MSG(_ojejuku_kejku_akuku.str().c_str()); }} while(false)
+
 #define TINFRA_TRACE_VAR(name) do { if( TINFRA_UNLIKELY(TINFRA_TRACER.is_enabled())) {    \
   std::ostringstream _ojejuku_kejku_akuku;                  \
   _ojejuku_kejku_akuku << #name << " = '" << (name) << "'";  \
   TINFRA_TRACE_MSG(_ojejuku_kejku_akuku.str().c_str()); }} while(false)
+
 
 #define TINFRA_USE_TRACER(name) tinfra::trace::tracer& __tinfra_tracer_adaptable(name)
 
