@@ -42,6 +42,23 @@ private:
     std::auto_ptr<internal_data> data_;
 };
 
+struct full_entry {
+    std::string section;
+    std::string name;
+    std::string value;
+};
+
+class reader: public generator_impl<reader, full_entry> {
+public:
+	reader(tinfra::input_stream& in);
+	~reader();
+	
+	bool fetch_next(full_entry&);
+private:
+	parser      p;
+	std::string section;
+};
+
 } // end namespace tinfra::inifile
 
 typedef inifile::parser inifile_parser;

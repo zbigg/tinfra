@@ -61,6 +61,40 @@ SUITE(tinfra) {
         
         CHECK( !p.fetch_next(re) );
     }
+    
+    TEST(inifile_reader)
+    {
+        const tinfra::tstring text = 
+                "a=c\n"
+                "[A]\n"
+                "m=n\n"
+                "[B]\n"
+                "x = z\n";
+        std::auto_ptr<tinfra::input_stream> in(create_memory_input_stream(text.data(), text.size(), tinfra::USE_BUFFER));
+        
+        namespace tif = tinfra::inifile;
+        
+        tif::reader r(*in);
+        
+        tif::full_entry fe;
+        
+        CHECK( r.fetch_next(fe) );
+        CHECK_EQUAL( "", fe.section);
+        CHECK_EQUAL( "a", fe.name );
+        CHECK_EQUAL( "c", fe.value );
+        
+        CHECK( r.fetch_next(fe) );
+        CHECK_EQUAL( "A", fe.section);
+        CHECK_EQUAL( "m", fe.name );
+        CHECK_EQUAL( "n", fe.value );
+        
+        CHECK( r.fetch_next(fe) );
+        CHECK_EQUAL( "B", fe.section);
+        CHECK_EQUAL( "x", fe.name );
+        CHECK_EQUAL( "z", fe.value );
+        
+        CHECK( !r.fetch_next(fe) );
+    }
 }
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:

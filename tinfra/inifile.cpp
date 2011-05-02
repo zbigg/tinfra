@@ -101,6 +101,39 @@ bool parser::fetch_next(entry& out)
     return true;
 }
 
+reader::reader(tinfra::input_stream& in):
+    p(in)
+{
+}
+reader::~reader()
+{
+}
+
+bool reader::fetch_next(full_entry& result)
+{
+	while( true ) {
+		entry e;
+		if( !p.fetch_next(e) )
+			return false;
+		switch( e.type ) {
+		case EMPTY:
+		case COMMENT:
+			continue;
+		case INVALID:
+			continue;
+		case SECTION:
+			this->section = e.name;
+			break;
+		case ENTRY:
+			result.section = this->section;
+			result.name = e.name;
+			result.value = e.value;
+			return true;
+		}
+	}
+}
+
+
 } } // end namespace tinfra::inifile
 
 
