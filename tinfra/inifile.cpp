@@ -4,6 +4,8 @@
 //
 
 #include "inifile.h"
+#include "trace.h"
+#include "string.h" // for strip
 
 namespace tinfra {
 namespace inifile {
@@ -38,12 +40,14 @@ static bool readline(tinfra::input_stream& in, std::string& result)
     while( true ) {
         char c;
         const int r = in.read(&c, 1);
-        if( r == 0 || c== '\n') {
+        if( r == 0 ) {
             break;
         }
-        
-        result.append(1, c);
+
         readed += 1;
+        if( c== '\n' )
+            break;
+        result.append(1, c);
     }
     return readed != 0;
 }
@@ -77,14 +81,14 @@ bool parser::fetch_next(entry& out)
         return true;
     }
     
-    const size_t entry_division_start = line.find_first_of(" \t=");
+    const size_t entry_division_start = line.find_first_of("=");
     if( entry_division_start == std::string::npos ) {
         fill_invalid_entry(out, "invalid line, not a section, entry or comment", line);
         return true;
     }
     
     out.type = ENTRY;
-    out.name = line.substr(0, entry_division_start);
+    out.name = tinfra::strip(line.substr(0, entry_division_start));
     const size_t value_begin = line.find_first_not_of(" \t=", entry_division_start);
     if( value_begin == std::string::npos ) {
         out.value = "";
@@ -101,6 +105,8 @@ bool parser::fetch_next(entry& out)
     return true;
 }
 
+TINFRA_PUBLIC_TRACER(tinfra_inifile_reader);
+
 reader::reader(tinfra::input_stream& in):
     p(in)
 {
@@ -111,16 +117,20 @@ reader::~reader()
 
 bool reader::fetch_next(full_entry& result)
 {
+	TINFRA_USE_TRACER(tinfra_inifile_reader);
+	int line=-1;
 	while( true ) {
 		entry e;
 		if( !p.fetch_next(e) )
 			return false;
+		line++;
 		switch( e.type ) {
 		case EMPTY:
 		case COMMENT:
-			continue;
+			break;
 		case INVALID:
-			continue;
+			TINFRA_TRACE_STRM("invalid inifile entry, line " << line);
+			break;
 		case SECTION:
 			this->section = e.name;
 			break;

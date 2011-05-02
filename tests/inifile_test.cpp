@@ -13,8 +13,10 @@ SUITE(tinfra) {
     {
         const tinfra::tstring text = ";comment\n"
                            "[section]\n"
+                           "\n"
                            "name=value\n"
                            "name = value \n"
+                           "name x = value \n"
                            "empty=\n"
                            "empty= \n";
         std::auto_ptr<tinfra::input_stream> in(create_memory_input_stream(text.data(), text.size(), tinfra::USE_BUFFER));
@@ -35,6 +37,10 @@ SUITE(tinfra) {
         CHECK_EQUAL( tif::SECTION, re.type );
         CHECK_EQUAL( "section", re.name);
         
+        //"\n" empty line
+        CHECK( p.fetch_next(re) );
+        CHECK_EQUAL( tif::EMPTY, re.type );
+        
         //"name=value\n"
         CHECK( p.fetch_next(re) );
         CHECK_EQUAL( tif::ENTRY, re.type );
@@ -45,6 +51,12 @@ SUITE(tinfra) {
         CHECK( p.fetch_next(re) );
         CHECK_EQUAL( tif::ENTRY, re.type );
         CHECK_EQUAL( "name", re.name);
+        CHECK_EQUAL( "value", re.value);
+        
+        //"name x = value \n"
+        CHECK( p.fetch_next(re) );
+        CHECK_EQUAL( tif::ENTRY, re.type );
+        CHECK_EQUAL( "name x", re.name);
         CHECK_EQUAL( "value", re.value);
         
         //"empty=\n"
