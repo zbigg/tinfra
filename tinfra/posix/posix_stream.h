@@ -74,7 +74,7 @@ struct standard_handle_output: public tinfra::output_stream {
     int write(const char* data, int size);
     void sync();
 private:
-    bool fd_;
+    const int fd_;
 };
 
 } // end namespace tinfra::posix
