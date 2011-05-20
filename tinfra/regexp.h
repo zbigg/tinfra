@@ -82,7 +82,10 @@ public:
     //typedef std_match_result match_result; // deprecated
     
     regexp(const char* pattern);
+    regexp(regexp const& other);
     ~regexp();
+    
+    regexp& operator=(regexp const& other);
     
     bool matches(tstring const& str) const {
         return do_match(0, str.data(), str.size(), 0);

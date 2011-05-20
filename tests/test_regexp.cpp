@@ -38,6 +38,13 @@ SUITE(tinfra)  {
     {
         // TODO: write matcher test
     }
+    
+    TEST(regexp_copyable)
+    {
+    	    tinfra::regexp a("a");
+    	    tinfra::regexp b(a);
+    }
+    
     TEST(regexp_static_tstring_match_result)
     {
         using tinfra::static_tstring_match_result;

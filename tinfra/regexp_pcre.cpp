@@ -9,6 +9,7 @@
 #include <stdexcept>
 
 #include "tinfra/fmt.h"
+#include "tinfra/assert.h"
 #include "regexp.h"
 
 #ifdef TINFRA_REGEX_PCRE
@@ -27,12 +28,32 @@ regexp::regexp(const char* pattern):
     compile(pattern, 0);
 }
 
+regexp::regexp(regexp const& other)
+{
+    pcre_refcount(TT_PCRE(re_), 1);
+}
+
+regexp& regexp::operator=(regexp const& other)
+{
+    using std::swap;
+    regexp tmp(other);
+    swap(tmp, *this);
+    return *this;
+}
+
 regexp::~regexp()
 {
-    if( extra_ )
-    	pcre_free(TT_PCRE_EXTRA(extra_));
-    if( re_ )
+    
+    if( !re_ )
+        return;
+    
+    int rc = pcre_refcount(TT_PCRE(re_), -1);        
+    if( rc == 0 ) {
+        if( extra_ )
+            pcre_free(TT_PCRE_EXTRA(extra_));
+            
         pcre_free(TT_PCRE(re_));
+    }
 }
 
 void regexp::compile(const char* pattern, int options)
@@ -64,6 +85,7 @@ void regexp::compile(const char* pattern, int options)
         }
         patterns_count_ = cc;
     }
+    TINFRA_ASSERT(pcre_refcount(TT_PCRE(re_), 1) == 1);
 }
 
 
