@@ -197,6 +197,23 @@ bool is_absolute(tstring const& filename)
     return false;
 }
 
+
+std::string extension(tstring const& filename)
+{
+    
+    size_t last_dot = filename.find_last_of(".");
+    if( last_dot == tstring::npos )
+        return "";
+    
+    size_t last_slash = filename.find_last_of("\\/");
+    if( last_slash != tstring::npos && last_slash > last_dot )
+        // extension is somewhere in path component
+        return "";
+        
+    return filename.substr(last_dot+1).str();
+    
+}
+
 bool has_extension(tstring const& filename)
 {
     size_t find_start = filename.find_last_of("\\/");
