@@ -100,6 +100,31 @@ SUITE(tinfra)
         //CHECK(  !has_extension("file.") );
         
     }
+    
+    TEST(path_extension)
+    {
+        using tinfra::path::extension;
+        
+        CHECK_EQUAL( "exe", extension("file.exe") );
+        CHECK_EQUAL(  "a", extension("file.a") );
+        
+        CHECK_EQUAL(  "exe", extension("abc/file.exe") );
+        CHECK_EQUAL(  "a", extension("/abc/file.a") );
+        
+        CHECK_EQUAL(  "exe", extension("abc.a\\file.exe") );
+        CHECK_EQUAL(  "a", extension("\\abc.b\\file.a") );
+        
+        CHECK_EQUAL(  "", extension(".") );
+        CHECK_EQUAL(  "", extension("/") );
+        CHECK_EQUAL(  "", extension("a") );
+        CHECK_EQUAL(  "", extension("./a") );
+        CHECK_EQUAL(  "", extension("akuku/dir.b/a") );
+        CHECK_EQUAL(  "", extension("akuku\\dir.b\\a") );
+        
+        // TODO: specify what to do with questionnable case
+        //CHECK(  !has_extension("file.") );
+        
+    }
 
     TEST(path_search_executable)
     {
