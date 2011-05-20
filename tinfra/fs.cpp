@@ -98,7 +98,11 @@ struct walker_file_visitor: public tinfra::fs::file_list_visitor {
 static void walk_(tstring const& start, walker& w)
 {    
     walker_file_visitor visitor(start, w);
-    tinfra::fs::list_files(start, visitor);    
+    try {
+        tinfra::fs::list_files(start, visitor);
+    } catch(std::runtime_error const&) {
+        // TBD, it should be more intelligent!!
+    }    
 }
 }
 

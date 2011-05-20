@@ -88,7 +88,7 @@ struct walker
     
         @return callback should return if it's interested in walking
                 through children of current element 
-        @throws throws walker::stop to forcifully stop walking
+        throw throws walker::stop to forcifully stop walking
     */
     virtual bool accept(tstring const& name, tstring const& parent, bool is_dir) = 0;
     
