@@ -81,9 +81,14 @@ class regexp {
 public:
     //typedef std_match_result match_result; // deprecated
     
+    regexp();
     regexp(const char* pattern);
     regexp(regexp const& other);
     ~regexp();
+    
+    void compile(const char* pattern);
+    void reset();
+    void swap(regexp& other);
     
     regexp& operator=(regexp const& other);
     
@@ -114,8 +119,13 @@ public:
     size_t groups_count() const { return patterns_count_; }
     
 private:
-    void compile(const char* pattern, int options);
+    void do_compile(const char* pattern, int options);
 };
+
+inline void swap(regexp& a, regexp& b)
+{
+    a.swap(b);
+}
 
 class matcher {
     regexp const& re_;

@@ -41,8 +41,12 @@ SUITE(tinfra)  {
     
     TEST(regexp_copyable)
     {
-    	    tinfra::regexp a("a");
+    	    tinfra::regexp a("^a$");
     	    tinfra::regexp b(a);
+    	    a = b;
+    	    b = a;
+    	    
+    	    CHECK( b.matches("a") );
     }
     
     TEST(regexp_static_tstring_match_result)

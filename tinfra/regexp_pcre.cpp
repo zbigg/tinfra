@@ -20,17 +20,37 @@ namespace tinfra {
 #define TT_PCRE(a)        (pcre*)(a)
 #define TT_PCRE_EXTRA(a)  (pcre_extra*)(a)
 
+regexp::regexp():
+    re_(0),
+    extra_(0),
+    patterns_count_(0)
+{
+}
+
 regexp::regexp(const char* pattern):
     re_(0),
     extra_(0),
     patterns_count_(0)
 {
-    compile(pattern, 0);
+    compile(pattern);
 }
 
 regexp::regexp(regexp const& other)
 {
-    pcre_refcount(TT_PCRE(re_), 1);
+    re_ = other.re_;
+    extra_ = other.extra_;
+    patterns_count_ = other.patterns_count_;
+    
+    if( re_ ) 
+        pcre_refcount(TT_PCRE(re_), 1);
+}
+
+void regexp::swap(regexp& other)
+{
+    using std::swap;
+    swap(re_, other.re_);
+    swap(extra_, other.extra_);
+    swap(patterns_count_, other.patterns_count_);
 }
 
 regexp& regexp::operator=(regexp const& other)
@@ -43,7 +63,11 @@ regexp& regexp::operator=(regexp const& other)
 
 regexp::~regexp()
 {
-    
+    reset();
+}
+
+void regexp::reset()
+{
     if( !re_ )
         return;
     
@@ -56,7 +80,13 @@ regexp::~regexp()
     }
 }
 
-void regexp::compile(const char* pattern, int options)
+void regexp::compile(const char* pattern)
+{
+    reset();
+    do_compile(pattern, 0);
+}
+
+void regexp::do_compile(const char* pattern, int options)
 {
     const char* err_ptr = 0;
     int         err_offset;
@@ -91,6 +121,8 @@ void regexp::compile(const char* pattern, int options)
 
 bool regexp::do_match(match_result_processor* result, const char* str, size_t length, size_t* finish_offset) const
 {
+    if( !re_ )
+        throw std::logic_error("expression not yet initialized, call compile!");
     const int offsets_size = (patterns_count_+1)*3; // see manual, pcre_exec def
     std::vector<int> offsets(offsets_size);
     int options = 0;
