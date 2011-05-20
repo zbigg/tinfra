@@ -36,13 +36,33 @@
 namespace tinfra {
 namespace path {
 
-std::string join(tstring const& a, tstring const& b) 
+static tstring remove_initial_slashes(tstring const& other)
 {
+    size_t pos = other.find_first_not_of("\\/");
+    if( pos == tstring::npos )
+        return other;
+    else
+        return other.substr(pos);
+}
+
+static tstring remove_trailing_slashes(tstring const& other)
+{
+    int idx = other.size()-1;
+    while( idx >= 0 && (other[idx] == '/' || other[idx] == '\\' )){
+            idx--;
+    }
+    return other.substr(0, idx+1);
+}
+
+std::string join(tstring const& a, tstring const& b2) 
+{
+    tstring b = remove_initial_slashes(b2);
     if( a.size() > 0 && b.size() > 0 ) {
         std::string r;
-        r.reserve(a.size() + 1 + b.size());
-        r.append(a.data(), a.size());
-        r.append(1, '/');
+        tstring a2 = remove_trailing_slashes(a);
+        r.reserve(a2.size() + 1 + b.size());
+        r.append(a2.data(), a2.size());
+        r.append("/");
         r.append(b.data(), b.size());
         return r;
     }

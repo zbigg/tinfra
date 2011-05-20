@@ -43,6 +43,11 @@ SUITE(tinfra)
         CHECK_EQUAL( "a/b", join("a","b"));
         CHECK_EQUAL( "a/b/c", join("a/b","c"));
         CHECK_EQUAL( "a/b/c", join("a","b/c"));
+        
+        CHECK_EQUAL( "/b", join("/","b"));
+        CHECK_EQUAL( "/a/b", join("/a/","b"));
+        CHECK_EQUAL( "/a/b", join("/a","/b"));
+        CHECK_EQUAL( "a/b", join("a","/b"));
     }
     
     TEST(path_is_absolute)
