@@ -35,7 +35,7 @@ struct lister::internal_data {
     DIR* handle;
 };
 
-lister::lister(tstring const& path, bool need_stat)
+lister::lister(tstring const& path, bool)
     : data_(new internal_data())
 {   
     tinfra::string_pool temporary_context;
@@ -84,12 +84,26 @@ file_info stat(tstring const& name)
 {
     string_pool temporary_context;
     struct stat st;
-    if( ::stat(name.c_str(temporary_context), &st) != 0 ) {
+    if( ::lstat(name.c_str(temporary_context), &st) != 0 ) {
         throw_errno_error(errno, fmt("unable stat file '%s'") % name);
     }
     
     file_info result;
-    result.is_dir = (st.st_mode & S_IFDIR) == S_IFDIR;
+    
+    if ( (st.st_mode & S_IFLNK) == S_IFLNK )
+    	result.type = SYMBOLIC_LINK;
+    else if( (st.st_mode & S_IFDIR) == S_IFDIR )
+    	result.type = DIRECTORY;    
+    else if( ((st.st_mode & S_IFCHR) == S_IFCHR)  || 
+    	     ((st.st_mode & S_IFBLK) == S_IFBLK) )
+    	result.type = DEVICE;
+    else if ( (st.st_mode & S_IFIFO) == S_IFIFO )
+    	result.type = FIFO;
+    else
+    	result.type = REGULAR_FILE;
+
+    result.is_dir = (result.type == DIRECTORY);
+    
     result.modification_time = st.st_mtime;
     result.access_time = st.st_atime;
     result.size = st.st_size;

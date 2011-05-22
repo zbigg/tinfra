@@ -16,9 +16,20 @@
 namespace tinfra {
 namespace fs {
 
+enum file_type {
+    REGULAR_FILE,
+    DIRECTORY,
+    DEVICE,
+    FIFO,
+    SYMBOLIC_LINK
+    //SOCKET
+};
+
 struct file_info {
     size_t    size;
-    bool      is_dir;   
+    bool      is_dir; // left for compatibility reasons
+    file_type type;
+    
     time_t    modification_time;
     time_t    access_time;
 };
@@ -104,4 +115,4 @@ void walk(tstring const& start, walker& w);
 
 #endif // tinfra_fs_h_included
 
-
+// jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:

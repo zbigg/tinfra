@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <stdexcept>
-
+#include <cstdlib> // for system
 
 using namespace tinfra;
 
@@ -87,6 +87,15 @@ SUITE(tinfra)
             CHECK( !fs::exists("a"));
         }
     }
+#ifndef _WIN32
+    TEST(fs_stat_symlink)
+    {
+        test_fs_sandbox tmp_location;
+        std::system("ln -s . foo");
+        tinfra::fs::file_info fi= tinfra::fs::stat("foo");
+        CHECK_EQUAL(tinfra::fs::SYMBOLIC_LINK, fi.type);
+    }
+#endif
     TEST(fs_recursive)
     {
         test_fs_sandbox tmp_location("testtest_dir");

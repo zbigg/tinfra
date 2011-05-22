@@ -198,6 +198,7 @@ void list_files(tinfra::vfs& fs, tstring const& path, tinfra::fs::file_name_list
 void default_recursive_copy(vfs& sfs, tstring const& src,
                             vfs& dfs, tstring const& dest)
 {
+    // note, symlinks are not handled!
     if( dfs.is_dir(dest ) ) {
         std::string new_dest = path::join(dest, path::basename(src));
         return recursive_copy(sfs, src, dfs, new_dest);
@@ -243,7 +244,9 @@ void default_copy(vfs& sfs, tstring const& src,
 
 void default_recursive_rm(tinfra::vfs& fs, tstring const& name)
 {
-    if( fs.is_dir(name) ) {
+    // note: symlinks are trated as generic files (just removed)
+    tinfra::fs::file_info fi = fs.stat(name);
+    if( fi.type == tinfra::fs::DIRECTORY ) {
         std::vector<std::string> files;
         list_files(fs, name, files);
         
