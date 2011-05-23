@@ -11,6 +11,7 @@ SOURCES=http.cpp
 
 httpd: httpd.o http.o
 
+https: https.o http.o 
 test_http: http.o test_http_parser.o ../unittests.o
 	$(CC) $^ $(LDFLAGS) $(LDLIBS) -o $@
 
