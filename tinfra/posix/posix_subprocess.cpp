@@ -142,7 +142,10 @@ struct posix_subprocess: public subprocess {
                 throw_errno_error(errno, "waitpid failed");
             // now convert wait exit_code to process exit code as in wait(2)
             // manual
-            if( WIFEXITED(exit_code_raw) ) {
+            if(  WIFSIGNALED(exit_code_raw) ) {
+                exit_code = EXIT_FAILURE;
+                this->signal_information = WTERMSIG(exit_code_raw);
+            } else if( WIFEXITED(exit_code_raw) ) {
                 exit_code = WEXITSTATUS(exit_code_raw);
             } else {
                 exit_code = EXIT_FAILURE;

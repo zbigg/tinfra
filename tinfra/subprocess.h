@@ -34,7 +34,8 @@ public:
         stdout_mode(INHERIT), 
         stderr_mode(INHERIT), 
         redirect_stderr(false), 
-        working_dir(".")
+        working_dir("."),
+        signal_information(0)
     {
     }
     void set_working_dir(std::string const& dir ) { working_dir = dir; }
@@ -46,6 +47,8 @@ public:
     void set_stdout_mode(pipe_mode pm)  { stdout_mode = pm; }
     void set_stderr_mode(pipe_mode pm)  { stderr_mode = pm; }
     
+    int      get_exit_signal() { return signal_information; }
+    
     virtual ~subprocess() {}
     
     virtual void     set_environment(environment_t const& e) = 0;
@@ -55,6 +58,7 @@ public:
     virtual void     wait() = 0;
     virtual void     detach() = 0;
     virtual int      get_exit_code() = 0;
+    	     
     
     virtual void     terminate() = 0;
     virtual void     kill() = 0;
@@ -73,6 +77,7 @@ protected:
     bool redirect_stderr;
 
     std::string working_dir;
+    int signal_information;
 };
 
 // deprecated
