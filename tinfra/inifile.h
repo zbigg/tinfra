@@ -57,6 +57,7 @@ public:
 private:
 	parser      p;
 	std::string section;
+	int line;
 };
 
 } // end namespace tinfra::inifile

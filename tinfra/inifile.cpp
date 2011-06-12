@@ -64,7 +64,7 @@ bool parser::fetch_next(entry& out)
         out.value = "";
         return true;
     }
-    if( line[0] == ';' ) {
+    if( line[0] == ';' || line[0] == '#' ) {
         out.type = COMMENT;
         out.value = line.substr(1);
         return true;
@@ -108,7 +108,8 @@ bool parser::fetch_next(entry& out)
 TINFRA_PUBLIC_TRACER(tinfra_inifile_reader);
 
 reader::reader(tinfra::input_stream& in):
-    p(in)
+    p(in),
+    line(0)
 {
 }
 reader::~reader()
@@ -118,18 +119,18 @@ reader::~reader()
 bool reader::fetch_next(full_entry& result)
 {
 	TINFRA_USE_TRACER(tinfra_inifile_reader);
-	int line=-1;
+	
 	while( true ) {
 		entry e;
 		if( !p.fetch_next(e) )
 			return false;
-		line++;
+		this->line++;
 		switch( e.type ) {
 		case EMPTY:
 		case COMMENT:
 			break;
 		case INVALID:
-			TINFRA_TRACE_STRM("invalid inifile entry, line " << line);
+			TINFRA_TRACE_STRM("invalid inifile entry, line=" << line << " content=" << e.value);
 			break;
 		case SECTION:
 			this->section = e.name;
