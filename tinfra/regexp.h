@@ -152,7 +152,14 @@ private:
 //
 
 class scanner {
-    std_match_result match_;
+    struct main_groups_collector: public match_result_processor {
+    	     void prepare(int groups);
+    	     void match_group(int group_no, const char* str, size_t pos, size_t len);
+    	     
+    	     std::vector<tinfra::tstring> main_groups;
+    };
+    main_groups_collector match_;
+    
     size_t  current_param_;
     bool    have_match_;
 public:
@@ -186,7 +193,8 @@ private:
 template <typename T>
 scanner& scanner::parse(T& value) {
     if( check_and_forward() ) {
-        tinfra::from_string<T>(match_.groups[current_param_], value);
+        tinfra::from_string<T>(match_.main_groups[current_param_], value);
+        current_param_ += 1;
     }
     return *this;
 }

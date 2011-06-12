@@ -72,14 +72,51 @@ void matcher::try_match()
 // scanner
 //
 
+
+
+void scanner::main_groups_collector::prepare(int)
+{
+	// actually we don't believe in what PCRE is saying because it
+	// tells us all group count
+}
+//
+// this collect only "non-zero" groups, example analysis
+// AAAAAA       group 0
+//  BBBBB       ignored 
+//    CC        ignored
+//       DDDDD  group 1
+//          FF  ignored
+//  sumamry 2 groups
+
+void scanner::main_groups_collector::match_group(int group_no, const char* str, size_t pos, size_t len)
+{
+	if( group_no == 0 ) { // group 0 is not interesting ! 
+		return;
+	}
+	
+	if( group_no == 1 ) { // this one is always added
+		const char* begin = str+pos;
+		this->main_groups.push_back(tstring(begin, len));
+		return;
+	}  
+	const tstring& last_group = this->main_groups[this->main_groups.size()-1];
+	const char* last_group_end = last_group.data() + last_group.size();
+	const char* current_begin = str+pos;
+	if( current_begin < last_group_end ) {
+		return;
+	}
+	this->main_groups.push_back(tstring(current_begin, len));
+}
+
 bool scanner::check_and_forward()
 {
-    if( !have_match_ ) 
-        return false; 
-    current_param_++;
-    if( current_param_ == match_.groups.size() ) {
+    if( !this->have_match_ ) 
+        return false;
+    
+    if( this->current_param_ == this->match_.main_groups.size() ) {
         throw std::logic_error("scanner: too many arguments");
     }
+    
     return true;
 }
 

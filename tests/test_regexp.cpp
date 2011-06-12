@@ -34,6 +34,18 @@ SUITE(tinfra)  {
         CHECK_EQUAL(m, 22);
         CHECK_EQUAL(s, 333);
     }
+    
+     TEST(regexp_scanner_skips_subgroups)
+    {
+        std::string name;
+        std::string time;
+        bool matches = scanner("^(\\w+) ((\\d+):(\\d+):(\\d+))$", "Week 1:22:333") % name % time;
+        
+        CHECK(matches);
+        CHECK_EQUAL(name, "Week");
+        CHECK_EQUAL(time, "1:22:333");
+    }
+    
     TEST(regexp_matcher)
     {
         // TODO: write matcher test
