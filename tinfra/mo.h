@@ -111,6 +111,12 @@ struct mutate_helper {
 
 } // end namespace mo_detail
 
+template <typename T, typename F>
+void mo_process_override(T const& value, F& functor)
+{
+    value.apply(functor);
+}
+
 /// Process all record fields using MO dispatcher.
 ///
 /// All MO record fields are processed by functors appropriate methods
@@ -120,7 +126,8 @@ template <typename T, typename F>
 void mo_process(T const& value, F& functor)
 {
     mo::dispatcher<F> functor_disp(functor);
-    value.apply(functor_disp);
+    using tinfra::mo_process_override;
+    mo_process_override(value, functor_disp);
 }
 
 /// Mutate record fields using MO dispatcher.
@@ -132,7 +139,8 @@ void mo_mutate(T& value, F& functor)
 {
     mo::mutate_helper<F> mutator(functor);
     mo::dispatcher< mo::mutate_helper<F> > functor_disp(mutator);
-    value.apply(functor_disp);
+    using tinfra::mo_process_override;
+    mo_process_override(value, functor_disp);
 }
 
 /// Process value using MO dispatcher.
@@ -182,12 +190,15 @@ void mutate(S const& sym,  T& value, F& functor)
 
 #define TINFRA_MO_MANIFEST(a)  template <typename F> void apply(F& f) const
 #define TINFRA_MO_FIELD(a)    f.dispatch(#a, a)
+#define TINFRA_MO_FIELD2(s,a)    f.dispatch(#a, s.a)
 
 // symbol based manifests are deprecated
 #define TINFRA_MO_SYMBOL_FIELD(a)    f.dispatch(S::a, a)
     
 #define TINFRA_SYMBOL_DECL(a) namespace S { extern tinfra::symbol a; } extern int TINFRA_SYMBOL_DECL_ ## a
 #define TINFRA_SYMBOL_IMPL(a) namespace S { tinfra::symbol a(#a); } extern int TINFRA_SYMBOL_IMPL_ ## a
+
+#define TINFRA_MO_IS_RECORD(a) namespace tinfra { template<> struct mo_traits<a>: public tinfra::struct_mo_traits<a> {}; }
 
 } // end namespace tinfra
 

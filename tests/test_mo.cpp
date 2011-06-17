@@ -12,6 +12,69 @@ struct true_type { enum { value = 1 } ; };
 
 struct false_type { enum { value = 1 } ; };
 
+template <typename T>
+struct getter {
+    std::string name;
+    T  value;
+    bool found;
+    template <typename V>
+    void record(const char* s, V const&v) {
+        tinfra::mo_process(v, *this);
+    }
+    void leaf(const char* s, T const& v) {
+        if( s == this->name ) {
+            value = v;
+            found = true;
+        }
+    }
+    template <typename V>
+    void leaf(const char*, V const&) {
+    } 
+};
+
+
+template <typename T, typename MO>
+T mo_get(MO const& v, std::string const& name)
+{
+    getter<T> g;
+    g.name = name;
+    g.found = false;
+    tinfra::process("", v, g);
+    assert(g.found);
+    return g.value;
+}
+
+template <typename T>
+struct setter {
+    std::string name;
+    T  value;
+    bool found;
+    template <typename V>
+    void record(const char* s, V&v) {
+        tinfra::mo_mutate(v, *this);
+    }
+    void leaf(const char* s, T& v) {
+        if( s == this->name ) {
+            v = value;
+            found = true;
+        }
+    }
+    template <typename V>
+    void leaf(const char*, V&) {
+    } 
+};
+
+template <typename T, typename MO>
+void mo_set(MO& v, std::string const& name, T const& value)
+{
+    setter<T> g;
+    g.name = name;
+    g.value = value;
+    g.found = false;
+    tinfra::mutate("", v, g);
+    assert(g.found);
+}
+
 namespace tinfra_mo_test {
     TINFRA_SYMBOL_IMPL(top_left);
     TINFRA_SYMBOL_IMPL(bottom_right);
@@ -130,6 +193,22 @@ namespace tinfra {
         v.apply(adapter);
     }
 }
+
+namespace tinfra_mo_test {
+    struct simple_struct {
+        int x;
+        std::string s; 
+    };
+    
+    template <typename F>
+    void mo_process_override(simple_struct const& v, F& f)
+    {
+        f.dispatch("x", v.x);
+        f.dispatch("s", v.s);
+    }    
+}
+
+TINFRA_MO_IS_RECORD(tinfra_mo_test::simple_struct);
 
 SUITE(tinfra)
 {
@@ -290,6 +369,25 @@ SUITE(tinfra)
         CHECK_EQUAL(0, foo.x);
         CHECK_EQUAL(0, foo.y);
         CHECK_EQUAL(0, foo.z);
+    }
+
+    // simple_struct is an 
+    TEST(mo_process_override_reads)
+    {
+        tinfra_mo_test::simple_struct V;
+        V.x = 66;
+        V.s = "spam";
+        CHECK_EQUAL( 66,     mo_get<int>(V, "x"));
+        CHECK_EQUAL( "spam", mo_get<std::string>(V, "s"));        
+    }
+    
+    TEST(mo_process_override_sets)
+    {
+        tinfra_mo_test::simple_struct V;
+        mo_set<int>(V,"x",66);
+        mo_set<std::string>(V,"s","spam");
+        CHECK_EQUAL( 66,     V.x);
+        CHECK_EQUAL( "spam", V.s);        
     }
 }
 
