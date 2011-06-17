@@ -6,6 +6,8 @@
 #ifndef tinfra_os_common_h_included
 #define tinfra_os_common_h_included
 
+#include <string>
+
 namespace tinfra {
     
 std::string errno_to_string(int error);
