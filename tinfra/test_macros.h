@@ -90,6 +90,8 @@ void check_map_equal(MapType const& A,
 #define CHECK_EQUAL_MAPS(expected,actual) \
     tinfra::test::check_map_equal(expected, actual, #actual, __FILE__, __LINE__)
 
+#define CHECK_SET_CONTAINS(expected_entry, container) \
+    tinfra::test::check_container_contains(expected_entry, container, #container, __FILE__, __LINE__) 
 #define CHECK_STRING_CONTAINS(expected_substring, actual_result) \
     tinfra::test::check_string_contains(expected_substring, actual_result, #actual_result, __FILE__, __LINE__)
 
@@ -101,6 +103,23 @@ void check_string_contains(tstring const& expected_substring, tstring const& act
 
 void check_types_equal_contains(std::type_info const& expected_substring, std::type_info const& actual_result, tstring const& result_descr, const char* file, int line);
 */
+
+// 
+// implementation details
+//
+
+template <typename KeyType, typename SetType>
+void check_container_contains(KeyType const& key, 
+                     SetType const& set, std::string const& set_name, const char* filename, int line)
+{
+	typename SetType::const_iterator i = set.find(key);
+	if( i == set.end() ) {
+		std::string msg = tinfra::fmt("expected key (%s) not found in %s") 
+			% key 
+			% set_name;
+		report_test_failure(filename, line, msg.c_str());
+	}
+}
 
 }}  // end namespace tinfra::test
 
