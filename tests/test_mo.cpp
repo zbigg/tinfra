@@ -18,7 +18,7 @@ struct getter {
     T  value;
     bool found;
     template <typename V>
-    void record(const char* s, V const&v) {
+    void record(const char*, V const&v) {
         tinfra::mo_process(v, *this);
     }
     void leaf(const char* s, T const& v) {
@@ -50,7 +50,7 @@ struct setter {
     T  value;
     bool found;
     template <typename V>
-    void record(const char* s, V&v) {
+    void record(const char*, V& v) {
         tinfra::mo_mutate(v, *this);
     }
     void leaf(const char* s, T& v) {
@@ -241,7 +241,7 @@ SUITE(tinfra)
     
     TEST(mo_process_complex)
     {
-        dummy_functor f = {0};
+        dummy_functor f = {0,0};
         const rect r = { { 3,-2} , {4, -3} };
         tinfra::mo_process(r, f);
         CHECK_EQUAL(2, f.sum);
@@ -250,7 +250,7 @@ SUITE(tinfra)
     
     TEST(mo_process_bean_api)
     {
-        dummy_functor f = {0};
+        dummy_functor f = {0,0};
         point_bean a;
         a.setX(1);
         a.setY(2);

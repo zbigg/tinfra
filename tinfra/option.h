@@ -235,7 +235,7 @@ public:
     virtual std::string value_as_string() const {
         if( accepted_ ) {
             std::ostringstream tmp;
-            for(int i = 0; i < value_.size(); ++i ) {
+            for(size_t i = 0; i < value_.size(); ++i ) {
                 if( i > 0 )
                     tmp << ", ";
                 tmp << value_[i];
