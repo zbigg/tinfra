@@ -142,7 +142,10 @@ void process_params(int& argc, char** argv)
 {
     using std::strcmp;
     using std::strncmp;
-    
+    const char* env_mask = ::getenv("TINFRA_TRACE");
+    if( env_mask != 0 ) {
+    	    enable_tracer_by_mask(env_mask);
+    }
     for( int i = 1; i < argc; ) {
         if( HELP_OPTION == argv[i] ) {
             print_tracer_usage();
