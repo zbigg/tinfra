@@ -21,6 +21,7 @@ public:
     
     vfs&        fs()   const { return _fs; }
     std::string path() const { return _path; }
+    std::string make_path(tstring const& path) const;
     
     void prepare();
     void cleanup();

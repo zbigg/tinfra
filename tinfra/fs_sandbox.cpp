@@ -57,6 +57,11 @@ void fs_sandbox::cleanup_nothrow()
     }
 }
 
+std::string fs_sandbox::make_path(tstring const& path) const
+{
+    return tinfra::path::join(this->_path, path); 
+}
+
 } //  end namespace tinfra
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
