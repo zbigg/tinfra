@@ -135,11 +135,8 @@ if [ ${BUILD_HOST} != local ] ; then
     base_build_dir=${base_build_dir-/tmp/rbuild/build}
 fi
 
-echo "REMOTE = $BUILD_HOST"
-echo "LOCAL  = local"
-
 if [ -z "$base_build_dir" ] ; then
-	platform=$(invoke_immediate uname -p)
+	platform="$(invoke_immediate uname -s)-$(invoke_immediate uname -m)"
 fi
 
 base_build_dir=${base_build_dir-../build/$platform}
@@ -149,6 +146,11 @@ build_dir=${base_build_dir}/${name}
 base_srcdir=$(pwd)
 
 created_folders="${build_dir}"
+
+echo "BUILD_HOST = $BUILD_HOST"
+echo "SRC  = $(pwd)"
+echo "BUILD = ${build_dir}"
+
 
 if [ -n "${remote_src}" ] ; then
     build_scrdir=${remote_src}/${name}	
@@ -165,11 +167,15 @@ init_build_area() {
     REMOTESCRIPT_TMP=$(mktemp)
     cat > $REMOTESCRIPT_TMP <<EOF
 cd ${build_dir}
-if [ ! -f ./config.status ] ; then
-	${build_scrdir}/configure $BUILD_HOST_CONFIGURE_OPTIONS "$@"
-fi
 if [ ! -f Makefile ] ; then
-	./config.status
+	if [ ! -f ./config.status ] ; then
+		echo "[in \$(pwd)]" ${build_scrdir}/configure $BUILD_HOST_CONFIGURE_OPTIONS "$@"
+		${build_scrdir}/configure $BUILD_HOST_CONFIGURE_OPTIONS "$@"
+	fi
+	if [ ! -f Makefile ] ; then
+		echo "[in \$(pwd)]"  ./config.status
+		./config.status
+	fi
 fi
 exec make "\$@"
 

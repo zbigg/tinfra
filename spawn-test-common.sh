@@ -1,11 +1,11 @@
 #!/bin/sh
 
-dist="$1"
-if [ ! -d "$dist" ] ; then
-    echo "$0: output dir '$dist' doesn't exist, build the project" 1>&2  
+if [ ! -d "$test_dir" ] ; then
+    echo "$0: output dir '$test_dir' doesn't exist, build the project" 1>&2  
     exit 2
 fi
-test_log_file_dir=${dist}/test_result
+
+test_log_file_dir=${test_dir}/test_result
 mkdir -p ${test_log_file_dir}
 
 interactive=no
@@ -16,6 +16,7 @@ get_test_log_file()
 {
     echo ${test_log_file_dir}/${1}.log
 }
+
 report_test_start()
 {
     test_name="$1"
@@ -23,7 +24,7 @@ report_test_start()
     test_command="$*"
     local test_log_file=$(get_test_log_file $test_name)
     (   
-        cd $dist    
+        cd $test_dir
         set -e
         echo "TEST EXECUTION LOG"
         echo "time:             $(date)"
@@ -62,7 +63,7 @@ generic_test()
     local test_log_file=$(get_test_log_file $test_name)
     report_test_start ${test_name} ${test_command}
     ( (
-        cd $dist
+        cd ${test_dir}
         ${test_command}
     )  2>&1 ) >> ${test_log_file} 
     local test_exit_code=$?
@@ -73,5 +74,11 @@ generic_test()
         failed=1
     fi
     report_result $test_name $test_exit_code $msg
+}
+
+generic_test_summary()
+{
+	echo "overall result: ${msg}($failed)"
+	echo "logs folder:    ${test_log_file_dir}"
 }
 
