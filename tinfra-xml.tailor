@@ -2,7 +2,7 @@
 #debug = True
 #verbose = True
 start-revision = INITIAL
-root-directory = tinfra-rootdir
+root-directory = tinfra-xml-rootdir
 source = monotone:
 target = svn:
 #source-repository = tinfra.mtn
@@ -11,15 +11,14 @@ use-propset = True
 # Projects
 
 #
-[pl.reddix.tinfra]
+[pl.reddix.tinfra-xml]
 
 # Sources
-[monotone:pl.reddix.tinfra]
-module = pl.reddix.tinfra
+[monotone:pl.reddix.tinfra-xml]
+module = pl.reddix.tinfra-xml
 subdir = mtn-side
 
 # Targets
-[svn:pl.reddix.tinfra]
-module = trunk/tinfra
+[svn:pl.reddix.tinfra-xml]
+module = trunk/tinfra-xml
 subdir = svn-side
-

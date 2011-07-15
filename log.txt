@@ -1,0 +1,5 @@
+in order to start:
+
+1) ensude you have commit access to SVN repo
+2) both  svn-side and mtn-side folders exist and are checkedout to _SOME_ (i mean any revision)
+
