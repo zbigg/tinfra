@@ -109,8 +109,8 @@ SUITE(tinfra)
         CHECK_EQUAL("a", r[0] );
         CHECK_EQUAL("b", r[1] );
     }
-    
-    TEST(string_split_two_delims)
+
+    TEST(string_split_lines_two_delims)
     {
         using tinfra::split_lines;
         using std::vector;
@@ -125,6 +125,40 @@ SUITE(tinfra)
         CHECK_EQUAL("FIRST", r[0] );
         CHECK_EQUAL("",  r[1] );
         CHECK_EQUAL("THIRD", r[2] );
+    }    
+    TEST(string_split_strict_two_delims)
+    {
+        using tinfra::split_strict;
+        using std::vector;
+        using std::string;
+        
+        vector<string> r;
+        r = split_strict("",'|');
+        CHECK_EQUAL(1u, r.size() );
+        
+        r = split_strict("FIRST||THIRD|",'|');
+        CHECK_EQUAL(4u, r.size() );
+        CHECK_EQUAL("FIRST", r[0] );
+        CHECK_EQUAL("",  r[1] );
+        CHECK_EQUAL("THIRD", r[2] );
+        CHECK_EQUAL("",  r[1] );
+    }
+
+    TEST(string_split_skip_empty_two_delims)
+    {
+        using tinfra::split_skip_empty;
+        using std::vector;
+        using std::string;
+        
+        vector<string> r;
+        r = split_skip_empty("",',');
+        CHECK_EQUAL(1u, r.size() );
+        
+        r = split_skip_empty("FIRST,,THIRD,",',');
+        CHECK_EQUAL(3u, r.size() );
+        CHECK_EQUAL("FIRST", r[0] );
+        CHECK_EQUAL("THIRD", r[1] );
+        CHECK_EQUAL("", r[2] );
     }
     
     TEST(string_compare_no_case_corner)

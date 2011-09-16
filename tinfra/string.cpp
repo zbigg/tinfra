@@ -113,12 +113,18 @@ std::string escape_c(tstring const& a)
 
 std::vector<std::string> split(tstring const& in, char delimiter)
 {
+    return split_strict(in, delimiter);
+}
+
+std::vector<std::string> split_strict(tstring const& in, char delimiter)
+{
     std::vector<std::string> result;
     std::size_t start = 0;
     do {
         std::size_t pos = in.find_first_of(delimiter, start);
         if( pos == tstring::npos ) {
-            result.push_back(std::string(in.begin(), start));
+            size_t remaining_length = in.size()-start;
+            result.push_back(std::string(in.begin(), start, remaining_length));
             break;
         }
                              
@@ -129,6 +135,33 @@ std::vector<std::string> split(tstring const& in, char delimiter)
         
     } while( start != std::string::npos );
         
+    return result;
+}
+
+std::vector<std::string> split_skip_empty(tstring const& in, char delimiter)
+{
+    std::vector<std::string> result;
+    std::size_t start = 0;
+    std::size_t pos = in.find_first_of(delimiter, start);
+    while( true ) {
+        if( pos == tstring::npos ) {
+            size_t remaining_length = in.size()-start;
+            result.push_back(std::string(in.begin(), start, remaining_length));
+            break;
+        }
+                             
+        result.push_back(std::string(in.begin(), start, pos-start));
+        
+        start = in.find_first_not_of(delimiter, pos+1);
+        if( start  == tstring::npos ) { // if we have nothing more that a
+                                        // empty value after separator must
+                                        // be realized. and we're done.
+            result.push_back(std::string());
+            break;
+        }
+        pos = in.find_first_of(delimiter, start);
+    } 
+            
     return result;
 }
 

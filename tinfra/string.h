@@ -22,7 +22,28 @@ std::string strip(tstring const& s);
 void        chop_inplace(std::string& s);
 std::string chop(tstring const& s);
 
-std::vector<std::string> split(tstring const& in, char delimiter);
+/// strict string splitter
+///
+/// repeated sibling delimiters create new substrings
+std::vector<std::string> split_strict(tstring const& in, char delimiter);
+
+/// strict string splitter
+///
+/// repeated sibling act as one delimiter
+std::vector<std::string> split_skip_empty(tstring const& in, char delimiter);
+
+/// strict splitting
+///
+/// same as split_strictt 
+/// DEPRECATED
+std::vector<std::string> split(tstring const& in, char delimiter); // DEPRECATED!
+
+/// line spliting
+///
+/// intelligent strict line splitting
+/// removes end-of-line characters
+/// detects only following line endings CRLF and LF 
+/// (CR alone is not detected!)
 std::vector<std::string> split_lines(tstring const& in);
 
 /// Compare strings ignoring case.
