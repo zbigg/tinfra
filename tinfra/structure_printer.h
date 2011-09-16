@@ -23,7 +23,10 @@ namespace tinfra {
 ///
 /// No escaping of values is used for now. This is not reversible conversion.
 ///
-class structure_printer {
+
+
+template <typename Formatter>
+class basic_structure_printer {
     std::ostream& out;
     bool need_separator;
     int  indent_size;
@@ -31,8 +34,9 @@ class structure_printer {
     bool multiline;
     bool showing_name;
     std::vector<bool> sn_history;
+    Formatter formatter;
 public:
-    structure_printer(std::ostream& o): 
+    basic_structure_printer(std::ostream& o): 
         out(o), 
         need_separator(false),
         indent_size(0),
@@ -55,7 +59,7 @@ public:
         separate();
         apply_indent();
         name(sym);
-        out << t;
+        formatter(out,t);
         need_separator = true;
     }
     
@@ -142,6 +146,16 @@ private:
     
     bool indenting() const { return multiline && indent_level != 0 && indent_size > 0; }
 }; 
+
+struct std_formatter {
+    template <typename T>
+    void operator()(std::ostream& str, T const& value)
+    {
+        str << value;
+    }
+};
+
+typedef basic_structure_printer<std_formatter> structure_printer;
 
 /*
 TODO:
