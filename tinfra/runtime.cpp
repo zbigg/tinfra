@@ -29,14 +29,19 @@ namespace tinfra {
 void print_stacktrace(stacktrace_t const& st, std::ostream& out)
 {    
 
-    bool try_get_debug_info = true;
+    const int MAX_DEBUG_INFO_FAILS = 10;
+    bool current_debug_info_fails = 0;
     for( stacktrace_t::const_iterator i = st.begin(); i != st.end(); ++i ) {
         void* address = *i;
         debug_info di;
-	if( try_get_debug_info )
-	    try_get_debug_info = get_debug_info(address, di);
+        bool have_debug_info = false;
+	if( current_debug_info_fails < MAX_DEBUG_INFO_FAILS ) { 
+	    have_debug_info =  get_debug_info(address, di);
+	    if( !have_debug_info )
+	    	    current_debug_info_fails++;
+	}
         out << "\tat ";
-        if( try_get_debug_info ) {
+        if( have_debug_info ) {
             // func(file:line)
             out << di.function;
             if( di.source_file.size() > 0 ) {

@@ -54,6 +54,21 @@ class position_controller {
 
 std::auto_ptr<input_stream>  create_file_input_stream(tstring const& name);
 
+/*
+    to be rethinked!
+    
+class file_input_stream: public input_stream
+{
+    file_input_stream(tstring const& name);
+    ~file_input_stream();
+private:
+    // noncopyable
+    file_input_stream(file_input_stream const&);
+    file_input_stream& operator=(file_input_stream const&);
+    
+    std::auto_ptr<input_stream> impl;
+};
+*/
 enum memory_strategy {
     USE_BUFFER,
     COPY_BUFFER

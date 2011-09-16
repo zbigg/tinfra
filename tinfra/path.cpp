@@ -229,9 +229,9 @@ bool has_extension(tstring const& filename)
 }
 
 #ifdef _WIN32
-static const char* PATH_SEPARATOR = ";";
+static const char PATH_SEPARATOR = ';';
 #else
-static const char* PATH_SEPARATOR = ":";
+static const char PATH_SEPARATOR = ':';
 #endif
 
 #ifdef _WIN32

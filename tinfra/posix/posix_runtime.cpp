@@ -92,11 +92,11 @@ bool get_debug_info(void* address, debug_info& result)
     } catch( std::exception& e) {
         return false;
     }
-    vector<string> lines = split(cmdo,"\r\n");
+    vector<string> lines = split_lines(cmdo);
     if( lines.size() != 2 ) 
         return false;
     
-    vector<string> place = split(lines[1], ":");
+    vector<string> place = split(lines[1], ':');
     
     if( place.size() != 2 ) 
         return false;

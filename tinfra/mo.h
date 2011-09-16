@@ -198,7 +198,7 @@ void mutate(S const& sym,  T& value, F& functor)
 #define TINFRA_SYMBOL_DECL(a) namespace S { extern tinfra::symbol a; } extern int TINFRA_SYMBOL_DECL_ ## a
 #define TINFRA_SYMBOL_IMPL(a) namespace S { tinfra::symbol a(#a); } extern int TINFRA_SYMBOL_IMPL_ ## a
 
-#define TINFRA_MO_IS_RECORD(a) namespace tinfra { template<> struct mo_traits<a>: public tinfra::struct_mo_traits<a> {}; }
+#define TINFRA_MO_IS_RECORD(a) namespace tinfra { template<> struct mo_traits<a>: public tinfra::struct_mo_traits<a> {}; } extern int TINFRA_MO_IS_RECORD_statement_enforement
 
 } // end namespace tinfra
 

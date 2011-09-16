@@ -48,9 +48,15 @@ public:
     
     void reset();
     
+    
+    operator std::string () {
+    	    return str();
+    }
+    /*
     operator std::string const&() {
         return str();
     }
+    */
     
     operator tinfra::tstring() {
         realize();

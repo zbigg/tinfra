@@ -92,9 +92,9 @@ SUITE(tinfra)
         CHECK_EQUAL(1u, r.size() );
         CHECK_EQUAL("a", r[0] );
         
-        r = split_lines("a\r");
+        r = split_lines("a\r"); // not a full end of line so we even don't detect it!
         CHECK_EQUAL(1u, r.size() );
-        CHECK_EQUAL("a", r[0] );
+        CHECK_EQUAL("a\r", r[0] );
         
         r = split_lines("a\n");
         CHECK_EQUAL(1u, r.size() );
@@ -108,6 +108,23 @@ SUITE(tinfra)
         CHECK_EQUAL(2u, r.size() );
         CHECK_EQUAL("a", r[0] );
         CHECK_EQUAL("b", r[1] );
+    }
+    
+    TEST(string_split_two_delims)
+    {
+        using tinfra::split_lines;
+        using std::vector;
+        using std::string;
+        
+        vector<string> r;
+        r = split_lines("");
+        CHECK_EQUAL(1u, r.size() );
+        
+        r = split_lines("FIRST\n\nTHIRD\n");
+        CHECK_EQUAL(3u, r.size() );
+        CHECK_EQUAL("FIRST", r[0] );
+        CHECK_EQUAL("",  r[1] );
+        CHECK_EQUAL("THIRD", r[2] );
     }
     
     TEST(string_compare_no_case_corner)

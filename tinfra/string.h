@@ -22,7 +22,7 @@ std::string strip(tstring const& s);
 void        chop_inplace(std::string& s);
 std::string chop(tstring const& s);
 
-std::vector<std::string> split(tstring const& in, tstring const& delimiters);
+std::vector<std::string> split(tstring const& in, char delimiter);
 std::vector<std::string> split_lines(tstring const& in);
 
 /// Compare strings ignoring case.

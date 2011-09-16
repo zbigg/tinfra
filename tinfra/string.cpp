@@ -111,19 +111,22 @@ std::string escape_c(tstring const& a)
     return result;
 }
 
-std::vector<std::string> split(tstring const& in, tstring const& delimiters)
+std::vector<std::string> split(tstring const& in, char delimiter)
 {
     std::vector<std::string> result;
     std::size_t start = 0;
     do {
-        std::size_t pos = in.find_first_of(delimiters, start);
+        std::size_t pos = in.find_first_of(delimiter, start);
+        if( pos == tstring::npos ) {
+            result.push_back(std::string(in.begin(), start));
+            break;
+        }
+                             
         result.push_back(std::string(in.begin(), start, pos-start));
         
-        start = pos;
+        start = pos+1;
         
-        if( start != std::string::npos ) {
-            start = in.find_first_not_of(delimiters, start);
-        }
+        
     } while( start != std::string::npos );
         
     return result;
@@ -131,7 +134,30 @@ std::vector<std::string> split(tstring const& in, tstring const& delimiters)
 
 std::vector<std::string> split_lines(tstring const& in)
 {
-    return split(in, "\r\n");
+    std::vector<std::string> result;
+    std::size_t start = 0;
+    int line_number = 0;
+    do {
+        std::size_t pos = in.find_first_of("\n", start);
+        if( pos == tstring::npos ) {
+            size_t remaining_length = in.size()-start;
+            if( line_number == 0 || remaining_length > 0) {
+                result.push_back(std::string(in.begin(), start, in.size()-start));
+            }
+            break;
+        }
+        
+        size_t text_line_length = pos-start;
+        if(text_line_length > 0 && in[pos-1] == '\r' )
+            text_line_length -= 1;
+        
+        result.push_back(std::string(in.begin(), start, text_line_length));
+        
+        start = pos+1;
+        line_number++;
+        
+    } while( start != std::string::npos );
+    return result;
 }
 
 static int local_strcasecmp(const char* a, const char* b, size_t len)
