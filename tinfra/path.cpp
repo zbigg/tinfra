@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2009, Zbigniew Zagorski
 // This software licensed under terms described in LICENSE.txt
 //
@@ -137,7 +136,7 @@ static std::vector<std::string> get_executable_extensions()
     const char* pathext = std::getenv("PATHEXT");
     if( pathext == 0 )
         pathext = ".com;.exe;.bat;.cmd";
-    return split(pathext, ";");
+    return split(pathext, ';');
 }
 
 bool is_executable(tstring const& name, std::vector<std::string> const& extensions)
