@@ -7,7 +7,7 @@
     </input>
     
     <add-formats>
-        msvc,msvs2003prj,autoconf
+        msvc,msvs2003prj,msvs2008prj,autoconf
     </add-formats>
     
     <add-flags formats="autoconf">
@@ -18,6 +18,9 @@
         -DFORMAT_HAS_MAKE_INSTALL=1
     </add-flags>    
     <add-flags formats="msvs2003prj">
-        -otinfra.sln
+        -otinfra_msvs2003.sln
+    </add-flags>
+    <add-flags formats="msvs2008prj">
+        -otinfra_msvs2008.sln
     </add-flags>
 </bakefile-gen>
