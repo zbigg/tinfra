@@ -23,6 +23,9 @@ std::string tmppath(const char* prefix = 0, const char* tmpdir = 0);
 
 bool has_extension(tstring const& filename);
 std::string extension(tstring const& filename);
+std::string remove_extension(tstring const& filename);
+std::string remove_all_extensions(tstring const& filename);
+
 bool is_absolute(tstring const& filename);
 
 std::string search_executable(tstring const& filename, tstring const& path);

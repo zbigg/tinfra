@@ -83,6 +83,7 @@ std::string basename(tstring const& name)
     }
 }
 
+
 std::string dirname(tstring const& name)
 {
     if( name.size() == 0 ) return ".";
@@ -123,7 +124,7 @@ std::string tmppath(const char* prefix, const char* tmpdir)
     
     std::string sprefix;
     if( prefix == 0 || strlen(prefix) == 0) {
-        sprefix = basename("foo"/*get_exepath()*/).c_str();
+        sprefix = remove_extension(basename(get_exepath()));
     } else {
         sprefix = prefix;
     }
@@ -213,6 +214,37 @@ std::string extension(tstring const& filename)
     return filename.substr(last_dot+1).str();
     
 }
+
+std::string remove_extension(tstring const& filename)
+{
+	const size_t last_slash = filename.find_last_of("\\/");
+	const size_t last_dot = filename.find_last_of('.');
+	if( ( last_slash != tstring::npos && last_dot < last_slash) || 
+	    ( last_dot == tstring::npos) ||
+		( last_dot == filename.size() - 1 )
+		) 
+	{
+		return filename.str();
+	} else {
+		tstring result = filename.substr(0, last_dot);
+		return result.str();
+	}
+}
+
+std::string remove_all_extensions(tstring const& filename)
+{
+	const size_t last_slash = filename.find_last_of("\\/");
+	const size_t last_dot = filename.find_first_of('.', last_slash);
+	if( ( last_dot == tstring::npos ) ||
+		( last_dot == filename.size() - 1 ) ) 
+	{
+		return filename.str();
+	} else {
+		tstring result = filename.substr(0, last_dot);
+		return result.str();
+	}
+}
+
 
 bool has_extension(tstring const& filename)
 {

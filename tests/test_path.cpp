@@ -126,6 +126,56 @@ SUITE(tinfra)
         
     }
 
+    TEST(path_remove_extension)
+    {
+        using tinfra::path::remove_extension;
+        
+		// no op without extension
+        CHECK_EQUAL( "file", remove_extension("file") );
+        CHECK_EQUAL( "a", remove_extension("a") );
+
+		// no op for other names
+		CHECK_EQUAL(  ".", remove_extension(".") );
+        CHECK_EQUAL(  "/", remove_extension("/") );
+        CHECK_EQUAL(  "./a", remove_extension("./a") );
+
+		// noop for files without extension but in folders with extension
+        CHECK_EQUAL(  "akuku/dir.b/a", remove_extension("akuku/dir.b/a") );
+        CHECK_EQUAL(  "akuku\\dir.b\\a", remove_extension("akuku\\dir.b\\a") );
+        
+        CHECK_EQUAL(  "abc/file", remove_extension("abc/file.exe") );
+        CHECK_EQUAL(  "/abc/file", remove_extension("/abc/file.a") );
+        
+        CHECK_EQUAL(  "abc.a\\file", remove_extension("abc.a\\file.exe") );
+        CHECK_EQUAL(  "\\abc.b\\file", remove_extension("\\abc.b\\file.a") );
+        
+    }
+
+    TEST(path_remove_all_extensions)
+    {
+        using tinfra::path::remove_all_extensions;
+        
+		// no op without extension
+        CHECK_EQUAL( "file", remove_all_extensions("file") );
+        CHECK_EQUAL( "a", remove_all_extensions("a") );
+        
+		// noop for files without extension but in folders with extension
+        CHECK_EQUAL(  "akuku/dir.b.c.d/xxx", remove_all_extensions("akuku/dir.b.c.d/xxx") );
+        CHECK_EQUAL(  "akuku.foo.bar\\dir.spam\\a", remove_all_extensions("akuku.foo.bar\\dir.spam\\a") );
+
+		// no op for other names
+		CHECK_EQUAL(  ".", remove_all_extensions(".") );
+        CHECK_EQUAL(  "/", remove_all_extensions("/") );
+        CHECK_EQUAL(  "./a", remove_all_extensions("./a") );
+
+		// actual work
+        CHECK_EQUAL(  "abc/file", remove_all_extensions("abc/file.exe.zip") );
+        CHECK_EQUAL(  "/abc/file", remove_all_extensions("/abc/file.a.gz.bzip2") );
+        
+        CHECK_EQUAL(  "abc.a\\file", remove_all_extensions("abc.a\\file.exe.spam") );
+        CHECK_EQUAL(  "\\abc.b\\file", remove_all_extensions("\\abc.b\\file.a.gz") );
+    }
+
     TEST(path_search_executable)
     {
         using tinfra::path::search_executable;
