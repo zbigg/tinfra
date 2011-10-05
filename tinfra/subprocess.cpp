@@ -51,7 +51,8 @@ std::string capture_command(std::string const& command, environment_t const* env
     const int exit_code = p->get_exit_code();
     
     if( exit_code != 0 ) {
-        throw std::runtime_error(fmt("command '%s' failed status %s") % command % exit_code);
+		const std::string error_message = (fmt("command '%s' failed status %s") % command % exit_code).str();
+        throw std::runtime_error(error_message);
     }
     
     return result;

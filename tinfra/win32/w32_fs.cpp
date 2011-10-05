@@ -8,6 +8,7 @@
 #include "tinfra/win32.h"
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
+#include "tinfra/cmd.h" // for getapp
 
 #include <string>
 #include <cctype>
@@ -27,7 +28,7 @@ struct lister::internal_data {
     std::string  name_holder;
 };
 
-lister::lister(tstring const& path, bool need_stat)
+lister::lister(tstring const& path, bool /*need_stat*/)
     : data_(new internal_data())
 {   
     TINFRA_TRACE_MSG("lister::lister");    
@@ -106,6 +107,7 @@ file_info stat(tstring const& name)
     result.modification_time = 0; // TODO: how to convert FILETIME to epoch time
     result.access_time = 0;  // TODO: how to convert FILETIME to epoch time
     result.size = file_attrs.nFileSizeLow; 
+	result.type = result.is_dir ? DIRECTORY : REGULAR_FILE;
     // TODO: add support for win64 build
     // result.size |= (size_t(file_attrs.nFileSizeHigh) << 32);
     return result;
@@ -192,10 +194,10 @@ void rm(tstring const& name)
 {
     // TODO: according to MSDN, we should remove read-only attribute before deletion (?)
     std::wstring w_name = tinfra::win32::make_wstring_from_utf8(name);
-    const BOOL result = ::DeleteFileW(w_name.c_str());
-    if( result == 0 ) {
-        tinfra::win32::throw_system_error(fmt("unable to remove file '%s' (DeleteFileW)") % name);
-    }
+	const BOOL result = ::DeleteFileW(w_name.c_str());
+	if( result == 0 ) {
+		tinfra::win32::throw_system_error(fmt("unable to remove file '%s' (DeleteFileW)") % name);
+	}
 }
 
 void rmdir(tstring const& name)
@@ -214,8 +216,10 @@ void mkdir(tstring const& name, bool create_parents)
     if( !is_dir(parent) ) {
         if( create_parents )
             mkdir(parent);
-        else
-            throw std::logic_error(fmt("unable to create dir '%s': %s") % name % "parent folder doesn't exist");
+        else {
+			const std::string message = (fmt("unable to create dir '%s': %s") % name % "parent folder doesn't exist").str();
+            throw std::logic_error(message);
+		}
     }
     
     const std::wstring w_name = tinfra::win32::make_wstring_from_utf8(name);

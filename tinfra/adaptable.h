@@ -52,7 +52,7 @@ private:
         explicit type_info_wrapper(std::type_info const& ti): ti_(ti) {}
             
         bool operator<(type_info_wrapper const& other) const {
-            return ti_.before(other.ti_);
+            return ti_.before(other.ti_) != 0;
         }
     };
     void add(std::type_info const&, void* value);

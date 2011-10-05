@@ -52,7 +52,8 @@ TINFRA_MODULE_TRACER(tinfra_thread);
 
 static void thread_error(const char* message, unsigned int rc)
 {
-    throw std::runtime_error(fmt("tinfra::thread error: %s :%s(%i)") % message % win32::get_error_string(rc) % rc );
+	const std::string error_message = (fmt("tinfra::thread error: %s :%s(%i)") % message % win32::get_error_string(rc) % rc).str();
+    throw std::runtime_error( error_message );
 }
 
 // 
@@ -172,7 +173,7 @@ static unsigned __stdcall thread_master_fun(void* raw_params)
         result = 0;
     } catch(std::exception& e) {
         TINFRA_LOG_ERROR(fmt("thread %i failed with uncaught exception: %s\n") % tid % e.what());
-        result = ~0;
+        result = ~(unsigned)0;
     }
     TINFRA_TRACE_MSG(fmt("thread exited tid=%i") % tid );
     ::_endthreadex(result); // never returns

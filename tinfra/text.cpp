@@ -3,6 +3,8 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "platform.h"
+
 #include "tinfra/text.h"
 
 namespace tinfra {

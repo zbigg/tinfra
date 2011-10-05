@@ -1,9 +1,12 @@
 //
-// Copyright (c) 2009, Zbigniew Zagorski
+// Copyright (c) 2009-2011, Zbigniew Zagorski
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/trace.h"
+#include "tinfra/platform.h" 
+
+#include "trace.h" // we implement this
+
 #include "tinfra/fmt.h"
 #include "tinfra/cmd.h"
 #include "tinfra/tstring.h"
@@ -14,6 +17,7 @@
 #include <iterator>
 #include <algorithm>
 #include <stdexcept>
+#include <cstdlib>
 
 namespace tinfra { 
 namespace trace {
@@ -119,7 +123,8 @@ void enable_tracer_by_mask_cmd(tstring const& mask)
 {
     if( mask.size() == 0 ) {
         print_tracer_usage();
-        throw std::logic_error(fmt("invalid tracer name: '%s'") % mask);
+		const std::string error_message = (fmt("invalid tracer name: '%s'") % mask).str();
+        throw std::logic_error(error_message);
     }
     enable_tracer_by_mask(mask);
 }
@@ -142,7 +147,7 @@ void process_params(int& argc, char** argv)
 {
     using std::strcmp;
     using std::strncmp;
-    const char* env_mask = ::getenv("TINFRA_TRACE");
+    const char* env_mask = std::getenv("TINFRA_TRACE");
     if( env_mask != 0 ) {
     	    enable_tracer_by_mask(env_mask);
     }

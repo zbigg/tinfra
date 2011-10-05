@@ -159,7 +159,7 @@ SUITE(tinfra) {
         environment_t base_env = tinfra::get_environment();
         {
 #ifdef WIN32
-            std::string erased_variable = "SYSTEMROOT";
+            std::string erased_variable = "OS";
 #else
             std::string erased_variable = "HOME";
 #endif      

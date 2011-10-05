@@ -89,7 +89,7 @@ public:
 
     int read(char* dest, int size)
     {
-        int read_size = size;
+        size_t read_size = size;
         if( read_size > remaining_size_ )
             read_size = remaining_size_;
         

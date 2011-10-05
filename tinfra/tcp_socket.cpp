@@ -3,6 +3,8 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "platform.h"
+
 #include "tcp_socket.h" // we implement this
 
 #include "tinfra/fmt.h"

@@ -3,6 +3,8 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "tinfra/platform.h"
+
 #include <tinfra/thread.h> // implements (thread_set)
 
 #include <tinfra/fmt.h>    // impl dependecies

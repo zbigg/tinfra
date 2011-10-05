@@ -3,6 +3,7 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "platform.h"
 #include "internal_pipe.h" // we implement this
 
 #include <tinfra/thread.h>
@@ -15,8 +16,9 @@ namespace tinfra {
 
 using tinfra::thread::synchronizator;
     
-struct internal_pipe::implementation_detail
+class internal_pipe::implementation_detail
 {
+public:
     tinfra::thread::monitor  monitor;
     //int              requested_buffer_size; // read_only, not implemented!!!
     bool             closed;
@@ -78,6 +80,10 @@ public:
 
 internal_pipe::internal_pipe(int buffer_size)
     : impl(new implementation_detail(/*this,*/ buffer_size))
+{
+}
+
+internal_pipe::~internal_pipe()
 {
 }
 

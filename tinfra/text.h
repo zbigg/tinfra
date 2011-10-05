@@ -36,6 +36,10 @@ public:
 	
 	bool fetch_next(std::string&);
 private:
+	// noncopyable
+    line_reader(line_reader const&);
+    line_reader& operator=(line_reader const&);
+
 	tinfra::input_stream& in;
 };
 

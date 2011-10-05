@@ -61,7 +61,8 @@ bool generic_vfs::is_file(tstring const& name)
         
         return ! stat(name).is_dir;
         
-    } catch( std::exception& e ) {
+        // TODO, remove exception flow -> should use exception-less stat here
+    } catch( std::exception& ) {
         return false;
     }
 }
@@ -72,17 +73,19 @@ bool generic_vfs::is_dir(tstring const& name)
         
         return stat(name).is_dir;
         
-    } catch( std::exception& e ) {
+        // TODO, remove exception flow -> should use exception-less stat here
+    } catch( std::exception&  ) {
         return false;
     }
 }
 
 bool generic_vfs::exists(tstring const& name)
 {
-    try {        
+    try {
         stat(name);
         return true;
-    } catch( std::exception& e ) {
+        // TODO, remove exception flow -> should use exception-less stat here
+    } catch( std::exception&  ) {
         return false;
     }
 }

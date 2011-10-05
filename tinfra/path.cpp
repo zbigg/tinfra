@@ -123,11 +123,12 @@ std::string tmppath(const char* prefix, const char* tmpdir)
     
     std::string sprefix;
     if( prefix == 0 || strlen(prefix) == 0) {
-        sprefix = basename(get_exepath()).c_str();
+        sprefix = basename("foo"/*get_exepath()*/).c_str();
     } else {
         sprefix = prefix;
     }
-    return fmt("%s/%s_%s_%s") % tmpdir % sprefix % t % stamp;
+    const std::string result = fmt("%s/%s_%s_%s") % tmpdir % sprefix % t % stamp;
+    return result; 
 }
 
 #ifdef _WIN32

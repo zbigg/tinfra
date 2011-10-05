@@ -83,7 +83,7 @@ buffer<T>::buffer(size_type initial_size, T const& pattern):
     begin_(new T[initial_size]),
 	size_(initial_size)
 {
-    for( int i = 0; i < initial_size; ++i ) {
+    for( size_t i = 0; i < initial_size; ++i ) {
 	at(i) = pattern;
     }
 }

@@ -20,6 +20,7 @@ public:
     };
 
     internal_pipe(int buffer_size);
+	~internal_pipe();
     
     /// Blocking read from pipe.
     ///

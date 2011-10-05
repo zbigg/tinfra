@@ -32,7 +32,7 @@ Server::~Server()
     if( ! stopped_ ) {
         try {
             stop();
-        } catch( std::exception& e) {
+        } catch( std::exception&) {
             // TODO: tinfra::silent_failure(e);
         }
     }
@@ -40,7 +40,7 @@ Server::~Server()
 
 void Server::bind(const char* address, int port)
 {
-    server_socket_ = std::auto_ptr<tcp_server_socket>(new tcp_server_socket(address, port));
+    server_socket_.reset(new tcp_server_socket(address, port));
     if( address ) {
         bound_address_ = address;
     }
@@ -80,7 +80,8 @@ void Server::stop()
             tcp_client_socket fake_client(connect_address, bound_port_);
         }
     } catch( std::exception& e)  {
-        throw std::runtime_error(fmt("unable to stop server %s:%s: %s") %  connect_address % bound_address_ % e.what());
+        const std::string error_message = (fmt("unable to stop server %s:%s: %s") %  connect_address % bound_address_ % e.what()).str();
+        throw std::runtime_error(error_message);
     }
 }
 

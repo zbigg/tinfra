@@ -55,7 +55,8 @@ test_fs_sandbox::test_fs_sandbox(tstring const& name):
     if( name_.size() > 0 ) {
         string real_path = path::join(top_srcdir, name_);
         if( !fs::exists(real_path) ) {
-            throw std::logic_error(fmt("unable to find test resource %s (%s)") % name_ % real_path);
+			const std::string error_message = (fmt("unable to find test resource %s (%s)") % name_ % real_path).str();
+            throw std::logic_error(error_message);
         }
         
         fs::recursive_copy(real_path, fs_sandbox::path());
