@@ -5,6 +5,8 @@
 
 #include "tstring.h"
 
+#include "tinfra/assert.h"
+
 #include <stdexcept>
 #include <cstdlib>
 #include <algorithm>
@@ -47,8 +49,15 @@ tstring tstring::substr(size_type pos, size_type n) const
 tstring::size_type
 tstring::find(char_type const* s, size_type pos, size_type n) const
 {    
-    if( size() == 0 && n == 0 )
-        return 0;
+	if( size() == 0 ) {
+		if( n == 0 )
+			return 0;
+		else
+			return npos;
+	}
+
+	TINFRA_ASSERT(pos == npos || pos <= this->size() );
+
     tstring const other = tstring(s, n, false);
     const_iterator result = std::search(
         begin()+pos,
@@ -66,6 +75,8 @@ tstring::size_type
 tstring::find_first_of(char_type const* s, size_type pos, size_type n) const
 {
     if( tstring::size() > 0 ) {
+		TINFRA_ASSERT(pos == npos || pos <= this->size() );
+
         for( const_iterator i = begin()+pos; i != end(); ++i ) {
             if( std::memchr(s, *i, n) != 0 ) // 'not in S' so return
                 return i - begin();
@@ -77,6 +88,8 @@ tstring::size_type
 tstring::find_first_of(char_type c, size_type pos) const
 {
     if( tstring::size() > 0 ) {
+		TINFRA_ASSERT(pos == npos || pos <= this->size() );
+
         for( const_iterator i = begin()+pos; i != end(); ++i ) {
             if( *i == c ) // '== C' so return
                 return i - begin();
@@ -91,6 +104,8 @@ tstring::size_type
 tstring::find_first_not_of(char_type const* s, size_type pos, size_type n) const
 {
     if( tstring::size() > 0 ) {
+		TINFRA_ASSERT(pos == npos || pos <= this->size() );
+
         for( const_iterator i = begin()+pos; i != end(); ++i ) {
             if( std::memchr(s, *i, n) == 0 ) // 'not in S' so return
                 return i - begin();
@@ -103,6 +118,8 @@ tstring::size_type
 tstring::find_first_not_of(char_type c, size_type pos) const
 {
     if( tstring::size() > 0 ) {
+		TINFRA_ASSERT(pos == npos || pos <= this->size() );
+
         for( const_iterator i = begin()+pos; i != end(); ++i ) {
             if( *i != c )
                 return i - begin();
@@ -111,68 +128,100 @@ tstring::find_first_not_of(char_type c, size_type pos) const
     return npos;
 }
 
+template <typename Predicate>
+tstring::size_type
+tstring_find_last(tstring const& subject, Predicate p, size_t pos)
+{
+	const size_t npos = tstring::npos;
+
+	if( subject.size() == 0 ) 
+		return npos;
+
+	if( pos != npos && pos > subject.size() )
+		pos = subject.size()-1;
+
+	TINFRA_ASSERT(pos == npos || pos < subject.size() );
+
+	const  tstring::const_iterator begin = subject.begin();
+	tstring::const_iterator i = 
+			(pos == npos) ? subject.end()-1
+		                  : subject.begin() + pos;
+
+	do {
+        if( p(*i)  ) // predicate true, then found
+            return i - begin;
+	} while( i-- != begin );
+	return npos;
+}
 // find last of
+
+
+
+struct last_of_str_predicate {
+	const char* pattern;
+	size_t      pattern_len;
+
+	bool operator()(char c) {
+		return std::memchr(this->pattern, c, this->pattern_len) != 0;
+	}
+};
 
 tstring::size_type
 tstring::find_last_of(char_type const* s, size_type pos, size_type n) const
 {
-    if( this->size() > 0 ) {
-		if( n == npos )
-			n = ::strlen(s);
-        assert(pos == npos || pos < size());
-		const_iterator i = 
-			(pos == npos) ? end()-1
-		                  : begin() + pos;
-		do {
-            if( std::memchr(s, *i, n) != 0 ) // 'in S' so return
-                return i - begin();
-		} while( i-- != begin() );
-    }
-    return npos;
+	last_of_str_predicate pred;
+	pred.pattern = s;
+	pred.pattern_len = (n == npos) ? std::strlen(s) : n;
+	return tstring_find_last(*this, pred, pos);
 }
+
+struct last_of_char_predicate {
+	char expected;
+	bool operator()(char c) {
+		return (c == expected);
+	}
+};
 
 tstring::size_type
 tstring::find_last_of(char_type c, size_type pos) const
 {
-    if( this->size() > 0 ) {
-        assert(pos == npos || pos < size());
-		const_iterator i = 
-			(pos == npos) ? end()-1
-		                  : begin() + pos;
-		do {
-			if( *i == c ) // '== C' so return
-                return i - begin();
-		} while( i-- != begin() );
-    }
-    return npos;
+    last_of_char_predicate pred;
+	pred.expected = c;
+	return tstring_find_last(*this, pred, pos);
 }
 
 // find last not of
+struct last_not_of_str_predicate {
+	const char* pattern;
+	size_t      pattern_len;
+
+	bool operator()(char c) {
+		return std::memchr(this->pattern, c, this->pattern_len) == 0;
+	}
+};
 
 tstring::size_type
 tstring::find_last_not_of(char_type const* s, size_type pos, size_type n) const
 {
-    if( tstring::size() > 0 ) {
-        assert(pos == npos); // TODO: pos not used!
-        for( const_iterator i = rbegin(); i != rend(); --i ) {
-            if( std::memchr(s, *i, n) == 0 ) // 'not == S' so return
-                return i - begin();
-        }
-    }
-    return npos;
+	last_not_of_str_predicate pred;
+	pred.pattern = s;
+	pred.pattern_len = (n == npos) ? std::strlen(s) : n;
+	return tstring_find_last(*this, pred, pos);
 }
+
+struct last_not_of_char_predicate {
+	char expected;
+	bool operator()(char c) {
+		return (c != expected);
+	}
+};
 
 tstring::size_type
 tstring::find_last_not_of(char_type c, size_type pos) const
 {
-    if( tstring::size() > 0 ) {
-        assert(pos == npos); // TODO: pos not used!
-        for( const_iterator i = rbegin(); i != rend(); --i ) {
-            if( *i != c ) // 'not = C' so return
-                return i - begin();
-        }
-    }
-    return npos;
+    last_not_of_char_predicate pred;
+	pred.expected = c;
+	return tstring_find_last(*this, pred, pos);
 }
     
 

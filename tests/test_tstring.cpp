@@ -129,6 +129,60 @@ SUITE(tinfra)
         }        
     }
 
+	TEST(tstring_find_last_not_of_str)
+    {
+		const size_t npos = tstring::npos;
+        struct {
+            size_t      expected;
+            const char* victim;
+            const char* param;
+			size_t pos;
+        } dataset[] = { 
+            { npos, "",    "", npos},
+            { 2,    "abc", "d", npos},
+            { npos, "",    "a", npos},
+			{ 2,    "abc", "a", npos},
+			{ npos,    "abc", "abc", npos},
+            { 1,    "abc", "c", npos},
+			{ 1,    "abc", "c", 2},
+			{ 1,    "abc", "c", 1},
+            { 0,    "abc", "xbc", npos},
+			{ 0,    "acb", "xcb", npos}
+        };
+        const int N = sizeof(dataset)/sizeof(dataset[0]);
+        
+        for( int i = 0; i < N; ++i ) {
+            CHECK_EQUAL(dataset[i].expected, tstring(dataset[i].victim).find_last_not_of(dataset[i].param, dataset[i].pos));
+            CHECK_EQUAL(dataset[i].expected, std::string(dataset[i].victim).find_last_not_of(dataset[i].param, dataset[i].pos));
+        }        
+    }
+
+	TEST(tstring_find_last_not_of_char)
+    {
+		const size_t npos = tstring::npos;
+        struct {
+            size_t      expected;
+            const char* victim;
+            char   param;
+			size_t pos;
+        } dataset[] = { 
+            { npos, "",    'X', npos},
+            { 2,    "abc", 'X', npos},
+            { npos, "",    'a', npos},
+			{ 2,    "abc", 'a', npos},
+            { 1,    "abc", 'c', npos},
+			{ 1,    "abc", 'c', 2},
+			{ 1,    "abc", 'c', 1},
+			{ 0,    "abc", 'c', 0}
+        };
+        const int N = sizeof(dataset)/sizeof(dataset[0]);
+        
+        for( int i = 0; i < N; ++i ) {
+            CHECK_EQUAL(dataset[i].expected, tstring(dataset[i].victim).find_last_not_of(dataset[i].param, dataset[i].pos));
+            CHECK_EQUAL(dataset[i].expected, std::string(dataset[i].victim).find_last_not_of(dataset[i].param, dataset[i].pos));
+        }        
+    }
+
     TEST(tstring_find)
     {
 	struct {
