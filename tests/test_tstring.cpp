@@ -3,7 +3,7 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/string.h"
+#include "tinfra/tstring.h"
 #include "tinfra/fmt.h"
 
 #include "tinfra/test.h" // test infra
@@ -74,7 +74,61 @@ SUITE(tinfra)
             CHECK_EQUAL(dataset[i].expected, std::string(dataset[i].victim).find_first_not_of(dataset[i].param));
         }        
     }
-    
+
+    TEST(tstring_find_last_of_str)
+    {
+		const size_t npos = tstring::npos;
+        struct {
+            size_t      expected;
+            const char* victim;
+            const char* param;
+			size_t pos;
+        } dataset[] = { 
+            { npos, "",    "", npos},
+            { npos, "abc", "d", npos},
+            { npos, "",    "a", npos},
+			{ 0,    "abc", "a", npos},
+			{ 2,    "abc", "abc", npos},
+            { 2,    "abc", "c", npos},
+			{ 2,    "abc", "c", 2},
+			{ npos,    "abc", "c", 1},
+            { 2,    "abc", "xbc", npos},
+			{ 2,    "acb", "xcb", npos}
+        };
+        const int N = sizeof(dataset)/sizeof(dataset[0]);
+        
+        for( int i = 0; i < N; ++i ) {
+            CHECK_EQUAL(dataset[i].expected, tstring(dataset[i].victim).find_last_of(dataset[i].param, dataset[i].pos));
+            CHECK_EQUAL(dataset[i].expected, std::string(dataset[i].victim).find_last_of(dataset[i].param, dataset[i].pos));
+        }        
+    }
+
+	TEST(tstring_find_last_of_char)
+    {
+		const size_t npos = tstring::npos;
+        struct {
+            size_t      expected;
+            const char* victim;
+            char   param;
+			size_t pos;
+        } dataset[] = { 
+            { npos, "",    'X', npos},
+            { npos, "abc", 'X', npos},
+            { npos, "",    'a', npos},
+			{ 0,    "abc", 'a', npos},
+            { 2,    "abc", 'c', npos},
+			{ 2,    "abc", 'c', 2},
+			{ npos,    "abc", 'c', 1},
+			{ npos,    "abc", 'c', 0}
+        };
+        const int N = sizeof(dataset)/sizeof(dataset[0]);
+        
+        for( int i = 0; i < N; ++i ) {
+            CHECK_EQUAL(dataset[i].expected, tstring(dataset[i].victim).find_last_of(dataset[i].param, dataset[i].pos));
+            CHECK_EQUAL(dataset[i].expected, std::string(dataset[i].victim).find_last_of(dataset[i].param, dataset[i].pos));
+        }        
+    }
+
     TEST(tstring_find)
     {
 	struct {

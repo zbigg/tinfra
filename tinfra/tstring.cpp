@@ -116,12 +116,17 @@ tstring::find_first_not_of(char_type c, size_type pos) const
 tstring::size_type
 tstring::find_last_of(char_type const* s, size_type pos, size_type n) const
 {
-    if( tstring::size() > 0 ) {
-        assert(pos == npos); // TODO: pos not used!
-        for( const_iterator i = rbegin(); i != rend(); --i ) {
+    if( this->size() > 0 ) {
+		if( n == npos )
+			n = ::strlen(s);
+        assert(pos == npos || pos < size());
+		const_iterator i = 
+			(pos == npos) ? end()-1
+		                  : begin() + pos;
+		do {
             if( std::memchr(s, *i, n) != 0 ) // 'in S' so return
                 return i - begin();
-        }
+		} while( i-- != begin() );
     }
     return npos;
 }
@@ -129,12 +134,15 @@ tstring::find_last_of(char_type const* s, size_type pos, size_type n) const
 tstring::size_type
 tstring::find_last_of(char_type c, size_type pos) const
 {
-    if( tstring::size() > 0 ) {
-        assert(pos == npos); // TODO: pos not used!
-        for( const_iterator i = rbegin(); i != rend(); --i ) {
-            if( *i == c ) // '== C' so return
+    if( this->size() > 0 ) {
+        assert(pos == npos || pos < size());
+		const_iterator i = 
+			(pos == npos) ? end()-1
+		                  : begin() + pos;
+		do {
+			if( *i == c ) // '== C' so return
                 return i - begin();
-        }
+		} while( i-- != begin() );
     }
     return npos;
 }
