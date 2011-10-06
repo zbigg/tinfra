@@ -14,17 +14,21 @@
 #include "tinfra/option.h"
 #include "tinfra/stream.h"
 #include "tinfra/exeinfo.h"
-
+#include "tinfra/runtime.h" // for debug_info
 #include "cli.h"
 #include <algorithm>
 #include <stdexcept>
 
-#include <unittest++/UnitTest++.h>
+/*
+//#include <unittest++/UnitTest++.h>
 #include <unittest++/TestReporter.h>
+#include <unittest++/Test.h>
+#include <unittest++/TestList.h>
+#include <unittest++/TestRunner.h>
 #include <unittest++/TestDetails.h>
 #include <unittest++/TestResults.h>
 #include <unittest++/TestReporter.h>
-
+*/
 #include <stdio.h> // screw cxxx headers because they are incompatible
 #include <stdarg.h>
 
@@ -76,6 +80,49 @@ void set_test_resources_dir(tstring const& x)
 {
     top_srcdir.assign(x.data(), x.size());
 }
+
+//
+// test_base
+//
+
+test_base::test_base(const char* _suite_name, const char* test_name):
+	suite_name(_suite_name),
+	name(test_name)
+{
+	static_registry<test_base>::register_element(this);
+}
+
+test_base::~test_base()
+{
+	static_registry<test_base>::unregister_element(this);
+}
+
+test_base* currently_executed_test = 0;
+debug_info last_seen_source_location;
+test_result_sink* current_test_result_sink = 0;
+
+void test_base::run(test_result_sink& sink)
+{
+	//sink.report_test_start();
+	currently_executed_test = this;
+	current_test_result_sink = &sink
+	try {
+		this->run_impl();
+	} catch( std::exception& e ) {
+		//sink.report_failure(...);
+		currently_executed_test = 0;
+		currentl_test_result_sink = 0;
+	} catch( ... ) {
+		//sink.report_failure(...);
+		currently_executed_test = 0;
+		currentl_test_result_sink = 0;
+	}
+	//sink.report_test_finish(...);
+}
+
+//
+//
+//
 
 static void out(const char* message, ...)
 {

@@ -7,11 +7,15 @@
 #define tinfra_test_macros_h_included
 
 #include "fmt.h"
+#include "tstring.h"
 
 // we're currently basing on UnitTest++, so include them!
-#include <unittest++/UnitTest++.h>
-#include <unittest++/TestMacros.h>
-#include <unittest++/CheckMacros.h>
+//#include <unittest++/UnitTest++.h>
+//#include <unittest++/Test.h>
+//#include <unittest++/TestResults.h>
+//#include <unittest++/TestMacros.h>
+//#include <unittest++/TestList.h>
+//#include <unittest++/CheckMacros.h>
 
 namespace tinfra { 
 namespace test {
@@ -23,6 +27,114 @@ namespace test {
 /// Currently UnitTest++ library current running test results is
 /// updated with this failure.
 void report_test_failure(const char* filename, int line, const char* message);
+
+#define SUITE(name) \
+	namespace test_suite_##name { \
+		inline const char* tinfra_test_suite_name() { return #name; } \
+	} \
+	namespace test_suite_##name
+
+class test_result_sink {
+};
+
+class test_base {
+public:
+	test_base(const char* suite_name, const char* test_name);
+	~test_base();
+	void run(test_result_sink& result);
+protected:
+	virtual void run_impl() = 0;
+private:
+	std::string suite_name;
+	std::string name;
+};
+
+#define TEST(name) \
+	class test_##name: public tinfra::test::test_base { \
+	public: \
+		test_##name(); \
+	private: \
+		virtual void run_impl(); \
+	};\
+	test_##name::test_##name(): \
+	    tinfra::test::test_base(tinfra_test_suite_name(), #name) \
+    { } \
+	void test_##name::run_impl()
+
+template <typename T1, typename T2>
+struct equality_helper {
+	bool operator()(T1 const& a, T2 const& b) {
+		return a == b;
+	}
+};
+
+template <>
+struct equality_helper<int, unsigned> {
+	bool operator()(int a, unsigned b) {
+		if( a < 0 ) {
+			return false;
+		} else {
+			return unsigned(a) == b;
+		}
+	}
+};
+
+template <>
+struct equality_helper<unsigned, int> {
+	bool operator()(unsigned a, int b) {
+		if( b < 0 ) {
+			return false;
+		} else {
+			return unsigned(b) == a;
+		}
+	}
+};
+
+template <typename T1, typename T2>
+bool equals(T1 const& a, T2 const& b)
+{
+	equality_helper<T1, T2> helper;
+	return helper(a,b);
+}
+
+inline
+bool equals(const char* a, const char* b)
+{
+	return tinfra::tstring(a) == tinfra::tstring(b);
+}
+
+/// Check basic equality
+#define CHECK(predicate) \
+	do {  if( !(predicate) ) { \
+			std::string msg = tinfra::fmt("predicate %s failed") % #predicate; \
+            ::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
+		} \
+	} while ( 0 );
+
+/// Check basic equality
+#define CHECK_EQUAL(expected, actual) \
+	do {  if( !tinfra::test::equals(expected,actual) ) { \
+			std::string msg = tinfra::fmt("expected '%s', but found '%s'") % expected % actual; \
+            ::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
+		} \
+	} while ( 0 )
+
+#define CHECK_THROW(statement, exception_type) \
+	do {  bool expected_exception_caught = false; \
+		  try { statement; } \
+		  catch( exception_type&) { \
+			  expected_exception_caught = true; \
+		  } \
+		  catch( ... ) { \
+			  std::string msg = "unexpected exception caught"; \
+              ::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
+			  throw; \
+		  } \
+		  if( !expected_exception_caught ) { \
+			  std::string msg = tinfra::fmt("expected exception %s not caught") % #exception_type; \
+              ::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
+		  } \
+	} while ( 0 )
 
 /// Check associative container equailty.
 ///
