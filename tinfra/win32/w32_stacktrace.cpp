@@ -17,6 +17,7 @@
 #include "tinfra/trace.h"
 #include "tinfra/fmt.h"
 #include "tinfra/buffer.h"
+#include "tinfra/win32.h"
 
 #include <windows.h>
 #include <string>
@@ -159,7 +160,7 @@ static DWORD unhandled_exception_filter( EXCEPTION_POINTERS *ep )
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
-static HANDLE tinfra_hOurProcess;
+static HANDLE tinfra_hOurProcess = 0;
 
 namespace tinfra {
 
@@ -167,7 +168,13 @@ namespace tinfra {
 
 void initialize_platform_runtime()
 {    	
-    tinfra_hOurProcess = GetCurrentProcess();
+    //assert( DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(), GetCurrentProcess(), 
+    //    &tinfra_hOurProcess,
+    //    0, FALSE, DUPLICATE_SAME_ACCESS) );
+    
+    DWORD Id = GetCurrentProcessId();
+    tinfra_hOurProcess = OpenProcess( PROCESS_ALL_ACCESS, TRUE, Id );
+    
     if( !initialize_imaghelp() ) {
 	TINFRA_LOG_ERROR("unable to initialize imaghelp");
     }
@@ -211,7 +218,7 @@ bool get_debug_info(void* address, debug_info& result)
     result.source_line = -1;
     if ( ! pSymGetSymFromAddr( hProcess, (DWORD)address, &offsetFromSymbol, pSym ) ) {
         if ( gle != 487 )
-            TINFRA_LOG_ERROR(fmt("get_debug_info: SymGetSymFromAddr failed, gle=%i") % gle);
+            TINFRA_LOG_ERROR(fmt("get_debug_info: SymGetSymFromAddr failed, gle=%i(%s)") % gle % tinfra::win32::get_error_string(gle));
 	    free(pSym);
 	    return false;
     } else {
@@ -390,8 +397,8 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
 		pSymFunctionTableAccess, pSymGetModuleBase, NULL ) )
 	    break;
 	
-	if( address == stack_frame.AddrPC.Offset )
-	    break;
+	//if( address == stack_frame.AddrPC.Offset )
+	//    break;
 	address = stack_frame.AddrPC.Offset;
 
 	if( stack_frame.AddrPC.Offset == 0 || stack_frame.AddrReturn.Offset == 0) break;
@@ -446,6 +453,7 @@ static bool initialize_imaghelp()
 
 static bool initialize_sym(HANDLE hProcess)
 {
+    /*
      // this is a _sample_. you can do the error checking yourself.
     char* tt = new char[TTBUFLEN];
     char* p = 0;
@@ -492,25 +500,29 @@ static bool initialize_sym(HANDLE hProcess)
     char* tmpSymSearchPath = new char[symSearchPath.size()+1];
     strcpy( tmpSymSearchPath, symSearchPath.c_str());
     bool result = true;
-    
+    */
+    bool result = true;
+    char* tmpSymSearchPath = 0;
     // init symbol handler stuff (SymInitialize())
-    if ( ! pSymInitialize( hProcess, tmpSymSearchPath, false ) )
+    
+    { // SymSetOptions call
+	DWORD symOptions; // symbol handler settings
+	// SymGetOptions()
+	symOptions = pSymGetOptions();
+	symOptions = SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS;
+	//symOptions &= ~SYMOPT_UNDNAME;
+	pSymSetOptions( symOptions ); // SymSetOptions()
+    }
+    if ( ! pSymInitialize( tinfra_hOurProcess, tmpSymSearchPath, true ) )
     {
 	printf( "SymInitialize(): gle = %lu\n", gle );
 	result = false;
 	goto cleanup;
     }
     
-    { // SymSetOptions call
-	DWORD symOptions; // symbol handler settings
-	// SymGetOptions()
-	symOptions = pSymGetOptions();
-	symOptions |= SYMOPT_LOAD_LINES;
-	symOptions &= ~SYMOPT_UNDNAME;
-	pSymSetOptions( symOptions ); // SymSetOptions()
-    }
+
 cleanup:
-    delete[] tmpSymSearchPath;
+    //delete[] tmpSymSearchPath;
     return result;
 }
 
