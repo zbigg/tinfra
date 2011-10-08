@@ -17,9 +17,7 @@ SUITE(tinfra)
         std::string r1 = tinfra::strip(s);
         std::string r2(s);
         tinfra::strip_inplace(r2);
-        if( r1 != r2 ) 
-            throw UnitTest::AssertException("strip vs strip_inplace difference",__FILE__, __LINE__);
-        
+        CHECK_EQUAL( r1, r2 );
         return r1;
     }
     
@@ -38,9 +36,7 @@ SUITE(tinfra)
         std::string r1 = tinfra::escape_c(s);
         std::string r2(s);
         tinfra::escape_c_inplace(r2);
-        if( r1 != r2 ) 
-            throw UnitTest::AssertException("escape_c vs escape_c_inplace difference",__FILE__, __LINE__);
-        
+        CHECK_EQUAL( r1, r2 );
         return r1;
     }
     
@@ -58,9 +54,7 @@ SUITE(tinfra)
         std::string r1 = tinfra::chop(s);
         std::string r2(s);
         tinfra::chop_inplace(r2);
-        if( r1 != r2 ) 
-            throw UnitTest::AssertException(fmt("chop vs chop_inplace difference for: %s") % tinfra::escape_c(s),__FILE__, __LINE__);
-        
+        CHECK_EQUAL( r1, r2 );
         return r1;
     }
     

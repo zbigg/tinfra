@@ -7,15 +7,8 @@
 #define tinfra_test_macros_h_included
 
 #include "fmt.h"
-#include "tstring.h"
-
-// we're currently basing on UnitTest++, so include them!
-//#include <unittest++/UnitTest++.h>
-//#include <unittest++/Test.h>
-//#include <unittest++/TestResults.h>
-//#include <unittest++/TestMacros.h>
-//#include <unittest++/TestList.h>
-//#include <unittest++/CheckMacros.h>
+#include "tstring.h" 
+#include "trace.h" // for tinfra::trace::location
 
 namespace tinfra { 
 namespace test {
@@ -23,9 +16,6 @@ namespace test {
 /// Report test failure.
 ///
 /// Reports a test failure described by message and source code location.
-///
-/// Currently UnitTest++ library current running test results is
-/// updated with this failure.
 void report_test_failure(const char* filename, int line, const char* message);
 
 #define SUITE(name) \
@@ -34,7 +24,38 @@ void report_test_failure(const char* filename, int line, const char* message);
 	} \
 	namespace test_suite_##name
 
+struct test_info {
+	const char* name;
+	const char* suite;
+};
+
+struct test_run_summary {
+	int executed_test_count;
+	int failed_test_count;
+	int failure_count;
+    float seconds_elapsed;
+};
+
 class test_result_sink {
+public:
+	virtual ~test_result_sink();
+
+	virtual void report_test_start(test_info  const&) = 0;
+	virtual void report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message) = 0;
+	virtual void report_test_finish(test_info const&) = 0;
+	virtual void report_summary(test_run_summary const&) = 0;
+};
+
+class default_test_result_sink: public test_result_sink {
+public:
+	default_test_result_sink();
+	~default_test_result_sink();
+
+	// test_result_sink interface
+	void report_test_start(test_info  const&);
+	void report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message);
+	void report_test_finish(test_info const&);
+	void report_summary(test_run_summary const&);
 };
 
 class test_base {
@@ -44,9 +65,9 @@ public:
 	void run(test_result_sink& result);
 protected:
 	virtual void run_impl() = 0;
-private:
-	std::string suite_name;
-	std::string name;
+public:
+	const char* name;
+	const char* suite;
 };
 
 #define TEST(name) \
@@ -59,8 +80,13 @@ private:
 	test_##name::test_##name(): \
 	    tinfra::test::test_base(tinfra_test_suite_name(), #name) \
     { } \
+	test_##name test_instance_##name; \
 	void test_##name::run_impl()
 
+//
+// equals
+// equality_helper
+//
 template <typename T1, typename T2>
 struct equality_helper {
 	bool operator()(T1 const& a, T2 const& b) {
@@ -102,6 +128,10 @@ bool equals(const char* a, const char* b)
 {
 	return tinfra::tstring(a) == tinfra::tstring(b);
 }
+
+//
+// Check macros
+//
 
 /// Check basic equality
 #define CHECK(predicate) \
@@ -234,5 +264,7 @@ void check_container_contains(KeyType const& key,
 }
 
 }}  // end namespace tinfra::test
+
+inline const char* tinfra_test_suite_name() { return "default"; }
 
 #endif // tinfra_test_macros_h_included
