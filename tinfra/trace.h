@@ -118,7 +118,7 @@ extern tinfra::trace::auto_register_tracer __tinfra_global_tracer;
   TINFRA_TRACE_MSG(_ojejuku_kejku_akuku.str().c_str()); }} while(false)
 
 
-#define TINFRA_USE_TRACER(name) tinfra::trace::tracer& __tinfra_tracer_adaptable(name)
+#define TINFRA_USE_TRACER(name) static tinfra::trace::tracer& __tinfra_tracer_adaptable(name)
 
 
 #define TINFRA_CALL_TRACE() \
