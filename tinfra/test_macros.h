@@ -92,6 +92,10 @@ void check_map_equal(MapType const& A,
 
 #define CHECK_SET_CONTAINS(expected_entry, container) \
     tinfra::test::check_container_contains(expected_entry, container, #container, __FILE__, __LINE__) 
+
+#define CHECK_MAP_ENTRY_MATCH(expected_value, expected_key, map) \
+    tinfra::test::check_map_entry_match(expected_key, expected_value, map, #map, __FILE__, __LINE__)
+
 #define CHECK_STRING_CONTAINS(expected_substring, actual_result) \
     tinfra::test::check_string_contains(expected_substring, actual_result, #actual_result, __FILE__, __LINE__)
 
@@ -120,6 +124,29 @@ void check_container_contains(KeyType const& key,
 		report_test_failure(filename, line, msg.c_str());
 	}
 }
+
+template <typename MapType>
+void check_map_entry_match(typename MapType::key_type const& key,
+                           typename MapType::value_type const& value,
+                           MapType const& map, std::string const& set_name, const char* filename, int line)
+{
+	typename MapType::const_iterator i = map.find(key);
+	if( i == map.end() ) {
+		std::string msg = tinfra::fmt("expected key (%s) not found in %s") 
+			% key 
+			% set_name;
+		report_test_failure(filename, line, msg.c_str());
+	}
+	else if( !( *i == value )) {
+	    std::string msg = tinfra::fmt("entry '%s': expected '%s' but found '%s' ") 
+			% key 
+			% value
+			% *i;
+	    report_test_failure(filename, line, msg.c_str());
+	}
+}
+
+
 
 }}  // end namespace tinfra::test
 
