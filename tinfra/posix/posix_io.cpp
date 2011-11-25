@@ -8,7 +8,7 @@
 #include "tinfra/os_common.h"
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
-
+#include "tinfra/runtime.h"
 #include <stdexcept>
 
 #include <sys/types.h>
@@ -132,8 +132,10 @@ int posix_stream::read(char* data, int size)
 {
     while( true ) {
         int r = ::read(handle_, data, size);
-        if( r < 0 && errno == EINTR ) 
+        if( r < 0 && errno == EINTR ) {
+            tinfra::test_interrupt();
             continue;
+        }
         if( r < 0 ) 
             throw_errno_error(errno, "read failed");
         return r;
@@ -144,8 +146,10 @@ int posix_stream::write(char const* data, int size)
 {
     while( true ) {
         int w = ::write(handle_, data, size);
-        if( w < 0 && errno == EINTR )
+        if( w < 0 && errno == EINTR ) {
+            tinfra::test_interrupt();
             continue;
+        }
         if( w < 0 ) 
             throw_errno_error(errno, "write failed");
         return w;

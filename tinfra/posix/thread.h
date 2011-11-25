@@ -60,6 +60,7 @@ public:
 class thread {
     pthread_t thread_;
 public:
+    explicit thread(): thread_() {}
     explicit thread(pthread_t thread): thread_(thread) {}
     static thread current() { return thread(::pthread_self()); }
     

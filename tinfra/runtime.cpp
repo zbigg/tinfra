@@ -139,7 +139,7 @@ static volatile sigatomic_t interrupted = 0;
 void interrupt()
 {
     if( current_interrupt_policy == IMMEDIATE_ABORT ) {
-        interrupt_exit("interrupted");
+        interrupt_exit("interrupted (immediate exit)");
     } else {
         interrupted = 1;
     }

@@ -20,7 +20,7 @@
 #include "tinfra/subprocess.h"
 #include "tinfra/os_common.h"
 #include "tinfra/trace.h"
-
+#include "tinfra/runtime.h" // for test_interrupt
 extern "C" char** environ;
 
 namespace tinfra {
@@ -136,8 +136,10 @@ struct posix_subprocess: public subprocess {
             int exit_code_raw;
             int tpid = ::waitpid(pid, &exit_code_raw, 0);
             
-            if( tpid < 0 &&  errno == EINTR )
+            if( tpid < 0 &&  errno == EINTR ) {
+                tinfra::test_interrupt();
                 continue;
+            }
             if( tpid < 0 )
                 throw_errno_error(errno, "waitpid failed");
             // now convert wait exit_code to process exit code as in wait(2)
