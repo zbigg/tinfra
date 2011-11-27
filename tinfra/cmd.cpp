@@ -8,6 +8,7 @@
 #include "tinfra/exeinfo.h"
 #include "tinfra/trace.h"
 #include "tinfra/stream.h"
+#include "tinfra/logger.h"
 
 #include <string>
 #include <exception>
@@ -17,44 +18,6 @@
 
 namespace tinfra {
 namespace cmd {
-
-static void print_maybe_multiline(tstring const& PS1, tstring const& PS2, tstring const& message, tinfra::output_stream& out)
-{
-    // TODO: implement "multiline behaviour"
-    size_t start = 0;
-    bool finished = false;
-    do {
-        if( start == message.size() ) break;
-            
-        size_t eol = message.find_first_of('\n', start);
-        size_t len;
-        if( eol == std::string::npos ) {
-            if( start != message.size()-1 ) {
-                len = std::string::npos;
-                finished = true;
-            } else {
-                return;
-            }
-        } else {    
-            size_t pi = eol;
-            if( pi > start+1 && message[eol-1] == '\r' ) --pi;
-            len = pi-start;
-        }
-        if( len != 0 ) {
-            // TODO: create tinfra string builders
-            std::ostringstream tmp;
-            tmp << (start == 0 ? PS1: PS2) << message.substr(start, len) << std::endl;
-            std::string const stmp = tmp.str();
-            out.write(stmp.data(), stmp.size());
-        }
-        start = eol+1;
-    } while( !finished );
-}
-
-static void print_maybe_multiline(tstring const& prefix, tstring const& message, tinfra::output_stream& out)
-{
-    print_maybe_multiline(prefix,prefix,message,out);
-}
 
 app::app()
     : program_name_("<unknown>")
@@ -89,32 +52,32 @@ unsigned app::error_count() const
 
 void app::fail(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": fatal error: ", msg, tinfra::err);
+    tinfra::log_fail(msg);
     error_count_ += 1;
     exit(1);
 }
 
 void app::warning(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": warning: ", msg, tinfra::err);
+    tinfra::log_warning(msg);
     warning_count_ += 1;
 }
 
 void app::silent_exception(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": warning, ignored exception: ", msg, tinfra::err);
+    tinfra::log_warning(std::string("ignored exception: ") + msg.str());
     warning_count_ += 1;
 }
 
 void app::error(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": error: ", msg, tinfra::err);
+    tinfra::log_error(msg);
     error_count_ += 1;
 }
 
 void app::inform(tstring const& msg)
 {
-    print_maybe_multiline(program_name() + ": ", msg, tinfra::err);
+    tinfra::log_info(msg);
 }
 
 static app default_app;

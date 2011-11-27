@@ -39,10 +39,15 @@ void tracer::trace(location const& loc, const char* message)
     if( !is_enabled() ) return;
         
     tstring name(this->name());
+    log_level level = TRACE;
     if( this == &__tinfra_global_tracer )
         name = "";
+    if( this == &error_tracer ) {
+        name = "";
+        level = ERROR;
+    }
     tinfra::logger log(name);
-    log.trace(message, loc);
+    log.log(level, message, loc);
 }
 
 //

@@ -83,7 +83,7 @@ void logger::trace(tstring const& message, tinfra::trace::location const& loc)
 
 void logger::info(tstring const& message)
 {
-    this->log(tinfra::TRACE, message, TINFRA_NULL_SOURCE_LOCATION);
+    this->log(tinfra::INFO, message, TINFRA_NULL_SOURCE_LOCATION);
 }
 void logger::info(tstring const& message, tinfra::trace::location const& loc)
 {
@@ -142,14 +142,11 @@ generic_log_handler::~generic_log_handler()
 {
 }
 
-void generic_log_handler::log(log_record const& record)
+static void print_log_header(std::ostream& formatter, log_record const& record)
 {
     using tinfra::path::basename;
     using tinfra::get_exepath;
-    
-    std::ostringstream formatter;
-    
-    // well hardcoded, but why not
+        // well hardcoded, but why not
     // YYYY-MM-DD HH:MM:SS name[pid] level(component::func:source:line): message
     
     // date
@@ -203,10 +200,55 @@ void generic_log_handler::log(log_record const& record)
     
     
     // message
-    formatter << ": " << record.message << "\n";
+    formatter << ": ";
+    
+}
+
+static void print_maybe_multiline(tstring const& PS1, tstring const& PS2, tstring const& message, tinfra::output_stream& out)
+{
+    // TODO: implement "multiline behaviour"
+    size_t start = 0;
+    bool finished = false;
+    do {
+        if( start == message.size() ) break;
             
-    const std::string str = formatter.str();
-    tinfra::err.write(str.data(), str.size());
+        size_t eol = message.find_first_of('\n', start);
+        size_t len;
+        if( eol == std::string::npos ) {
+            if( start != message.size()-1 ) {
+                len = std::string::npos;
+                finished = true;
+            } else {
+                return;
+            }
+        } else {    
+            size_t pi = eol;
+            if( pi > start+1 && message[eol-1] == '\r' ) --pi;
+            len = pi-start;
+        }
+        if( len != 0 ) {
+            // TODO: create tinfra string builders
+            std::ostringstream tmp;
+            tmp << (start == 0 ? PS1: PS2) << message.substr(start, len) << std::endl;
+            std::string const stmp = tmp.str();
+            out.write(stmp.data(), stmp.size());
+        }
+        start = eol+1;
+    } while( !finished );
+}
+
+static void print_maybe_multiline(tstring const& prefix, tstring const& message, tinfra::output_stream& out)
+{
+    print_maybe_multiline(prefix,prefix,message,out);
+}
+
+void generic_log_handler::log(log_record const& record)
+{
+    std::ostringstream formatter;
+    print_log_header(formatter, record);           
+    const std::string header = formatter.str();
+    
+    print_maybe_multiline( header, header, record.message, this->out );
 }
 
 //
