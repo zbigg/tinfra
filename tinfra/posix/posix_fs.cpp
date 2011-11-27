@@ -8,6 +8,7 @@
 #include "tinfra/fs.h"
 
 #include "tinfra/fmt.h"
+#include "tinfra/fail.h"
 #include "tinfra/os_common.h"
 #include "tinfra/path.h"
 
@@ -43,7 +44,7 @@ lister::lister(tstring const& path, bool)
     TINFRA_TRACE_VAR(path);
     data_->handle = ::opendir(path.c_str(temporary_context));
     if( !data_->handle ) {
-        throw_errno_error(errno, fmt("unable to read dir '%s'") % path);
+        tinfra::fail(fmt("unable to open directory '%s' for listing") % path, errno_to_string(errno));
     }
 }
 lister::~lister()
@@ -58,9 +59,14 @@ bool lister::fetch_next(directory_entry& result)
     TINFRA_TRACE_MSG("lister::fetch_next");
     
     while( true ) {
+        errno = 0;
         dirent* entry = ::readdir(data_->handle);
-        if( entry == 0 )
+        if( entry == 0 ) {
+            if( errno != 0 ) {
+                tinfra::fail("failed read directory contents", errno_to_string(errno));
+            }
             return false;
+        }
         
         if( std::strcmp(entry->d_name,"..") == 0 || 
             std::strcmp(entry->d_name,".") == 0 ) 
@@ -85,7 +91,7 @@ file_info stat(tstring const& name)
     string_pool temporary_context;
     struct stat st;
     if( ::lstat(name.c_str(temporary_context), &st) != 0 ) {
-        throw_errno_error(errno, fmt("unable stat file '%s'") % name);
+        tinfra::fail(fmt("unable stat file '%s'") % name, errno_to_string(errno));
     }
     
     file_info result;
@@ -168,8 +174,8 @@ void mv(tstring const& src, tstring const& dest)
     string_pool tmp_pool;
     int result = ::rename(src.c_str(tmp_pool), dest.c_str(tmp_pool));
     if( result == -1 ) {
-        throw_errno_error(errno, fmt("unable to rename from '%s' to '%s' ") % src % dest);
-    }    
+        tinfra::fail(fmt("unable to rename from '%s' to '%s' ") % src % dest, errno_to_string(errno));
+    }
 }
 
 void rm(tstring const& name)
@@ -177,7 +183,7 @@ void rm(tstring const& name)
     string_pool temporary_context;
     int result = ::unlink(name.c_str(temporary_context));
     if( result == -1 ) {
-        throw_errno_error(errno, fmt("unable to remove file '%s'") % name);
+        tinfra::fail(fmt("unable to remove file '%s'") % name, errno_to_string(errno));
     }
 }
 
@@ -186,7 +192,7 @@ void rmdir(tstring const& name)
     string_pool temporary_context;
     int result = ::rmdir(name.c_str(temporary_context));
     if( result == -1 ) {
-        throw_errno_error(errno, fmt("unable to remove folder '%s'") % name);
+        tinfra::fail(fmt("unable to remove directory '%s'") % name, errno_to_string(errno));
     }
 }
 
@@ -194,15 +200,16 @@ void mkdir(tstring const& name, bool create_parents)
 {
     std::string parent = path::dirname(name);
     if( !is_dir(parent) ) {
-        if( create_parents )
+        if( create_parents ) {
             mkdir(parent);
-        else
-            throw std::logic_error(fmt("unable to create dir '%s': %s") % name % "parent folder doesn't exist");
+        } else {
+            tinfra::fail(fmt("unable to create dir '%s': %s") % name, "parent folder doesn't exist");
+        }
     }
     string_pool temporary_context;
     int result = ::mkdir(name.c_str(temporary_context), 0777);
     if( result == -1 ) {
-        throw_errno_error(errno, fmt("unable to create dir '%s'") % name);
+        tinfra::fail(fmt("unable to create dir '%s'") % name, errno_to_string(errno));
     }
 }
 
@@ -212,7 +219,7 @@ void cd(tstring const& dirname)
     string_pool temporary_context;
     int result = ::chdir(dirname.c_str(temporary_context));
     if( result == -1 ) {
-        throw_errno_error(errno, fmt("unable to open output '%s'") % dirname);
+        tinfra::fail(fmt("unable change directory to '%s'") % dirname, errno_to_string(errno));
     }
 }
 
@@ -220,9 +227,10 @@ std::string pwd()
 {
     char buf[1024];
     if( getcwd(buf, sizeof(buf)) == 0 ) {
-        throw_errno_error(errno, "fs::pwd() unable read pwd (implement it better!)");
+        tinfra::fail("fs::pwd() unable read pwd (implement it better!)", errno_to_string(errno));
     }
     return std::string(buf);
 }
     
 } } // end namespace tinfra::fs
+

@@ -64,9 +64,6 @@ void report_assertion_failure(tinfra::trace::location const& location, const cha
 #define TINFRA_STATIC_AUTO_ASSERT(expression)     \
         TINFRA_STATIC_AUTO_ASSERT_IMPL(expression)
 
-#define TINFRA_SOURCE_LOCATION() \
-        tinfra::make_debug_info(__FILE__, __LINE__, TINFRA_SHORT_FUNCTION)
-
 //
 // implementation
 //
@@ -77,15 +74,6 @@ void report_assertion_failure(tinfra::trace::location const& location, const cha
         } } while( 0 )
 
 extern void assert_failed(tinfra::trace::location const& location, const char* expression);
-
-inline tinfra::trace::location make_debug_info(const char* file, int line, const char* function)
-{
-    tinfra::trace::location result;
-    result.line = line; 
-    result.filename = file;
-    result.name = function;
-    return result;
-}
 
 #define TINFRA_STATIC_AUTO_ASSERT_IMPL(expression)     \
     static struct                                 \

@@ -7,6 +7,7 @@
 
 #include "trace.h" // we implement this
 
+#include "tinfra/logger.h" // for tinfra::logger
 #include "tinfra/fmt.h"
 #include "tinfra/cmd.h"
 #include "tinfra/tstring.h"
@@ -37,16 +38,11 @@ void tracer::trace(location const& loc, const char* message)
 {
     if( !is_enabled() ) return;
         
-    std::ostringstream out;
-    if( name_ && std::strlen(name_) ) {
-        out << '[' << name_ << "] ";
-    }
-    out << loc.filename << ':' << loc.line;
-    if( loc.name ) {
-        out << '[' << loc.name << ']';
-    } 
-    out << ": " << message << std::endl;
-    tinfra::err.write( out.str() );
+    tstring name(this->name());
+    if( this == &__tinfra_global_tracer )
+        name = "";
+    tinfra::logger log(name);
+    log.trace(message, loc);
 }
 
 //

@@ -68,6 +68,8 @@
             tinfra/internal_pipe.cpp
             tinfra/assert.cpp
             tinfra/text.cpp
+	    tinfra/fail.cpp
+	    tinfra/logger.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -158,6 +160,8 @@
             tinfra/internal_pipe.h
             tinfra/assert.h
             tinfra/text.h
+	    tinfra/fail.h
+            tinfra/logger.h
         </files>
     </data-files-tree>
     
@@ -205,6 +209,7 @@
             tests/internal_pipe_test.cpp
             tests/assert_test.cpp
             tests/text_test.cpp
+	    tests/logger_test.cpp
         </sources>
         <define>UNITTEST_IGNORE_SIGNALS</define>
         <library>tinfra-test</library>

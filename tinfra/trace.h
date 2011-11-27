@@ -20,6 +20,14 @@ struct location {
     const char* name;
 };
 
+#define TINFRA_SOURCE_LOCATION() \
+    tinfra::trace::make_source_location(__FILE__, __LINE__, TINFRA_SHORT_FUNCTION)
+
+#define TINFRA_NULL_SOURCE_LOCATION \
+    tinfra::trace::make_source_location(0,0,0)
+
+tinfra::trace::location make_source_location(const char* filename, int line, const char* func);
+
 class tracer {
 public:
     tracer(const char* name, bool enabled = false)
@@ -135,5 +143,19 @@ tinfra::trace::exit_tracer __tinfra_tracer_entry_exit(__FILE__, __LINE__, TINFRA
 
 #define TINFRA_PUBLIC_TRACER(name)                   \
 tinfra::trace::auto_register_tracer     name(#name)
+
+//
+// implementation
+//
+
+namespace tinfra { namespace trace {
+
+inline tinfra::trace::location  make_source_location(const char* filename, int line, const char* func)
+{
+    location loc = { filename, line, func };
+    return loc;
+}
+
+} } // end namespace tinfra::trace
 
 #endif
