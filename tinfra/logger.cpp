@@ -6,6 +6,10 @@
 #include "exeinfo.h" // for get_exepath
 #include "thread.h"
 
+#ifdef _WIN32
+#undef ERROR // defined by WINGDI
+#endif
+
 #include <time.h>
 #include <sstream>  // for ostringstream
 #include <unistd.h> //for getpid, win32 defaund yourself
@@ -154,7 +158,12 @@ static void print_log_header(std::ostream& formatter, log_record const& record)
     {
         
         struct tm exploded_time;
+#ifdef HAVE_LOCALTIME_R
         localtime_r(&record.timestamp, &exploded_time);
+#else
+        struct tm* exploded_time2 = localtime(&record.timestamp);
+        exploded_time = *exploded_time2;
+#endif
         char strtime_buf[256];
         strftime(strtime_buf, sizeof(strtime_buf), LOG_TIME_FORMAT, &exploded_time);
         formatter << strtime_buf << ' '; 
