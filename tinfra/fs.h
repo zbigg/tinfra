@@ -21,8 +21,8 @@ enum file_type {
     DIRECTORY,
     DEVICE,
     FIFO,
-    SYMBOLIC_LINK
-    //SOCKET
+    SYMBOLIC_LINK,
+    SOCKET
 };
 
 struct file_info {

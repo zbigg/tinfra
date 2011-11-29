@@ -96,15 +96,18 @@ file_info stat(tstring const& name)
     
     file_info result;
     
-    if ( (st.st_mode & S_IFLNK) == S_IFLNK )
+    int file_type = st.st_mode & S_IFMT; 
+    if ( file_type == S_IFLNK )
     	result.type = SYMBOLIC_LINK;
-    else if( (st.st_mode & S_IFDIR) == S_IFDIR )
+    else if( file_type == S_IFDIR )
     	result.type = DIRECTORY;    
-    else if( ((st.st_mode & S_IFCHR) == S_IFCHR)  || 
-    	     ((st.st_mode & S_IFBLK) == S_IFBLK) )
+    else if( (file_type == S_IFCHR)  || 
+    	     (file_type == S_IFBLK) )
     	result.type = DEVICE;
-    else if ( (st.st_mode & S_IFIFO) == S_IFIFO )
+    else if ( file_type == S_IFIFO )
     	result.type = FIFO;
+    else if ( file_type == S_IFSOCK) 
+        result.type = SOCKET;
     else
     	result.type = REGULAR_FILE;
 
@@ -157,7 +160,9 @@ bool is_dir(tstring const& name)
     struct stat st;
     if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
         return false;
-    return (st.st_mode & S_IFDIR) == S_IFDIR;
+    int file_type = st.st_mode & S_IFMT;
+    bool result = (file_type == S_IFDIR);
+    return result;
 }
 
 bool is_file(tstring const& name)
