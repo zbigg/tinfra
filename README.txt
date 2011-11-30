@@ -13,14 +13,13 @@
     
     tinfra-test
     
-        Simple unit-test helper code based on UnitTest++ (http://unittest-cpp.sourceforge.net/)
+        Simple unit-test helper code inspired by UnitTest++ (http://unittest-cpp.sourceforge.net/)
         
         Headers: tinfra/test.h
         LIB: libtinfra-test.a or tinfra-test.lib 
         
     Tests of library are under unittests(.exe) target. They cover something like 50% of 
     current code and 20-30% of functionality.
-    (To build unittests UnitTest++ is needed)
     
         
 = Usage, Linux/Unix or MSYS/Mingw = 
@@ -63,4 +62,6 @@
     On MSVS, libraries are built to:
     
         out/debug_vc/tinfra.lib         - base tinfra library for use in normal code
-        out/debug_vc/tinfra-test.lib    - test helper code (dependent on unittest++ package)
+        out/debug_vc/tinfra-test.lib    - test helper code (depends on
+	tinfra.lib)
+
