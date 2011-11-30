@@ -26,8 +26,7 @@ SUITE(tinfra)
         for(int i = 0; i < 1000; ++i )
         {
             int r = q->get();
-            if( r < 0 || r >= 1000 )
-                throw UnitTest::AssertException("bad data in queue",__FILE__, __LINE__);
+            CHECK( !(r < 0 || r >= 1000 ) );
         }
         return 0;
     }
@@ -37,8 +36,7 @@ SUITE(tinfra)
         queue<int>* q = (queue<int>*)q_;
         for(int i = 0; i < 1000; ++i )
         {
-            if( i !=  q->get())
-                throw UnitTest::AssertException("bad data in queue",__FILE__, __LINE__);
+            CHECK_EQUAL( i,  q->get());
         }
         return 0;
     }
