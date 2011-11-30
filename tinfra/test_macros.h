@@ -150,6 +150,20 @@ bool equals(const char* a, const char* b)
 		} \
 	} while ( 0 )
 
+/// Check value equality with tolerance
+/// 
+/// Checks if distance of between actual and expected is less or equal tollerancy.
+/// 
+/// TBD, the expressions are repeated, need to fix this in all
+/// CHECK_... macros (see http://unittest-cpp.sourceforge.net/UnitTest++.html, Simple check macros)
+// they have to be revamped as templates
+
+#define CHECK_CLOSE(expected, actual, tollerancy) \
+	do { if( ((expected) - (actual)) > (tollerancy) ) { \
+		std::string msg = tinfra::fmt("expected %s (+/i %s) but found %s") % (expected) % (tollerancy) % (actual); \
+		::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
+	} }  while ( 0 )
+
 #define CHECK_THROW(statement, exception_type) \
 	do {  bool expected_exception_caught = false; \
 		  try { statement; } \
