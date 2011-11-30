@@ -84,9 +84,10 @@ test_result_sink::~test_result_sink()
 // test_base
 //
 
-test_base::test_base(const char* _suite_name, const char* test_name):
+test_base::test_base(const char* _suite_name, const char* test_name, tinfra::trace::location const& sl):
 	suite(_suite_name),
-	name(test_name)
+	name(test_name),
+	source_location(sl)
 {
 	static_registry<test_base>::register_element(this);
 }
@@ -110,6 +111,7 @@ void test_base::run(test_result_sink& sink)
 	sink.report_test_start(info);
 	currently_executed_test = this;
 	current_test_result_sink = &sink;
+	last_seen_source_location = this->source_location;
 	try {
 		this->run_impl();
 	} catch( std::exception& e ) {

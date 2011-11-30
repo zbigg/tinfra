@@ -32,7 +32,7 @@ void set_test_resources_dir(tstring const& d);
 /// Test driver
 ///
 /// Use this as your main function if building
-/// unittester. It invokes UnitTest++ unittests.
+/// unittester. It invokes tinfra-test 
 /// 
 /// If argument list is empty then it invokes all
 /// unittests, if not. It invokes only tests
@@ -44,7 +44,6 @@ void set_test_resources_dir(tstring const& d);
 ///
 /// Example
 ///
-/// If used then UnitTest++ library must be linked with executable.
 ///
 /// Sample usage:
 /// @code

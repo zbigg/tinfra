@@ -211,10 +211,8 @@
             tests/text_test.cpp
 	    tests/logger_test.cpp
         </sources>
-        <define>UNITTEST_IGNORE_SIGNALS</define>
         <library>tinfra-test</library>
         <library>tinfra</library>
-        <sys-lib>unittest++</sys-lib>
         <if cond="FORMAT!='autoconf' and PLATFORM_WIN32=='1'"> 
             <sys-lib>ws2_32</sys-lib>
         </if>

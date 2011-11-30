@@ -8,7 +8,7 @@
 
 #include "fmt.h"
 #include "tstring.h" 
-#include "trace.h" // for tinfra::trace::location
+#include "trace.h" // for tinfra::trace::location, TINFRA_SOURCE_LOCATION
 
 namespace tinfra { 
 namespace test {
@@ -60,7 +60,7 @@ public:
 
 class test_base {
 public:
-	test_base(const char* suite_name, const char* test_name);
+	test_base(const char* suite_name, const char* test_name, tinfra::trace::location const& source_location);
 	~test_base();
 	void run(test_result_sink& result);
 protected:
@@ -68,6 +68,7 @@ protected:
 public:
 	const char* name;
 	const char* suite;
+	tinfra::trace::location source_location;
 };
 
 #define TEST(name) \
@@ -78,7 +79,7 @@ public:
 		virtual void run_impl(); \
 	};\
 	test_##name::test_##name(): \
-	    tinfra::test::test_base(tinfra_test_suite_name(), #name) \
+	    tinfra::test::test_base(tinfra_test_suite_name(), #name, TINFRA_SOURCE_LOCATION()) \
     { } \
 	test_##name test_instance_##name; \
 	void test_##name::run_impl()
