@@ -12,6 +12,6 @@ msvs_files="*.sln *.vcproj makefile.vc"
 all_files="${base_files} ${generated_files} ${autoconf_files} ${msvs_files} ${tinfra_support}"
 ls -1d ${all_files}
 
-VERSION=0.0.1-dev
+VERSION=0.0.2
 rm -rf tinfra-dev-${VERSION}.zip
 zip tinfra-dev-${VERSION}.zip ${all_files}

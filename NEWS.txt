@@ -1,0 +1,21 @@
+[This is human changelog. For details, see mtn log.]
+
+version 0.0.2, released 2012-11-30
+
+   compatibility: w/ previous version: ABI:no, API:yes]
+   tested: gcc 4.3, 4.5 on linux (i386,x86_54), mingw32
+
+   changes:
+   * a new logger interface for applications, supporting 
+        FAIL,ERROR,INFO,WARNING,TRACE levels, and standard syslog like
+	formatter for stderr (most tinfra is using this logger, including trace)
+   * removed UnitTest++ dependency, and small home-made testing framework
+        implemented (which preserver UT++ compile time API)
+   * several corrections
+   	posix: is_dir() & stat: works correctly with special files
+	posix: fixed signal and EINTR&tinfra::test_interrupt support
+
+version 0.0.1, releases 2012-10-06
+    
+    initial, release ... too much to document ;)
+
