@@ -5,7 +5,7 @@
 // I.e., do what you like, but keep copyright and there's NO WARRANTY.
 //
 
-#include <unittest++/UnitTest++.h>
+#include <tinfra/test.h>
 
 #include "tinfra/regexp.h"
 
