@@ -144,8 +144,8 @@ bool equals(const char* a, const char* b)
 
 /// Check basic equality
 #define CHECK_EQUAL(expected, actual) \
-	do {  if( !tinfra::test::equals(expected,actual) ) { \
-			std::string msg = tinfra::fmt("expected '%s', but found '%s'") % expected % actual; \
+	do {  if( !tinfra::test::equals((expected),(actual)) ) { \
+			std::string msg = tinfra::fmt("expected '%s', but found '%s'") % (expected) % (actual); \
             ::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
 		} \
 	} while ( 0 )
