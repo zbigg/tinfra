@@ -60,6 +60,19 @@ private:
 	int line;
 };
 
+class writer {
+    tinfra::output_stream& out;
+public:
+    writer(tinfra::output_stream& out);
+    ~writer();
+    
+    void section(std::string const& name);
+    void entry(std::string const& name, std::string const& value);
+    void comment(std::string const& content);
+    
+    void entry(tinfra::inifile::entry const& e);
+};
+
 } // end namespace tinfra::inifile
 
 typedef inifile::parser inifile_parser;
