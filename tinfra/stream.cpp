@@ -59,6 +59,9 @@ auto_ptr<input_stream> create_file_input_stream(tstring const& name)
     return auto_ptr<input_stream>(new old_input_stream_adapter(delegate));
 }
 
+//
+// memory_input_stream
+//
 class memory_input_stream_impl: public input_stream {
     const void* buffer_;
     const void* current_;
@@ -112,6 +115,32 @@ auto_ptr<input_stream>  create_memory_input_stream(const void* buffer, size_t si
     const bool STREAM_OWNS_BUFFER = (buffer_strategy == COPY_BUFFER);
     
     return auto_ptr<input_stream>( new memory_input_stream_impl(buffer2, size, STREAM_OWNS_BUFFER));
+}
+
+//
+// memory_output_stream
+//
+class memory_output_stream_impl: public output_stream {
+    std::string& out;
+public:
+    memory_output_stream_impl(std::string& o): out(o) {}
+    
+    //
+    // implement tinfra::output_stream
+    //    
+    virtual void close() { }
+    
+    virtual int write(const char* data, int size) { 
+        out.append(data, size);
+        return size;
+    }
+    
+    virtual void sync() { }
+};
+
+std::auto_ptr<output_stream> create_memory_output_stream(std::string& out)
+{
+    return auto_ptr<output_stream> (new memory_output_stream_impl(out));
 }
 
 class old_output_stream_adapter: public output_stream {

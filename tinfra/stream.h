@@ -75,6 +75,7 @@ enum memory_strategy {
 };
 
 std::auto_ptr<input_stream>  create_memory_input_stream(const void* buffer, size_t size, memory_strategy buffer_copy);
+std::auto_ptr<output_stream> create_memory_output_stream(std::string& out);
 
 enum file_output_mode {
     TRUNCATE = 1,

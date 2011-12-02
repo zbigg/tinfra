@@ -210,6 +210,7 @@
             tests/assert_test.cpp
             tests/text_test.cpp
 	    tests/logger_test.cpp
+	        tests/memory_stream_test.cpp
         </sources>
         <library>tinfra-test</library>
         <library>tinfra</library>
