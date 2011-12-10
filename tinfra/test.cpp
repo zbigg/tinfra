@@ -146,6 +146,16 @@ static void out(const char* message, ...)
     va_end(ap);
 }
 
+// test_run_summary
+
+test_run_summary::test_run_summary():
+        executed_test_count(0),
+        failed_test_count(0),
+        failure_count(0),
+        seconds_elapsed(0)
+{
+}
+
 // default_test_result_sink
 default_test_result_sink::default_test_result_sink()
 {
@@ -154,7 +164,43 @@ default_test_result_sink::~default_test_result_sink()
 {
 }
 
-	// test_result_sink interface
+// local_test_result_sink
+local_test_result_sink::local_test_result_sink(test_run_summary& rs):
+        result(rs),
+        current_test_failed(0)
+{
+    this->prev_sink = current_test_result_sink; 
+    current_test_result_sink = this;
+}
+
+local_test_result_sink::~local_test_result_sink()
+{
+    current_test_result_sink = this->prev_sink;
+}
+
+void local_test_result_sink::report_test_start(test_info  const&)
+{
+    this->current_test_failed = false;
+}
+
+void local_test_result_sink::report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message)
+{
+    this->result.failure_count += 1;
+    this->current_test_failed = true;
+}
+
+void local_test_result_sink::report_test_finish(test_info const&)
+{
+    this->result.executed_test_count += 1;
+    if( this->current_test_failed )
+        this->result.failed_test_count++;
+}
+
+void local_test_result_sink::report_summary(test_run_summary const&)
+{
+}
+
+// test_result_sink interface
 void default_test_result_sink::report_test_start(test_info  const& info)
 {
 	if( strcmp("DefaultSuite",info.suite) != 0 ) {

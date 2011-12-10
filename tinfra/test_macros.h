@@ -34,6 +34,8 @@ struct test_run_summary {
 	int failed_test_count;
 	int failure_count;
     float seconds_elapsed;
+    
+    test_run_summary(); // will 0 everything
 };
 
 class test_result_sink {
@@ -56,6 +58,21 @@ public:
 	void report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message);
 	void report_test_finish(test_info const&);
 	void report_summary(test_run_summary const&);
+};
+
+class local_test_result_sink: public test_result_sink {
+    test_result_sink* prev_sink;
+    test_run_summary& result;
+    bool              current_test_failed;
+public:    
+    local_test_result_sink(test_run_summary& r);
+    ~local_test_result_sink();
+
+    void report_test_start(test_info  const&);
+    void report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message);
+    void report_test_finish(test_info const&);
+    void report_summary(test_run_summary const&);
+
 };
 
 class test_base {
@@ -144,11 +161,7 @@ bool equals(const char* a, const char* b)
 
 /// Check basic equality
 #define CHECK_EQUAL(expected, actual) \
-	do {  if( !tinfra::test::equals((expected),(actual)) ) { \
-			std::string msg = tinfra::fmt("expected '%s', but found '%s'") % (expected) % (actual); \
-            ::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
-		} \
-	} while ( 0 )
+        tinfra::test::check_equal(expected, actual, TINFRA_SOURCE_LOCATION())
 
 /// Check value equality with tolerance
 /// 
@@ -159,10 +172,7 @@ bool equals(const char* a, const char* b)
 // they have to be revamped as templates
 
 #define CHECK_CLOSE(expected, actual, tollerancy) \
-	do { if( ((expected) - (actual)) > (tollerancy) ) { \
-		std::string msg = tinfra::fmt("expected %s (+/i %s) but found %s") % (expected) % (tollerancy) % (actual); \
-		::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
-	} }  while ( 0 )
+        tinfra::test::check_close(expected, actual, tollerancy, TINFRA_SOURCE_LOCATION())
 
 #define CHECK_THROW(statement, exception_type) \
 	do {  bool expected_exception_caught = false; \
@@ -180,6 +190,30 @@ bool equals(const char* a, const char* b)
               ::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
 		  } \
 	} while ( 0 )
+
+//
+// implementation details
+//
+template <typename T1, typename T2>
+void check_equal(T1 const& expected, T2 const& actual, tinfra::trace::location const& loc) 
+{
+    if( !tinfra::test::equals(expected,actual) ) {
+	std::string msg = tinfra::fmt("expected '%s', but found '%s'") % (expected) % (actual);
+        ::tinfra::test::report_test_failure(loc.filename, loc.line, msg.c_str());
+    }
+} 
+
+template <typename T1, typename T2, typename T3>
+void check_close(T1 const& expected, T2 const& actual, T3 const& tollerancy, tinfra::trace::location const& loc) 
+{
+    const bool result = (expected >= actual)
+                ? (expected - actual ) > tollerancy
+                : (actual - expected ) > tollerancy;
+    if( result ) {
+	std::string msg = tinfra::fmt("expected %s (+/i %s) but found %s") % (expected) % (tollerancy) % (actual);
+	::tinfra::test::report_test_failure(loc.filename, loc.line, msg.c_str());
+    }
+}
 
 /// Check associative container equailty.
 ///
