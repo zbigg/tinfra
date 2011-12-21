@@ -91,7 +91,7 @@ SUITE(tinfra)
     TEST(fs_stat_symlink)
     {
         test_fs_sandbox tmp_location;
-        std::system("ln -s . foo");
+        CHECK_EQUAL(0, std::system("ln -s . foo"));
         tinfra::fs::file_info fi= tinfra::fs::stat("foo");
         CHECK_EQUAL(tinfra::fs::SYMBOLIC_LINK, fi.type);
     }
@@ -152,6 +152,43 @@ SUITE(tinfra)
     {
         test_vfs(tinfra::local_fs());
     }
+    
+#ifndef _WIN32
+    /// basic test for symlink/readlink interoperability on POSIX
+    
+    TEST(fs_symlink_and_readlink) {
+        test_fs_sandbox tmp_location;
+        tinfra::fs::symlink(".", "foo");
+        tinfra::fs::file_info fi= tinfra::fs::stat("foo");
+        CHECK_EQUAL(tinfra::fs::SYMBOLIC_LINK, fi.type);
+        CHECK_EQUAL(".", tinfra::fs::readlink("foo"));
+    }
+    
+    TEST(fs_realpath_complex)
+    {
+        using tinfra::fs::readlink;
+        using tinfra::fs::mkdir;
+        using tinfra::fs::symlink;
+        
+        test_fs_sandbox tmp_location;
+        mkdir("var/a/b", true);
+        mkdir("var/x/real_c", true);
+        mkdir("var/real_d", true);
+        
+        symlink("../../real_d", "var/x/real_c/d");
+        symlink("../../x/real_c", "var/a/b/c");
+        symlink("var/a/b/c/d", "d");
+        touch("d/FOO");
+        //system("find . | xargs ls -lad");
+        std::string pwd = tinfra::fs::pwd();
+        
+        CHECK_EQUAL( tinfra::path::join(pwd, "var/real_d"), 
+                     tinfra::fs::realpath("var/x/real_c/d"));
+        
+        CHECK_EQUAL( tinfra::path::join(pwd, "var/real_d/FOO"), 
+                     tinfra::fs::realpath("var/a/b/c/d/FOO"));
+    }
+#endif
 }
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:

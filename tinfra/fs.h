@@ -89,6 +89,11 @@ void rm(tstring const& name);
 void rmdir(tstring const& name);
 void recursive_rm(tstring const& src);
 
+// implemented only in POSIX
+void         symlink(tstring const& target, tstring const& path);
+std::string  readlink(tstring const& path);
+std::string  realpath(tstring const& path);
+
 struct walker 
 {
     /** Throw this from accept to stop walk. */
@@ -112,6 +117,7 @@ struct walker
 void walk(tstring const& start, walker& w);
 
 } } // end namespace tinfra::fs
+
 
 #endif // tinfra_fs_h_included
 

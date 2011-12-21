@@ -14,9 +14,10 @@
 
 #include <cstring>
 #include <errno.h>
-
+#include <unistd.h> // for readlink, symlink 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdlib.h>
 
 #ifdef HAVE_IO_H
 #include <io.h>
@@ -236,6 +237,42 @@ std::string pwd()
     }
     return std::string(buf);
 }
+
+void         symlink(tstring const& target, tstring const& path)
+{
+    string_pool pool;
+    const int r = ::symlink(target.c_str(pool), path.c_str(pool));
+    if( r == -1 ) {
+        tinfra::fail(fmt("symlink('%s', '%s') failed") % target % path, errno_to_string(errno));
+    }
+}
+
+std::string readlink(tstring const& path)
+{
+    string_pool pool;
+    char buf[1024];
+    const int r = ::readlink(path.c_str(pool), buf, sizeof(buf));
+    if( r == -1 ) {
+        tinfra::fail(fmt("readlink('%s') failed") % path, errno_to_string(errno));
+    }
+    buf[r] = 0;
+    return buf;
+}
+
+std::string realpath(tstring const& path)
+{
+    string_pool pool;
+    std::string result;
     
+    char* x = ::realpath(path.c_str(pool), NULL);
+    if( !x ) {
+        tinfra::fail(fmt("realpath('%s') failed") % path, errno_to_string(errno));
+    }
+    result = x;
+    ::free(x);
+    return result;
+}
+
+
 } } // end namespace tinfra::fs
 
