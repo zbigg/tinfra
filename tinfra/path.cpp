@@ -97,6 +97,12 @@ std::string dirname(tstring const& name)
     }
 }
 
+std::string sanitize(tstring const& path)
+{
+    
+    return path;
+}
+
 std::string tmppath(const char* prefix, const char* tmpdir)
 {
     if( tmpdir == 0 || strlen(tmpdir) == 0 ) {

@@ -76,6 +76,48 @@ SUITE(tinfra)
 #endif
     }
     
+    /* 
+      not sure if this is needed
+    TEST(path_sanitize_removes_unnecessary_dots)
+    {
+        using tinfra::path::sanitize;
+        
+        // canonical example
+        CHECK_EQUAL("a/b/c", sanitize("./a/./b./c"));
+        
+        // some more tricky cases
+        CHECK_EQUAL("foo/a", sanitize("foo/././a"));
+        CHECK_EQUAL("foo/a", sanitize("foo/./a"));
+        
+        CHECK_EQUAL("foo/a", sanitize("foo/./a"));
+    }
+
+    TEST(path_sanitize_removes_unnecessary_slashes)
+    {
+        using tinfra::path::sanitize;
+        // canonical example
+        CHECK_EQUAL("foo/a", sanitize(".//foo//a"));
+        
+        // corner cases
+        CHECK_EQUAL("foo/a", sanitize("foo//.//a"));
+        CHECK_EQUAL("x/a", sanitize("//.//x//a"));
+        CHECK_EQUAL("foo/", sanitize("foo//")); // not sure about this
+    }
+    
+    TEST(path_sanitize_removes_unnecessary_dosts) 
+    { 
+        using tinfra::path::sanitize;
+        
+        // canonical example
+        CHECK_EQUAL("a/b", sanitize("a/b/c/.."));
+        
+        CHECK_EQUAL(".", sanitize("a/b/../.."));
+        
+        // tricky ones
+        CHECK_EQUAL("..", sanitize("./.."));
+        CHECK_EQUAL("c", sanitize("b/../c/d/.."));
+    }
+    */
     TEST(path_has_extension)
     {
         using tinfra::path::has_extension;
