@@ -28,82 +28,177 @@ public:
     format_exception(const std::string& message): std::logic_error("format exception: " + message) {}
 };
 
-class simple_fmt {
+class basic_fmt {
 public:
-    simple_fmt(tstring const& format): fmt_(format), pos_(0) {}
+    basic_fmt(std::streambuf* buf, tstring const& format):
+        buf_(buf),
+        fmt_(format), 
+        pos_(0) 
+    {}
     
     template <typename T>
-    simple_fmt& push(T const& value) {
-        std::ostringstream formatter(&this->format_buf_);
-        std::size_t cmd_pos = check_command(formatter);
+    basic_fmt& push(T const& value) {
+        std::ostream formatter(this->buf_);
+        const std::size_t cmd_pos = check_command(formatter);
         formatter << value;
-        pos_= cmd_pos;
+        this->pos_= cmd_pos;
         return *this;
     }
     
     template <typename T>
-    simple_fmt& operator <<(T const& value) { return push(value); }
+    basic_fmt& operator <<(T const& value) { return push(value); }
     
     template <typename T>
-    simple_fmt& operator %(T const& value) { return push(value); }
+    basic_fmt& operator %(T const& value) { return push(value); }
     
     void reset();
-    
-    
-    operator std::string () {
-    	    return str();
-    }
-    /*
-    operator std::string const&() {
-        return str();
-    }
-    */
-    
-    operator tinfra::tstring() {
-        realize();
-        return tinfra::tstring(output_);
-    }
-    
-    operator const char*() {
-        return c_str();
-    }
-    
-    std::string const& str() {
-        realize();
-        return output_;
-    }
-    char const* c_str() {
-        realize();
-        return output_.c_str();
-    }
+
+    void flush() { realize(); }
     
 private:
 
     std::size_t check_command(std::ostream&);
     void realize();
 
-    std::string fmt_;
-    std::size_t pos_;
-    std::string output_;
-    std::stringbuf format_buf_;
+    std::streambuf* buf_; // where write to ?
+    std::string     fmt_; // format string
+    std::size_t     pos_; // where we are in parsing format ?
 };
 
-inline simple_fmt fmt(tstring const& fmt) { return simple_fmt(fmt); }
 
-template <typename T1>
-simple_fmt fmt(tstring const& fmt, T1 const& v1) { return simple_fmt(fmt) % v1; }
+class stringbuf_fmt {
+    std::stringbuf the_buf_;
+    basic_fmt      delegate_;
+public:
+    stringbuf_fmt(tstring const& format):
+        delegate_(&the_buf_, format)
+    {
+    }
 
-template <typename T1, typename T2>
-simple_fmt fmt(tstring const& fmt, T1 const& v1, T2 const& v2) { return simple_fmt(fmt) % v1 % v2; } 
+    template <typename T>
+    stringbuf_fmt& push(T const& value) { delegate_.push(value); return *this; }
+    
+    template <typename T>
+    stringbuf_fmt& operator <<(T const& value) { return push(value); }
+    
+    template <typename T>
+    stringbuf_fmt& operator %(T const& value) { return push(value); }
+    
+    std::string str() {
+        delegate_.flush();
+        return the_buf_.str();
+    }
+    
+    operator std::string () {
+        return str();
+    }
+    
+    /*
+        ok, now this is shit and shouldn't be supported
+        if one wants "in-memory" and optimized formatter
+        then he should use basic_fmt and pass "own"
+        streambuf
+    */
+private:
+    std::string tmp_output_;
+public:
+    operator tinfra::tstring() {
+        tmp_output_ = this->str();
+        return tinfra::tstring(tmp_output_);
+    }
+    
+    operator const char*() {
+        tmp_output_ = this->str();
+        return tmp_output_.c_str();
+    }
+    
+    /*
+    operator std::string const&() {
+        tmp_output_ = this->str();
+        return tmp_output_;
+    }
+    */
+};
+
+std::ostream& operator << (std::ostream& out, stringbuf_fmt& fmt);
+
 ///
 /// The default formatter supported by tinfra.
 ///
-//typedef simple_fmt fmt;
+typedef stringbuf_fmt fmt;
 
-std::ostream& operator << (std::ostream& out, simple_fmt& fmt);
+//
+// printf & sprintf like wrappers for basic_fmt
+//
+
+
+inline void tprintf(std::ostream& out, tstring const& fmt) {
+    basic_fmt F(out.rdbuf(), fmt);
+    F.flush();
+}
+
+template <typename T1>
+inline void tprintf(std::ostream& out, tstring const& fmt, T1 const& v1) {
+    basic_fmt F(out.rdbuf(), fmt);
+    F << v1;
+    F.flush();
+}
+
+template <typename T1, typename T2>
+inline void tprintf(std::ostream& out, tstring const& fmt, T1 const& v1, T2 const& v2) {
+    basic_fmt F(out.rdbuf(), fmt);
+    F << v1 << v2;
+    F.flush();
+}
+
+template <typename T1, typename T2, typename T3>
+inline void tprintf(std::ostream& out, tstring const& fmt, T1 const& v1, T2 const& v2, T3 const& v3) {
+    basic_fmt F(out.rdbuf(), fmt);
+    F << v1 << v2 << v3;
+    F.flush();
+}
+
+template <typename T1, typename T2, typename T3, typename T4>
+inline void tprintf(std::ostream& out, tstring const& fmt, T1 const& v1, T2 const& v2, T3 const& v3, T4 const& v4) {
+    basic_fmt F(out.rdbuf(), fmt);
+    F << v1 << v2  << v3 << v4;
+    F.flush();
+}
+
+inline std::string tsprintf(tstring const& fmt) {
+    stringbuf_fmt F(fmt);
+    return F.str();
+}
+
+template <typename T1>
+inline std::string tsprintf(tstring const& fmt, T1 const& v1) {
+    stringbuf_fmt F(fmt);
+    F << v1;
+    return F.str();
+}
+
+template <typename T1, typename T2>
+inline std::string tsprintf(tstring const& fmt, T1 const& v1, T2 const& v2) {
+    stringbuf_fmt F(fmt);
+    F << v1 << v2;
+    return F.str();
+}
+
+template <typename T1, typename T2, typename T3>
+inline std::string tsprintf( tstring const& fmt, T1 const& v1, T2 const& v2, T3 const& v3) {
+    stringbuf_fmt F(fmt);
+    F << v1 << v2  << v3;
+    return F.str(); 
+}
+
+template <typename T1, typename T2, typename T3, typename T4>
+inline std::string tsprintf(tstring const& fmt, T1 const& v1, T2 const& v2, T3 const& v3, T4 const& v4) {
+    stringbuf_fmt F(fmt);
+    F << v1 << v2  << v3 << v4;
+    return F.str();
+}
 
 } // end namespace tinfra
-
 
 #endif
 

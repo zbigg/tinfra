@@ -72,7 +72,7 @@ size_t process_fmt(std::string fmt, size_t start, fmt_command& result, T& output
             state = FREE_TEXT;
             return c - fmt.begin();
         }
-        throw format_exception("simple_fmt: bad format character");
+        throw format_exception("basic_fmt: bad format character");
     }
     //std::cout << "pf: " << -1 << std::endl;
     output.append(istart, end);
@@ -103,20 +103,19 @@ public:
 };
 
 ///
-/// simple_fmt
+/// basic_fmt
 ///
-void simple_fmt::reset() {
-    output_.clear();
+void basic_fmt::reset() {
     pos_ = 0;
 }
-size_t simple_fmt::check_command(ostream& formatter)
+size_t basic_fmt::check_command(std::ostream& formatter)
 {
     fmt_command cmd;
     ostream_string_output output(formatter);
     
-    size_t cmd_pos = process_fmt(fmt_, pos_, cmd, output);
+    size_t cmd_pos = process_fmt(this->fmt_, this->pos_, cmd, output);
     if( cmd_pos == (size_t)-1 ) 
-        throw format_exception("simple_fmt: too many actual arguments");
+        throw format_exception("basic_fmt: too many actual arguments");
     if( cmd.fill )
         formatter.fill(cmd.fill);
     if( cmd.width )
@@ -132,24 +131,24 @@ size_t simple_fmt::check_command(ostream& formatter)
         std::hex(formatter);
         break;
     default:
-        throw format_exception(simple_fmt("simple_fmt: bad format command %s") % cmd.command);
+        throw format_exception(fmt("basic_fmt: bad format command %s") % cmd.command);
     }
     return cmd_pos;
 }
 
-void simple_fmt::realize()
+void basic_fmt::realize()
 {
     fmt_command cmd;
-    std::ostringstream formatter(&this->format_buf_);
+    std::ostream formatter(this->buf_);
     ostream_string_output output(formatter);
-    if( process_fmt(fmt_, pos_, cmd, output) != (size_t)-1 ) 
-        throw format_exception("simple_fmt: not all arguments realized");
-    output_ = this->format_buf_.str();
-    pos_ = fmt_.size();
+    if( process_fmt(this->fmt_, this->pos_, cmd, output) != (size_t)-1 ) 
+        throw format_exception("basic_fmt: not all arguments realized");
+    
+    this->pos_ = fmt_.size();
 }
 
 
-std::ostream& operator << (std::ostream& out, simple_fmt& fmt)
+std::ostream& operator << (std::ostream& out, stringbuf_fmt& fmt)
 {
     return out << fmt.str();
 }
