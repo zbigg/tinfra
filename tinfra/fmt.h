@@ -34,8 +34,9 @@ public:
     
     template <typename T>
     simple_fmt& push(T const& value) {
-        std::size_t cmd_pos = check_command();
-        formatter_ << value;
+        std::ostringstream formatter(&this->format_buf_);
+        std::size_t cmd_pos = check_command(formatter);
+        formatter << value;
         pos_= cmd_pos;
         return *this;
     }
@@ -78,19 +79,26 @@ public:
     
 private:
 
-    std::size_t check_command();
+    std::size_t check_command(std::ostream&);
     void realize();
 
     std::string fmt_;
     std::size_t pos_;
     std::string output_;
-    std::ostringstream formatter_;
+    std::stringbuf format_buf_;
 };
 
+inline simple_fmt fmt(tstring const& fmt) { return simple_fmt(fmt); }
+
+template <typename T1>
+simple_fmt fmt(tstring const& fmt, T1 const& v1) { return simple_fmt(fmt) % v1; }
+
+template <typename T1, typename T2>
+simple_fmt fmt(tstring const& fmt, T1 const& v1, T2 const& v2) { return simple_fmt(fmt) % v1 % v2; } 
 ///
 /// The default formatter supported by tinfra.
 ///
-typedef simple_fmt fmt;
+//typedef simple_fmt fmt;
 
 std::ostream& operator << (std::ostream& out, simple_fmt& fmt);
 
