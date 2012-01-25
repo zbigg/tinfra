@@ -16,7 +16,7 @@ S'pl.reddix.tinfra-regexp'
 p8
 asS'log'
 p9
-S'tinfra:scanner now ignores internal groups\n'
+S'* removed unittest++ references\n'
 p10
 sS'author'
 p11
@@ -27,7 +27,7 @@ p13
 NsS'real_ancestors'
 p14
 (lp15
-S'65150fe3b4f3ef2fb949634d64ebe28ba089e968'
+S'4549277742e6b7f0b50fd37e823c716873811252'
 p16
 asS'tags'
 p17
@@ -38,7 +38,7 @@ p19
 cdatetime
 datetime
 p21
-(S"\x07\xdb\x06\x0c\x07'\n\x00\x00\x00"
+(S'\x07\xdb\x0b\x1e\r\x00\x16\x00\x00\x00'
 cvcpx.tzinfo
 _UTC
 p22
@@ -72,7 +72,7 @@ sS'unidiff'
 p36
 NsS'new_revision'
 p37
-S'4549277742e6b7f0b50fd37e823c716873811252'
+S'777776d6a34ca6b742a01b2fc778fd0d0de4a6f0'
 p38
 sS'action_kind'
 p39
@@ -90,7 +90,7 @@ Nsg32
 Nsg33
 I00
 sg34
-S'tinfra/regexp.cpp'
+S'tinfra-regexp.bkl'
 p44
 sg36
 Nsg37
@@ -98,29 +98,11 @@ g38
 sg39
 g40
 sg41
-Nsbag1
-(g28
-g3
-NtRp45
-(dp46
-g31
-Nsg32
-Nsg33
-I00
-sg34
-S'tinfra/regexp.h'
-p47
-sg36
-Nsg37
-g38
-sg39
-g40
-sg41
 NsbasS'lin_ancestor'
-p48
-S'65150fe3b4f3ef2fb949634d64ebe28ba089e968'
-p49
+p45
+S'4549277742e6b7f0b50fd37e823c716873811252'
+p46
 sS'revision'
-p50
+p47
 g38
 sb.N.
