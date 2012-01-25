@@ -1,5 +1,21 @@
 [This is human changelog. For details, see mtn log.]
 
+version 0.0.3, releases 2012-xx-xx
+
+   compatibility: ABI: no , API: yes
+   tested: gcc 4.3, 4.5 on linux (i386,x86_54),
+
+   changes:
+    * fmt: refactored, added tsprintf, tprintf functions (see fmt.h) (ABI)
+   new:
+    * fs.h: symlink support: symlink, readlink and realpath added (wraps POSIX)
+    * inifile.h: ini file writer added
+    * stream.h: new create_memory_output_stream()
+   fix:
+    * socket: correctly handle interrupts (EINTR) on posix
+    * CHECK_EQUAL et al evaluate macro args once (tested)
+    * mo: fix, mutate_helper can forward sequence() calls
+
 version 0.0.2, released 2012-11-30
 
    compatibility: w/ previous version: ABI:no, API:yes]
