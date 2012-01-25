@@ -104,6 +104,11 @@ struct mutate_helper {
     }
     
     template <typename S, typename T>
+    void sequence(S const& sym, T const& v) {
+        mutator_.sequence(sym, const_cast<T&>(v));
+    }
+    
+    template <typename S, typename T>
     void mstruct(S const& sym, T const& v) {
         mutator_.sequence(sym, const_cast<T&>(v));
     }
