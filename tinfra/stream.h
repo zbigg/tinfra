@@ -53,6 +53,7 @@ class position_controller {
 #endif
 
 std::auto_ptr<input_stream>  create_file_input_stream(tstring const& name);
+std::auto_ptr<input_stream>  create_file_input_stream(tstring const& name, size_t buffer_size);
 
 /*
     to be rethinked!
