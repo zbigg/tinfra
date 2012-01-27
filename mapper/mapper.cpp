@@ -62,6 +62,8 @@ void render_json(A const& a, json_renderer& json)
 {
 	json.begin_map();
 	json.nvm_pair("id", a.id);
+	json.value("names");
+	json.separate(':');
 	json.begin_seq();
 	for( int i = 0; i < a.names.size(); ++i ) {
 	    json.value(a.names[i]);
