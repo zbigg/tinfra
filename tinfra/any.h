@@ -7,6 +7,7 @@
 #define tinfra_any_h_included
 
 #include "shared_ptr.h"
+#include "assert.h"
 
 #include <cassert>
 #include <typeinfo>
@@ -102,14 +103,14 @@ private:
 
 template <typename T>
 T& any::get() {
-    assert(this->type() == typeid(T));
+    TINFRA_ASSERT(this->type() == typeid(T));
     T* result = reinterpret_cast<T*>( this->get_raw() );
     return *result;
 }
 
 template <typename T>
 T const& any::get() const {
-    assert(this->type() == typeid(T));
+    TINFRA_ASSERT(this->type() == typeid(T));
     T const* result = reinterpret_cast<T const*>( this->get_raw() );
     return *result;
 }
