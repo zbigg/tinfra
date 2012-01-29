@@ -1,0 +1,62 @@
+
+gcc, simple object:
+
+    option: -fdump-class-hierarchy
+    
+    Vtable for basic_scm_impl
+    basic_scm_impl::_ZTV14basic_scm_impl: 7u entries
+    0     (int (*)(...))0
+    4     (int (*)(...))(& _ZTI14basic_scm_impl)
+    8     basic_scm_impl::~basic_scm_impl           <<-- vtable points here
+    12    basic_scm_impl::~basic_scm_impl
+    16    basic_scm_impl::get_manifest              << first method ad vtable[2]
+    20    basic_scm_impl::get_revision_info
+    24    basic_scm_impl::get_head_revision_info
+
+    Class basic_scm_impl
+       size=4 align=4
+       base size=4 base align=4
+    basic_scm_impl (0x382e180) 0 nearly-empty
+        vptr=((& basic_scm_impl::_ZTV14basic_scm_impl) + 8u) <<<<<>>>>
+      basic_scm (0x37f7d58) 0 nearly-empty
+          primary-for basic_scm_impl (0x382e180)
+    asm:
+         2b4:	89 04 24             	mov    %eax,(%esp)
+     2b7:	8b 44 24 34          	mov    0x34(%esp),%eax
+     2bb:	ff 50 10             	call   *0x10(%eax)
+     
+     offset: 0x10 -> 16 = (4*4) = (3+1)*4
+
+visualc++:
+    ???
+    option: -d1 reportAllClassLayout > classes.txt
+    outputs:
+        class basic_scm_impl	size(4):
+                +---
+                | +--- (base class basic_scm)
+         0	| | {vfptr}
+                | +---
+                +---
+
+        basic_scm_impl::$vftable@:
+                | &basic_scm_impl_meta
+                |  0
+         0	| &basic_scm_impl::{dtor}
+         1	| &basic_scm_impl::get_manifest
+         2	| &basic_scm_impl::get_revision_info
+         3	| &basic_scm_impl::get_head_revision_info
+
+    call asm:
+    
+        	mov	ecx, DWORD PTR _faked_scm$[ebp]
+                mov	eax, DWORD PTR [edx+12]
+                    --> , i.e method is at index 3 == (12/4) == 3
+
+
+current status:
+    basic, interface:   
+        without base classes 
+    works on g++ 4.5.0
+    (there is gcc bug to be submitted)
+    
+    

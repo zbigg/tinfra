@@ -47,7 +47,7 @@ int main()
     using tinfra::any;
     using namespace tinfra::reflect;
     
-
+    
     foo_implementation lm;
     {
         method_info* mi  = default_method_info::create("no_arg", &foo_interface::no_arg);
