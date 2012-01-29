@@ -33,6 +33,7 @@ struct foo_implementation: public foo_interface {
     {
         TINFRA_ASSERT(foo == "encepencewktorejrence");
         foo = "bols";
+	return 1;
     }
     
     virtual void no_return(std::string& foo)

@@ -2,6 +2,7 @@
 #define tinfra_proxy_h_included
 
 #include "tinfra/any.h"
+#include "tinfra/assert.h"
 #include <vector>
 #include <iostream>
 
@@ -290,7 +291,7 @@ proxy_object proxy_builder::make_proxy(proxy_handler* handler)
     
     obj.names.resize(table_size);
     
-    for(int i = 0; i < this->functions.size();i++ ) {
+    for(unsigned i = 0; i < this->functions.size();i++ ) {
         obj.vtable[i+VTABLE_INITIAL_IDX] = this->functions[i];
         obj.names[i+VTABLE_INITIAL_IDX] = this->names[i];
     }
