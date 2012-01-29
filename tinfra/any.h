@@ -15,6 +15,8 @@
 
 namespace tinfra {
 
+struct any_container_base;
+
 /// container of any object
 ///
 /// Implementation contains object of any type and
@@ -23,6 +25,54 @@ namespace tinfra {
 /// Provides opaque access to this object.
 ///
 /// C++ equivalent of void*
+
+class any {
+public:
+    /// create any value holding copy of object
+    template <typename T>
+    static any from_copy(T const& v);
+    
+    /// create any value holding reference to object
+    template <typename T>
+    static any by_ref(T& v);
+    
+    /// create any value owning instance of object
+    template <typename T>
+    static any from_new(T* v);
+    
+    void* get_raw();    
+    const void* get_raw() const;
+    
+    std::type_info const& type() const;
+    
+    /// typesafe get
+    /// precondition:
+    ///         will check in runtime of any
+    ///         holds instance of T (or reference to it)
+    /// uses TINFRA_ASSERT to check precondition
+    template <typename T>
+    T& get();
+    
+    /// typesafe const get
+    /// precondition:
+    ///         will check in runtime of any
+    ///         holds instance of T (or reference to it)
+    /// uses TINFRA_ASSERT to check precondition
+    template <typename T>
+    T const& get() const;
+private:
+    
+    any(any_container_base* ptr);
+    shared_ptr<any_container_base> ref_;
+};
+
+//
+// implementation detail
+//
+
+//
+// any internal storage
+//
 struct any_container_base {
     virtual ~any_container_base();
 
@@ -67,39 +117,24 @@ public:
     T&            typed_get() { return value_holder.get(); }
 };
 
-class any {
-public:
-    template <typename T>
-    static any from_copy(T const& v) {
-        return any(new storing_any_container<T>(v));
-    }
-    
-    template <typename T>
-    static any by_ref(T& v) {
-        return any(new ref_any_container<T>(v));
-    }
-    
-    template <typename T>
-    static any from_new(T* v) {
-        return any(new auto_ptr_any_container<T>(v));
-    }
-    
-    any(any_container_base* ptr);
-    
-    void* get_raw();
-    
-    const void* get_raw() const;
-    
-    std::type_info const& type() const;
-    
-    template <typename T>
-    T& get();
-    
-    template <typename T>
-    T const& get() const;
-private:
-    shared_ptr<any_container_base> ref_;
-};
+//
+// any itself
+//
+
+template <typename T>
+any any::from_copy(T const& v) {
+    return any(new storing_any_container<T>(v));
+}
+
+template <typename T>
+any any::by_ref(T& v) {
+    return any(new ref_any_container<T>(v));
+}
+
+template <typename T>
+any any::from_new(T* v) {
+    return any(new auto_ptr_any_container<T>(v));
+}
 
 template <typename T>
 T& any::get() {
