@@ -65,7 +65,7 @@ public:
     static thread current() { return thread(::pthread_self()); }
     
     static void sleep(long milliseconds);
-    typedef void* (thread_entry)(void*);
+    typedef void* (*thread_entry)(void*);
 
     static thread start( runnable job );
     /// Start a detached thread
