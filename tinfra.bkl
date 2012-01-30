@@ -62,6 +62,7 @@
             tinfra/any.cpp
             tinfra/typeinfo.cpp
             tinfra/stream.cpp
+	    tinfra/buffered_stream.cpp
             tinfra/inifile.cpp
             tinfra/socket.cpp
             tinfra/tcp_socket.cpp
@@ -206,6 +207,7 @@
             tests/lex_test.cpp
             tests/inifile_test.cpp
 	    tests/tcp_socket_test.cpp
+            tests/buffered_stream_test.cpp
             tests/internal_pipe_test.cpp
             tests/assert_test.cpp
             tests/text_test.cpp
