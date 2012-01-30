@@ -10,9 +10,16 @@
 #undef ERROR // defined by WINGDI
 #endif
 
+#ifndef HAVE_PID
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#else
+#include <unistd.h>
+#endif
+
 #include <time.h>
 #include <sstream>  // for ostringstream
-#include <unistd.h> //for getpid, win32 defaund yourself
 
 namespace tinfra {
 
@@ -145,7 +152,15 @@ generic_log_handler::generic_log_handler(tinfra::output_stream& o):
 generic_log_handler::~generic_log_handler()
 {
 }
-
+#ifndef HAVE_PID
+#ifdef _WIN32
+static int getpid() { 
+    return ::GetCurrentProcessId();
+}
+#endif
+#else
+static int getpid() { return -1; }
+#endif
 static void print_log_header(std::ostream& formatter, log_record const& record)
 {
     using tinfra::path::basename;

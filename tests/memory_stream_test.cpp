@@ -35,7 +35,7 @@ SUITE(tinfra) {
         CHECK_EQUAL( 5, out->write(std::string("01234",5)));
         CHECK_EQUAL( "01234", result);
         
-        CHECK_EQUAL( 0, out->write(std::string("",0)));
+        CHECK_EQUAL( 0, out->write(std::string("",0u)));
         CHECK_EQUAL( "01234", result);
                     
         CHECK_EQUAL( 5, out->write(std::string("56789",5)));
