@@ -1,0 +1,33 @@
+this should look like this:
+
+    int do_something(args ...) {
+    
+        DOING("opening connection");
+            ARG(host)
+            ARG(port)
+            ARG(timeout)
+            
+        connect
+        read header
+        etc ...
+        
+        
+    }
+    
+and the infrastructure will create an object
+
+    local_action_info doing_hook ("opening connection")
+    ...
+    
+    which in destructor will check if exception "we're unwinding some exception"
+    
+    if yes, then logger will log
+        ... : while opening connection using __LINE_ and __FILE__
+        or last registered DOING ....
+        
+    so the final message will look like
+    
+        (socket.cpp:123): error: unable to create socket: invalid arg (EINVAL)
+        (socket.cpp:121): debug: while creating socket(AF_INET, SOCK_STREAM)-> .... just debug information
+        (http_client.cpp:123): debug: while opening connection (URL=fjiejf)]
+        (client.cpp:2133): fail: fething http:/xxx failed: unable to create socket: invalid arg (EINVAL) -> log_fail
