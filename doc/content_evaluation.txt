@@ -1,0 +1,309 @@
+(a note to manifesto ;)
+    tinfra is to be considered convienience library and might be called
+    "sugar" if it succedds, so it strives from _complex_ constructs
+    that are visible at user level
+    
+    also, as sugar means _usable_ and convienient, tinfra will
+    provide multitude of ways same thing can be accessed, like for example
+    file listing:
+        vector<string> tinfra::fs::list_files(folder)
+            for functional use
+        void tinfra::fs::list_files(vector<string>&)
+            in order to reuse buffers
+            
+        tinfra::fs::lister, for iterative, potentially zero-alloc approach
+
+tinfra _main_ modules
+    any.h - DATA_STRUCTURES
+        quite in good shape now
+         - missing none/nil value and default consturctor
+         - could be "devirtualized"
+         - is missing upcast support
+         - probably any::from_copy() should be also default constructor
+    
+    adaptable.h - DATA_STRUCTURES
+        sandbox mode, not used by any project
+        perfectly component-able
+        should be removed from main library
+    
+    assert.h - RUNTIME CORE
+        TINFRA_ASSRT good shape and usable
+        TINFRA_STATIC_AUTO_ASSERT - sandbox mode and afair doesn't
+            work at all
+    
+    buffer.h - DATA_STRUCTURES
+        gosh, naive std::vector with data() ;)
+        itn's it added to C++11 ?
+        - not sure what to do about that
+    
+    buffered_stream.h   ??? COMPONENT
+        ok, tested
+        not documented
+        suffers from ownership definition problem:
+            who should own delegate of buffer ?
+            caller ? buffer ?
+            should it be in shared_ptr ?
+            why o why we have to worry about that ...
+    cli.h
+    cmd.h
+        shitty attempt to create cli, console command framework
+        to be redesigned as a whole
+        (cli.h is rather good direction)
+    
+    db.h
+        to be removed
+    
+    exeinfo.h RUNTIME ???
+        wraps "exepath" property of process
+        some stupid symbol reading sandbox (to be removed)
+        
+    fail.h      RUNTIME CORE
+        more or less good design, but lacks
+        support for anything more than tinfra::failure, i.e
+        no way to report any other type of exception
+        (minor documentation issues)
+        
+        idea for improvement: hidden options
+            --tinfra-fail-handler=gdb, invoke gdb in place of fail
+            --tinfra-fail-handler=abort, abort instead of throwing excpetion (default also with -fno-exceptions)
+            --tinfra-fail-handler=core, i.e probably implemented as abort ?
+        (also TINFRA_FAIL_HANDLER env)
+        
+    fmt.h       HELPER  CORE
+        quite good shape
+        the formatter has problem with implicit casts to:
+            std::string and const char* :/ 
+        documentation needed!!
+        xxprintf, maybe to be separated from to printf ?
+        future: remove iostream dependency
+    
+    fs.h        OSACCESS CORE
+        to be revisited, but already usable
+        lack of documentation
+    
+    fs_sandbox.h HELPER COMPONENT
+        helper, not sure if should be here at all ?
+    
+    generator.h STL HEADER
+        at ideal, part of tinfra-stl, so part of template library 
+        provided by tinfra
+    
+    guard.h
+    mutex.h
+    threa.h
+        threading api is under-designed, pity
+        naming: tinfra::thread::thread
+        guard: it should be more than just _mutex_ guard
+            (or it should be part of mutex)
+    
+    holder.h
+        was i drunk ?
+        
+    inifile..h    HELPER COMPONENT SEPARABLE
+        quite good shape. tested
+        - has functionality flaws (no escaping, comments support broken?)
+        
+    internal_pipe.h     COMPONENT SEPARABLE
+        documented
+        tested (at least basically)
+        not sure why it landed in tinfra
+    
+    interruptible.h     STL HEADER
+    lazy_protocol.h
+        very sandbox mode, probably to be removed 
+        
+    lex.h
+        basic functionality ok
+        lack of error handling, documentation
+        only basic formats supported (decimal, no padding, base, precision)
+        future: remove dependency on iostream
+        
+    
+        
+    logger.h      RUNTIME CORE
+        quite good
+        note to fail and error
+            errors should be logged "in all levels" before final decision
+            _how_to_handle_this_event_
+            so
+                - each time you detect and throw, rethrow, exception you
+                  use log_error
+                
+                each time you see failure and YOU KNOW THAT it's point
+                for final handling like:
+                    continue with next request
+                    show messagebox and let user continue with next attempt
+                    abort program
+                then use log_fail and do what is decided
+                
+            the above can be summarized as
+              - error happens and i don't know how they will be handled, so
+                      report them to higher instance
+              - fail is when you know that error means failure to complete 
+                      some task
+                      
+            jeez, it is still very messy
+    
+    memory_pool.h       HELPER COMPONENT
+        sandbox mode, not usable, not tested
+        
+    mo.h
+        arghh, name name name, how should
+        how visitable struct be called ?
+            maybe, call it struct_visitor ?
+    
+    multitype_map.h     DATA_STRUCTURES COMPONENT 
+        consider for removal
+        well, at this point i don't know how that differs from
+        std::map<K, any>
+        
+        i think that it originally was meant as storage for property_set
+        (which was never created)
+        
+    
+    mutex.h (see above for threading)
+    
+    option.h            HELPER COMPONENT
+        quite good and usable for _OPTIONS_
+        no idea for designing model of CLI ARGUMENTS
+        future:
+            each option should be somehow connected with ENV VARIABLE ?
+        documentation needed!
+        
+    path.h              HELPER FUNC_SET
+        not documented, more or less tested
+        good shape, usable
+        
+    platform.h
+        internal, definitions related to platform (compiler, os etc.)
+        
+    primitive_wrapper.h
+        jeez, originally existed because in protocols see 
+        standards/rfc4251.h there was need for primitive types
+        that have well-specified sizes and are not convertible between each
+        other,
+        consider for removal together with
+            standard/rfc4251.h
+    standards/rfc4251.h
+        see above
+        
+    queue.h     HELPER DATA_STRUCTURE THREAD COMPONENT
+        same as internal_pipe.h
+    
+    runner.h
+        well, quite good idea
+        not documented
+        poorly tested
+        (excluding next reimplementation of runnable/std::function-like
+         infra)
+         
+    runtime.h   RUNTIME CORE
+        good intention, but after two years it became a trash
+        lack of documentation
+        separate:
+            stacktrace & debug_info from
+            interruption & fatal_exit support
+            environment
+        or not ?
+    
+    server.h    HELPER COMPONENT
+        again, shouldn't be part of library
+        (apart from fact that this is not usable shit)
+        
+    shared_ptr.h        HELPER CORE
+        are we supoprting any platform without std::tr1, come on ;)
+        in reality it should by default fallback to std::tr1::shared_ptr
+        
+        otherwise, quite good, tested and slow feature lacking
+        reimpl of boost::shared_ptr (no deleter, no weak_ptr support)
+        
+    socket.h    OSACCESS NETWORK
+        well, ok but ...
+        - is non-copyable, but maybe it should be ref-counted ?
+        
+    static_registry.h   HELPER RUNTIME CORE
+        used by tests and optiosn
+        perfect idea, but implementation and usage
+        not really easier that handwriting "static instance chains" 
+        by hand
+        
+    stream.h            CORE
+        why oh why it is only java.util.Input/OutputStream reimpl ?
+        lots of issues including
+         - copyability
+         - construction syntax (remove those ugly auto_ptr<...> create_this_and_this
+         - wrapping memory ownership problem ...
+         - buffering and "fast streaming" (ommiting virtual calls for simple actions 
+           like nextchar, putchar)
+           
+    string.h
+        contents should be moved to text.h
+        not documented
+        still lacks "usable" version of join_strings
+        
+    structure_printer.h
+        well, ughh
+        - not extendable (in practivce, almost all users must 
+          copy and adapt)
+        + formatter change supported now
+        - doesn't understand line length
+        
+    subprocess.h        OSACCESS COMPONENT
+        very important, functional 
+        but "uncool" and a little bitter API
+        lacks exec
+    
+    symbol.h
+        to be removed
+        
+    tcp_socket.h        OSACCESS NETWORK
+        ok (but same flaws as stream.h/socket.h)
+    
+    test.h
+        needs a HEAVY refactoring ;)
+    test_macros.h
+        more or less good,
+        CHECK_EQUAL needs improvement for complex and lenghy string
+            LCS of long strings or sequences
+    text.h
+        only line_reader for now
+        api: (again, problem with ownesrhip of delegate)
+        
+    thread_runner.h
+        good, threading, 
+    thread.h
+    threadcmn.h
+        ??/
+    
+    trace.h       RUNTIME CORE
+        major redesign needed to work with logger.h
+    
+    typeinfo.h
+        usable, but may be minorized
+        
+    unix_socket.h
+        ok, but not tested nor used  by anyone
+        
+    value_guard.h
+        in fact it should be orig_restorer or ?
+        
+    vfs.h       
+        not used, may be somehow removed
+        and/or sandboxed
+    
+    win32.h
+        internal
+    
+    tstring.h   DATA_STRUCTURES
+        a const char* replacement for argument passing
+         - it casts from const char*
+         - it casts from std::string
+         - it provides ~ same read-only API that std::string
+        
+        note: it may be considered as YAC++String but the hell
+        it is usable as
+         - wanna really work on "buffers"
+        
+        not sure if it should end up in final design.
+        
+    
