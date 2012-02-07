@@ -75,4 +75,9 @@ namespace tinfra {
 
 #endif
 
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L)
+#define TINFRA_CXX11
+#define TINFRA_HAS_VARIADIC_TEMPLATES
+#endif
+
 #endif // tinfra_platform_h_included

@@ -44,6 +44,17 @@ public:
         this->pos_= cmd_pos;
         return *this;
     }
+#ifdef TINFRA_HAS_VARIADIC_TEMPLATES
+    basic_fmt& push() {
+        return *this;
+    }
+    template <typename T, typename... Args>
+    basic_fmt& push(T const& value, Args... args) {
+        push(value);
+        push(args...);
+        return *this;
+    }
+#endif
     
     template <typename T>
     basic_fmt& operator <<(T const& value) { return push(value); }
@@ -75,8 +86,21 @@ public:
     {
     }
 
+#ifdef TINFRA_HAS_VARIADIC_TEMPLATES
+    stringbuf_fmt& push() {
+        return *this;
+    }
+    template <typename T, typename... Args>
+    stringbuf_fmt& push(T const& value, Args... args) {
+        delegate_.push(value);
+        push(args...);
+        return *this;
+    }
+#else
+    
     template <typename T>
     stringbuf_fmt& push(T const& value) { delegate_.push(value); return *this; }
+#endif
     
     template <typename T>
     stringbuf_fmt& operator <<(T const& value) { return push(value); }
@@ -131,6 +155,44 @@ typedef stringbuf_fmt fmt;
 // printf & sprintf like wrappers for basic_fmt
 //
 
+///
+/// template <typename OUT, typename... Args>
+/// void tprintf(OUT& out, Args... args);
+///
+///
+/// NOTE, they are available also without variadic template support, but
+/// implemented "by hand" below
+
+#ifdef TINFRA_HAS_VARIADIC_TEMPLATES
+template < typename... Args>
+void tprintf(std::ostream& out, tinfra::tstring const& fmt, Args... args);
+
+template < typename... Args>
+std::string tsprintf(tstring const& fmt, Args ... args);
+#endif
+
+
+//
+// tsprintf and tprintf implementation
+//
+#ifdef TINFRA_HAS_VARIADIC_TEMPLATES
+template <typename... Args>
+void tprintf(std::ostream& out, tinfra::tstring const& fmt, Args... args)
+{
+    basic_fmt F(out.rdbuf(), fmt);
+    F.push(args...);
+    F.flush();
+}
+
+template <typename ... Args>
+std::string tsprintf(tstring const& fmt, Args ... args) {
+    stringbuf_fmt F(fmt);
+    F.push(args...);
+    return F.str();
+}
+
+
+#else // no TINFRA_HAS_VARIADIC_TEMPLATES
 
 inline void tprintf(std::ostream& out, tstring const& fmt) {
     basic_fmt F(out.rdbuf(), fmt);
@@ -197,6 +259,8 @@ inline std::string tsprintf(tstring const& fmt, T1 const& v1, T2 const& v2, T3 c
     F << v1 << v2  << v3 << v4;
     return F.str();
 }
+
+#endif // !TINFRA_HAS_VARIADIC_TEMPLATES
 
 } // end namespace tinfra
 
