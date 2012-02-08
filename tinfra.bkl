@@ -180,30 +180,30 @@
         <sources>
             tests/test_main.cpp
             
-            tests/test_string.cpp
-            tests/test_tstring.cpp
-            tests/test_path.cpp
-            tests/test_fs.cpp
+            tests/string_test.cpp
+            tests/tstring_test.cpp
+            tests/path_test.cpp
+            tests/fs_test.cpp
             tests/test_test.cpp
-            tests/test_multitype_map.cpp
-            tests/test_fmt.cpp
-            tests/test_stream.cpp            
-            tests/test_server.cpp
-            tests/test_symbol.cpp
-            tests/test_exeinfo.cpp            
-            tests/test_thread.cpp
-            tests/test_queue.cpp
-            tests/test_subprocess.cpp
-	    tests/test_memory_pool.cpp
-            tests/test_runtime.cpp
-            tests/test_option.cpp
+            tests/multitype_map_test.cpp
+            tests/fmt_test.cpp
+            tests/stream_test.cpp            
+            tests/server_test.cpp
+            tests/symbol_test.cpp
+            tests/exeinfo_test.cpp            
+            tests/thread_test.cpp
+            tests/queue_test.cpp
+            tests/subprocess_test.cpp
+	    tests/memory_pool_test.cpp
+            tests/runtime_test.cpp
+            tests/option_test.cpp
             tests/runner_test.cpp
             tests/shared_ptr_test.cpp
             tests/adaptable_test.cpp
             tests/any_test.cpp
             tests/buffer_test.cpp
-            tests/test_mo.cpp
-            tests/test_structure_printer.cpp
+            tests/mo_test.cpp
+            tests/structure_printer_test.cpp
             tests/lex_test.cpp
             tests/inifile_test.cpp
 	    tests/tcp_socket_test.cpp
@@ -226,7 +226,7 @@
     <exe id="test_fatal_exception" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
         <sources>
-            tests/test_fatal_exception.cpp
+            tests/fatal_exception_test.cpp
         </sources>
         <library>tinfra</library>
     </exe>
