@@ -87,13 +87,9 @@ public:
     }
 
 #ifdef TINFRA_HAS_VARIADIC_TEMPLATES
-    stringbuf_fmt& push() {
-        return *this;
-    }
-    template <typename T, typename... Args>
-    stringbuf_fmt& push(T const& value, Args... args) {
-        delegate_.push(value);
-        push(args...);
+    template <typename... Args>
+    stringbuf_fmt& push(Args... args) {
+        delegate_.push(args...);
         return *this;
     }
 #else
