@@ -9,6 +9,7 @@
 #include "tinfra/trace.h"
 #include "tinfra/stream.h"
 #include "tinfra/logger.h"
+#include "tinfra/fs.h"
 
 #include <string>
 #include <exception>
@@ -93,7 +94,12 @@ app& app::get()
 
 int main_wrapper(int argc, char* argv[],int (*real_main)(int,char*[]))
 {
-    set_exepath(argv[0]);
+    std::string real_name(argv[0]);
+    try {
+        real_name = tinfra::fs::realpath(real_name);
+    } catch( std::runtime_error& e ) {
+    }
+    set_exepath(real_name);
         
     app::get().program_name(argv[0]);
     

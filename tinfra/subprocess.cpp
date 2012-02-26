@@ -13,15 +13,6 @@
 #include <stdexcept>
 namespace tinfra {
     
-static void read_file(tinfra::input_stream* s, std::string& data)
-{
-    char buf[1024];
-    int r;
-    while( ( r = s->read(buf, sizeof(buf))) > 0 ) {
-        data.append(buf, r);
-    }
-}
-
 static std::string capture_command(std::string const& command, environment_t const* env);
 
 std::string capture_command(std::string const& command)
@@ -42,10 +33,10 @@ std::string capture_command(std::string const& command, environment_t const* env
     if( env )
         p->set_environment(*env);
 
-    std::string result;
+    
     p->start(command.c_str());
     
-    read_file(p->get_stdout(), result);
+    std::string result = read_all(* p->get_stdout());
     
     p->wait();
     const int exit_code = p->get_exit_code();
