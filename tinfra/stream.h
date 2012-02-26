@@ -85,7 +85,24 @@ enum file_output_mode {
 
 std::auto_ptr<output_stream> create_file_output_stream(tstring const& name, int mode);
 
+/// read whole content of stream
+///
+/// Read all data until EOF is occured and return
+/// as std::string.
+///
+/// throws/failures:
+///    will rethrow, any error occured in output.read(), 
+///    will retrrow bad_alloc, from std::string    
 std::string read_all(input_stream& input);
+
+/// write whole buffer to stream
+///
+/// Write all data (retrying as necessary) to target stream.
+/// 
+/// throws/failures:
+///    will rethrow, any error occured in output.write()
+///    std::runtime_error if output.write() returns 0
+void        write_all(output_stream& output, tstring const& data);
 
 } // end namespace tinfra
 

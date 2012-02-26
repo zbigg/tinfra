@@ -10,25 +10,12 @@
 #include "tinfra/test.h" // test infra
 
 #include "tinfra/string.h"
+#include "tinfra/stream.h" // for tinfra::read_all, write_all
 #include "tinfra/tstring.h"
 #include <iostream>
 
 using tinfra::subprocess;
 using tinfra::io::stream;
-
-static void write_file(tinfra::output_stream* s, std::string const& data)
-{
-    s->write(data.c_str(), data.size());
-}
-
-static void read_file(tinfra::input_stream* s, std::string& data)
-{
-    char buf[1024];
-    int r;
-    while( ( r = s->read(buf, sizeof(buf))) > 0 ) {
-        data.append(buf, r);
-    }
-}
 
 SUITE(tinfra) {
     
@@ -59,10 +46,13 @@ SUITE(tinfra) {
     }
     
     TEST(subprocess_read_stdin) {
+        using tinfra::read_all;
+        using tinfra::write_all;
+        
         std::auto_ptr<subprocess> p = tinfra::subprocess::create();
                 
         p->set_stdout_mode(subprocess::REDIRECT);
-        std::string result;
+        
 #ifdef WIN32
         p->start("cmd /c ver");
 #else
@@ -73,7 +63,7 @@ SUITE(tinfra) {
         CHECK(p->get_stdout() != 0);
         CHECK(p->get_stderr() == 0);
         
-        read_file(p->get_stdout(), result);        
+        std::string result = read_all(* p->get_stdout() );        
         p->wait();
         CHECK( result.size() > 0);
         CHECK_EQUAL(0, p->get_exit_code());
@@ -81,7 +71,11 @@ SUITE(tinfra) {
     
     TEST(subprocess_read_write) {
         std::string result;
+        
         {
+            using tinfra::read_all;
+            using tinfra::write_all;
+        
             std::auto_ptr<subprocess> p = tinfra::subprocess::create();
             
             p->set_stdin_mode(subprocess::REDIRECT);
@@ -93,10 +87,10 @@ SUITE(tinfra) {
             CHECK(p->get_stdout() != 0);
             CHECK(p->get_stderr() == 0);
             
-            write_file(p->get_stdin(), "zz\r\ncc\r\nbb\r\naa\r\n");
+            write_all(* p->get_stdin(), "zz\r\ncc\r\nbb\r\naa\r\n");
             p->get_stdin()->close();
 
-            read_file(p->get_stdout(), result);
+            result = read_all(* p->get_stdout() );
             p->wait();
         }
         using tinfra::escape_c;

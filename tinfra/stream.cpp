@@ -8,6 +8,8 @@
 
 // we use this
 #include "tinfra/io/stream.h" // for tinfra::io::stream, open_file
+#include "tinfra/fail.h"      // for tinfra::fail
+#include "tinfra/fmt.h"       // for tinfra::tsprintf
 #include "buffered_stream.h"
 
 #include <memory>             // for auto_ptr
@@ -225,7 +227,7 @@ auto_ptr<output_stream> create_file_output_stream(tstring const& name, int mode)
     return auto_ptr<output_stream>(new old_output_stream_adapter(delegate));
 }
 
-std::string read_all(input_stream* input)
+std::string read_all(input_stream& input)
 {
     static const int COPY_BUFFER_SIZE = 65536;
 
@@ -233,7 +235,7 @@ std::string read_all(input_stream* input)
     std::vector<char> tmp;
     int readed;
     
-    while( (readed = input->read(buffer, sizeof(buffer))) > 0 ) {
+    while( (readed = input.read(buffer, sizeof(buffer))) > 0 ) {
         tmp.insert(tmp.end(),
             buffer, buffer + readed);
     }
@@ -241,4 +243,24 @@ std::string read_all(input_stream* input)
     return std::string(tmp.begin(), tmp.end());
 }
 
+void        write_all(output_stream& output, tstring const& data)
+{
+    using tinfra::fail;
+    using tinfra::tsprintf;
+    
+    size_t to_write              = data.size();
+    size_t buffer_to_write_index = 0;
+    
+    while( to_write > 0 ) {
+        const int w = output.write(data.data() + buffer_to_write_index, to_write);
+        if( to_write != 0 && w == 0 ) {
+            fail(tsprintf("unable to save data, %i bytes left", to_write), 
+                 "write() unexpectedly returned 0"); 
+        }
+        to_write -= w;
+        buffer_to_write_index += w;
+    }
+}
+
 } // end namespace tinfra
+

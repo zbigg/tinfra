@@ -10,7 +10,7 @@ version 0.0.3, releases 2012-xx-xx
    new:
     * fs.h: symlink support: symlink, readlink and realpath added (wraps POSIX)
     * inifile.h: ini file writer added
-    * stream.h: new create_memory_output_stream()
+    * stream.h: new create_memory_output_stream(), helpers: read_all(), write_all()
    fix:
     * socket: correctly handle interrupts (EINTR) on posix
     * CHECK_EQUAL et al evaluate macro args once (tested)
