@@ -11,6 +11,8 @@
 #include "tinfra/fail.h"
 #include "tinfra/os_common.h"
 #include "tinfra/path.h"
+#include "tinfra/logger.h"
+#include "tinfra/trace.h"
 
 #include <cstring>
 #include <errno.h>
@@ -33,6 +35,8 @@
 namespace tinfra {
 namespace fs { 
 
+tinfra::module_tracer fs_tracer(tinfra::tinfra_tracer, "fs");
+
 struct lister::internal_data {
     DIR* handle;
 };
@@ -41,8 +45,8 @@ lister::lister(tstring const& path, bool)
     : data_(new internal_data())
 {   
     tinfra::string_pool temporary_context;
-    TINFRA_TRACE_MSG("lister::lister");    
-    TINFRA_TRACE_VAR(path);
+    TINFRA_TRACE(fs_tracer, "lister::lister");    
+    TINFRA_TRACE_VAR(fs_tracer, path);
     data_->handle = ::opendir(path.c_str(temporary_context));
     if( !data_->handle ) {
         tinfra::fail(fmt("unable to open directory '%s' for listing") % path, errno_to_string(errno));
@@ -50,14 +54,14 @@ lister::lister(tstring const& path, bool)
 }
 lister::~lister()
 {
-    TINFRA_TRACE_MSG("lister::~lister");
+    TINFRA_TRACE(fs_tracer, "lister::~lister");
     if( data_->handle  != 0 )
         ::closedir(data_->handle);
 }
 
 bool lister::fetch_next(directory_entry& result)
 {
-    TINFRA_TRACE_MSG("lister::fetch_next");
+    TINFRA_TRACE(fs_tracer, "lister::fetch_next");
     
     while( true ) {
         errno = 0;
@@ -76,7 +80,7 @@ bool lister::fetch_next(directory_entry& result)
         }
         
         result.name = entry->d_name;
-        TINFRA_TRACE_VAR(result.name);
+        TINFRA_TRACE_VAR(fs_tracer, result.name);
         result.info.is_dir = false;
         result.info.size = 0;
         

@@ -12,6 +12,7 @@
 #include "tinfra/subprocess.h"
 #include "tinfra/string.h"
 #include "tinfra/trace.h"
+#include "tinfra/logger.h"
 #include "tinfra/fmt.h"
 #include "tinfra/os_common.h"
 

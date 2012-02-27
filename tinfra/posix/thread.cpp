@@ -11,6 +11,7 @@
 #include "tinfra/thread.h"
 #include "tinfra/fmt.h"
 #include "tinfra/runtime.h"
+#include "tinfra/logger.h"
 
 #include <memory>
 #include <stdexcept>

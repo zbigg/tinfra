@@ -8,7 +8,7 @@
 
 #include "fmt.h"
 #include "tinfra/platform.h" // for TINFRA_UNLIKELY
-#include "tinfra/trace.h"  // for tinfra::trace::location
+#include "tinfra/trace.h"  // for tinfra::source_location
 
 namespace tinfra { 
 
@@ -36,7 +36,7 @@ namespace tinfra {
 /// 
 /// Called by TINFRA_ASSERT, TINFRA_STATIC_AUTO_ASSERT upon failure.
 
-void report_assertion_failure(tinfra::trace::location const& location, const char* message);
+void report_assertion_failure(tinfra::source_location const& location, const char* message);
 
 /// same as C++ assert, but calls report_assertion_failure.
 #define TINFRA_ASSERT(expression) \
@@ -73,7 +73,7 @@ void report_assertion_failure(tinfra::trace::location const& location, const cha
         tinfra::assert_failed(TINFRA_SOURCE_LOCATION(), #expression); \
         } } while( 0 )
 
-extern void assert_failed(tinfra::trace::location const& location, const char* expression);
+extern void assert_failed(tinfra::source_location const& location, const char* expression);
 
 #define TINFRA_STATIC_AUTO_ASSERT_IMPL(expression)     \
     static struct                                 \

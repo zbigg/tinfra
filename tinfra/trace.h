@@ -9,7 +9,9 @@
 #include <vector>
 #include "tinfra/platform.h" // for TINFRA_UNLIKELY, TINFRA_SHORT_FUNCTION
 #include "tinfra/tstring.h"
-#include "static_registry.h"
+#include "tinfra/stream.h"   // for tinfra::output_stream
+
+#include "tinfra/static_registry.h"
 
 #include <sstream>
 
@@ -114,6 +116,9 @@ namespace tinfra {
 #define TINFRA_TRACE(tracer,cout_like_expr)  TINFRA_TRACE_IMPL(tracer,                  cout_like_expr)
 #define TINFRA_GLOBAL_TRACE(cout_like_expr)  TINFRA_TRACE_IMPL(::tinfra::global_tracer, cout_like_expr)
 
+#define TINFRA_TRACE_VAR(tracer,variable)  TINFRA_TRACE(tracer, #variable " = '" << (variable) << "'" )
+#define TINFRA_GLOBAL_TRACE_VAR(variable)  TINFRA_TRACE_VAR(::tinfra::global_tracer, variable)
+
 
 /// Return current source code location.
 ///
@@ -151,6 +156,7 @@ class tracer {
     
 public:
     
+    void        set_enabled(bool new_value = true);
     bool        is_enabled() const; // inline
     bool        is_enabled_inherit();
     const char* get_name() const;
@@ -158,7 +164,7 @@ public:
     
     void trace(tstring const& message, tinfra::source_location const& sloc);
 protected:
-    tracer(parent* parent, const char* name, bool enabled);
+    tracer(tracer* parent, const char* name, bool enabled);
 };
 
 /// Function entry/exit tracer.
@@ -194,8 +200,23 @@ public:
 
     int         get_verbosity_level();
     
-    void        set_enabled(bool new_value = true);
     void        set_inherit_enabled(bool inherit_enabled = true);
+    
+    
+    // static enablers for globally registered tracers
+    static void enable_by_mask(tstring const& mask);
+    static void enable_by_level(int level);
+    static void enable_all(bool enable);
+    
+    // interrogate
+    static std::vector<public_tracer*> get_global_tracers();
+    
+    /// process trace params
+    ///
+    /// consumes (removes!) trace-related params from list
+    static void process_params(int& argc, char** argv);
+    
+    static void print_tracer_usage(tinfra::output_stream& out, tstring const& msg = "");
 };
 
 /// Module named public tracer
@@ -228,55 +249,39 @@ extern module_tracer tinfra_tracer;
 // implementation detail
 //
 
-tinfra::trace::location make_source_location(const char* filename, int line, const char* func);
+tinfra::source_location make_source_location(const char* filename, int line, const char* func);
 
 #define TINFRA_TRACE_IMPL(tracer, cout_like_expr) do {   \
         if(TINFRA_UNLIKELY(tracer.is_enabled())) {       \
             std::ostringstream _tinfra_trace_the_buffer; \
-            _tinfra_trace_the_buffer << cout_expr;       \
-            tracer.trace(cout_expr.str(), TINFRA_SOURCE_LOCATION); \
-        } while(false)
+            _tinfra_trace_the_buffer << cout_like_expr;       \
+            tracer.trace(_tinfra_trace_the_buffer.str(), TINFRA_SOURCE_LOCATION()); \
+        } } while(false)
 
-#define TINFRA_NULL_SOURCE_LOCATION \
+#define TINFRA_NULL_SOURCE_LOCATION() \
     tinfra::make_source_location(0,0,0)
             
 // backwards compatibility
 
-namespace trace {
-    
-/// Locates source code location.
-typedef tinfra::source_location location;
-
-std::vector<public_tracer*> get_global_tracers();
-
-void process_params(int& argc, char** argv);
-void print_tracer_usage(tstring const& msg = "");
-
-bool enable_tracer_by_mask(tstring const& mask);
-
-} // end of namespace tinfra::trace
-} // end of namespace tinfra
-
-
+/*
 // shouldn't it be moved to logger.h ?
 #define TINFRA_LOG_ERROR(msg) tinfra::global_tracer.trace((msg), TINFRA_SOURCE_LOCATION())
 
 #define TINFRA_TRACE_MSG(msg) TINFRA_GLOBAL_TRACE( (msg) )
 #define TINFRA_TRACE_STRM(msg) TINFRA_GLOBAL_TRACE( (msg) )
 
-#define TINFRA_TRACE_VAR(name) TINFRA_GLOBAL_TRACE( #name " = \" << name << "\"" )
+#define TINFRA_TRACE_VAR(name) TINFRA_GLOBAL_TRACE( #name " = \"" << name << "\"" )
 
 
 #define TINFRA_CALL_TRACE() \
 tinfra::call_tracer _tinfra_call_tracer(TINFRA_SOURCE_LOCATION())
 
 #define TINFRA_EXIT_TRACE() 
+*/
 
 //
 // implementation
 //
-
-namespace tinfra { 
 
 //
 // tracer inlines
@@ -299,12 +304,12 @@ inline const char* tracer::get_name() const
 //
 // helpers
 //
-inline tinfra::trace::location  make_source_location(const char* filename, int line, const char* func)
+inline tinfra::source_location  make_source_location(const char* filename, int line, const char* func)
 {
-    location loc = { filename, line, func };
+    source_location loc = { filename, line, func };
     return loc;
 }
 
-} } // end namespace tinfra::trace
+} // end namespace tinfra
 
 #endif

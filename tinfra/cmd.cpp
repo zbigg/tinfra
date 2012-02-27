@@ -106,7 +106,7 @@ int main_wrapper(int argc, char* argv[],int (*real_main)(int,char*[]))
     initialize_fatal_exception_handler();    
     
     try {
-        tinfra::trace::process_params(argc, argv);
+        tinfra::public_tracer::process_params(argc, argv);
         
         return real_main(argc, argv);
     } catch( std::exception& e) {

@@ -41,13 +41,13 @@ static std::string top_srcdir = DEFAULT_TOP_SRCDIR;
 //
 // test_fs_sandbox
 //
-TINFRA_MODULE_TRACER(tinfra_test_fs_sandbox);
+
+tinfra::module_tracer test_fs_sandbox_tracer(tinfra::tinfra_tracer, "test_fs_sandbox");
 
 test_fs_sandbox::test_fs_sandbox(tstring const& name):
 	fs_sandbox(tinfra::local_fs()),
 	name_(name.str()) 
 {
-    TINFRA_USE_TRACER(tinfra_test_fs_sandbox);
     if( name_.size() > 0 ) {
         string real_path = path::join(top_srcdir, name_);
         if( !fs::exists(real_path) ) {
@@ -59,12 +59,13 @@ test_fs_sandbox::test_fs_sandbox(tstring const& name):
     } 
     orig_pwd_ = fs::pwd();
     fs::cd(fs_sandbox::path());
-    TINFRA_TRACE_MSG(fmt("entering sandbox pwd='%s'") % fs_sandbox::path());
+    TINFRA_TRACE(test_fs_sandbox_tracer, fmt("entering sandbox pwd='%s'") % fs_sandbox::path());
 }
+
 test_fs_sandbox::~test_fs_sandbox()
 {
-    TINFRA_USE_TRACER(tinfra_test_fs_sandbox);
-    TINFRA_TRACE_MSG(fmt("leaving sandbox pwd='%s'") % orig_pwd_);
+    TINFRA_TRACE(test_fs_sandbox_tracer, fmt("leaving sandbox pwd='%s'") % orig_pwd_);
+    
     fs::cd(orig_pwd_);    
 }
 
@@ -84,7 +85,7 @@ test_result_sink::~test_result_sink()
 // test_base
 //
 
-test_base::test_base(const char* _suite_name, const char* test_name, tinfra::trace::location const& sl):
+test_base::test_base(const char* _suite_name, const char* test_name, tinfra::source_location const& sl):
 	suite(_suite_name),
 	name(test_name),
 	source_location(sl)
@@ -101,7 +102,7 @@ test_base::~test_base()
 test_base*              currently_executed_test = 0;
 test_result_sink*       current_test_result_sink = 0;
 
-tinfra::trace::location last_seen_source_location;
+tinfra::source_location last_seen_source_location;
 
 void test_base::run(test_result_sink& sink)
 {
@@ -183,7 +184,7 @@ void local_test_result_sink::report_test_start(test_info  const&)
     this->current_test_failed = false;
 }
 
-void local_test_result_sink::report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message)
+void local_test_result_sink::report_failure(test_info const& info, tinfra::source_location const& location, tstring const& message)
 {
     this->result.failure_count += 1;
     this->current_test_failed = true;
@@ -209,7 +210,7 @@ void default_test_result_sink::report_test_start(test_info  const& info)
         out("TEST %s\n", info.name);
     }
 }
-void default_test_result_sink::report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message)
+void default_test_result_sink::report_failure(test_info const& info, tinfra::source_location const& location, tstring const& message)
 {
 #ifdef _MSC_VER 
     char const* const errorFormat = "%s(%d): error: FAILURE in %s: %s\n";        
@@ -247,7 +248,7 @@ void report_test_failure(const char* filename, int line, const char* message)
 	if( !current_test_result_sink )
 		return;
 	
-	tinfra::trace::location location;
+	tinfra::source_location location;
 	location.filename = filename;
 	location.line = line;
 	location.name = "";
@@ -343,7 +344,7 @@ public:
 		this->next.report_test_start(ti);
 		start_time = now();
 	}
-	void report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message)
+	void report_failure(test_info const& info, tinfra::source_location const& location, tstring const& message)
 	{
 		this->next.report_failure(info, location, message);
 		this->failures++;

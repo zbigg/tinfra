@@ -132,7 +132,7 @@ private:
         }
         
         while( !queue_.empty() ) {
-            TINFRA_TRACE_MSG("sequential_runner::do_run: starting job");
+            TINFRA_GLOBAL_TRACE("sequential_runner::do_run: starting job");
             runnable_ptr current_ptr = queue_.front();
             queue_.pop_front();
             

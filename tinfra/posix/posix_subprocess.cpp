@@ -20,6 +20,7 @@
 #include "tinfra/subprocess.h"
 #include "tinfra/os_common.h"
 #include "tinfra/trace.h"
+#include "tinfra/logger.h"
 #include "tinfra/runtime.h" // for test_interrupt
 extern "C" char** environ;
 

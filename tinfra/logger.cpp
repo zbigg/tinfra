@@ -1,7 +1,7 @@
 #include "logger.h" // we implement this
 
 #include "stream.h" // for tinfra::err
-#include "trace.h"  // for TINFRA_NULL_SOURCE_LOCATION
+#include "trace.h"  // for TINFRA_NULL_SOURCE_LOCATION()
 #include "path.h"   // for basename
 #include "exeinfo.h" // for get_exepath
 #include "thread.h"
@@ -28,16 +28,16 @@ namespace tinfra {
 //
 
 void log_info(tstring const& m) { logger().info(m); }
-void log_info(tstring const& m, tinfra::trace::location const& loc) { logger().info(m,loc); }
+void log_info(tstring const& m, tinfra::source_location const& loc) { logger().info(m,loc); }
 
 void log_warning(tstring const& m) { logger().warning(m); }
-void log_warning(tstring const& m, tinfra::trace::location const& loc) { logger().warning(m,loc); }
+void log_warning(tstring const& m, tinfra::source_location const& loc) { logger().warning(m,loc); }
 
 void log_error(tstring const& m) { logger().error(m); }
-void log_error(tstring const& m, tinfra::trace::location const& loc) { logger().error(m,loc); }
+void log_error(tstring const& m, tinfra::source_location const& loc) { logger().error(m,loc); }
 
 void log_fail(tstring const& m) { logger().fail(m); }
-void log_fail(tstring const& m, tinfra::trace::location const& loc) { logger().fail(m,loc); }
+void log_fail(tstring const& m, tinfra::source_location const& loc) { logger().fail(m,loc); }
 
 //
 // logger implementation
@@ -70,7 +70,7 @@ logger::~logger()
 {
 }
 
-void logger::log(log_level level, tstring const& m, tinfra::trace::location const& loc)
+void logger::log(log_level level, tstring const& m, tinfra::source_location const& loc)
 {
     log_record record;
     record.level = level;
@@ -84,46 +84,46 @@ void logger::log(log_level level, tstring const& m, tinfra::trace::location cons
 
 void logger::trace(tstring const& message)
 {
-    this->log(TRACE, message, TINFRA_NULL_SOURCE_LOCATION);
+    this->log(TRACE, message, TINFRA_NULL_SOURCE_LOCATION());
 }
 
-void logger::trace(tstring const& message, tinfra::trace::location const& loc)
+void logger::trace(tstring const& message, tinfra::source_location const& loc)
 {
     this->log(TRACE, message, loc);
 }
 
 void logger::info(tstring const& message)
 {
-    this->log(tinfra::INFO, message, TINFRA_NULL_SOURCE_LOCATION);
+    this->log(tinfra::INFO, message, TINFRA_NULL_SOURCE_LOCATION());
 }
-void logger::info(tstring const& message, tinfra::trace::location const& loc)
+void logger::info(tstring const& message, tinfra::source_location const& loc)
 {
     this->log(tinfra::INFO, message, loc);
 }
 
 void logger::warning(tstring const& message)
 {
-    this->log(tinfra::WARNING, message, TINFRA_NULL_SOURCE_LOCATION);
+    this->log(tinfra::WARNING, message, TINFRA_NULL_SOURCE_LOCATION());
 }
-void logger::warning(tstring const& message, tinfra::trace::location const& loc)
+void logger::warning(tstring const& message, tinfra::source_location const& loc)
 {
     this->log(tinfra::WARNING, message, loc);
 }
 
 void logger::error(tstring const& message)
 {
-    this->log(tinfra::ERROR, message, TINFRA_NULL_SOURCE_LOCATION);
+    this->log(tinfra::ERROR, message, TINFRA_NULL_SOURCE_LOCATION());
 }
-void logger::error(tstring const& message, tinfra::trace::location const& loc)
+void logger::error(tstring const& message, tinfra::source_location const& loc)
 {
     this->log(tinfra::ERROR, message, loc);
 }
 
 void logger::fail(tstring const& message)
 {
-    this->log(tinfra::FAIL, message, TINFRA_NULL_SOURCE_LOCATION);
+    this->log(tinfra::FAIL, message, TINFRA_NULL_SOURCE_LOCATION());
 }
-void logger::fail(tstring const& message, tinfra::trace::location const& loc)
+void logger::fail(tstring const& message, tinfra::source_location const& loc)
 {
     this->log(tinfra::FAIL, message, loc);
 }

@@ -11,6 +11,8 @@
 namespace tinfra {
 namespace inifile {
 
+tinfra::module_tracer inifile_tracer(tinfra::tinfra_tracer, "inifile");
+
 using tinfra::fmt;
     
 struct parser::internal_data {
@@ -108,8 +110,6 @@ bool parser::fetch_next(entry& out)
     return true;
 }
 
-TINFRA_PUBLIC_TRACER(tinfra_inifile_reader);
-
 reader::reader(tinfra::input_stream& in):
     p(in),
     line(0)
@@ -121,7 +121,6 @@ reader::~reader()
 
 bool reader::fetch_next(full_entry& result)
 {
-	TINFRA_USE_TRACER(tinfra_inifile_reader);
 	
 	while( true ) {
 		entry e;
@@ -133,7 +132,7 @@ bool reader::fetch_next(full_entry& result)
 		case COMMENT:
 			break;
 		case INVALID:
-			TINFRA_TRACE_STRM("invalid inifile entry, line=" << line << " content=" << e.value);
+			TINFRA_TRACE(inifile_tracer, "invalid inifile entry, line=" << line << " content=" << e.value);
 			break;
 		case SECTION:
 			this->section = e.name;

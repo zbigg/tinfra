@@ -2,7 +2,7 @@
 #define tinfra_fail_h_included
 
 #include "tstring.h"
-#include "trace.h" // for tinfra::trace::location
+#include "trace.h" // for tinfra::source_location
 
 #include <stdexcept>
 
@@ -42,7 +42,7 @@ namespace tinfra {
   * Doesn't return - always throw exception.
   */
 void fail(tstring const& m, tstring const& cause);
-void fail(tstring const& m, tstring const& cause, tinfra::trace::location const&);
+void fail(tstring const& m, tstring const& cause, tinfra::source_location const&);
 
 /** Subprogram failure.
  * 

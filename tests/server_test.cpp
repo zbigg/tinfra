@@ -28,7 +28,7 @@ using tinfra::tstring;
 
 static void writeline(output_stream& out, tstring const& str)
 {
-    TINFRA_TRACE_MSG(fmt("wrote '%s'") % tinfra::escape_c(str));
+    TINFRA_GLOBAL_TRACE(fmt("wrote '%s'") % tinfra::escape_c(str));
     out.write(str.data(), str.size());
     out.write("\n",1);
 }
@@ -46,7 +46,7 @@ static std::string readline(input_stream& in)
         
         result.append(1, c);
     }
-    TINFRA_TRACE_MSG(fmt("readed '%s'") % tinfra::escape_c(result));
+    TINFRA_GLOBAL_TRACE(fmt("readed '%s'") % tinfra::escape_c(result));
     return result;
 }
 

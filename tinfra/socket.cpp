@@ -12,6 +12,7 @@
 
 #include "tinfra/win32.h"
 #include "tinfra/trace.h"
+#include "tinfra/logger.h"
 #include "tinfra/runtime.h" // for test_interrupt
 #include <stdexcept>
 
@@ -169,7 +170,7 @@ client_stream_socket::read(char* dest, int size)
     while( true ) {
         int result = ::recv(handle(), dest ,size, 0);
         if( result == -1 && detail::last_socket_error_is_interruption() ) {
-            TINFRA_TRACE_MSG("recv() call interrupted (EINTR), retrying");
+            TINFRA_GLOBAL_TRACE("recv() call interrupted (EINTR), retrying");
             tinfra::test_interrupt();
             continue;
         }
@@ -188,7 +189,7 @@ client_stream_socket::write(const char* data, int size)
     while( true ) {
         int result = ::send(handle(), data, size, 0);
         if( result == -1 && detail::last_socket_error_is_interruption() ) {
-            TINFRA_TRACE_MSG("send() call interrupted (EINTR), retrying");
+            TINFRA_GLOBAL_TRACE("send() call interrupted (EINTR), retrying");
             tinfra::test_interrupt();
             continue;
         }

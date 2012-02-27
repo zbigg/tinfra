@@ -15,7 +15,7 @@ void fail(tstring const& m, tstring const& cause)
     throw exception;
 }
 
-void fail(tstring const& m, tstring const& cause, tinfra::trace::location const& loc)
+void fail(tstring const& m, tstring const& cause, tinfra::source_location const& loc)
 {
     tinfra::failure exception(m, cause);
     tinfra::log_error(exception.what(), loc);

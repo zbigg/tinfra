@@ -7,6 +7,8 @@
 
 #include "tinfra/os_common.h"
 #include "tinfra/trace.h"
+#include "tinfra/logger.h"
+
 #include <unistd.h>
 #include <errno.h>
 

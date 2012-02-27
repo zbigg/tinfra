@@ -1,7 +1,7 @@
 #ifndef tinfra_logger_h_included
 #define tinfra_logger_h_included
 
-#include "trace.h"   // for tinfra::trace::location
+#include "trace.h"   // for tinfra::source_location
 #include "tstring.h" // for tstring
 #include "stream.h"  // for tinfra::output_stream
 #include <time.h>    // for time_t
@@ -29,7 +29,7 @@ namespace tinfra {
  * Default logger is used.
  */
 void log_info(tstring const& m);
-void log_info(tstring const& m, tinfra::trace::location const& loc);
+void log_info(tstring const& m, tinfra::source_location const& loc);
 
 /** Log warning message
   *
@@ -40,7 +40,7 @@ void log_info(tstring const& m, tinfra::trace::location const& loc);
   * Default logger is used to report message.
   */
 void log_warning(tstring const& m);
-void log_warning(tstring const& m, tinfra::trace::location const& loc);
+void log_warning(tstring const& m, tinfra::source_location const& loc);
 
 /** Log error message
   *
@@ -66,13 +66,15 @@ void log_warning(tstring const& m, tinfra::trace::location const& loc);
   * Default logger is used to report message.
   */
 void log_error(tstring const& m);
-void log_error(tstring const& m, tinfra::trace::location const& loc);
+void log_error(tstring const& m, tinfra::source_location const& loc);
+
+#define TINFRA_LOG_ERROR(m) ::tinfra::log_error((m), TINFRA_SOURCE_LOCATION())
 
 /** Log system visible failure.
   *
   */
 void log_fail(tstring const& m);
-void log_fail(tstring const& m, tinfra::trace::location const& loc);
+void log_fail(tstring const& m, tinfra::source_location const& loc);
 
 //
 // OO logger interface 
@@ -104,21 +106,21 @@ public:
     ~logger();
     
     void trace(tstring const& message);
-    void trace(tstring const& m, tinfra::trace::location const& loc);
+    void trace(tstring const& m, tinfra::source_location const& loc);
     
     void info(tstring const& message);
-    void info(tstring const& m, tinfra::trace::location const& loc);
+    void info(tstring const& m, tinfra::source_location const& loc);
     
     void warning(tstring const& message);
-    void warning(tstring const& m, tinfra::trace::location const& loc);
+    void warning(tstring const& m, tinfra::source_location const& loc);
     
     void error(tstring const& message);
-    void error(tstring const& m, tinfra::trace::location const& loc);
+    void error(tstring const& m, tinfra::source_location const& loc);
     
     void fail(tstring const& message);
-    void fail(tstring const& m, tinfra::trace::location const& loc);
+    void fail(tstring const& m, tinfra::source_location const& loc);
 
-    void log(log_level, tstring const& m, tinfra::trace::location const& loc);
+    void log(log_level, tstring const& m, tinfra::source_location const& loc);
 };
 
 struct log_record {
@@ -126,7 +128,7 @@ struct log_record {
     tstring   component;
     tstring   message;
     time_t    timestamp;
-    tinfra::trace::location location;
+    tinfra::source_location location;
 };
 
 struct log_handler {

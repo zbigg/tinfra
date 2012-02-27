@@ -8,7 +8,7 @@
 
 #include "fmt.h"
 #include "tstring.h" 
-#include "trace.h" // for tinfra::trace::location, TINFRA_SOURCE_LOCATION
+#include "trace.h" // for tinfra::source_location, TINFRA_SOURCE_LOCATION
 
 namespace tinfra { 
 namespace test {
@@ -43,7 +43,7 @@ public:
 	virtual ~test_result_sink();
 
 	virtual void report_test_start(test_info  const&) = 0;
-	virtual void report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message) = 0;
+	virtual void report_failure(test_info const& info, tinfra::source_location const& location, tstring const& message) = 0;
 	virtual void report_test_finish(test_info const&) = 0;
 	virtual void report_summary(test_run_summary const&) = 0;
 };
@@ -55,7 +55,7 @@ public:
 
 	// test_result_sink interface
 	void report_test_start(test_info  const&);
-	void report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message);
+	void report_failure(test_info const& info, tinfra::source_location const& location, tstring const& message);
 	void report_test_finish(test_info const&);
 	void report_summary(test_run_summary const&);
 };
@@ -69,7 +69,7 @@ public:
     ~local_test_result_sink();
 
     void report_test_start(test_info  const&);
-    void report_failure(test_info const& info, tinfra::trace::location const& location, tstring const& message);
+    void report_failure(test_info const& info, tinfra::source_location const& location, tstring const& message);
     void report_test_finish(test_info const&);
     void report_summary(test_run_summary const&);
 
@@ -77,7 +77,7 @@ public:
 
 class test_base {
 public:
-	test_base(const char* suite_name, const char* test_name, tinfra::trace::location const& source_location);
+	test_base(const char* suite_name, const char* test_name, tinfra::source_location const& source_location);
 	~test_base();
 	void run(test_result_sink& result);
 protected:
@@ -85,7 +85,7 @@ protected:
 public:
 	const char* name;
 	const char* suite;
-	tinfra::trace::location source_location;
+	tinfra::source_location source_location;
 };
 
 #define TEST(name) \
@@ -195,7 +195,7 @@ bool equals(const char* a, const char* b)
 // implementation details
 //
 template <typename T1, typename T2>
-void check_equal(T1 const& expected, T2 const& actual, tinfra::trace::location const& loc) 
+void check_equal(T1 const& expected, T2 const& actual, tinfra::source_location const& loc) 
 {
     if( !tinfra::test::equals(expected,actual) ) {
 	std::string msg = tinfra::fmt("expected '%s', but found '%s'") % (expected) % (actual);
@@ -204,7 +204,7 @@ void check_equal(T1 const& expected, T2 const& actual, tinfra::trace::location c
 } 
 
 template <typename T1, typename T2, typename T3>
-void check_close(T1 const& expected, T2 const& actual, T3 const& tollerancy, tinfra::trace::location const& loc) 
+void check_close(T1 const& expected, T2 const& actual, T3 const& tollerancy, tinfra::source_location const& loc) 
 {
     const bool result = (expected >= actual)
                 ? (expected - actual ) > tollerancy

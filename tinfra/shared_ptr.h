@@ -24,6 +24,8 @@
 
 namespace tinfra {
 
+extern tinfra::module_tracer shared_ptr_tracer;
+
 #ifdef TINFRA_SHARED_PTR_USE_BOOST
 
 using boost::shared_ptr;
@@ -133,7 +135,7 @@ public:
     }
     void swap(shared_ptr<T>& other)
     {
-        TINFRA_TRACE_MSG("tinfra::shared_ptr: swap");
+        //TINFRA_TRACE(shared_ptr_tracer, "tinfra::shared_ptr: swap");
         using std::swap;
         swap(ptr_, other.ptr_);
         swap(refcount_.ref_, other.refcount_.ref_);
@@ -154,8 +156,8 @@ public:
 private:
     void release() {
         if( refcount_.detach() ) {
-            TINFRA_TRACE_MSG("tinfra::shared_ptr: releasing");
-            TINFRA_TRACE_VAR(this->ptr_);
+            //TINFRA_TRACE(shared_ptr_tracer, "tinfra::shared_ptr: releasing");
+            //TINFRA_TRACE_VAR(shared_ptr_tracer, this->ptr_);
             delete ptr_;
             ptr_ = 0;
         }
@@ -189,7 +191,7 @@ shared_ptr<T>::shared_ptr(Y* p)
     : ptr_(p), 
       refcount_( new shared_ptr_atomic::atomic_long(1))
 { 
-    TINFRA_TRACE_MSG("tinfra::shared_ptr: new instance");
+    //TINFRA_TRACE(shared_ptr_tracer, "tinfra::shared_ptr: new instance");
 }
     
 template <typename T>
@@ -197,7 +199,7 @@ shared_ptr<T>::shared_ptr(shared_ptr const& p)
     : ptr_(p.ptr_),
       refcount_(p.refcount_)
 {
-    TINFRA_TRACE_MSG("tinfra::shared_ptr: copy_const");
+    //TINFRA_TRACE(shared_ptr_tracer, "tinfra::shared_ptr: copy_const");
     refcount_.attach();
 }
 
@@ -207,7 +209,7 @@ shared_ptr<T>::shared_ptr(shared_ptr<Y> const& p)
     : ptr_(p.get()),
       refcount_(p._tinfra_priv_refcount_())
 {
-    TINFRA_TRACE_MSG("tinfra::shared_ptr: copy_const template");
+    //TINFRA_TRACE(shared_ptr_tracer, "tinfra::shared_ptr: copy_const template");
     refcount_.attach();
 }
 template <typename T>
@@ -222,10 +224,10 @@ shared_ptr<T>::shared_ptr(std::auto_ptr<Y>& p)
 template <typename T>
 shared_ptr<T>& shared_ptr<T>::operator=(shared_ptr<T> const& p)
 {
-    TINFRA_TRACE_MSG("tinfra::shared_ptr: operator=");
-    TINFRA_TRACE_VAR(this->ptr_);
+    //TINFRA_TRACE(shared_ptr_tracer, "tinfra::shared_ptr: operator=");
+    //TINFRA_TRACE_VAR(shared_ptr_tracer, this->ptr_);
     int rc = refcount_.ref_ ? (long)(*refcount_.ref_) : -1;
-    TINFRA_TRACE_VAR(rc);
+    //TINFRA_TRACE_VAR(shared_ptr_tracer, rc);
     if( this == &p )
         return *this;
     
@@ -239,8 +241,8 @@ shared_ptr<T>& shared_ptr<T>::operator=(shared_ptr<T> const& p)
     refcount_ = p.refcount_;
     
     refcount_.attach();
-    TINFRA_TRACE_MSG("tinfra::shared_ptr: operator=, attached:");
-    TINFRA_TRACE_VAR(this->ptr_);
+    //TINFRA_TRACE(shared_ptr_tracer, "tinfra::shared_ptr: operator=, attached:");
+    //TINFRA_TRACE_VAR(shared_ptr_tracer, this->ptr_);
     
     return *this;
 }
@@ -248,7 +250,7 @@ template <typename T>
 template <typename Y>
 shared_ptr<T>& shared_ptr<T>::operator=(shared_ptr<Y> const& p)
 {
-    TINFRA_TRACE_MSG("tinfra::shared_ptr: operator= template");
+    //TINFRA_TRACE(shared_ptr_tracer, "tinfra::shared_ptr: operator= template");
     if( this == &p )
         return *this;
     
@@ -265,14 +267,14 @@ shared_ptr<T>& shared_ptr<T>::operator=(shared_ptr<Y> const& p)
 inline void reference_count::attach() {
     if( ref_ ) {
         shared_ptr_atomic::atomic_increment(ref_);
-	TINFRA_TRACE_VAR(ref_);
+        //TINFRA_TRACE_VAR(shared_ptr_tracer, ref_);
     }
 }
 
 inline bool reference_count::detach() {
     if( ref_ == 0 )
         return false;
-    TINFRA_TRACE_VAR(ref_);
+    //TINFRA_TRACE_VAR(shared_ptr_tracer, ref_);
     int current_use_count = shared_ptr_atomic::atomic_decrement(ref_);
     if( current_use_count == 0 ) {
         delete ref_;
@@ -288,3 +290,4 @@ inline bool reference_count::detach() {
 } // end namespace tinfra
 
 #endif // tinfra_shared_ptr_h_included_
+
