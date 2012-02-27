@@ -21,55 +21,127 @@
 #include <cstdlib>
 
 namespace tinfra { 
-namespace trace {
-    auto_register_tracer __tinfra_global_tracer("global");
-    tinfra::trace::auto_register_tracer error_tracer("errors", true);
-}}
 
-tinfra::trace::tracer& __tinfra_tracer_adaptable = tinfra::trace::__tinfra_global_tracer;
-
-namespace tinfra { 
-namespace trace {
+//
+// static instances
+//
+    
+module_tracer global_tracer("global", 2);
+module_tracer tinfra_tracer(global_tracer, "tinfra", 2);
 
 //
 // tracer implementation
 //
-void tracer::trace(location const& loc, const char* message)
+
+bool tracer::is_enabled_inherit()
 {
-    if( !is_enabled() ) return;
+    tracer* cur_tracer=this;
+    bool result;
+    do {
+        result = cur_tracer->is_enabled();
+        tracer = cur_tracer->get_parent();
+    } while( cur_tracer );
+    this->enabled = result;
+    return result;
+}
+
+void tracer::trace(tstring const& message, source_location const& sloc)
+{
+    if( !is_enabled_inherit() ) 
+        return;
         
-    tstring name(this->name());
-    log_level level = TRACE;
-    if( this == &__tinfra_global_tracer )
-        name = "";
-    if( this == &error_tracer ) {
-        name = "";
-        level = ERROR;
-    }
-    tinfra::logger log(name);
-    log.log(level, message, loc);
+    const tstring name(this->name());
+    logger log(name);
+    log.log(level, message, sloc);
+}
+
+tracer::tracer(parent* parent, const char* name, bool enabled):
+    enabled(enabled),
+    name(name),
+    parent(parent)
+{
+}
+
+//
+// call_tracer
+//
+
+call_tracer::call_tracer(tinfra::source_location const& sloc):
+    tracer(&global_tracer, sloc.name, global_tracer.is_enabled())
+{
+    trace("entering", sloc);
+}
+
+call_tracer::call_tracer(tracer& parent, tinfra::source_location const& sloc):
+    tracer(&parent, sloc.name, parent.is_enabled())
+{
+    trace("entering", sloc);
+}
+
+call_tracer::call_tracer(tracer& parent, const char* name):
+    tracer(&parent, name, parent.is_enabled())
+{
+    trace("entering", sloc);
+}
+
+call_tracer::~call_tracer()
+{
+    trace("exiting", TINFRA_NULL_SOURCE_LOCATION);
+}
+
+//
+// public_tracer
+//
+//  int         verbosity_level;  
+//  bool        inherit_enabled;
+
+public_tracer::public_tracer(tracer& parent, const char* name, int verbosity_level):
+    tracer(&parent, name, false),
+    verbosity_level(verbosity_level),
+    inherit_enabled(true)
+{
+    static_registry<public_tracer>::register_element(this);
+}
+
+public_tracer::public_tracer(const char* name, int verbosity_level):
+    tracer(&global_tracer, name, false),
+    verbosity_level(verbosity_level),
+    inherit_enabled(true)
+{
+    static_registry<public_tracer>::register_element(this);
+}
+
+public_tracer::~public_tracer()
+{
+    static_registry<public_tracer>::unregister_element(this);
+}
+
+int  public_tracer::get_verbosity_level()
+{
+    return this->verbosity_level;
+}
+    
+void public_tracer::set_enabled(bool new_value)
+{
+    this->enabled = new_value;
+    this->inherit_enabled = false;
+}
+
+void public_tracer::set_inherit_enabled(bool inherit_enabled)
+{
+    this->inherit_enabled = inherit_enabled;
+    if( this->inherit_enabled )
+        this->is_enabled_inherit();
 }
 
 //
 // tracer registry
 //
 
-auto_register_tracer::auto_register_tracer(const char* name, bool enabled):
-        tracer(name, enabled)
+std::vector<public_tracer*> get_global_tracers()
 {
-    static_registry<tracer>::register_element(this);
+    return static_registry<public_tracer>::elements();
 }
-
-auto_register_tracer::~auto_register_tracer()
-{
-    static_registry<tracer>::register_element(this);
-}
-
-std::vector<tracer*> get_global_tracers()
-{
-    return static_registry<tracer>::elements();
-}
-
 
 void print_tracer_usage(tstring const&)
 {
@@ -179,4 +251,4 @@ void process_params(int& argc, char** argv)
         ++i;
     }
 }
-}} // end namespace tinfra::trace
+} // end namespace tinfra::trace
