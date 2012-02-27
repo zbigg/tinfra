@@ -19,7 +19,7 @@ int buffered_input_stream::read(char* dest, int size)
 {
     size_t readed_size = 0;
     const size_t initial_consumed = consume_buffer(dest, size);
-    if( initial_consumed == size )
+    if( initial_consumed == (size_t)size )
         return size;
     
     readed_size += initial_consumed;
@@ -31,7 +31,7 @@ int buffered_input_stream::read(char* dest, int size)
         return readed_size;
     }
     
-    if( size > buffer.size() ) {
+    if( (size_t)size > buffer.size() ) {
         // if requested size is bigger than buffer
         // then read directly into target buffer
         int r = target.read(dest, size);
