@@ -26,28 +26,16 @@ AC_PROG_RANLIB
 AC_CANONICAL_SYSTEM
 
 AC_BAKEFILE([m4_include(autoconf_inc.m4)])
-m4_include([pcre.m4])
 
-PKG_CHECK_MODULES([TINFRA], [tinfra >= 0.0.1],
-    [
-        CXXFLAGS="$CXXFLAGS $TINFRA_CFLAGS"
-        CPPFLAGS="$CPPFLAGS $TINFRA_CFLAGS"
-        LIBS="$LIBS $TINFRA_LIBS"
-    ],
-    [AC_MSG_ERROR([tinfra library required] )]
-    )
+PKG_CHECK_MODULES([DEPS], [tinfra >= 0.0.1 libpcre >= 8.0],
+	[
+	LIBS="$DEPS_LIBS $LIBS"
+	CXXFLAGS="$DEPS_CFLAGS $CXXFLAGS"
+	CPPFLAGS="$DEPS_CFLAGS $CFLAGS"
 
+	])
 
-AM_PATH_PCRE(4.5,
-[
-    LIBS="$LIBS $PCRE_LIBS"
-    CPPFLAGS="$CPPFLAGS $PCRE_CFLAGS"
-    AC_DEFINE(HAVE_PCRE,1,[Have PCRE library for regexp])
-], 
-[
-    AC_MSG_ERROR([pcre library not found, where is your pcre-config ?])
-])
-
+AC_DEFINE(HAVE_PCRE,1,[Have PCRE library for regexp])
 
 AC_CONFIG_FILES([Makefile tinfra-regexp.pc])
 AC_OUTPUT
