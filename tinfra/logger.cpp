@@ -5,6 +5,7 @@
 #include "path.h"   // for basename
 #include "exeinfo.h" // for get_exepath
 #include "thread.h"
+#include "fmt.h"    // for tsprintf
 
 #ifdef _WIN32
 #undef ERROR // defined by WINGDI
@@ -38,6 +39,17 @@ void log_error(tstring const& m, tinfra::source_location const& loc) { logger().
 
 void log_fail(tstring const& m) { logger().fail(m); }
 void log_fail(tstring const& m, tinfra::source_location const& loc) { logger().fail(m,loc); }
+
+void log_fail(tstring const& m, tstring const& reason)
+{
+    std::string message = tsprintf("%s: %s", m, reason);
+    log_fail(message);
+}
+void log_fail(tstring const& m, tstring const& reason, tinfra::source_location const& loc)
+{
+    std::string message = tsprintf("%s: %s", m, reason);
+    log_fail(message, loc);
+}
 
 //
 // logger implementation

@@ -167,7 +167,7 @@
     </data-files-tree>
     
     <data-files-tree id="headers-autoconf" cond="FORMAT=='autoconf'">
-        <srcdir>$(SRCDIR)</srcdir>
+        <srcdir>$(BUILDDIR)</srcdir>
         <install-to>$(INCLUDEDIR)</install-to> 
         <files>
             tinfra/config.h

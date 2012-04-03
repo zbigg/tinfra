@@ -75,6 +75,8 @@ void log_error(tstring const& m, tinfra::source_location const& loc);
   */
 void log_fail(tstring const& m);
 void log_fail(tstring const& m, tinfra::source_location const& loc);
+void log_fail(tstring const& m, tstring const& reason);
+void log_fail(tstring const& m, tstring const& reason, tinfra::source_location const& loc);
 
 //
 // OO logger interface 
