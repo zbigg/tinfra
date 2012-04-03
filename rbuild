@@ -68,7 +68,7 @@
 set -e
 #set -x
 
-rbuild_root=$(readlink -f $(dirname $0))
+rbuild_root=$(dirname $(readlink -f $0))
 
 name=${name-$(basename $PWD)}
 
@@ -78,6 +78,9 @@ sync()
 {
         echo "LOCAL:  rsync $1 -> $2" 1>&2
         local RSYNC_OPTS="--exclude-from=${rbuild_root}/rbuild-rsync-exclude.txt -r -z -i --copy-links --times"
+	if [ -f .rbuild-exclude.txt ] ; then
+		RSYNC_OPTS="$RSYNC_OPTS --exclude-from=.rbuild-exclude.txt"
+	fi
         rsync $RSYNC_OPTS $1 $2
 }
 
