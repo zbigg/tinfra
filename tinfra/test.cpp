@@ -36,7 +36,37 @@ using std::string;
     #define DEFAULT_TOP_SRCDIR "."
 #endif
 
+#ifdef SRCDIR
+    #define DEFAULT_SRCDIR SRCDIR
+#else
+    #define DEFAULT_SRCDIR "."
+#endif
+
 static std::string top_srcdir = DEFAULT_TOP_SRCDIR;
+static std::string srcdir = DEFAULT_SRCDIR;
+
+void set_test_resources_dir(tstring const& x)
+{
+    top_srcdir.assign(x.data(), x.size());
+}
+
+void set_srcdir(tstring const& x)
+{
+    srcdir.assign(x.data(), x.size());
+}
+
+std::string srcdir_eval(std::string const& path_expr)
+{
+    std::string SRCDIR_TOKEN = "$srcdir";
+    std::string result(path_expr);
+    std::size_t s = 0;
+    std::size_t m;
+    while ( ( m = result.find(SRCDIR_TOKEN,s)) != std::string::npos ) {
+        result.replace(m, SRCDIR_TOKEN.size(), srcdir);
+        s = m + srcdir.size();
+    }
+    return result;
+}
 
 //
 // test_fs_sandbox
@@ -67,11 +97,6 @@ test_fs_sandbox::~test_fs_sandbox()
     TINFRA_TRACE(test_fs_sandbox_tracer, fmt("leaving sandbox pwd='%s'") % orig_pwd_);
     
     fs::cd(orig_pwd_);    
-}
-
-void set_test_resources_dir(tstring const& x)
-{
-    top_srcdir.assign(x.data(), x.size());
 }
 
 //
@@ -372,8 +397,12 @@ static std::string DEFAULT_TEST_RESOURCES_DIR = SRCDIR "/tests/resources";
 static std::string DEFAULT_TEST_RESOURCES_DIR =  "tests/resources";
 #endif
 
+
 tinfra::option<std::string> 
                       opt_test_resources_dir(DEFAULT_TEST_RESOURCES_DIR, 'D',"test-resources-dir", "set folder with file resources");
+tinfra::option<std::string> 
+                      opt_srcdir(DEFAULT_SRCDIR,"srcdir", "set folder with sources ($srcdir from makefile)");
+                      
 tinfra::option_switch opt_list('l', "test-list", "list available test cases");
 
 int test_main_real(tstring const&, std::vector<tinfra::tstring>& args)
@@ -382,9 +411,23 @@ int test_main_real(tstring const&, std::vector<tinfra::tstring>& args)
         list_available_tests();
         return 0;
     }
-    
-    set_test_resources_dir(opt_test_resources_dir.value());
 
+    
+    set_srcdir(DEFAULT_SRCDIR);
+    if( opt_srcdir.accepted() ) {
+        set_srcdir(opt_srcdir.value());
+    } else {
+        const char* srcdir_env = std::getenv("srcdir");
+        if( srcdir_env ) 
+            set_srcdir(srcdir_env);
+    }
+    
+    if( opt_test_resources_dir.accepted() ) {
+        set_test_resources_dir(opt_test_resources_dir.value());
+    } else {
+        set_test_resources_dir(srcdir_eval("$srcdir/tests/resources"));
+    }
+    
     test_name_list test_names(args.begin(), args.end());
     test_name_matcher predicate(test_names);
 

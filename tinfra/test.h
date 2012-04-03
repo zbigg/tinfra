@@ -61,6 +61,12 @@ void set_test_resources_dir(tstring const& d);
 
 int test_main(int argc, char** argv);
 
+/// Expand $srcdir
+///
+/// Expand expression $srcdir to actual vaule passed 
+/// via environment or --srcdir option.
+std::string srcdir_eval(std::string const& path_expr);
+
 } } // end namespace tinfra::test
 
 #endif
