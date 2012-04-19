@@ -9,7 +9,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.59)
 AC_INIT(
     tinfra,
-    0.0.1 ,
+    0.0.2,
     [z.zagorski@gmail.com])
 AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
 AC_CONFIG_SRCDIR([tinfra.bkl])
