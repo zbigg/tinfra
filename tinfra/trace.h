@@ -163,6 +163,9 @@ public:
     tracer*     get_parent() const; // inline
     
     void trace(tstring const& message, tinfra::source_location const& sloc);
+    
+    tracer(const char* name, bool enabled = false);
+    tracer(tracer& parent, const char* name, bool enabled = false);
 protected:
     tracer(tracer* parent, const char* name, bool enabled);
 };

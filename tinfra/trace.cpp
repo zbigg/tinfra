@@ -44,6 +44,8 @@ bool tracer::is_enabled_inherit()
     bool result;
     do {
         result = cur_tracer->is_enabled();
+        if( result )
+            break;
         tracer* next = cur_tracer->get_parent();
         if( next == cur_tracer )
             break;
@@ -55,7 +57,9 @@ bool tracer::is_enabled_inherit()
 
 void tracer::trace(tstring const& message, source_location const& sloc)
 {
-    if( !is_enabled_inherit() ) 
+    // TBD, inheritance mechanism is fucked up!
+    // if( !is_enabled_inherit() )
+    if( !is_enabled() ) 
         return;
         
     const tstring name(this->get_name());
@@ -70,6 +74,19 @@ tracer::tracer(tracer* parent, const char* name, bool enabled):
 {
 }
 
+tracer::tracer(const char* name, bool enabled):
+    enabled(enabled),
+    name(name),
+    parent(0)
+{
+}
+
+tracer::tracer(tracer& parent, const char* name, bool enabled):
+    enabled(enabled),
+    name(name),
+    parent(&parent)
+{
+}
 //
 // call_tracer
 //
