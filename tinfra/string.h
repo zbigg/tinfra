@@ -46,6 +46,14 @@ std::vector<std::string> split(tstring const& in, char delimiter); // DEPRECATED
 /// (CR alone is not detected!)
 std::vector<std::string> split_lines(tstring const& in);
 
+/// extract first token
+///
+/// extracts first token from string delimited by @param any char contained
+/// in delimiter
+/// if there is no delimiter, then whole string is returned
+/// if strings starts with delimiter, empty string is returned
+std::string before_first(tstring const& delimiters, tstring const& input);
+
 /// Compare strings ignoring case.
 ///
 /// Compare strings ignoring case (strnicmp, strncasecmp) functions are used
@@ -67,6 +75,7 @@ int         compare_no_case(tstring const& a, tstring const& b);
 ///
 /// @return less than 0 when a appears to be "less" than b, 0 if they're equal, greater than 0 otherwise
 int         compare_no_case(tstring const& a, tstring const& b, size_t upto);
+
 
 }
 

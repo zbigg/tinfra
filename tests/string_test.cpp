@@ -155,6 +155,20 @@ SUITE(tinfra)
         CHECK_EQUAL("", r[2] );
     }
     
+    TEST(string_before_first)
+    {
+        using tinfra::before_first;
+        
+        // main use case
+        CHECK_EQUAL("mount", before_first(" \t", "mount /dev/cdrom"));
+        // and variations
+        CHECK_EQUAL("mount", before_first(" \t", "mount\t/dev/cdrom"));
+        
+        // and edge cases
+        CHECK_EQUAL("mountcdrom", before_first(" \t", "mountcdrom"));
+        CHECK_EQUAL("", before_first("m", "mountcdrom"));
+    }
+    
     TEST(string_compare_no_case_corner)
     {
         using tinfra::compare_no_case;
