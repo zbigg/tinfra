@@ -6,6 +6,8 @@
 #ifndef tinfra_exeinfo_h_included
 #define tinfra_exeinfo_h_included
 
+#include "platform.h" // for intptr_t
+
 #include <istream>
 
 namespace tinfra {

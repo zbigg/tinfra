@@ -54,8 +54,18 @@
 #include "tinfra/config.h"
 #endif
 
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L)
+#define TINFRA_CXX11
+#define TINFRA_HAS_VARIADIC_TEMPLATES
+#endif
+
 #include <ios>
 #include <cstddef>
+#ifdef TINFRA_CXX11
+#include <cstdint>  // for intptr_t as defined in C++11
+#else
+#include <stdint.h> // for intptr_t as deined in C99 and available in most places
+#endif
 
 namespace tinfra {
 	using std::size_t;
@@ -73,11 +83,6 @@ namespace tinfra {
 #define TINFRA_LIKELY(x)       (x)
 #define TINFRA_UNLIKELY(x)     (x)
 
-#endif
-
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L)
-#define TINFRA_CXX11
-#define TINFRA_HAS_VARIADIC_TEMPLATES
 #endif
 
 #endif // tinfra_platform_h_included

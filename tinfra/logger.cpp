@@ -11,11 +11,10 @@
 #undef ERROR // defined by WINGDI
 #endif
 
-#ifndef HAVE_PID
 #ifdef _WIN32
 #include <windows.h>
-#endif
 #else
+#include <sys/types.h>
 #include <unistd.h>
 #endif
 
