@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <sys/termios.h>
 #include <stdio.h>
 
 #include "tinfra/posix/posix_stream.h"
@@ -254,7 +255,9 @@ struct posix_subprocess: public subprocess {
                 // now reasoing is following:
                 //   if we're redirecting stdin of subprocess then we wanw
                 //   it to read from us not TTY  ==> always detach if stdin == REDIRECT
-                
+		// on openindiana, ioctl(/dev/tty, TIOCNOTTY) fails, so ignore
+		// but i don't know why :/
+#ifndef sun		
                 int tty_fd = open("/dev/tty", O_RDWR);
                 if (tty_fd >= 0) {
                     int ret = ioctl(tty_fd, TIOCNOTTY, 0);
@@ -267,6 +270,7 @@ struct posix_subprocess: public subprocess {
                 else {
 		    TINFRA_LOG_ERROR(fmt("warning: detaching from tty failed: open(/dev/tty) returned errno: %s)") % errno_to_string(errno));
                 }
+#endif
             } else if( stdin_mode == NONE) { 
                 ::close(0);
                 ::open("/dev/null",O_RDONLY);
