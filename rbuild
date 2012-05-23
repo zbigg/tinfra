@@ -111,11 +111,11 @@ if [ ${BUILD_HOST} = local ] ; then
 else
     invoke_immediate() {
             echo "REMOTE: $@" 1>&2
-            ssh $BUILD_HOST "$@"
+            ssh -At $BUILD_HOST "$@"
     }
     invoke() {
             echo "REMOTE: $BUILD_HOST: $@" 1>&2
-            ssh $BUILD_HOST "$@"
+            ssh -A $BUILD_HOST "$@"
     }
     remote_path(){
             echo $BUILD_HOST:$1
@@ -134,8 +134,11 @@ if [ -f ${build_host_config} ] ; then
 fi
 
 if [ ${BUILD_HOST} != local ] ; then
-    remote_src=${remote_src-/tmp/rbuild/src}
-    base_build_dir=${base_build_dir-/tmp/rbuild/build}
+    base_hostname=`hostname`
+    view_tag=${LOGNAME}@${base_hostname}
+    
+    remote_src=${remote_src-/tmp/rbuild-${view_tag}/src}
+    base_build_dir=${base_build_dir-/tmp/rbuild-${view_tag}/build}
 fi
 
 if [ -z "$base_build_dir" ] ; then
@@ -202,6 +205,10 @@ fi
 if [ "$1" = "--remove" ] ; then
     echo "$0: removing build area"
     remove_build_area
+    exit
+fi
+
+if [ "$1" = "--reconfigure" ]; then
     exit
 fi
 
