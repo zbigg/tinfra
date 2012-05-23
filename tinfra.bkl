@@ -35,6 +35,7 @@
     <!-- public things -->
     <lib id="tinfra" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
+	<include>$(BUILDDIR)</include>
         <sources>
             tinfra/symbol.cpp
             tinfra/runtime.cpp
@@ -77,6 +78,7 @@
     </lib>
     <lib id="tinfra-test" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
+	<include>$(BUILDDIR)</include>
         <sources>
             tinfra/test.cpp
         </sources>
@@ -177,6 +179,7 @@
     <!-- local things -->
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
+	<include>$(BUILDDIR)</include>
         <sources>
             tests/test_main.cpp
             
@@ -226,6 +229,7 @@
     
     <exe id="test_fatal_exception" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
+	<include>$(BUILDDIR)</include>
         <sources>
             tests/fatal_exception_test.cpp
         </sources>
