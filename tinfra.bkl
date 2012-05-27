@@ -71,6 +71,7 @@
             tinfra/text.cpp
 	    tinfra/fail.cpp
 	    tinfra/logger.cpp
+	    tinfra/time.cpp
             $(TINFRA_PLATFORM_SOURCES)
         </sources>
         <install-to>$(LIBDIR)</install-to> 
@@ -215,6 +216,7 @@
 	    tests/memory_stream_test.cpp
 	    tests/test_macros_test.cpp
 	    tests/trace_test.cpp
+	    tests/time_test.cpp
         </sources>
         <library>tinfra-test</library>
         <library>tinfra</library>
