@@ -1,0 +1,35 @@
+
+The Idea:
+    to have a common framework for easy publication
+    of C++ objects+methods & functions through
+     - HTTP
+     - CLI
+     - GUI
+
+// iheader.cpp
+struct IFoo {
+    virtual std::string reverse(std::string) = 0;
+};
+
+// iheader.cpp
+REGISTER_CALLABLE_METHOD(IFoo, "reverse", &IFoo::reverse);
+
+// impl
+class FooImpl {
+    std::string reverse(std::string);
+public:    
+    FooImpl* FooImpl::create();
+};
+
+REGISTER_CLASS_FACTORY(IFoo, &FooImpl::create);
+
+// integration part
+main() 
+{
+    UltimateFactory cf;
+    ServiceContainer c;
+    unique_ptr<IFoo> foo(cf.create<IFoo>(/*how to pass params here*/));    
+    c.add_service("reverser", foo);
+    
+    c.run();
+}
