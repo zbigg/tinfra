@@ -85,7 +85,8 @@ SUITE(tinfra) {
         CHECK_EQUAL("a b", tsprintf("a %s", "b"));
         CHECK_EQUAL("a b c", tsprintf("a %s %s", "b", 'c'));
         CHECK_EQUAL("a b c 33", tsprintf("a %s %s %i", "b", 'c', 33));
-        
+        CHECK_EQUAL("a b c 33 x", tsprintf("a %s %s %i %s", "b", 'c', 33, 'x'));
+        CHECK_EQUAL("a b c 33 y z", tsprintf("a %s %s %i %s %s", "b", 'c', 33, 'y', 'z'));
     }
     
     TEST(fmt_tprintf)
