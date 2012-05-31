@@ -136,6 +136,31 @@ SUITE(tinfra) {
         CHECK_EQUAL(4, def.value()[3]);
         
     }
+    TEST(option_bug_string_with_space) {
+        using std::vector;
+        using std::string;
+        
+        using tinfra::tstring;
+        using tinfra::option_list;
+	using tinfra::list_option;
+        using tinfra::option;
+
+        vector<tstring> params;
+        
+        params.push_back("--def=abc def");
+	params.push_back("--foo=zoo bar");
+        
+        option_list the_list;
+        
+        option<string>  def(the_list, "boom", "def", "foo_description");
+	list_option<string> foo(the_list, "foo", "foo_description");
+
+        the_list.parse(params);
+        CHECK_EQUAL("abc def", def.value());
+	CHECK_EQUAL(1, foo.value().size());
+	CHECK_EQUAL("zoo bar", foo.value()[0]);
+    }
+
 } // end SUITE(tinfra)
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:
