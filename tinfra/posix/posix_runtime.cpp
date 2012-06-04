@@ -15,6 +15,7 @@
 #include "tinfra/logger.h"
 #include "tinfra/fmt.h"
 #include "tinfra/os_common.h"
+#include "tinfra/fs.h" 
 
 #include <exception>
 #include <iomanip>
@@ -85,10 +86,20 @@ bool get_stacktrace(stacktrace_t& dest)
 #endif
 }
 
+static std::string local_get_exepath()
+{
+#ifdef linux
+    if( tinfra::fs::exists("/proc/self/exe") ) {
+        return tinfra::fs::readlink("/proc/self/exe");
+    } 
+#endif    
+    return get_exepath();
+
+}
 bool get_debug_info(void* address, debug_info& result)
 {
     std::ostringstream cmd;
-    cmd << "addr2line -e " << get_exepath() << " -sfC " << std::hex << address;
+    cmd << "addr2line -e " << local_get_exepath() << " -sfC " << std::hex << address;
     using std::vector;
     using std::string;
     string cmdo;
