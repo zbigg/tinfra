@@ -102,7 +102,7 @@ bool parser::fetch_next(entry& out)
     // TODO: escape sequence support
     // TODO: unicode support
     // TODO: inline comment support
-    const size_t value_end = line.find_last_not_of(" \t");
+    const size_t value_end = line.find_last_not_of(" \r\n\t");
     if( value_end != std::string::npos ) 
         out.value = line.substr(value_begin, 1+value_end-value_begin);
     else
