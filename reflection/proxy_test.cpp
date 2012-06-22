@@ -21,6 +21,13 @@ public:
 
 };
 
+TINFRA_PROXY1_BEGIN(bar_interface) {
+    TINFRA_PROXY1_METHOD(0, bar_interface, method0);
+    TINFRA_PROXY1_METHOD(1, bar_interface, method1);
+    TINFRA_PROXY1_METHOD(2, bar_interface, method1x);
+    TINFRA_PROXY1_METHOD(3, bar_interface, method2);
+}
+
 using tinfra::any;
 using std::vector;
 
@@ -93,20 +100,15 @@ extern void call_method1x(bar_interface* bar)
 int xxx(int, char**)
 {
     bar_interface_impl xff;
-    
-    tinfra::proxy_builder bld;
-    bld.method<0>("method0", &bar_interface::method0);
-    bld.method<1>("method1", &bar_interface::method1);
-    bld.method<2>("method1x", &bar_interface::method1x);
-    bld.method<3>("method2", &bar_interface::method2);
+
     
     my_proxy_handler handler;    
-    tinfra::proxy_object proxy_obj = bld.make_proxy(&handler);
+    tinfra::proxy_object<bar_interface> bar = tinfra::make_proxy<bar_interface>(handler);
     
-    bar_interface* bar = reinterpret_cast<bar_interface*>(&proxy_obj);
+    bar_interface* pbar = bar.get();
  
     std::cout << "ptr=" << sizeof(foo_value) << "\n";
-    std::cout << "ptr=" << bar << "\n";
+    std::cout << "ptr=" << bar.get() << "\n";
     
     {
         CHECK_EQUAL(1337, bar->method0());
@@ -117,7 +119,7 @@ int xxx(int, char**)
         CHECK_EQUAL(0, res);
     }
 
-    std::cout << "ptr=" << bar << "\n";
+    std::cout << "ptr=" << bar.get()  << "\n";
     {
         foo_value res = bar->method1(666,-666);
         
@@ -133,3 +135,4 @@ int xxx(int, char**)
 }
     
 TINFRA_MAIN(xxx);
+

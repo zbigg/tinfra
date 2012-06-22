@@ -6,6 +6,42 @@
 #include <vector>
 #include <iostream>
 
+
+
+namespace tinfra {
+
+class proxy_handler {
+public:
+    virtual ~proxy_handler() {};
+    virtual any invoke(std::string const& method, std::vector<tinfra::any>& args) = 0;
+};
+
+struct proxy_object_data {
+    void**                   vtable;
+    std::vector<std::string> names;
+    proxy_handler* handler;   
+};
+
+template <typename Interface>
+class proxy_object {
+    proxy_object_data dat;
+public:
+    proxy_object(proxy_object_data const&);
+    
+    const Interface* get() const { return reinterpret_cast<Interface*>(&dat); }
+          Interface* get()       { return reinterpret_cast<Interface*>(&dat); }
+         
+    const Interface* operator->() const { return this->get(); } 
+          Interface* operator->()       { return this->get(); } 
+};
+
+#define TINFRA_PROXY1_BEGIN(clazz)      TINFRA_PROXY1_BEGIN_IMPL(clazz)
+#define TINFRA_PROXY1_METHOD(idx, c, m)   TINFRA_PROXY1_METHOD_IMPL(idx,c,m)
+
+template <typename Interface>
+tinfra::proxy_object<Interface> make_proxy(tinfra::proxy_handler& ph);
+
+
 /*
     MSVS note, 
     
@@ -78,20 +114,6 @@
             ret 8
     looks like we have to build trampolines by ourselves :/
 */
-namespace tinfra {
-    
-class proxy_handler {
-public:
-    virtual ~proxy_handler() {};
-    virtual any invoke(std::string const& method, std::vector<tinfra::any>& args) = 0;
-};
-
-struct proxy_object {
-    void**         vtable;
-    
-    std::vector<std::string> names;
-    proxy_handler* handler;
-};
 
 #ifdef _MSC_VER
 const int VTABLE_INITIAL_IDX = 1;
@@ -107,7 +129,7 @@ const int VTABLE_INITIAL_IDX = 2;
 
 class proxy_builder {
 public:
-    proxy_object make_proxy(proxy_handler* handler) ;
+    proxy_object_data make_proxy(proxy_handler* handler) ;
     
     template <int idx, typename CLS, typename R>
     void method(const char* name, R (TINFRA_PROXY_THISCALL CLS::*)());
@@ -138,7 +160,7 @@ struct virtual_methods {
     static ReturnType TINFRA_PROXY_THISCALL invoke(void* obj)
     {
         std::cout << "invoke0<" << MethodNumber << "> called on ptr=" << obj << "\n";
-        proxy_object* proxy = reinterpret_cast<proxy_object*>(obj);
+        proxy_object_data* proxy = reinterpret_cast<proxy_object_data*>(obj);
         
         TINFRA_ASSERT(MethodNumber+VTABLE_INITIAL_IDX < proxy->names.size());
         const std::string& name = proxy->names[MethodNumber+VTABLE_INITIAL_IDX];
@@ -155,7 +177,8 @@ struct virtual_methods {
     {
         std::cout << "invoke1<" << MethodNumber << "> called on ptr=" << obj << "\n";
         std::cout << "arg0: " << v1 << "\n";
-        proxy_object* proxy = reinterpret_cast<proxy_object*>(obj);
+        proxy_object_data* proxy = reinterpret_cast<proxy_object_data*>(obj);
+        
         
         TINFRA_ASSERT(MethodNumber+VTABLE_INITIAL_IDX < proxy->names.size());
         const std::string& name = proxy->names[MethodNumber+VTABLE_INITIAL_IDX];
@@ -170,7 +193,7 @@ struct virtual_methods {
     template <int MethodNumber, typename T1, typename T2>
     static ReturnType TINFRA_PROXY_THISCALL invoke(void* obj, T1 v1, T2 v2)
     {     
-        proxy_object* proxy = reinterpret_cast<proxy_object*>(obj);
+        proxy_object_data* proxy = reinterpret_cast<proxy_object_data*>(obj);
         TINFRA_PROXY_GET_THIS(obj, proxy);
         std::cout << "invoke2<" << MethodNumber << "> called on ptr=" << proxy << "\n";
         std::cout << "arg0: " << v1 << "\n";
@@ -191,7 +214,7 @@ struct virtual_methods {
     template <int MethodNumber, typename T1, typename T2, typename T3>
     static ReturnType TINFRA_PROXY_THISCALL invoke(void* obj, T1 v1, T2 v2, T3 v3)
     {
-        proxy_object* proxy = reinterpret_cast<proxy_object*>(obj);
+        proxy_object_data* proxy = reinterpret_cast<proxy_object_data*>(obj);
         TINFRA_PROXY_GET_THIS(obj, proxy);
         
         std::cout << "invoke3<" << MethodNumber << "> called on ptr=" << proxy << "\n";
@@ -214,7 +237,7 @@ struct virtual_methods {
     template <int MethodNumber, typename T1, typename T2, typename T3, typename T4>
     static ReturnType TINFRA_PROXY_THISCALL invoke(void* obj, T1 v1, T2 v2, T3 v3, T4 v4)
     {
-        proxy_object* proxy = reinterpret_cast<proxy_object*>(obj);
+        proxy_object_data* proxy = reinterpret_cast<proxy_object_data*>(obj);
         TINFRA_PROXY_GET_THIS(obj, proxy);
         
         std::cout << "invoke4<" << MethodNumber << "> called on ptr=" << proxy << "\n";
@@ -280,10 +303,9 @@ void proxy_builder::method(const char* name, R (TINFRA_PROXY_THISCALL CLS::*)(T1
     functions.push_back( (void*)fun );
 }
 
-inline
-proxy_object proxy_builder::make_proxy(proxy_handler* handler) 
+proxy_object_data proxy_builder::make_proxy(proxy_handler* handler) 
 {
-    proxy_object obj;
+    proxy_object_data obj;
     // prepare tables
     size_t table_size = this->functions.size() + VTABLE_INITIAL_IDX;
     obj.vtable = new void*[table_size];
@@ -297,6 +319,34 @@ proxy_object proxy_builder::make_proxy(proxy_handler* handler)
     }
     obj.handler = handler;
     return obj;
+}
+
+#define TINFRA_PROXY1_BEGIN_IMPL(clazz)      inline void tinfra_proxy_visit_interface(clazz*, tinfra::proxy_builder& bld)
+#define TINFRA_PROXY1_METHOD_IMPL(idx, c, m)   bld.method<idx>(#m, &c::m)
+
+template <typename Interface>
+proxy_object_data proxy_get_def(tinfra::proxy_handler& ph)
+{
+    Interface* dummy = 0;
+    tinfra::proxy_builder builder;
+    tinfra_proxy_visit_interface(dummy, builder);
+    return builder.make_proxy(&ph);
+}
+
+template <typename Interface>
+proxy_object<Interface> make_proxy(tinfra::proxy_handler& ph)
+{
+    static proxy_object_data dat = proxy_get_def<Interface>(ph);
+    Interface* dummy = 0;
+    tinfra::proxy_builder builder;
+    tinfra_proxy_visit_interface(dummy, builder);
+    return builder.make_proxy(&ph);
+}
+
+template <typename Interface>
+proxy_object<Interface>::proxy_object(proxy_object_data const& dat):
+	dat(dat)
+{
 }
 
 } // end namespace tinfra
