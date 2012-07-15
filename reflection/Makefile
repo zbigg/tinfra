@@ -1,6 +1,6 @@
 LDLIBS=$(shell pkg-config tinfra tinfra-test --libs)
 #LDFLAGS=$(shell pkg-config tinfra --libs)
-CXXFLAGS=-O2 -g -Wall -Wextra -Wno-unused
+CXXFLAGS=-O0 -g -Wall -Wextra -Wno-unused
 CC=g++
 
 all: mo_full reflect_test proxy_test

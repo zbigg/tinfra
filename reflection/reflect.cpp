@@ -10,8 +10,8 @@ namespace reflect {
 // 
 default_method_info::default_method_info(
                   std::string name, 
-                  class_info* return_type,
-                  vector<class_info*> parameter_types,
+                  type_info* return_type,
+                  vector<type_info*> parameter_types,
                   method_invoker_fun invoker,
                   any target_method_ptr):
     name(name),
@@ -27,11 +27,11 @@ string      default_method_info::get_name() {
     return this->name;
 }
 
-class_info* default_method_info::get_return_type() { 
+type_info* default_method_info::get_return_type() { 
     return this->return_type; 
 }
 
-vector<class_info*> default_method_info::get_parameter_types() { 
+vector<type_info*> default_method_info::get_parameter_types() { 
     return this->parameter_types;
 }
 

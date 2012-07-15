@@ -33,3 +33,21 @@ main()
     
     c.run();
 }
+
+// another idea
+
+for functions that need services to operate like this:
+
+PersonData get_person(DatabaseAccess& db, int person_id)
+{
+    return mo_select<PersonData>(db, F("select * from persons where id=%i",person_id))
+}
+
+the clue is that DatabaseAccess& is "service" like argument,
+in constrast to person_id which is "pure function" argument.
+
+The idea is that dispatcher will somehow "detect" service classes in form T&
+and resolve them from context.
+Other argument will be resolved to/from argument list (form, args).
+
+
