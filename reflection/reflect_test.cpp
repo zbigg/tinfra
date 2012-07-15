@@ -2,6 +2,7 @@
 
 #include "tinfra/test.h"
 #include "tinfra/cmd.h"
+#include "tinfra/typeinfo.h"
 
 #include <map>
 #include <iostream>
@@ -148,6 +149,7 @@ struct registration_harness {
     manual_rtti_system& R;
     type_info* ensure_registered(std::string const& name)
     {
+        std::cerr << "ensure_registered<T>, T=" << tinfra::type_name<T>() << "\n";
         return R.ensure_registered_detail(name, TIT_NORMAL, 0, 0, typeid(T));
     }
 };
@@ -155,10 +157,14 @@ struct registration_harness {
 template <typename T>
 struct registration_harness<T&> {
     manual_rtti_system& R;
+    
     type_info* ensure_registered(std::string const& name)
     {
-        type_info* target = R.for_std_type_info(typeid(T));
-        return R.ensure_registered_detail(name, TIT_REFERENCE, 0, target, typeid(T&));
+        std::cerr << "ensure_registered<T&>, T=" << tinfra::type_name<T>() << "\n";
+        
+        registration_harness<T> rh = { R };
+        type_info* target = rh.ensure_registered("");
+        return R.ensure_registered_detail("", TIT_REFERENCE, 0, target, typeid(T&));
     }
 };
 
@@ -168,8 +174,10 @@ struct registration_harness<T*> {
     
     type_info* ensure_registered(std::string const& name)
     {
-        type_info* target = R.for_std_type_info(typeid(T)); 
-        return R.ensure_registered_detail(name, TIT_POINTER, 0, target, typeid(T*));
+        std::cerr << "ensure_registered<T*>, T=" << tinfra::type_name<T>() << "\n";
+        registration_harness<T> rh = { R };
+        type_info* target = rh.ensure_registered(""); 
+        return R.ensure_registered_detail("", TIT_POINTER, 0, target, typeid(T*));
     }
 };
 
@@ -179,8 +187,10 @@ struct registration_harness<T const> {
     
     type_info* ensure_registered(std::string const& name)
     {
-        type_info* target = R.for_std_type_info(typeid(T)); 
-        return R.ensure_registered_detail(name, target->type(), TIM_CONST, target, typeid(T const));
+        std::cerr << "ensure_registered<T const>, T=" << tinfra::type_name<T>() << "\n";
+        registration_harness<T> rh = { R };
+        type_info* target = rh.ensure_registered("");
+        return R.ensure_registered_detail("", target->type(), TIM_CONST, target, typeid(T const));
     }
 };
 
@@ -219,15 +229,20 @@ template <typename T>
 void manual_rtti_system::ensure_basics_registered(std::string const& name)
 {
     this->ensure_registered<T>(name);
+    this->ensure_registered<T const>("");
     this->ensure_registered<T*>("");
-    this->ensure_registered<const T*>("");
+    this->ensure_registered<T const*>("");
     this->ensure_registered<T&>("");
+    this->ensure_registered<T const&>("");
 }
 template <typename T>
 type_info* manual_rtti_system::ensure_registered(std::string const& name)
 {    
+    std::cerr << "rtti: ensure_registered, T=" << tinfra::type_name<T>() << "\n";
     registration_harness<T> rh = { *this } ;
-    return rh.ensure_registered(name);
+    type_info* r = rh.ensure_registered(name);
+    std::cerr << "...\n";
+    return r;
 }
 
 manual_rtti_system::manual_rtti_system()    
@@ -239,6 +254,7 @@ manual_rtti_system::manual_rtti_system()
     this->ensure_basics_registered<unsigned int>("unsigned int");
     this->ensure_basics_registered<long>("long");
     this->ensure_basics_registered<unsigned long>("unsigned long");
+    
     this->ensure_registered<void>("void");
     this->ensure_registered<void*>("");
     this->ensure_registered<const void*>("");
@@ -258,19 +274,25 @@ type_info* manual_rtti_system::do_ensure_registered(std::string const& name, typ
     if( tit != TIT_NORMAL && target != 0 ) {
         derived_type_key key(tit, target);
         derived_type_map_t::const_iterator i = this->types_by_derivation.find(key);
-        if( i != this->types_by_derivation.end() ) 
+        if( i != this->types_by_derivation.end() ) {
+            std::cerr << "do_ensure_registered, found by type&target: " << i->second->name() << "\n";
             return i->second;
+        }
     }
     if( mod != 0 && target != 0 ) {
         modified_type_key key(mod, target);
         modified_type_key_t::const_iterator i = this->types_by_modifier.find(key);
-        if( i != this->types_by_modifier.end() ) 
+        if( i != this->types_by_modifier.end() ) {
+            std::cerr << "do_ensure_registered, found by mod&target: " << i->second->name() << "\n";
             return i->second;
+        }
     }
-    if( stdti != 0 ) {
+    if( target == 0 && stdti != 0 ) {
         result = this->for_std_type_info(*stdti);
-        if( result )
+        if( result ) {
+            std::cerr << "do_ensure_registered, found by stdtid: " << result->name() << "\n";
             return result;
+        }
     } 
     return do_register_type(name, tit, mod, target, stdti);
 }
@@ -280,9 +302,13 @@ type_info* manual_rtti_system::do_register_type(std::string const& name, type_in
     std::string the_name(name);
     if( the_name.empty() )
         the_name = apply_modifiers(tit,mod, target);
+    
+    std::cerr << "rtti::registering name:" << the_name << " (stdtid " << stdti->name() << ")\n";
     manual_type_info* mti = new manual_type_info(the_name, tit, mod, target, stdti);    
     this->types_by_name[the_name] = mti;
-    this->types_by_std_type_info[stdti] = mti;
+    if( target == 0 ) {
+        this->types_by_std_type_info[stdti] = mti;
+    }
     
     if( target != 0 && mod != 0 ) {        
         modified_type_key key(mod, target);
@@ -464,12 +490,12 @@ TEST(manual_rtti_check_all)
         
         std::cout << idx++ <<        
              ": name:" << ti->name() <<
-             "  type:" << ti->type() <<
-             "  mod:" << ti->modifiers() << 
-             "  target: " << (ti->target_type() 
+             " (type:" << ti->type() <<
+             " mod:" << ti->modifiers() << 
+             " target: " << (ti->target_type() 
                               ? ti->target_type()->name() 
                               : std::string("n/a") ) << 
-             "\n";
+             ")\n";
                                 
     }
 }
