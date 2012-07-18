@@ -218,6 +218,7 @@
 	    tests/memory_stream_test.cpp
 	    tests/test_macros_test.cpp
 	    tests/trace_test.cpp
+	    tests/mo_algo_test.cpp
         </sources>
         <library>tinfra-test</library>
         <library>tinfra</library>

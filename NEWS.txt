@@ -3,7 +3,7 @@
 version 0.0.3, releases 2012-xx-xx
 
    compatibility: ABI: no , API: no
-   tested: gcc 4.3, 4.5 on linux (i386,x86_54),
+   tested: gcc 4.7, 4.5 on linux (i386,x86_54),
 
    changes:
     * fmt: refactored, added tsprintf, tprintf functions (see fmt.h) (ABI)
@@ -15,6 +15,7 @@ version 0.0.3, releases 2012-xx-xx
     * stream.h: new create_memory_output_stream(), helpers: read_all(), write_all()
     * test --srcdir option and srcdir_eval() added for finding test resources 
       relative to $srcdir
+    * mo_algo.h added with mo_equals, mo_less_than, mo_swap added
 
    fix:
     * socket: correctly handle interrupts (EINTR) on posix
