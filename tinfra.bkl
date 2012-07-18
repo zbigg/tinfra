@@ -146,6 +146,7 @@
             tinfra/thread_runner.h
             tinfra/value_guard.h
             tinfra/mo.h
+            tinfra/mo_algo.h
             tinfra/structure_printer.h
 	    tinfra/test.h
             tinfra/test_macros.h

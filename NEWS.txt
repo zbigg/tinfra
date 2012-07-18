@@ -3,7 +3,10 @@
 version 0.0.3, releases 2012-xx-xx
 
    compatibility: ABI: no , API: no
-   tested: gcc 4.7, 4.5 on linux (i386,x86_54),
+   tested: 
+      linux: gcc 4.7, 4.5 on linux (i386,x86_54),
+      freebsd: gcc 4.2.1 (freebsd 9 x86_64)
+      macos x: gcc 4.2.1 (macos x 10.2.0)
 
    changes:
     * fmt: refactored, added tsprintf, tprintf functions (see fmt.h) (ABI)
