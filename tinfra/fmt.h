@@ -9,11 +9,13 @@
 #include "tinfra/platform.h"
 
 #include "tinfra/tstring.h"
+#include "stream.h" // for tinfra::output_stream
 
 #include <string>  // for std::string
 #include <iosfwd>  // for std::ostream
 #include <sstream> // for std::ostringstream 
 #include <stdexcept> // for std::logic_error
+
 namespace tinfra {
     
 /// simple_fmt
@@ -190,6 +192,9 @@ std::string tsprintf(tstring const& fmt, Args ... args) {
 
 #else // no TINFRA_HAS_VARIADIC_TEMPLATES
 
+// tprintf(std::ostream&...)
+//
+
 inline void tprintf(std::ostream& out, tstring const& fmt) {
     basic_fmt F(out.rdbuf(), fmt);
     F.flush();
@@ -231,7 +236,6 @@ inline void tprintf(std::ostream& out, tstring const& fmt, T1 const& v1, T2 cons
 }
 
 
-
 template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 inline void tprintf(std::ostream& out, tstring const& fmt, T1 const& v1, T2 const& v2, T3 const& v3, T4 const& v4, T5 const& v5, T6 const& v6) {
     basic_fmt F(out.rdbuf(), fmt);
@@ -239,6 +243,58 @@ inline void tprintf(std::ostream& out, tstring const& fmt, T1 const& v1, T2 cons
     F.flush();
 }
 
+// tprintf(tinfra::output_string&...)
+//
+
+inline void tprintf(tinfra::output_stream& out, tstring const& fmt) {
+    stringbuf_fmt F(fmt);
+    out.write(F);
+}
+
+template <typename T1>
+inline void tprintf(tinfra::output_stream& out, tstring const& fmt, T1 const& v1) {
+    stringbuf_fmt F(fmt);
+    F << v1;
+    out.write(F);
+}
+
+template <typename T1, typename T2>
+inline void tprintf(tinfra::output_stream& out, tstring const& fmt, T1 const& v1, T2 const& v2) {
+    stringbuf_fmt F(fmt);
+    F << v1 << v2;
+    out.write(F);
+}
+
+template <typename T1, typename T2, typename T3>
+inline void tprintf(tinfra::output_stream& out, tstring const& fmt, T1 const& v1, T2 const& v2, T3 const& v3) {
+    stringbuf_fmt F(fmt);
+    F << v1 << v2 << v3;
+    out.write(F);
+}
+
+template <typename T1, typename T2, typename T3, typename T4>
+inline void tprintf(tinfra::output_stream& out, tstring const& fmt, T1 const& v1, T2 const& v2, T3 const& v3, T4 const& v4) {
+    stringbuf_fmt F(fmt);
+    F << v1 << v2  << v3 << v4;
+    out.write(F);
+}
+
+template <typename T1, typename T2, typename T3, typename T4, typename T5>
+inline void tprintf(tinfra::output_stream& out, tstring const& fmt, T1 const& v1, T2 const& v2, T3 const& v3, T4 const& v4, T5 const& v5 ) {
+    stringbuf_fmt F(fmt);
+    F << v1 << v2  << v3 << v4 << v5;
+    out.write(F);
+}
+
+template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+inline void tprintf(tinfra::output_stream& out, tstring const& fmt, T1 const& v1, T2 const& v2, T3 const& v3, T4 const& v4, T5 const& v5, T6 const& v6) {
+    stringbuf_fmt F(fmt);
+    F << v1 << v2  << v3 << v4 << v5 << v6;
+    out.write(F);
+}
+
+// tsprintf
+// 
 inline std::string tsprintf(tstring const& fmt) {
     stringbuf_fmt F(fmt);
     return F.str();
