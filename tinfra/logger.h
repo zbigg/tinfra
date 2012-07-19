@@ -162,6 +162,28 @@ private:
     virtual void log(log_record const& record);
 };
 
+/// log handler override
+///
+/// Override default tinfra log handler for lifetime
+/// of instance of this object.
+///
+/// Current log_handler is saved inside this object
+/// and new (null or custom) is installed.
+///
+class log_handler_override {
+    tinfra::log_handler* previous;
+public:
+    /// construct log_handler override that discards all logs
+    
+    log_handler_override();
+    
+    /// construct log_handler override that redirects to custom log_handler    
+    log_handler_override(log_handler& handler);
+    
+    ~log_handler_override();
+};
+
+
 } // end namespace tinfra
 
 #endif // include guard

@@ -287,6 +287,32 @@ void generic_log_handler::log(log_record const& record)
 }
 
 //
+// log_handler_override
+//
+
+struct null_log_handler: public tinfra::log_handler {
+    virtual void log(tinfra::log_record const&) {}
+};
+
+null_log_handler null_lh;
+
+log_handler_override::log_handler_override():
+    previous(&(log_handler::get_default()))
+{
+    log_handler::set_default(&null_lh);
+}
+log_handler_override::log_handler_override(log_handler& custom_handler):
+    previous(&(log_handler::get_default()))
+{
+    log_handler::set_default(&custom_handler);
+}
+    
+log_handler_override::~log_handler_override()
+{
+    log_handler::set_default(this->previous);
+}
+
+//
 // log_handler
 //
 
