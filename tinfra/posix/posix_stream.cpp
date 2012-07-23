@@ -178,8 +178,10 @@ int standard_handle_output::write(const char* data, int size)
         int w = ::write(fd_, data, size);
         if( w < 0 && errno == EINTR )
             continue;
-        if( w < 0 ) 
-            throw_errno_error(errno, "write failed");
+        if( w < 0 ) {
+            //std::string msg
+            //throw_errno_error(errno, "write failed");
+        }
         return w;
     }
 }
