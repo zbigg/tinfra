@@ -5,6 +5,8 @@
 
 #include "tinfra/platform.h"
 
+#ifdef TINFRA_W32
+
 #include "tinfra/win32.h"
 
 #include "tinfra/fmt.h"
@@ -169,3 +171,6 @@ std::string make_utf8(wchar_t const* str)
     
 
 } } // end namespace tinfra::win32
+
+#endif // TINFRA_W32
+

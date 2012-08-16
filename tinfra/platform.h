@@ -6,6 +6,12 @@
 #ifndef tinfra_platform_h_included
 #define tinfra_platform_h_included
 
+#ifdef _WIN32
+#define TINFRA_W32
+#else
+#define TINFRA_POSIX
+#endif
+
 #if defined _MSC_VER
 //
 // excerpt from MSDN:

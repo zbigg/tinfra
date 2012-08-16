@@ -3,7 +3,8 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/platform.h"
+#include "../platform.h"
+#ifdef TINFRA_POSIX
 
 #include "tinfra/fs.h"
 
@@ -279,4 +280,6 @@ std::string realpath(tstring const& path)
 
 
 } } // end namespace tinfra::fs
+
+#endif // TINFRA_POSIX
 

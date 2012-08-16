@@ -15,21 +15,17 @@ AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
 AC_CONFIG_SRCDIR([tinfra.bkl])
 AC_CONFIG_HEADER([tinfra/config.h])
 
+AC_MAKEFOO
+
 #CXXFLAGS="$CXXFLAGS -std=c++0x"
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
-AC_PROG_CPP
 AC_PROG_INSTALL
-AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
 AC_CANONICAL_SYSTEM
-
-
-AC_BAKEFILE([m4_include(autoconf_inc.m4)])
-
 AC_CHECK_HEADERS([pthread.h time.h])
 
 AC_CHECK_FUNCS([opendir nanosleep usleep])

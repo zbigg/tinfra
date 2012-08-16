@@ -8,6 +8,9 @@
 //   pthread based implementation of threads
 //
 
+#include "../platform.h"
+#ifdef TINFRA_POSIX
+
 #include "tinfra/thread.h"
 #include "tinfra/fmt.h"
 #include "tinfra/runtime.h"
@@ -174,5 +177,7 @@ size_t thread::to_number() const
 }
 
 } } // end namespace tinfra::thread
+
+#endif // TINFRA_POSIX
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:

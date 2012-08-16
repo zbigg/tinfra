@@ -3,7 +3,8 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/platform.h"
+#include "../platform.h"
+#ifdef TINFRA_POSIX
 
 #include "tinfra/runtime.h"
 
@@ -169,4 +170,5 @@ extern "C" void tinfra_interrupt_sighandler(int signo, siginfo_t *, void *)
     tinfra::interrupt();
 }
 
+#endif // TINFRA_POSIX
 

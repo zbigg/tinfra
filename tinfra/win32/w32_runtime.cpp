@@ -7,6 +7,9 @@
 // win32/runtime.cpp services
 //
 
+#include "../platform.h"
+#ifdef TINFRA_W32
+
 #include "tinfra/runtime.h"
 #include "tinfra/win32.h"
 
@@ -40,3 +43,6 @@ environment_t get_environment()
 
 
 } // end of namespace tinfra
+
+#endif // TINFRA_W32
+
