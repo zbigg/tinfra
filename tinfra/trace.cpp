@@ -64,7 +64,7 @@ void tracer::trace(tstring const& message, source_location const& sloc)
         
     const tstring name(this->get_name());
     logger log(name);
-    log.log(tinfra::TRACE, message, sloc);
+    log.log(tinfra::LL_TRACE, message, sloc);
 }
 
 tracer::tracer(tracer* parent, const char* name, bool enabled):

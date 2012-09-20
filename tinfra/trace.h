@@ -1,3 +1,4 @@
+
 //
 // Copyright (c) 2009, Zbigniew Zagorski
 // This software licensed under terms described in LICENSE.txt
@@ -7,11 +8,11 @@
 #define tinfra_trace_h_included
 
 #include <vector>
-#include "tinfra/platform.h" // for TINFRA_UNLIKELY, TINFRA_SHORT_FUNCTION
-#include "tinfra/tstring.h"
-#include "tinfra/stream.h"   // for tinfra::output_stream
+#include "platform.h" // for TINFRA_UNLIKELY, TINFRA_SHORT_FUNCTION
+#include "tstring.h"
+#include "stream.h"   // for tinfra::output_stream
 
-#include "tinfra/static_registry.h"
+#include "static_registry.h"
 
 #include <sstream>
 

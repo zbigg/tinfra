@@ -6,7 +6,8 @@
 #ifndef tinfra_win32_h_included
 #define tinfra_win32_h_included
 
-#include <tinfra/tstring.h>
+#include "tstring.h"
+#include "logger.h"
 
 #include <vector>
 #include <string>
