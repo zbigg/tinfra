@@ -113,7 +113,6 @@ void        write_all(output_stream& output, tstring const& data);
 #include "win32/w32_stream.h"
 #else
 #include "posix/posix_stream.h"
-
 #endif // disabling of platform specific defs
 
 #endif // tinfra_stream_h_included

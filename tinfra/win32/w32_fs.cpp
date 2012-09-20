@@ -20,6 +20,8 @@
 namespace tinfra {
 namespace fs { 
 
+tinfra::module_tracer win32_fs_tracer(tinfra::tinfra_tracer, "win32_fs", 70);
+
 struct lister::internal_data {
     
     HANDLE ff_handle;
@@ -31,8 +33,8 @@ struct lister::internal_data {
 lister::lister(tstring const& path, bool /*need_stat*/)
     : data_(new internal_data())
 {   
-    TINFRA_TRACE_MSG("lister::lister");    
-    TINFRA_TRACE_VAR(path);
+    TINFRA_TRACE(win32_fs_tracer, "lister::lister");    
+    TINFRA_TRACE_VAR(win32_fs_tracer, path);
     std::wstring wname = tinfra::win32::make_wstring_from_utf8(path);
     wname.append(L"\\*.*");
     data_->ff_handle = FindFirstFileW(wname.c_str(), &data_->ff_data );
@@ -44,14 +46,14 @@ lister::lister(tstring const& path, bool /*need_stat*/)
 }
 lister::~lister()
 {
-    TINFRA_TRACE_MSG("lister::~lister");
+    TINFRA_TRACE(win32_fs_tracer, "lister::~lister");
     if( data_->ff_handle != INVALID_HANDLE_VALUE )
         FindClose(data_->ff_handle);
 }
 
 bool lister::fetch_next(directory_entry& result)
 {
-    TINFRA_TRACE_MSG("lister::fetch_next");
+    TINFRA_TRACE(win32_fs_tracer, "lister::fetch_next");
     
     while( true ) {
         bool have_data = data_->is_first;
@@ -59,7 +61,7 @@ bool lister::fetch_next(directory_entry& result)
         if( !have_data )
             have_data =  (FindNextFileW(data_->ff_handle, &data_->ff_data) != 0 );
         if( !have_data )
-            return false;
+            return false;       
         
         WIN32_FIND_DATAW& ff_data = data_->ff_data;
         if( ff_data.cFileName[0] == '.' ) 
@@ -74,7 +76,7 @@ bool lister::fetch_next(directory_entry& result)
         data_->name_holder = tinfra::win32::make_utf8(ff_data.cFileName);
         
         result.name = data_->name_holder;
-        TINFRA_TRACE_VAR(result.name);
+        TINFRA_TRACE_VAR(win32_fs_tracer, result.name);
         result.info.is_dir = (ff_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) == FILE_ATTRIBUTE_DIRECTORY;
         result.info.size = size_t(ff_data.nFileSizeLow);
         // TODO: add support for win64 build
@@ -279,5 +281,19 @@ std::string pwd()
     tinfra::win32::throw_system_error("fs::pwd() failed (GetCurrentDirectoryW): implement it better!");
     return ""; // just to satisfy compiler
 }
-    
+
+//void         symlink(tstring const& target, tstring const& path)
+//{    
+//}
+
+//std::string readlink(tstring const& path)
+//{
+//    
+//}
+
+std::string realpath(tstring const& path)
+{    
+    return path;
+}
+
 } } // end namespace tinfra::fs

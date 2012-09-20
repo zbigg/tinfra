@@ -6,6 +6,9 @@
 #include "tinfra/option.h" // API under test
 #include "tinfra/test.h" // test infra
 
+#include "tinfra/fail.h" // for fail
+#include "tinfra/fmt.h" // for tsprintf
+#include "tinfra/logger.h" // for log_handler_override
 #include <string>
 
 SUITE(tinfra) {
@@ -135,6 +138,86 @@ SUITE(tinfra) {
         CHECK_EQUAL(3, def.value()[2]);
         CHECK_EQUAL(4, def.value()[3]);
         
+    }
+    TEST(option_bug_string_with_space) {
+        using std::vector;
+        using std::string;
+        
+        using tinfra::tstring;
+        using tinfra::option_list;
+	using tinfra::list_option;
+        using tinfra::option;
+
+        vector<tstring> params;
+        
+        params.push_back("--def=abc def");
+	params.push_back("--foo=zoo bar");
+        
+        option_list the_list;
+        
+        option<string>  def(the_list, "boom", "def", "foo_description");
+	list_option<string> foo(the_list, "foo", "foo_description");
+
+        the_list.parse(params);
+        CHECK_EQUAL("abc def", def.value());
+	CHECK_EQUAL(1, foo.value().size());
+	CHECK_EQUAL("zoo bar", foo.value()[0]);
+    }
+
+    enum TestEnum {
+        HIGH,
+        LOW,
+        UNSPECIFIED
+    };
+    
+    std::ostream& operator<<(std::ostream& s, TestEnum v)
+    {
+        switch( v ) {
+        case HIGH: return s << "high";
+        case LOW: return s << "low";
+        case UNSPECIFIED: return s << "unspecified";
+        }
+    }
+    std::istream& operator>>(std::istream& s, TestEnum& v)
+    {
+        std::string tmp;
+        s >> tmp;
+             if( tmp == "high" ) v = HIGH;
+        else if( tmp == "low" )  v = LOW;
+        else if( tmp == "unspecified" ) v = UNSPECIFIED;
+        else tinfra::fail("invalid input", 
+                          tinfra::tsprintf("'%s' passed, but only high,low,unspecified is supported", tmp));
+    }
+    TEST(option_can_capture_enum_with_custom_ios_operators)
+    {
+         using tinfra::option_list;
+         using tinfra::option;
+         option_list the_list;
+        
+         option<TestEnum>  prio(the_list, UNSPECIFIED, 'p', "prio", "message priority");
+         CHECK_EQUAL(false, prio.accepted());
+         CHECK_EQUAL(UNSPECIFIED, prio.value());
+         
+         // check that it actually uses overloaded operator
+         {
+             std::vector<tinfra::tstring> params;
+             params.push_back("--prio=high def");
+             the_list.parse(params);
+             
+             CHECK_EQUAL(true, prio.accepted());
+             CHECK_EQUAL(HIGH, prio.value());
+        }
+        
+        // check that it "passws exception through"
+        {
+             tinfra::log_handler_override log_override;
+             std::vector<tinfra::tstring> params;
+             params.push_back("--prio=dupa def");
+             CHECK_THROW( the_list.parse(params), std::runtime_error );
+             
+             //CHECK_EQUAL(true, prio.accepted());
+             //CHECK_EQUAL(HIGH, prio.value());
+         }
     }
 } // end SUITE(tinfra)
 

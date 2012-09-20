@@ -8,10 +8,6 @@
 #include "fmt.h"    // for tsprintf
 
 #ifdef _WIN32
-#undef ERROR // defined by WINGDI
-#endif
-
-#ifdef _WIN32
 #include <windows.h>
 #else
 #include <sys/types.h>
@@ -95,60 +91,60 @@ void logger::log(log_level level, tstring const& m, tinfra::source_location cons
 
 void logger::trace(tstring const& message)
 {
-    this->log(TRACE, message, TINFRA_NULL_SOURCE_LOCATION());
+    this->log(LL_TRACE, message, TINFRA_NULL_SOURCE_LOCATION());
 }
 
 void logger::trace(tstring const& message, tinfra::source_location const& loc)
 {
-    this->log(TRACE, message, loc);
+    this->log(LL_TRACE, message, loc);
 }
 
 void logger::info(tstring const& message)
 {
-    this->log(tinfra::INFO, message, TINFRA_NULL_SOURCE_LOCATION());
+    this->log(tinfra::LL_INFO, message, TINFRA_NULL_SOURCE_LOCATION());
 }
 void logger::info(tstring const& message, tinfra::source_location const& loc)
 {
-    this->log(tinfra::INFO, message, loc);
+    this->log(tinfra::LL_INFO, message, loc);
 }
 
 void logger::warning(tstring const& message)
 {
-    this->log(tinfra::WARNING, message, TINFRA_NULL_SOURCE_LOCATION());
+    this->log(tinfra::LL_WARNING, message, TINFRA_NULL_SOURCE_LOCATION());
 }
 void logger::warning(tstring const& message, tinfra::source_location const& loc)
 {
-    this->log(tinfra::WARNING, message, loc);
+    this->log(tinfra::LL_WARNING, message, loc);
 }
 
 void logger::error(tstring const& message)
 {
-    this->log(tinfra::ERROR, message, TINFRA_NULL_SOURCE_LOCATION());
+    this->log(tinfra::LL_ERROR, message, TINFRA_NULL_SOURCE_LOCATION());
 }
 void logger::error(tstring const& message, tinfra::source_location const& loc)
 {
-    this->log(tinfra::ERROR, message, loc);
+    this->log(tinfra::LL_ERROR, message, loc);
 }
 
 void logger::fail(tstring const& message)
 {
-    this->log(tinfra::FAIL, message, TINFRA_NULL_SOURCE_LOCATION());
+    this->log(tinfra::LL_FAIL, message, TINFRA_NULL_SOURCE_LOCATION());
 }
 void logger::fail(tstring const& message, tinfra::source_location const& loc)
 {
-    this->log(tinfra::FAIL, message, loc);
+    this->log(tinfra::LL_FAIL, message, loc);
 }
 
 static const char* log_level_to_string(log_level level)
 {
     switch( level ) {
-    case FATAL:   return "FATAL";
-    case FAIL:    return "FAIL";
-    case ERROR:   return "ERROR";
-    case NOTICE:  return "NOTICE";
-    case WARNING: return "WARNING";
-    case INFO:    return "INFO";
-    case TRACE:   return "TRACE";
+    case LL_FATAL:   return "FATAL";
+    case LL_FAIL:    return "FAIL";
+    case LL_ERROR:   return "ERROR";
+    case LL_NOTICE:  return "NOTICE";
+    case LL_WARNING: return "WARNING";
+    case LL_INFO:    return "INFO";
+    case LL_TRACE:   return "TRACE";
     default:      return "-";    
     }
 }
@@ -284,6 +280,32 @@ void generic_log_handler::log(log_record const& record)
     const std::string header = formatter.str();
     
     print_maybe_multiline( header, header, record.message, this->out );
+}
+
+//
+// log_handler_override
+//
+
+struct null_log_handler: public tinfra::log_handler {
+    virtual void log(tinfra::log_record const&) {}
+};
+
+null_log_handler null_lh;
+
+log_handler_override::log_handler_override():
+    previous(&(log_handler::get_default()))
+{
+    log_handler::set_default(&null_lh);
+}
+log_handler_override::log_handler_override(log_handler& custom_handler):
+    previous(&(log_handler::get_default()))
+{
+    log_handler::set_default(&custom_handler);
+}
+    
+log_handler_override::~log_handler_override()
+{
+    log_handler::set_default(this->previous);
 }
 
 //

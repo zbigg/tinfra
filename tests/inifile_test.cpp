@@ -14,7 +14,7 @@ SUITE(tinfra) {
         const tinfra::tstring text = ";comment\n"
                            "[section]\n"
                            "\n"
-                           "name=value\n"
+                           "name=value\r\n"
                            "name = value \n"
                            "name x = value \n"
                            "empty=\n"

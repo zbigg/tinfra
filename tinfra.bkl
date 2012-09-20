@@ -35,6 +35,7 @@
     <!-- public things -->
     <lib id="tinfra" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
+	<include>$(BUILDDIR)</include>
         <sources>
             tinfra/symbol.cpp
             tinfra/runtime.cpp
@@ -78,6 +79,7 @@
     </lib>
     <lib id="tinfra-test" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
+	<include>$(BUILDDIR)</include>
         <sources>
             tinfra/test.cpp
         </sources>
@@ -145,6 +147,7 @@
             tinfra/thread_runner.h
             tinfra/value_guard.h
             tinfra/mo.h
+            tinfra/mo_algo.h
             tinfra/structure_printer.h
 	    tinfra/test.h
             tinfra/test_macros.h
@@ -178,6 +181,7 @@
     <!-- local things -->
     <exe id="unittests" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
+	<include>$(BUILDDIR)</include>
         <sources>
             tests/test_main.cpp
             
@@ -216,6 +220,7 @@
 	    tests/memory_stream_test.cpp
 	    tests/test_macros_test.cpp
 	    tests/trace_test.cpp
+	    tests/mo_algo_test.cpp
 	    tests/time_test.cpp
         </sources>
         <library>tinfra-test</library>
@@ -228,6 +233,7 @@
     
     <exe id="test_fatal_exception" template="default-workspace-settings">
         <include>$(SRCDIR)</include>
+	<include>$(BUILDDIR)</include>
         <sources>
             tests/fatal_exception_test.cpp
         </sources>

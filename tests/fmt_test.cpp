@@ -6,7 +6,7 @@
 #include "tinfra/fmt.h"
 
 #include "tinfra/test.h" // for test infra
-
+#include "tinfra/stream.h" // for create_memory_output_stream
 #include <sstream>
 
 using tinfra::fmt;
@@ -85,10 +85,11 @@ SUITE(tinfra) {
         CHECK_EQUAL("a b", tsprintf("a %s", "b"));
         CHECK_EQUAL("a b c", tsprintf("a %s %s", "b", 'c'));
         CHECK_EQUAL("a b c 33", tsprintf("a %s %s %i", "b", 'c', 33));
-        
+        CHECK_EQUAL("a b c 33 x", tsprintf("a %s %s %i %s", "b", 'c', 33, 'x'));
+        CHECK_EQUAL("a b c 33 y z", tsprintf("a %s %s %i %s %s", "b", 'c', 33, 'y', 'z'));
     }
     
-    TEST(fmt_tprintf)
+    TEST(fmt_tprintf_ostream)
     {
         using tinfra::tprintf;
         {
@@ -113,7 +114,15 @@ SUITE(tinfra) {
             std::ostringstream f;
             tprintf(f, "a %s %s %i", "b", 'c', 33);
             CHECK_EQUAL("a b c 33", f.str() );
-        }
+        }        
+    }
+    
+    TEST(fmt_tprintf_output_stream)
+    {
+        std::string result;
+        std::auto_ptr<tinfra::output_stream> buf(tinfra::create_memory_output_stream(result));
         
+        tinfra::tprintf(*buf, "a %s %s %i", "b", 'c', 33);
+        CHECK_EQUAL("a b c 33", result );
     }
 } // end SUITE(fmt)
