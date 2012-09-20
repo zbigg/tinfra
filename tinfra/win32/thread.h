@@ -33,6 +33,7 @@ public:
     void signal();
     void broadcast();
     void wait(mutex& mutex);
+    bool timed_wait(mutex& mutex, deadline const& d);
 
     //CONDITION_VARIABLE* get_native() { return &cond_; }
 private:
