@@ -6,13 +6,10 @@ dnl
 dnl
 dnl Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-AC_INIT(
-    tinfra,
-    0.0.2,
-    [z.zagorski@gmail.com])
-AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
-AC_CONFIG_SRCDIR([tinfra.bkl])
+AC_PREREQ([2.67])
+AC_INIT([tinfra],[0.0.2],[z.zagorski@gmail.com])
+#AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
+AC_CONFIG_SRCDIR([tinfra/mo.h])
 AC_CONFIG_HEADER([tinfra/config.h])
 
 AC_MAKEFOO
@@ -22,10 +19,11 @@ AC_MAKEFOO
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
+AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET
 AC_CHECK_HEADERS([pthread.h time.h])
 
 AC_CHECK_FUNCS([opendir nanosleep usleep])

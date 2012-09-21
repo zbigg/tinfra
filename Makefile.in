@@ -5,6 +5,8 @@ top_builddir = .
 MAKEFOO=@MAKEFOO@
 CC=@CC@
 CXX=@CXX@
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
 
 # components
 tinfra_DIR      = .
@@ -69,7 +71,14 @@ tinfra_HEADERS = \
 	tinfra/unix_socket.h \
 	tinfra/value_guard.h \
 	tinfra/vfs.h \
-	tinfra/win32.h
+	tinfra/win32.h \
+	tinfra/posix/posix_mutex.h \
+	tinfra/posix/posix_stream.h \
+	tinfra/posix/thread.h \
+	tinfra/win32/thread.h \
+	tinfra/win32/w32_mutex.h \
+	tinfra/win32/w32_stream.h 
+
 
 tinfra_SOURCES = \
 	tinfra/symbol.cpp \
@@ -119,13 +128,15 @@ tinfra_SOURCES = \
 	tinfra/win32/thread.cpp \
 	tinfra/win32/w32_runtime.cpp \
 	tinfra/win32/w32_fs.cpp \
-	tinfra/win32/w32_stream.cpp
-
+	tinfra/win32/w32_stream.cpp \
+	$(tinfra_HEADERS)
 
 tinfra_test_SOURCES  = \
 	tinfra/test.cpp \
 	tinfra/test.h \
 	tinfra/test_macros.h
+
+
 
 SHARED_LIBRARIES += tinfra
 STATIC_LIBRARIES += tinfra
@@ -137,6 +148,8 @@ tinfra_CXXFLAGS = -I$(top_srcdir)
 tinfra_test_CXXFLAGS = -I$(top_srcdir)
 tinfra_test_program_CXXFLAGS = -I$(top_srcdir)
 tinfra_test_program_LDFLAGS = -L. -ltinfra -ltinfra-test -lpthread
+
+tinfra_test_program_TEST_INVOKE_ARGS = --srcdir=$(realpath $(top_srcdir))
 
 #TBD, tests/fatal_exception_test.cpp
 
@@ -179,6 +192,22 @@ tinfra_TEST_SOURCES = \
 	tests/trace_test.cpp \
 	tests/tstring_test.cpp
 
+# install tinfra headers
+tinfra_headers_FILES=$(tinfra_HEADERS)
+tinfra_headers_INSTALL_DEST=$(prefix)/include
+PUBLIC_COMPONENTS+= tinfra_headers
+
+tinfra_EXTRA_DIST=\
+	configure.ac \
+	configure \
+	aclocal.m4 \
+	tinfra/config.h.in \
+	Makefile.in \
+	build-helper \
+	tinfra.pc.in
+
+tinfra_test_EXTRA_DIST=\
+	tinfra-test.pc.in
 
 #TEST_PROGRAMS += tinfra
 
@@ -187,14 +216,20 @@ tinfra_TEST_SOURCES = \
 #MAKEFOO=$(top_srcdir)/makefoo
 # but in tests we're testing current source tree
 #MAKEFOO=$(top_srcdir)/../../
+
 tinfra_COMPONENTS=tinfra tinfra_test
 PACKAGES=tinfra
 
+PRODUCT=tinfra
+VERSION=0.0.3
+
+AUTOCONF_AUX_DIR=
 MAKEFOO_USE += native
 MAKEFOO_USE += test-program
 MAKEFOO_USE += install-fhs
 MAKEFOO_USE += rpm
 MAKEFOO_USE += autoconf
+MAKEFOO_USE += src-dist
  
 include $(MAKEFOO)/main.mk
 
