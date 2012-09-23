@@ -139,6 +139,20 @@ struct arg_getter<T&> {
 using std::string;
 using std::vector;
 
+// TBD
+// a simple note, this is the same functionality as in 
+// ../reflect/reflect.h:
+//    template method_invoker<ReturnType>::invoke<Object,...> which
+//  invokes methods but reads from vector<any<
+//  idea would be to generalize this code and abstract-out
+//  somethins like:
+//     * return_value_consumer
+//        invoke_bridge: serializer
+//        reflect, copy to any
+//     * argument_provider
+//        invoke_bridge: here invoke_bridge_context
+//        reflect: from vector<any>
+
 template <typename R, typename T1>
 void invoke_bridge_call(invoke_bridge_context const& ctx, R function(T1))
 {
