@@ -3,7 +3,8 @@ TINFRA_SRC=/home/zbigg/projects/tinfra/trunk
 #CXXFLAGS=-O2 -g -Wall -Werror -I. $(shell pkg-config --cflags tinfra tinfra-test)
 #LDLIBS=$(shell pkg-config --libs tinfra tinfra-test)
 CXXFLAGS=-O2 -g -Wall -Werror -I. 
-LDLIBS=-ltinfra-test -ltinfra -lwsock32 -Wl,--enable-auto-import
+LDLIBS=-ltinfra-test -ltinfra
+#LDLIBS=-ltinfra-test -ltinfra -lwsock32 -Wl,--enable-auto-import
 
 CC=g++
 
