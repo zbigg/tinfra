@@ -161,7 +161,7 @@ void invoke_bridge_call(invoke_bridge_context const& ctx, R function(T1))
     std::cout << "called " << __PRETTY_FUNCTION__ << "\n";
     T1 arg1 = arg_getter<T1>::get(ctx, int_ctx);
     
-    //assert(arg1 == 128);
+    R rv = function(arg1);
 }
 
 template <typename R, typename T1, typename T2>
@@ -173,14 +173,14 @@ void invoke_bridge_call(invoke_bridge_context const& ctx, R function(T1,T2))
     T1 arg1 = arg_getter<T1>::get(ctx, int_ctx);
     T2 arg2 = arg_getter<T2>::get(ctx, int_ctx);
     
-    //assert(&arg1 == &std::cout);
-    //assert(arg2 == 128);
+    R rv = function(arg1, arg2); 
 }
 //
 //
 //
 string some_function(int a)
 {
+    assert(a == 128);
     char buf[100];
     sprintf(buf, "0x%08x", a);
     return string(buf);
@@ -194,17 +194,20 @@ void test_base()
     invoke_bridge_call(ctx, &some_function);
 }
 
-void some_function_ref(std::ostream& x, int a)
+int some_function_ref(std::ostream& x, int a)
 {
+    assert(&x == &std::cout);
+    assert(a == 255);
     char buf[100];
     sprintf(buf, "0x%08x", a);
     x << buf << "\n";    
+    return 0;
 }
 
 void test_base_ref()
 {
     invoke_bridge_context ctx;
-    ctx.raw_args.push_back("128");
+    ctx.raw_args.push_back("255");
     
     ctx.context[typeid(std::ostream).name()] = &std::cout;
     
@@ -213,6 +216,8 @@ void test_base_ref()
 
 string some_function_const_ref(int a, std::string const& s)
 {
+    assert(a == 1);
+    assert(s == "abc");
     char buf[100];
     sprintf(buf, "0x%08x %i", a, s.size());
     return string(buf);
@@ -221,7 +226,7 @@ string some_function_const_ref(int a, std::string const& s)
 void test_base_const_ref()
 {
     invoke_bridge_context ctx;
-    ctx.raw_args.push_back("1.23");
+    ctx.raw_args.push_back("1");
     ctx.raw_args.push_back("abc");
     
     invoke_bridge_call(ctx, &some_function_const_ref);
