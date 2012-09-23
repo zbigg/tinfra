@@ -49,6 +49,16 @@
 //      REGISTER_GLOBAL(get_system_users)
 //    
 //  issues
+//    compilation border i.e i'd like to expose functions
+//    that inherently do now know how they will be called
+//      
+//  what works ?
+//    effectively deducing  
+//      - value_types (T and T const&)
+//      - reference (T&) 
+//    and retrieving them from context (invoke_bridge_context)
+//    
+//
 #include <vector>
 #include <string>
 #include <stdio.h>
@@ -76,7 +86,25 @@ struct invoke_bridge_context_int {
 template <typename T>
 struct arg_getter {
     static T get(invoke_bridge_context const& ctx, invoke_bridge_context_int& int_ctx) {
-        std::cout << "called " << __PRETTY_FUNCTION__ << "\n";
+        std::cout << "    called " << __PRETTY_FUNCTION__ << "\n";
+        
+        const int arg_number = int_ctx.consumed_args; 
+        if( arg_number >= ctx.raw_args.size() ) {
+            throw std::logic_error("not enough arguments");
+        }
+        std::string const& text_arg = ctx.raw_args[arg_number];
+        const T result = tinfra::from_string<T>(text_arg);
+        
+        int_ctx.consumed_args++;
+        
+        return result;
+    }
+};
+
+template <typename T>
+struct arg_getter<T const&> {
+    static T get(invoke_bridge_context const& ctx, invoke_bridge_context_int& int_ctx) {
+        std::cout << "    called " << __PRETTY_FUNCTION__ << "\n";
         
         const int arg_number = int_ctx.consumed_args; 
         if( arg_number >= ctx.raw_args.size() ) {
@@ -94,7 +122,7 @@ struct arg_getter {
 template <typename T>
 struct arg_getter<T&> {    
     static T& get(invoke_bridge_context const& ctx, invoke_bridge_context_int&) {
-        std::cout << "called " << __PRETTY_FUNCTION__ << "\n";
+        std::cout << "    called " << __PRETTY_FUNCTION__ << "\n";
         
         std::string interface_name = typeid(T).name();
         typename std::map<std::string, void*>::const_iterator iresult = ctx.context.find(interface_name);
@@ -119,7 +147,7 @@ void invoke_bridge_call(invoke_bridge_context const& ctx, R function(T1))
     std::cout << "called " << __PRETTY_FUNCTION__ << "\n";
     T1 arg1 = arg_getter<T1>::get(ctx, int_ctx);
     
-    assert(arg1 == 128);
+    //assert(arg1 == 128);
 }
 
 template <typename R, typename T1, typename T2>
@@ -130,8 +158,9 @@ void invoke_bridge_call(invoke_bridge_context const& ctx, R function(T1,T2))
     std::cout << "called " << __PRETTY_FUNCTION__ << "\n";
     T1 arg1 = arg_getter<T1>::get(ctx, int_ctx);
     T2 arg2 = arg_getter<T2>::get(ctx, int_ctx);
-    assert(&arg1 == &std::cout);
-    assert(arg2 == 128);    
+    
+    //assert(&arg1 == &std::cout);
+    //assert(arg2 == 128);
 }
 //
 //
@@ -143,14 +172,6 @@ string some_function(int a)
     return string(buf);
 }
 
-void some_function_out(std::ostream& x, int a)
-{
-    char buf[100];
-    sprintf(buf, "0x%08x", a);
-    x << buf << "\n";    
-}
-
-REGISTER_GLOBAL(some_function);
 
 void test_base()
 {
@@ -159,21 +180,44 @@ void test_base()
     invoke_bridge_call(ctx, &some_function);
 }
 
-void test_base_out()
+void some_function_ref(std::ostream& x, int a)
+{
+    char buf[100];
+    sprintf(buf, "0x%08x", a);
+    x << buf << "\n";    
+}
+
+void test_base_ref()
 {
     invoke_bridge_context ctx;
     ctx.raw_args.push_back("128");
     
     ctx.context[typeid(std::ostream).name()] = &std::cout;
-    ctx.context[typeid(std::istream).name()] = &std::cin;
     
-    invoke_bridge_call(ctx, &some_function_out);
+    invoke_bridge_call(ctx, &some_function_ref);
+}
+
+string some_function_const_ref(int a, std::string const& s)
+{
+    char buf[100];
+    sprintf(buf, "0x%08x %i", a, s.size());
+    return string(buf);
+}
+
+void test_base_const_ref()
+{
+    invoke_bridge_context ctx;
+    ctx.raw_args.push_back("1.23");
+    ctx.raw_args.push_back("abc");
+    
+    invoke_bridge_call(ctx, &some_function_const_ref);
 }
 
 int main(int argc, char** argv)
 {
     test_base();
-    test_base_out();
+    test_base_ref();
+    test_base_const_ref();
     
 #if 0    
     assert(argc > 1 );

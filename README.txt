@@ -46,3 +46,25 @@ status:
 	* works on gcc, 
 	* problems on msvs due to plethora of different calling
 	  conventions (see proxy.h & vtable_research.txt)
+	  
+invoke_bridge
+-------------
+
+this is realization of following idea
+
+ * cli/http/gui univeral interface
+    so i can write
+      int foo(int a,int c)
+    and have automagical http/cli/desktop
+    interface towards this function
+
+ * c++ framework to write down easy small web applications
+ 
+      real fucking easy mapper from data
+      processing into web interface, i.e
+ 
+      vector<string> foo(int id) {
+      }
+      HTTP_MAP(foo, "/foo/{1}");
+
+      
