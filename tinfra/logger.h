@@ -4,6 +4,7 @@
 #include "trace.h"   // for tinfra::source_location
 #include "tstring.h" // for tstring
 #include "stream.h"  // for tinfra::output_stream
+
 #include <time.h>    // for time_t
 
 namespace tinfra {
@@ -85,13 +86,13 @@ void log_fail(tstring const& m, tstring const& reason, tinfra::source_location c
 struct log_handler;
 
 enum log_level {
-    FATAL,
-    FAIL,
-    ERROR,
-    NOTICE,
-    WARNING,
-    INFO,
-    TRACE
+    LL_FATAL,
+    LL_FAIL,
+    LL_ERROR,
+    LL_NOTICE,
+    LL_WARNING,
+    LL_INFO,
+    LL_TRACE
 };
 
 class logger {

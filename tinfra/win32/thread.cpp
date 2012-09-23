@@ -51,18 +51,19 @@ void mutex::unlock() {
 
 namespace thread {
 
-TINFRA_MODULE_TRACER(tinfra_thread);
-
+tinfra::module_tracer thread_tracer(tinfra::tinfra_tracer, "thread", 80);
+    
 static void thread_error(const char* message, unsigned int rc)
 {
-	const std::string error_message = (fmt("tinfra::thread error: %s :%s(%i)") % message % win32::get_error_string(rc) % rc).str();
+    const std::string error_message = (fmt("tinfra::thread error: %s :%s(%i)") % message % win32::get_error_string(rc) % rc).str();
     throw std::runtime_error( error_message );
 }
 
 // 
 // condition implementation
 //
-TINFRA_PUBLIC_TRACER(tinfra_thread_condition);
+tinfra::module_tracer condition_tracer(tinfra::tinfra_tracer, "condition", 100);
+
 condition::condition()
 :   current_generation(0),
     signal_count(0),
@@ -72,8 +73,7 @@ condition::condition()
     was_broadcast(false),
     broadcast_ended(0)
 {
-    TINFRA_USE_TRACER(tinfra_thread_condition);
-    TINFRA_CALL_TRACE();
+    TINFRA_TRACE(condition_tracer, "condition::condition()");
 
     signal_sem = CreateSemaphore(NULL, 0, LONG_MAX, NULL);
     if( signal_sem == 0 ) {
@@ -89,16 +89,14 @@ condition::condition()
 }
 
 condition::~condition() {
-    TINFRA_USE_TRACER(tinfra_thread_condition);
-    TINFRA_CALL_TRACE();
+    TINFRA_TRACE(condition_tracer, "condition::~condition()");
 
     CloseHandle(signal_sem);
     CloseHandle(broadcast_ended);
 }
 
 void condition::signal() {
-    TINFRA_USE_TRACER(tinfra_thread_condition);
-    TINFRA_CALL_TRACE();
+    TINFRA_TRACE(condition_tracer, "condition::signal()");
 
     guard interal_guard(internal_lock);
     if( waiters_count == 0 )
@@ -111,8 +109,7 @@ void condition::signal() {
 }
 
 void condition::broadcast() {
-    TINFRA_USE_TRACER(tinfra_thread_condition);
-    TINFRA_CALL_TRACE();
+    TINFRA_TRACE(condition_tracer, "condition::broadcast()");
     {
         guard interal_guard(internal_lock);
         if( waiters_count == 0 )
@@ -127,8 +124,7 @@ void condition::broadcast() {
 }
 
 void condition::wait(mutex& external_lock) {
-    TINFRA_USE_TRACER(tinfra_thread_condition);
-    TINFRA_CALL_TRACE();
+    TINFRA_TRACE(condition_tracer, "condition::wait()");
 
     unsigned long waiter_generation;
     {
@@ -167,7 +163,8 @@ static unsigned __stdcall thread_master_fun(void* raw_params)
 {
     size_t tid = thread::current().to_number();
 
-    TINFRA_TRACE_MSG(fmt("entered thread tid=%i") % tid);
+    TINFRA_TRACE(thread_tracer, tsprintf("entered thread tid=%i", tid));
+    
     unsigned result;
     try {
         std::auto_ptr<thread_entry_param> params((thread_entry_param*)raw_params);
@@ -178,7 +175,8 @@ static unsigned __stdcall thread_master_fun(void* raw_params)
         TINFRA_LOG_ERROR(fmt("thread %i failed with uncaught exception: %s\n") % tid % e.what());
         result = ~(unsigned)0;
     }
-    TINFRA_TRACE_MSG(fmt("thread exited tid=%i") % tid );
+    TINFRA_TRACE(thread_tracer, tsprintf("thread exited tid=%i", tid));
+    
     ::_endthreadex(result); // never returns
     return result; // just to satisfy compiler
 }
@@ -282,7 +280,7 @@ void* thread::join()
     }
     
     size_t tid = to_number();
-    TINFRA_TRACE_MSG(fmt("thread joining ... tid=%i") % tid);
+    TINFRA_TRACE(thread_tracer, tsprintf("thread joining ... tid=%i", tid));
     DWORD gla = 0;
     
     int rc = ::WaitForSingleObject( thread_handle_, INFINITE );
@@ -304,7 +302,7 @@ void* thread::join()
     if( rc != WAIT_OBJECT_0 )
         thread_error("unable to join thread", gla);
     
-    TINFRA_TRACE_MSG(fmt("thread joined tid=%i, result %i") % tid % retvalue);
+    TINFRA_TRACE(thread_tracer, tsprintf("thread joined tid=%i, result %i", tid, retvalue));
     return (void*)retvalue;
 }
 
