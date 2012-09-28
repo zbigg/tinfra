@@ -18,6 +18,7 @@
 #include "tinfra/trace.h"
 #include "tinfra/fmt.h"
 #include "tinfra/buffer.h"
+#include "tinfra/logger.h"
 
 #include <windows.h>
 #include <string>
