@@ -147,8 +147,8 @@ STATIC_LIBRARIES += tinfra_test
 tinfra_CXXFLAGS = -I$(top_srcdir)
 tinfra_test_CXXFLAGS = -I$(top_srcdir)
 tinfra_test_program_CXXFLAGS = -I$(top_srcdir)
-tinfra_test_program_LDFLAGS = -L. -ltinfra -ltinfra-test -lpthread
-
+tinfra_test_program_LDFLAGS = -lpthread
+tinfra_test_program_LINK_DEPS = tinfra tinfra_test
 tinfra_test_program_TEST_INVOKE_ARGS = --srcdir=$(realpath $(top_srcdir))
 
 #TBD, tests/fatal_exception_test.cpp
