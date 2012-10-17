@@ -14,7 +14,22 @@
 #include <iostream>
 
 namespace tinfra {
-    
+/// Invoke Bridge (tbd, change name)
+///
+/// This infrastructure for lightweight freestanding
+/// function invocation.
+///
+/// Usage example:
+///
+///   void fun(std::ostream& out, int a, int b) { out << a+n; }
+///   ( ...)
+///   invoke_bridge_context ctx;
+///   ctx.register<std::ostream>(std::cout);
+///   std::vector args;
+///   args.push_back("22");
+///   args.push_back("33");
+///   invoke_bridge(ctx, args, &fun);
+
 struct invoke_bridge_context {
     std::vector<std::string> raw_args;
     std::map<std::string, void*> context;    
