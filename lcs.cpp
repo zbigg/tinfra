@@ -7,10 +7,117 @@
 // proof of concept, checking if i can still program some algorithm
 // DONT TRY IT IN PRODUCTION
 //
+// updates:
+//   2012-07-18, API proposition added (update_info, find_updates)
+//               new www resource, good discussion of optimization
+//               strategies: http://wordaligned.org/articles/longest-common-subsequence
+//               SO thread: http://stackoverflow.com/questions/3659032/efficient-longest-common-subsequence-algorithm-library
+
 
 #include <vector>
 #include <cassert>
 #include <iostream>
+
+//
+// example API for LCS
+//
+
+enum update_type {
+    ADD,
+    DELETE,
+    UPDATE
+};
+
+template <typename Target>
+struct update_info {
+    update_type type; // update type
+    int        idx; // index in previous_list 
+    Target*    old_value; // old value (valid if type in DELETE, UPDATE)
+    Target*    new_value; // new value (valid if type in DELETE, UPDATE)
+};
+
+template <typename T>
+std::vector< update_info<T> > find_updates(std::vector<T> const previous_list, std::vector<T> const updated_list);
+
+/// find_updates
+/// 
+/// for each update (delete, update, new_value)
+/// call f(Update<T> update)
+///
+/// Updates are sorted by occurence.
+/// 
+/// Example:
+/// vector<A> new_list = get_some_list()
+/// find_updates(this->current_list, new_list, [&](update_info<A> const& upd) {
+///     int update_offset = 0; // needed to synchronize original and modified
+///                            // indexes; upd.idx refer to original index
+///     switch( upd.type ) {
+///     case ADD:
+///         some_ui.insert_item(upd.idx + update_offset, construct_gui_item(upd.new_value))
+///         update_offset += 1;
+///         break;
+///     case DELETE:
+///         some_ui.delete_item(upd.idx + update_offset)
+///         update_offset -= 1;
+///         break;
+///     case UPDATE:
+///         some_ui.update_item(upd.idx + update_offset, construct_gui_item(upd.new_value))
+///         break;
+///     }
+/// });
+///
+/// this->current_list = new_list;
+
+template <typename T, typename Functor f>
+void find_updates(std::vector<T> const previous_list, std::vector<T> const& updated_list, Functor& f);
+
+template <typename T, typename Container>
+struct updater {
+    Container& target;
+    int update_offset;
+    
+    updater(Container& target): 
+        target(target),
+        update_offset(0) 
+    {}
+    
+    void operator()(update_info<T> const& ui)
+    {
+        typename Container::iterator iter = this->target.begin();
+        const size_t allowed_offset = (upd.type == ADD) 
+            ? this->target.size() : 
+              this->target.size()-1;
+              
+        assert(ui.idx + this-> update_offset <= allowed_offset);
+        advance(iter, upd.idx + this->update_offset);
+        
+        switch( ui.type ) {
+        case ADD:
+            this->target.insert(iter);
+            this->update_offset += 1;
+            break;
+        case DELETE:
+            this->target.erase(iter);            
+            this->update_offset -= 1;
+            break;
+        case UPDATE:
+            *iter = ui.new_value;
+            break;
+        }
+    }
+};
+
+template <typename T, typename Container f>
+void apply_updates(std::vector<T> const previous_list, std::vector<T> const& updated_list, Container& target)
+{
+    updater<T,C> upd_handler(target);
+    find_updates(previous_list, updated_list, upd_handler)
+}
+
+//
+// LCS implementation
+//
+//   helpers
 
 namespace std {
 template <typename T>
