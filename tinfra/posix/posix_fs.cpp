@@ -14,6 +14,10 @@
 #include "tinfra/logger.h"
 #include "tinfra/trace.h"
 
+#ifdef __linux__
+#define _FILE_OFFSET_BITS 64
+#endif
+
 #include <cstring>
 #include <errno.h>
 #include <unistd.h> // for readlink, symlink 

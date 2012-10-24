@@ -26,7 +26,7 @@ enum file_type {
 };
 
 struct file_info {
-    size_t    size;
+    long long size;
     bool      is_dir; // left for compatibility reasons
     file_type type;
     
