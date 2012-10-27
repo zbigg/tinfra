@@ -21,6 +21,7 @@ TINFRA_SANDBOX_OBJECTS=\
 COMMON_OBJECTS=\
 	tinfra/callfwd.o
 
+tzfile_read: tzfile_read.o
 
 editor_server: editor_server.o
 
