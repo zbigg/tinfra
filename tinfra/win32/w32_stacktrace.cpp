@@ -9,7 +9,8 @@
 /// based on codebase from
 ///    http://win32.mvps.org/misc/stackwalk.html
 
-#include "tinfra/platform.h"
+#include "../platform.h"
+#ifdef TINFRA_W32
 
 #include "tinfra/exeinfo.h"
 #include "tinfra/thread.h"
@@ -742,3 +743,6 @@ cleanup:
 
     return modules.size() != 0;
 }
+
+#endif // TINFRA_W32
+

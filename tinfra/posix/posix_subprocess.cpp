@@ -3,6 +3,9 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "../platform.h"
+#ifdef TINFRA_POSIX
+
 #include <sys/types.h>
 #include <signal.h>
 #include <sys/param.h>
@@ -335,5 +338,8 @@ std::auto_ptr<subprocess> subprocess::create()
 
 } // end namespace tinfra
 
+#endif // TINFRA_POSIX
+
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
+
 

@@ -3,6 +3,9 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "../platform.h"
+#ifdef TINFRA_POSIX
+
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
 #include "tinfra/os_common.h"
@@ -174,3 +177,6 @@ stream* open_native(intptr_t handle)
 
 
 } }
+
+#endif // TINFRA_POSIX
+

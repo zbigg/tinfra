@@ -3,6 +3,9 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "../platform.h"
+#ifdef TINFRA_W32
+
 #include "tinfra/stream.h" // we implement this in w32
 #include "tinfra/win32.h"
 #include "tinfra/trace.h"
@@ -217,4 +220,6 @@ void standard_handle_output::sync()
 
 } // end namespace tinfra::win32
 } // end namespace tinfra
+
+#endif // TINFRA_W32
 

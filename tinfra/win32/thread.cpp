@@ -8,6 +8,9 @@
 //   pthread based implementation of threads
 //   STILL NOT READY
 
+#include "../platform.h"
+#ifdef TINFRA_W32
+
 #include "tinfra/thread.h"
 
 #include <windows.h>
@@ -315,4 +318,5 @@ size_t thread::to_number() const
 
 } } // end namespace tinfra::thread
 
+#endif // TINFRA_W32
 
