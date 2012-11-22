@@ -6,7 +6,7 @@ dnl
 dnl
 dnl Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.67])
+AC_PREREQ([2.59])
 AC_INIT([tinfra],[0.0.2],[z.zagorski@gmail.com])
 AC_CONFIG_AUX_DIR([build/autoconf])
 AC_CONFIG_SRCDIR([tinfra/mo.h])
