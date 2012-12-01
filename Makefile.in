@@ -143,10 +143,10 @@ tinfra_test_SOURCES  = \
 
 
 
-SHARED_LIBRARIES += tinfra
+#SHARED_LIBRARIES += tinfra
 STATIC_LIBRARIES += tinfra
 
-SHARED_LIBRARIES += tinfra_test
+#SHARED_LIBRARIES += tinfra_test
 STATIC_LIBRARIES += tinfra_test
 
 tinfra_CXXFLAGS = -I$(top_srcdir)
