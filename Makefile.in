@@ -1,0 +1,89 @@
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+top_builddir = .
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir = @libdir@
+datadir = @datadir@
+
+MAKEFOO=@MAKEFOO@
+CC=@CC@
+CXX=@CXX@
+CXXFLAGS=@CXXFLAGS@
+LIBS=@LIBS@
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
+
+# components
+tinfra-regexp_DIR      = .
+tinfra-regexp_test_DIR = .
+
+# tinfra definitions (should be in libfoo/component_defs.mk)
+tinfra-regexp_HEADERS = \
+	tinfra/regexp.h \
+	tinfra/regexp-config.h
+
+tinfra-regexp_SOURCES = \
+	tinfra/regexp_pcre.cpp \
+	tinfra/regexp.cpp \
+	$(tinfra_HEADERS)
+
+tinfra_test_SOURCES  = \
+	tinfra/test.cpp \
+	tinfra/test.h \
+	tinfra/test_macros.h
+
+STATIC_LIBRARIES += tinfra-regexp
+
+tinfra-regexp_CXXFLAGS = -I$(top_srcdir)
+tinfra-regexp_test_CXXFLAGS = -I$(top_srcdir)
+tinfra-regexp_test_program_CXXFLAGS = -I$(top_srcdir)
+tinfra-regexp_test_program_LDFLAGS = -lpthread
+tinfra-regexp_test_program_LINK_DEPS = tinfra-regexp
+tinfra-regexp_test_program_TEST_INVOKE_ARGS = --srcdir=$(realpath $(top_srcdir))
+
+#TBD, tests/fatal_exception_test.cpp
+
+tinfra-regexp_TEST_SOURCES = \
+	tests/test_main.cpp \
+	tests/test_regexp.cpp
+
+# install tinfra headers
+tinfra-regexp_headers_FILES=$(tinfra-regexp_HEADERS)
+tinfra-regexp_headers_INSTALL_DEST=$(prefix)/include
+PUBLIC_COMPONENTS+= tinfra-regexp_headers
+
+# install tinfra-regexp.pc
+tinfra-regexp_pkg_config_FILES = tinfra-regexp.pc
+tinfra-regexp_pkg_config_INSTALL_DEST=$(libdir)/pkgconfig
+PUBLIC_COMPONENTS += tinfra-regexp_pkg_config
+
+
+tinfra-regexp_EXTRA_DIST=\
+	configure.ac \
+	configure \
+	aclocal.m4 \
+	tinfra/regexp-config.h.in \
+	Makefile.in \
+	build-helper \
+	tinfra-regexp.pc.in
+
+tinfra-regexp_COMPONENTS=tinfra-regexp
+PACKAGES=tinfra-regexp
+
+PRODUCT=tinfra-regexp
+VERSION=0.0.1
+
+AUTOCONF_AUX_DIR=build/autoconf
+MAKEFOO_USE += native
+MAKEFOO_USE += test-program
+MAKEFOO_USE += install-fhs
+MAKEFOO_USE += rpm
+MAKEFOO_USE += autoconf
+MAKEFOO_USE += src-dist
+ 
+include $(MAKEFOO)
+
+# jedit: :tabSize=8:mode=makefile:
+
