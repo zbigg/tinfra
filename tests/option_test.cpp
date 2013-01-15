@@ -187,6 +187,7 @@ SUITE(tinfra) {
         else if( tmp == "unspecified" ) v = UNSPECIFIED;
         else tinfra::fail("invalid input", 
                           tinfra::tsprintf("'%s' passed, but only high,low,unspecified is supported", tmp));
+        return s;
     }
     TEST(option_can_capture_enum_with_custom_ios_operators)
     {

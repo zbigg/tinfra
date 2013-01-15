@@ -3,7 +3,8 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/platform.h"
+#include "../platform.h"
+#ifdef TINFRA_W32
 
 #include "tinfra/subprocess.h"
 
@@ -308,3 +309,6 @@ std::auto_ptr<subprocess> subprocess::create()
 }
 
 } // end namespace tinfra::win32
+
+#endif TINFRA_W32
+

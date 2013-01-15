@@ -3,6 +3,10 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "../platform.h"
+
+#ifdef TINFRA_W32
+
 #include "tinfra/fs.h"
 
 #include "tinfra/win32.h"
@@ -297,3 +301,6 @@ std::string realpath(tstring const& path)
 }
 
 } } // end namespace tinfra::fs
+
+#endif // TINFRA_W32
+

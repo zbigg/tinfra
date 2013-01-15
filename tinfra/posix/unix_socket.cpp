@@ -3,6 +3,9 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "../platform.h"
+#ifdef TINFRA_POSIX
+
 #include "tinfra/unix_socket.h"
 
 #include "tinfra/fmt.h"
@@ -116,4 +119,6 @@ unix_client_socket::unix_client_socket(tstring const& path):
 }
 
 } // end namespace tinfra
+
+#endif // TINFRA_POSIX
 

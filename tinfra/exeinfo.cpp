@@ -6,6 +6,7 @@
 #include "tinfra/platform.h"
 
 #include "tinfra/exeinfo.h"
+#include "tinfra/fs.h"
 
 #include <istream>
 #include <cstdio>
@@ -61,6 +62,11 @@ std::string get_exepath()
 {
     if( exepath.size() == 0 ) {
         // TODO: write some OS-dependent code here
+#ifdef linux
+        if( tinfra::fs::exists("/proc/self/exe") ) {
+            return tinfra::fs::readlink("/proc/self/exe");
+        } 
+#endif   
 		return "";
     } else {
         return exepath;

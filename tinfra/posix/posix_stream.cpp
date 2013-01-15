@@ -3,6 +3,9 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "../platform.h"
+#ifdef TINFRA_POSIX
+
 #include "tinfra/posix/posix_stream.h" // we implement these
 
 #include "tinfra/os_common.h"
@@ -193,3 +196,4 @@ void standard_handle_output::sync()
 } // end namespace tinfra::posix
 } // end namespace tinfra
 
+#endif // TINFRA_POSIX

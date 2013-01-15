@@ -3,6 +3,9 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "../platform.h"
+#ifdef TINFRA_W32
+
 #include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
 #include "tinfra/win32.h"
@@ -214,3 +217,6 @@ stream* open_native(intptr_t handle)
 }
     
 } } // end namespace tinfra::io
+
+#endif // TINFRA_W32
+

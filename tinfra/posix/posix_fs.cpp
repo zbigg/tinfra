@@ -3,7 +3,13 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/platform.h"
+#ifdef __linux__
+#define _FILE_OFFSET_BITS 64
+#endif
+
+#include "../platform.h"
+
+#ifdef TINFRA_POSIX
 
 #include "tinfra/fs.h"
 
@@ -13,6 +19,7 @@
 #include "tinfra/path.h"
 #include "tinfra/logger.h"
 #include "tinfra/trace.h"
+
 
 #include <cstring>
 #include <errno.h>
@@ -279,4 +286,6 @@ std::string realpath(tstring const& path)
 
 
 } } // end namespace tinfra::fs
+
+#endif // TINFRA_POSIX
 

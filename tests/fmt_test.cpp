@@ -126,3 +126,8 @@ SUITE(tinfra) {
         CHECK_EQUAL("a b c 33", result );
     }
 } // end SUITE(fmt)
+
+// makefoo:requires:tinfra_fmt
+// makefoo:requires:tinfra_test
+//
+// makefoo:type:tinfra_test
