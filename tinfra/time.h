@@ -133,28 +133,23 @@ public:
 
     static deadline infinity();
     static deadline absolute(time_stamp const& t);
-    static deadline relative(time_duration const& dt);
+    static deadline relative(time_duration const& dt, time_source ts = TS_SYSTEM);
 
-    // create new freezed deadline
-    // 
-    // this deadline will be absolute (even if original was
-    // relative) , so each duration of specified
-    // timeout/wait time will decsrease as time passes
-    static deadline freeze(deadline const& base_deadline, time_source ts = TS_SYSTEM);
     
     bool is_infinite() const;
-    bool is_relative() const;
     bool is_absolute() const;
-
-    time_duration get_duration(time_source ts = TS_SYSTEM) const;
-    time_stamp    get_absolute(time_source ts = TS_SYSTEM) const;
+    
+    // check how much time left to deadline
+    time_duration time_left_to(time_stamp ts) const;
+    time_duration time_left_to(time_source ts = TS_SYSTEM) const;
+    
+    // get deadline time_stamp
+    time_stamp    get_absolute() const;
 
     value_type    get_raw();
 private:
-    deadline(value_type v, bool relative);
+    deadline(value_type v);
     value_type value;
-
-    bool  relativity_mark;
 };
 
 //
@@ -279,67 +274,49 @@ time_stamp   operator-(time_stamp a, time_duration b) { return time_stamp::from_
 inline
 deadline deadline::infinity()
 {
-    return deadline(static_cast<value_type>(-1), /* relative */ true);
+    return deadline(static_cast<value_type>(-1));
 }
 
 inline
-deadline deadline::absolute(time_stamp const& t)
+deadline deadline::absolute(time_stamp const& ts)
 {
-    return deadline(t.to_raw(), false /* absolute */);
+    return deadline(ts.to_raw() );
 }
 
 inline
-deadline deadline::relative(time_duration const& dt)
+deadline deadline::relative(time_duration const& dt, time_source ts)
 {
-    value_type v = (dt.to_raw() < 0 ) ? 0 : static_cast<value_type>(dt.to_raw());
-    return deadline(v, true /* relative */);
-}
-
-inline
-deadline deadline::freeze(deadline const& base_deadline, time_source ts)
-{
-    return deadline::absolute(base_deadline.get_absolute(ts));
+    const time_stamp dts = time_stamp::now(ts) + dt;
+    return deadline(dts.to_raw());
 }
 
 inline
 bool deadline::is_infinite() const { 
-    return this->is_relative() && 
-           this->value == static_cast<value_type>(-1); 
+    return ( this->value == static_cast<value_type>(-1) ); 
 }
 
 inline
-bool deadline::is_relative() const { return this->relativity_mark; }
-
-inline
-bool deadline::is_absolute() const { return ! this->relativity_mark; }
-
-inline
-time_duration deadline::get_duration(time_source ts) const
+time_duration deadline::time_left_to(time_stamp now) const
 {
-    if( is_relative() ) {
-        return time_duration::from_raw(this->value);
-    } else {
-        const time_stamp now = time_stamp::now();
-        const time_stamp deadline_stamp = time_stamp::from_raw(this->value);
-        if( deadline_stamp > now ) 
-            return deadline_stamp - now;
-        else
-            return time_duration();
-    }
+    const time_stamp deadline_stamp = time_stamp::from_raw(this->value);
+    return deadline_stamp - now;
 }
 
 inline
-time_stamp    deadline::get_absolute(time_source ts) const
+time_duration deadline::time_left_to(time_source ts) const
 {
-    if( is_absolute() ) {
-        return time_stamp::from_raw(this->value);
-    } if( is_infinite() ) {
+    const time_stamp now = time_stamp::now(ts);
+    const time_stamp deadline_stamp = time_stamp::from_raw(this->value);
+    return deadline_stamp - now;
+}
+
+inline
+time_stamp    deadline::get_absolute() const
+{
+    if( is_infinite() ) {
         return time_stamp::from_raw(this->value); // this->value == MAX
     } else {
-        const time_stamp now = time_stamp::now(ts);
-        const time_duration duration = time_duration::from_raw(this->value);
-        
-        return now + duration;
+        return time_stamp::from_raw(this->value);
     }
 }
 
@@ -350,9 +327,8 @@ deadline::value_type    deadline::get_raw()
 }
 
 inline 
-deadline::deadline(deadline::value_type v, bool relativity):
-    value(v),
-    relativity_mark(relativity)
+deadline::deadline(deadline::value_type v):
+    value(v)
 {
 }
 

@@ -48,11 +48,18 @@ esac
 
 AC_SUBST(CLIENT_CXXFLAGS)
 
-AC_CHECK_LIB(socket, socket)
-AC_CHECK_LIB(nsl,gethostbyname)
 AC_CHECK_FUNC(strncasecmp)
 AC_CHECK_FUNC(strnicmp)
 AC_CHECK_FUNC(hstrerror)
+
+AC_SEARCH_LIBS([socket], [socket], 
+    [AC_DEFINE([HAVE_SOCKET], [1], [socket function available])])
+    
+AC_SEARCH_LIBS([gethostbyname],[nsl],
+    [AC_DEFINE([HAVE_GETHOSTBYNAME], [1], [gethostbyname function available])])
+    
+AC_SEARCH_LIBS([clock_gettime],[rt],
+    [AC_DEFINE([HAVE_CLOCK_GETTIME], [1], [clock_gettime function available])])
 
 AC_CONFIG_FILES([Makefile  tinfra.pc tinfra-test.pc])
 AC_OUTPUT
