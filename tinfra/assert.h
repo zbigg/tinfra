@@ -42,6 +42,9 @@ void report_assertion_failure(tinfra::source_location const& location, const cha
 #define TINFRA_ASSERT(expression) \
     TINFRA_ASSERT_IMPL(expression)
 
+    
+#define TINFRA_STATIC_ASSERT(expression) TINFRA_STATIC_ASSERT_IMPL(expression)
+    
 /// Define static assertion, executed during static initialization
 ///
 /// Effectively caslls assert(expression) during static initialization
@@ -82,6 +85,25 @@ extern void assert_failed(tinfra::source_location const& location, const char* e
             TINFRA_ASSERT( expression );          \
         } }                                       \
         tinfra_static_auto_asserer_inst##__LINE__ 
+
+//template<int  x> struct static_assert_p        {};
+
+#if defined(HAVE_STATIC_ASSERT) || defined(TINFRA_CXX11)
+#define TINFRA_STATIC_ASSERT_IMPL(EXPR) \
+// c++11 static_assert
+        static_assert(EXPR, #EXPR)
+#else
+
+// static_assert inspired by stackoverflow & boost
+//  http://stackoverflow.com/questions/987684/does-gcc-have-a-built-in-compile-time-assert
+template<bool x> struct static_assert_f;
+template<      > struct static_assert_f <true> {};
+
+#define TINFRA_STATIC_ASSERT_IMPL(EXPR)   \
+        enum { dummy = sizeof(tinfra::static_assert_f<((EXPR) ? true : false)>) }
+
+    
+#endif
 
 }  // end namespace tinfra
 
