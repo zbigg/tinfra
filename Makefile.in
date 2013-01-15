@@ -5,6 +5,7 @@ top_builddir = .
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir = @libdir@
+datarootdir = @datarootdir@
 datadir = @datadir@
 
 MAKEFOO=@MAKEFOO@
@@ -12,6 +13,8 @@ CC=@CC@
 CXX=@CXX@
 INSTALL=@INSTALL@
 INSTALL_DATA=@INSTALL_DATA@
+CXXFLAGS=@CXXFLAGS@
+LIBS=@LIBS@
 
 # components
 tinfra_DIR      = .
@@ -68,6 +71,7 @@ tinfra_HEADERS = \
 	tinfra/test.h \
 	tinfra/test_macros.h \
 	tinfra/text.h \
+	tinfra/time.h \
 	tinfra/thread.h \
 	tinfra/thread_runner.h \
 	tinfra/trace.h \
@@ -120,6 +124,7 @@ tinfra_SOURCES = \
 	tinfra/text.cpp \
 	tinfra/fail.cpp \
 	tinfra/logger.cpp \
+	tinfra/time.cpp \
 	tinfra/posix/posix_io.cpp \
 	tinfra/posix/posix_subprocess.cpp \
 	tinfra/posix/thread.cpp \
@@ -194,6 +199,7 @@ tinfra_TEST_SOURCES = \
 	tests/test_test.cpp \
 	tests/text_test.cpp \
 	tests/thread_test.cpp \
+	tests/time_test.cpp \
 	tests/trace_test.cpp \
 	tests/tstring_test.cpp
 
