@@ -95,7 +95,7 @@ tinfra_SOURCES = \
 	tinfra/exeinfo.cpp \
 	tinfra/cmd.cpp \
 	tinfra/cli.cpp \
-	tinfra/io/stream.cpp \
+	tinfra/io/old_stream.cpp \
 	tinfra/subprocess.cpp \
 	tinfra/server.cpp \
 	tinfra/fmt.cpp \
@@ -127,7 +127,7 @@ tinfra_SOURCES = \
 	tinfra/time.cpp \
 	tinfra/posix/posix_io.cpp \
 	tinfra/posix/posix_subprocess.cpp \
-	tinfra/posix/thread.cpp \
+	tinfra/posix/posix_thread.cpp \
 	tinfra/posix/posix_runtime.cpp \
 	tinfra/posix/posix_fs.cpp \
 	tinfra/posix/posix_stream.cpp \
@@ -135,7 +135,7 @@ tinfra_SOURCES = \
 	tinfra/win32/w32_io.cpp \
 	tinfra/win32/w32_subprocess.cpp \
 	tinfra/win32/w32_common.cpp \
-	tinfra/win32/thread.cpp \
+	tinfra/win32/w32_thread.cpp \
 	tinfra/win32/w32_runtime.cpp \
 	tinfra/win32/w32_fs.cpp \
 	tinfra/win32/w32_stream.cpp \
