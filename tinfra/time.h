@@ -129,7 +129,7 @@ std::ostream& operator<<(std::ostream&, time_duration);
 
 class deadline {
 public:
-    typedef typename time_traits::value_type value_type;
+    typedef time_traits::value_type value_type;
 
     static deadline infinity();
     static deadline absolute(time_stamp const& t);

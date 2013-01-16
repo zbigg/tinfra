@@ -11,6 +11,7 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <ostream>
 
 namespace tinfra {
 

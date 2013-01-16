@@ -154,9 +154,8 @@ STATIC_LIBRARIES += tinfra
 #SHARED_LIBRARIES += tinfra_test
 STATIC_LIBRARIES += tinfra_test
 
-tinfra_CXXFLAGS = -I$(top_srcdir)
-tinfra_test_CXXFLAGS = -I$(top_srcdir)
-tinfra_test_program_CXXFLAGS = -I$(top_srcdir)
+CXXFLAGS += -I${top_builddir} -I$(top_srcdir)
+
 tinfra_test_program_LDFLAGS = -lpthread
 tinfra_test_program_LINK_DEPS = tinfra_test tinfra
 tinfra_test_program_TEST_INVOKE_ARGS = --srcdir=$(realpath $(top_srcdir))

@@ -51,7 +51,7 @@ time_stamp::value_type ttt_get_monotonic()
 {
     return ttt_get_system();
 }
-#elif defined HAVE_CLOCK_GETTIME
+#elif defined(HAVE_CLOCK_GETTIME)
 time_stamp::value_type ttt_get_system()
 {
     struct timespec tv;
