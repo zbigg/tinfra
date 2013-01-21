@@ -116,6 +116,53 @@ SUITE(tinfra)
         fs::walk(".", foo);
     }
     
+    TEST(fs_recursive_lister_depth)
+    {
+        test_fs_sandbox tmp_location("testtest_dir");
+        
+        fs::recursive_lister lister(".", false);
+        
+        std::vector<std::string> result;
+        {
+            fs::directory_entry de;
+            while (lister.fetch_next(de) ) {
+                result.push_back(de.name.str());
+            }
+        }
+        std::sort(result.begin(), result.end());
+        
+        CHECK_EQUAL(4, result.size());
+        CHECK_EQUAL("./testtest_dir",         result[0]);
+        CHECK_EQUAL("./testtest_dir/a",       result[1]);
+        CHECK_EQUAL("./testtest_dir/a/file2", result[2]);
+        CHECK_EQUAL("./testtest_dir/file1",   result[3]);
+    }
+    
+    TEST(fs_recursive_lister_ignore_stg)
+    {
+        test_fs_sandbox tmp_location("testtest_dir");
+        
+        fs::recursive_lister lister(".", false);
+        
+        std::vector<std::string> result;
+        {
+            fs::directory_entry de;
+            while (lister.fetch_next(de) ) {
+                // save a but don't recurse
+                if( tinfra::path::basename(de.name) == "a" )
+                    lister.recurse(false);
+                result.push_back(de.name.str());
+            }
+        }
+        std::sort(result.begin(), result.end());
+        
+        CHECK_EQUAL(3, result.size());
+        CHECK_EQUAL("./testtest_dir",         result[0]);
+        CHECK_EQUAL("./testtest_dir/a",       result[1]);
+        //CHECK_EQUAL("./testtest_dir/a/file2", result[2]);
+        CHECK_EQUAL("./testtest_dir/file1",   result[2]);
+    }
+    
     void touch(tstring const& name)
     {
         

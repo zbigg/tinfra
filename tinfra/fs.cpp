@@ -12,6 +12,7 @@
 #include "tinfra/io/stream.h"
 #include "tinfra/os_common.h"
 #include "tinfra/vfs.h"
+#include "tinfra/trace.h"
 #include <streambuf>
 #include <fstream>
 #include <stdexcept>
@@ -54,6 +55,67 @@ void list_files(tstring const& dirname, std::vector<std::string>& result)
         
         result.push_back(de.name.str());
     }
+}
+
+struct recursive_lister::internal_data {
+    // the stack
+    std::vector<lister*>    listers;
+    std::vector<std::string> base_paths;
+    //
+    std::string             last_path;
+    bool                    last_was_dir;
+    
+    bool                    recurse_enabled;
+};
+
+recursive_lister::recursive_lister(tstring const& path, bool):
+    self(new internal_data())
+{
+    self->listers.push_back(new lister(path, true));
+    self->base_paths.push_back(path);
+    
+    // fake for first run
+    self->last_was_dir = false;
+    self->recurse_enabled = false;
+}
+recursive_lister::~recursive_lister()
+{
+    for(std::vector<lister*>::const_iterator i = self->listers.begin(); i != self->listers.end(); ++i ) {
+        delete *i;
+    }
+}
+
+bool recursive_lister::fetch_next(directory_entry& de)
+{
+    if( self->recurse_enabled && self->last_was_dir) {
+        self->listers.push_back(new lister(self->last_path, true));
+        self->base_paths.push_back(self->last_path);
+    }
+    self->recurse_enabled = true;
+    while( ! self->listers.empty() ) {
+        lister* current = self->listers.back();
+        bool r = current->fetch_next(de);
+        if( r ) {
+            self->last_path = path::join(self->base_paths.back(), de.name);
+            self->last_was_dir = (de.info.type == tinfra::fs::DIRECTORY);
+            TINFRA_GLOBAL_TRACE_VAR(self->last_path);
+            TINFRA_GLOBAL_TRACE_VAR(self->last_was_dir);
+            TINFRA_GLOBAL_TRACE_VAR(de.info.type);
+            de.name = self->last_path;
+            return true;
+        } else {
+            delete current;
+            self->listers.pop_back();
+            self->base_paths.pop_back();
+            self->last_was_dir = false;
+        }
+    }
+    return false;
+}
+
+void recursive_lister::recurse(bool recurse)
+{
+    self->recurse_enabled = recurse;
 }
 
 void recursive_copy(tstring const& src, tstring const& dest)

@@ -54,6 +54,19 @@ private:
     std::auto_ptr<internal_data> data_;
 };
 
+class recursive_lister: public generator_impl<recursive_lister, directory_entry> {
+public:
+    recursive_lister(tstring const& path, bool need_stat = false);
+    ~recursive_lister();
+
+    bool fetch_next(directory_entry&);
+
+    void recurse(bool recurse = true);
+private:
+    struct internal_data;
+    std::auto_ptr<internal_data> self;
+};
+
 struct file_list_visitor {
     virtual void accept(tstring const& name) =0;
     
