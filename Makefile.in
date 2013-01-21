@@ -1,0 +1,89 @@
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+top_builddir = .
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir = @libdir@
+datadir = @datadir@
+
+MAKEFOO=@MAKEFOO@
+CC=@CC@
+CXX=@CXX@
+CXXFLAGS=@CXXFLAGS@
+LIBS=@LIBS@
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
+
+# components
+tinfra-xml_DIR      = .
+tinfra-xml_test_DIR = .
+
+# tinfra definitions (should be in libfoo/component_defs.mk)
+tinfra-xml_HEADERS = \
+	tinfra/xml_builder.h \
+	tinfra/xml_event_buffer.h \
+	tinfra/xml_parser.h \
+	tinfra/xml_stream.h \
+	tinfra/xml_writer.h 
+
+tinfra-xml_SOURCES = \
+	tinfra/xml_builder.cpp \
+	tinfra/xml_parser_expat.cpp \
+	tinfra/xml_writer.cpp \
+	$(tinfra_HEADERS)
+
+STATIC_LIBRARIES += tinfra-xml
+
+tinfra-xml_CXXFLAGS = -I$(top_srcdir)
+tinfra-xml_test_CXXFLAGS = -I$(top_srcdir)
+tinfra-xml_test_program_CXXFLAGS = -I$(top_srcdir)
+tinfra-xml_test_program_LDFLAGS = -lpthread -ltinfra-test
+tinfra-xml_test_program_LINK_DEPS = tinfra-xml
+tinfra-xml_test_program_TEST_INVOKE_ARGS = --srcdir=$(realpath $(top_srcdir))
+
+#TBD, tests/fatal_exception_test.cpp
+
+tinfra-xml_TEST_SOURCES = \
+	tests/test_main.cpp \
+	tests/xml_builder_test.cpp \
+	tests/xml_writer_test.cpp
+
+# install tinfra headers
+tinfra-xml_headers_FILES=$(tinfra-xml_HEADERS)
+tinfra-xml_headers_INSTALL_DEST=$(prefix)/include
+PUBLIC_COMPONENTS+= tinfra-xml_headers
+
+# install tinfra-xml.pc
+tinfra-xml_pkg_config_FILES = tinfra-xml.pc
+tinfra-xml_pkg_config_INSTALL_DEST=$(libdir)/pkgconfig
+PUBLIC_COMPONENTS += tinfra-xml_pkg_config
+
+
+tinfra-xml_EXTRA_DIST=\
+	configure.ac \
+	configure \
+	aclocal.m4 \
+	tinfra/regexp-config.h.in \
+	Makefile.in \
+	build-helper \
+	tinfra-xml.pc.in
+
+tinfra-xml_COMPONENTS=tinfra-xml
+PACKAGES=tinfra-xml
+
+PRODUCT=tinfra-xml
+VERSION=0.0.1
+
+AUTOCONF_AUX_DIR=build/autoconf
+MAKEFOO_USE += native
+MAKEFOO_USE += test-program
+MAKEFOO_USE += install-fhs
+MAKEFOO_USE += rpm
+MAKEFOO_USE += autoconf
+MAKEFOO_USE += src-dist
+ 
+include $(MAKEFOO)
+
+# jedit: :tabSize=8:mode=makefile:
+

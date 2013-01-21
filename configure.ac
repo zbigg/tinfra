@@ -11,9 +11,11 @@ AC_INIT(
     [0.0.1],
     [z.zagorski@gmail.com])
 
-AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
-AC_CONFIG_SRCDIR([tinfra-xml.bkl])
+AC_CONFIG_AUX_DIR([build/autoconf])
+AC_CONFIG_SRCDIR([tinfra/xml_stream.h])
 AC_CONFIG_HEADER([tinfra/xml-config.h])
+
+AC_MAKEFOO
 
 # Checks for programs.
 AC_PROG_CXX
@@ -24,8 +26,6 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
 AC_CANONICAL_SYSTEM
-
-AC_BAKEFILE([m4_include(autoconf_inc.m4)])
 
 PKG_CHECK_MODULES([TINFRA], [tinfra >= 0.0.1],
     [
