@@ -13,6 +13,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib> // for system
+#include <algorithm>
 
 using namespace tinfra;
 
