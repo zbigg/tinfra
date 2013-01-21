@@ -45,12 +45,16 @@ namespace fs {
 tinfra::module_tracer fs_tracer(tinfra::tinfra_tracer, "fs");
 
 struct lister::internal_data {
+    std::string base_path;
     DIR* handle;
+    bool need_stat;
 };
 
-lister::lister(tstring const& path, bool)
+lister::lister(tstring const& path, bool need_stat)
     : data_(new internal_data())
-{   
+{
+    data_->base_path = path.str();
+    data_->need_stat = need_stat;
     tinfra::string_pool temporary_context;
     TINFRA_TRACE(fs_tracer, "lister::lister");    
     TINFRA_TRACE_VAR(fs_tracer, path);
@@ -88,12 +92,18 @@ bool lister::fetch_next(directory_entry& result)
         
         result.name = entry->d_name;
         TINFRA_TRACE_VAR(fs_tracer, result.name);
-        result.info.is_dir = false;
-        result.info.size = 0;
         
-        // TODO, recognize how to use FILETIME and how to convert it into timestamp
-        result.info.modification_time = 0;
-        result.info.access_time = 0;
+        if( data_->need_stat ) {
+            std::string path = path::join(data_->base_path, result.name);
+            result.info = stat(path);
+            result.info.is_dir = (result.info.type == DIRECTORY);
+        } else {
+            result.info.is_dir = false;
+            result.info.size = 0;
+            result.info.type = REGULAR_FILE; // as fallback
+            result.info.modification_time = 0;
+            result.info.access_time = 0;
+        }
         return true;
     }
 }
