@@ -79,6 +79,7 @@ tinfra_HEADERS = \
 	tinfra/typeinfo.h \
 	tinfra/unix_socket.h \
 	tinfra/value_guard.h \
+	tinfra/variant.h \
 	tinfra/vfs.h \
 	tinfra/win32.h \
 	tinfra/io/stream.h \
@@ -126,6 +127,7 @@ tinfra_SOURCES = \
 	tinfra/fail.cpp \
 	tinfra/logger.cpp \
 	tinfra/time.cpp \
+	tinfra/variant.cpp \
 	tinfra/posix/posix_io.cpp \
 	tinfra/posix/posix_subprocess.cpp \
 	tinfra/posix/posix_thread.cpp \
@@ -203,7 +205,8 @@ tinfra_TEST_SOURCES = \
 	tests/thread_test.cpp \
 	tests/time_test.cpp \
 	tests/trace_test.cpp \
-	tests/tstring_test.cpp
+	tests/tstring_test.cpp \
+	tests/variant_test.cpp
 
 # install tinfra headers
 tinfra_headers_FILES=$(tinfra_HEADERS)
