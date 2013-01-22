@@ -3,6 +3,7 @@
 #include "xml_parser.h"
 
 #include <tinfra/tstring.h>
+#include <tinfra/fmt.h>
 
 #include <expat.h>
 #include <deque>
@@ -75,7 +76,11 @@ public:
     }
     void handle_parse_errors()
     {
-        throw std::runtime_error("XML_ParseBuffer");
+        const int line = XML_GetCurrentLineNumber(this->parser);
+        XML_Error err_code = XML_GetErrorCode(this->parser);
+        const char* err_str = XML_ErrorString(err_code);
+        throw std::runtime_error(tsprintf("xml parsing error: line %i, %s(%i)",
+                                          line, err_str, (int)err_code));
     }
     
     static int attributes_count(const char** attributes)
