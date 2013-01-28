@@ -161,7 +161,7 @@ bool get_debug_info(void* address, debug_info& result)
 {
 #ifdef linux
     if( get_debug_info_addr2line(address,result) )
-        return true
+        return true;
 #endif
 #ifdef HAVE_DLADDR
     if( get_debug_info_dladdr(address,result) )
