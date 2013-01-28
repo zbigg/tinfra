@@ -30,9 +30,15 @@
 
 #include <signal.h>
 
-#ifdef linux
+#if defined(HAVE_BACKTRACE) && defined(HAVE_EXECINFO_H)
 #include <execinfo.h>
-#define HAVE_BACKTRACE
+#endif
+
+#if defined(HAVE_DLADDR)
+#include <dlfcn.h>
+#if defined(__MACH__) && defined(__APPLE__)
+#define DL_info dl_info
+#endif
 #endif
 
 extern "C" void tinfra_fatal_sighandler(int signo, siginfo_t *, void *);
@@ -71,8 +77,11 @@ bool get_stacktrace(stacktrace_t& dest)
 {
 #ifdef HAVE_BACKTRACE
     // Reference
-    // http://www-128.ibm.com/developerworks/library/l-cppexcep.html?ca=dnt-68
-    // http://www.delorie.com/gnu/docs/glibc/libc_665.html
+    // web/howto:
+    //     http://www-128.ibm.com/developerworks/library/l-cppexcep.html?ca=dnt-68
+    //     http://www.delorie.com/gnu/docs/glibc/libc_665.html
+    // linux: man backtrace
+    // macosx: man backtrace
     //
     void* addresses[256];
     int size = ::backtrace(addresses, 256);    
@@ -97,7 +106,9 @@ static std::string local_get_exepath()
     return get_exepath();
 
 }
-bool get_debug_info(void* address, debug_info& result)
+
+#ifdef linux
+bool get_debug_info_addr2line(void* address, debug_info& result)
 {
     std::ostringstream cmd;
     cmd << "addr2line -e " << local_get_exepath() << " -sfC " << std::hex << address;
@@ -126,8 +137,41 @@ bool get_debug_info(void* address, debug_info& result)
     from_string<int>(place[1], result.source_line);
     return true;
 }
+#endif
 
-static void my_signal(int signo, void (*handler)(int, siginfo_t*, void*))
+#if defined(HAVE_DLADDR)
+bool get_debug_info_dladdr(void* address, debug_info& result)
+{
+    DL_info info;
+    memset(&info, 0, sizeof(info));
+    int r = dladdr(address, &info);
+    if( r == 0 ) {
+        // TBD, at least trace what is wrong
+        return false;
+    }
+    if( info.dli_sname != 0 ) {
+        result.function = info.dli_sname;
+        return true;
+    }
+    return false;
+}
+#endif
+
+bool get_debug_info(void* address, debug_info& result)
+{
+#ifdef linux
+    if( get_debug_info_addr2line(address,result) )
+        return true
+#endif
+#ifdef HAVE_DLADDR
+    if( get_debug_info_dladdr(address,result) )
+        return true;
+#endif
+    return false;
+}
+static std::vector<const char*> sig_names;
+
+static void my_signal(int signo, const char* name, void (*handler)(int, siginfo_t*, void*))
 {
     struct sigaction act;
     memset (&act, '\0', sizeof(act));
@@ -140,15 +184,23 @@ static void my_signal(int signo, void (*handler)(int, siginfo_t*, void*))
 	if( sigaction(signo, &act, 0) == -1) {
 	    TINFRA_LOG_ERROR(fmt("unable to install signal(%i) handler: %s") % signo % tinfra::errno_to_string(errno));
 	}
+	
+	if( sig_names.size() <= signo ) {
+	    sig_names.resize(signo+1);
+	} 
+	sig_names[signo] = name;
+	// ensure that those pages are really loaded !
+	strlen(name);
 }
 void initialize_platform_runtime()
 {
-    my_signal(SIGSEGV, &tinfra_fatal_sighandler);
-    my_signal(SIGBUS,  &tinfra_fatal_sighandler);
-    my_signal(SIGABRT, &tinfra_fatal_sighandler);
+    my_signal(SIGSEGV, "segmentation fault (SIGSEGV)", &tinfra_fatal_sighandler);
+    my_signal(SIGBUS,  "bus error (SIGBUS)",           &tinfra_fatal_sighandler);
+    my_signal(SIGABRT, "abort program (SIGABRT)", &tinfra_fatal_sighandler);
+    my_signal(SIGILL,  "illegal instruction (SIGILL)", &tinfra_fatal_sighandler);
     
-    my_signal(SIGINT,  &tinfra_interrupt_sighandler);
-    my_signal(SIGTERM, &tinfra_interrupt_sighandler);
+    my_signal(SIGINT,  "interrupt program (SIGINT)", &tinfra_interrupt_sighandler);
+    my_signal(SIGTERM, "termination request (SIGTERM)", &tinfra_interrupt_sighandler);
 }
 
 void uninstall_abort_handler()
@@ -161,7 +213,10 @@ void uninstall_abort_handler()
 extern "C" void tinfra_fatal_sighandler(int signo, siginfo_t *, void *)
 {
     char buf[64];
-    snprintf(buf, sizeof(buf), "fatal signal %i received", signo);
+    const char* signame = "unknown signal";
+    if( signo < tinfra::sig_names.size() )
+        signame = tinfra::sig_names[signo];
+    snprintf(buf, sizeof(buf), "fatal signal received: %s (signo=%i)", signame, signo);
     tinfra::fatal_exit(buf);
 }
 

@@ -16,6 +16,8 @@ INSTALL_DATA=@INSTALL_DATA@
 CXXFLAGS=@CXXFLAGS@
 LIBS=@LIBS@
 
+default: build
+
 # components
 tinfra_DIR      = .
 tinfra_test_DIR = .
@@ -165,6 +167,17 @@ tinfra_test_program_LDFLAGS = -lpthread
 tinfra_test_program_LINK_DEPS = tinfra_test tinfra
 tinfra_test_program_TEST_INVOKE_ARGS = --srcdir=$(realpath $(top_srcdir))
 
+test_fatal_exception_SOURCES = tests/fatal_exception_test.cpp
+test_fatal_exception_LDFLAGS = -lpthread
+test_fatal_exception_LINK_DEPS = tinfra_test tinfra
+
+test_fatal_exception_int: test_fatal_exception
+	./test_fatal_exception int
+
+test_fatal_exception_segv: test_fatal_exception
+	./test_fatal_exception segv
+	
+PROGRAMS=test_fatal_exception
 #TBD, tests/fatal_exception_test.cpp
 
 tinfra_TEST_SOURCES = \
@@ -229,6 +242,11 @@ tinfra_EXTRA_DIST=\
 
 tinfra_test_EXTRA_DIST=\
 	tinfra-test.pc.in
+
+AUTOCONF_GENERATED_FILES += \
+	tinfra/config.h \
+	tinfra.pc \
+	tinfra-test.pc
 
 #TEST_PROGRAMS += tinfra
 
