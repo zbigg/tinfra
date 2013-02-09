@@ -1,0 +1,22 @@
+process control design
+    process_controller()
+    
+    user use case:
+        query process state
+            echo "lock" > /var/run/xagent/xagentctl
+            tinfra-process-ctl DESC lock 
+            tinfra-process-ctl DESC wait webmonitor.running=true
+                awfull
+            service --tinfra-process-ctl=unix:/var/run/service/ctl &
+            tinfra-process-ctl unix:/var/run/service/ctl wait-initialized
+                wait_initialized will register as event listener
+                and for each event will check process-state if it's
+                initialized and if yes, will return ok
+            
+        request process to "do something"
+            reread config
+            stop
+            lock/unlock etc...
+            activate/deactivate
+        
+     
