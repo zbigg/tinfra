@@ -37,7 +37,7 @@
 #if defined(HAVE_DLADDR)
 #include <dlfcn.h>
 #if defined(__MACH__) && defined(__APPLE__)
-#define DL_info dl_info
+#define Dl_info dl_info
 #endif
 #endif
 
@@ -142,7 +142,7 @@ bool get_debug_info_addr2line(void* address, debug_info& result)
 #if defined(HAVE_DLADDR)
 bool get_debug_info_dladdr(void* address, debug_info& result)
 {
-    DL_info info;
+    Dl_info info;
     memset(&info, 0, sizeof(info));
     int r = dladdr(address, &info);
     if( r == 0 ) {
