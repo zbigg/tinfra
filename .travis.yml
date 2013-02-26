@@ -15,6 +15,7 @@ before_script:
   - git clone https://github.com/zbigg/makefoo.git makefoo-master
   - aclocal -I ./makefoo-master
   - autoheader
+  - autoconf
   - ./configure --with-makefoo-dir=./makefoo-master
 
 script:
