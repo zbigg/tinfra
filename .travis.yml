@@ -1,0 +1,23 @@
+#
+# travis (http://travis-ci.org/)
+#  build description 
+#   for tinfra (https://github.com/zbigg/tinfra)
+#
+
+#install: make autoconf aclocal
+language: cpp
+
+compiler:
+  - clang
+  - gcc
+
+before_script:
+  - git clone https://github.com/zbigg/makefoo.git makefoo-master
+  - aclocal -I ./makefoo-master
+  - autoheader
+  - ./configure --with-makefoo-dir=./makefoo-master
+
+script:
+  - make
+  - make check
+
