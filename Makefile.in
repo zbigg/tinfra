@@ -238,7 +238,12 @@ tinfra_EXTRA_DIST=\
 	tinfra/config.h.in \
 	Makefile.in \
 	build-helper \
-	tinfra.pc.in
+	tinfra.pc.in \
+	tests/resources/sample.exe.map \
+	tests/resources/testtest_dir/a \
+	tests/resources/testtest_dir/a/file2 \
+	tests/resources/testtest_dir/file1 \
+	tests/resources/testtest_file
 
 tinfra_test_EXTRA_DIST=\
 	tinfra-test.pc.in
