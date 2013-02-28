@@ -11,8 +11,13 @@
 
 namespace tinfra { 
 namespace path {
-    
-std::string join(tstring const& a, tstring const& b);
+
+/// join path components
+///
+/// Create string representing PATH joined from several PATH
+/// components.
+///
+std::string join(tstring const& p1, tstring const& p2 = "", tstring const& p3 = "", tstring const& p4 = "" );
 
 bool is_executable(tstring const& name);
 std::string basename(tstring const& name);

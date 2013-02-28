@@ -41,8 +41,16 @@ SUITE(tinfra)
         CHECK_EQUAL( "a", join("a",""));
         CHECK_EQUAL( "a", join("","a"));
         CHECK_EQUAL( "a/b", join("a","b"));
+	CHECK_EQUAL( "a/b/c", join("a","b","c"));
         CHECK_EQUAL( "a/b/c", join("a/b","c"));
         CHECK_EQUAL( "a/b/c", join("a","b/c"));
+        CHECK_EQUAL( "x/y/z/w", join("x","y", "z", "w"));
+        CHECK_EQUAL( "/x/y/z/w/", join("/x","y", "z", "w/"));
+        
+	// check if spurious componens are properly normalized
+        CHECK_EQUAL( "x/y/z/w", join("x//","//y", "//z//", "//w"));
+        // but we're not too greedy 
+        CHECK_EQUAL( "/x/y/z/w/", join("///x//","//y", "//z//", "//w///"));
         
         CHECK_EQUAL( "/b", join("/","b"));
         CHECK_EQUAL( "/a/b", join("/a/","b"));
