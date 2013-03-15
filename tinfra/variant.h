@@ -25,10 +25,11 @@ public:
     typedef std::map<key_type, variant> dict_type;
     typedef std::vector<variant>        array_type;
     typedef std::string                 string_type;
+    typedef long long                   integer_type;
     
 public:
     variant(): value(tinfra::any::from_copy(none_type())) {} // TBD, fix it!
-    variant(int v): value(tinfra::any::from_copy(v)) {}
+    variant(integer_type v): value(tinfra::any::from_copy(v)) {}
     variant(string_type const& v): value(tinfra::any::from_copy(v)) {}
     
     variant(tinfra::any const& v): value(v) {}
@@ -42,7 +43,8 @@ public:
     bool is_array() const;
     bool is_dict() const;
     bool is_string() const;
-    bool is_int() const;
+    bool is_int() const; // deprecated
+    bool is_integer() const;
     bool is_double() const;
     bool is_bool() const;
     bool is_none() const;
@@ -57,8 +59,11 @@ public:
     string_type&       get_string();
     string_type const& get_string() const;
     
-    int&       get_int();
-    int const& get_int() const;
+    integer_type&       get_integer();
+    integer_type const& get_integer() const;
+
+    integer_type&       get_int(); // deprecated
+    integer_type const& get_int() const; // deprecated
     
     double&       get_double();
     double const& get_double() const;
@@ -71,7 +76,8 @@ public:
     void set_array(array_type const& = array_type());
     void set_string(string_type const&);
     
-    void set_int(int);
+    void set_int(integer_type);
+    void set_integer(integer_type);
     void set_double(double);
     void set_bool(bool);
     
@@ -124,9 +130,14 @@ inline bool variant::is_string() const
     return this->value.type() == typeid(string_type);
 }
 
+inline bool variant::is_integer() const
+{
+    return this->value.type() == typeid(integer_type);
+}
+
 inline bool variant::is_int() const
 {
-    return this->value.type() == typeid(int);
+    return this->value.type() == typeid(integer_type);
 }
 
 inline bool variant::is_double() const
@@ -166,14 +177,23 @@ inline variant::string_type const& variant::get_string() const {
     return this->value.get<string_type>();
 }
 
-inline int&       variant::get_int() {
-    TINFRA_ASSERT(is_int());
-    return this->value.get<int>();
+inline variant::integer_type&       variant::get_integer() {
+    TINFRA_ASSERT(is_integer());
+    return this->value.get<integer_type>();
 }
-inline int const& variant::get_int() const {
-    TINFRA_ASSERT(is_int());
-    return this->value.get<int>();
+inline variant::integer_type const& variant::get_integer() const {
+    TINFRA_ASSERT(is_integer());
+    return this->value.get<integer_type>();
 }
+
+
+inline variant::integer_type&       variant::get_int() { // deprecated
+    return this->get_int();
+}
+inline variant::integer_type const& variant::get_int() const { // deprecated
+    return this->get_int();
+}
+
 
 inline double&       variant::get_double() {
     TINFRA_ASSERT(is_double());
@@ -205,7 +225,12 @@ inline void variant::set_array(array_type const& v) {
 inline void variant::set_string(string_type const& v) {
     this->value = tinfra::any::from_copy(v);
 }
-inline void variant::set_int(int v) {
+
+inline void variant::set_integer(integer_type v) {
+    this->value = tinfra::any::from_copy(v);
+}
+
+inline void variant::set_int(integer_type v) {
     this->value = tinfra::any::from_copy(v);
 }
 
