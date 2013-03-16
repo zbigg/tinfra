@@ -82,6 +82,7 @@ tinfra_HEADERS = \
 	tinfra/unix_socket.h \
 	tinfra/value_guard.h \
 	tinfra/variant.h \
+	tinfra/vtpath.h \
 	tinfra/vfs.h \
 	tinfra/win32.h \
 	tinfra/io/stream.h \
@@ -130,6 +131,7 @@ tinfra_SOURCES = \
 	tinfra/logger.cpp \
 	tinfra/time.cpp \
 	tinfra/variant.cpp \
+	tinfra/vtpath.cpp \
 	tinfra/posix/posix_io.cpp \
 	tinfra/posix/posix_subprocess.cpp \
 	tinfra/posix/posix_thread.cpp \
@@ -163,12 +165,21 @@ tinfra_test_NAME=tinfra-test
 
 CXXFLAGS += -I${top_builddir} -I$(top_srcdir)
 
+ifdef TARGET_POSIX
 tinfra_test_program_LDFLAGS = -lpthread
+endif
+ifdef TARGET_W32
+test_fatal_exception_LDFLAGS = -lws2_32
+endif
+
 tinfra_test_program_LINK_DEPS = tinfra_test tinfra
 tinfra_test_program_TEST_INVOKE_ARGS = --srcdir=$(realpath $(top_srcdir))
 
 test_fatal_exception_SOURCES = tests/fatal_exception_test.cpp
+ifdef TARGET_POSIX
 test_fatal_exception_LDFLAGS = -lpthread
+endif
+
 test_fatal_exception_LINK_DEPS = tinfra_test tinfra
 
 test_fatal_exception_int: test_fatal_exception
@@ -219,7 +230,8 @@ tinfra_TEST_SOURCES = \
 	tests/time_test.cpp \
 	tests/trace_test.cpp \
 	tests/tstring_test.cpp \
-	tests/variant_test.cpp
+	tests/variant_test.cpp \
+	tests/vtpath_test.cpp
 
 # install tinfra headers
 tinfra_headers_FILES=$(tinfra_HEADERS)
