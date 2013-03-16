@@ -142,6 +142,7 @@ struct vtpath_parse_state {
     // iterator in container
     variant::array_type::iterator iarray;
     variant::dict_type::iterator  idict;
+    int                           index;
     bool                          matching_finished;
     // iterator in expression-set
     std::vector<vtpath_command>::iterator icommand;
@@ -174,25 +175,30 @@ struct vtpath_visitor::internal_data {
             result_queue.push_back(node);
             return;
         } else {
-            vtpath_parse_state new_state;
-            new_state.matching_finished = false;
-            new_state.current  = node;
-            new_state.icommand = inext_command;
-            
-            if( node->is_dict() ) {
-                TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: pushing dict: " << node);
-                new_state.idict = node->get_dict().begin();
-            } else if( node->is_array() ) {
-                TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: pushing array: " << node);
-                new_state.iarray = node->get_array().begin();
-            } else {
-                // do nothing when
-                // we've found leafs not at end of 
-                // command chain
-                return;
-            }
-            this->states.push(new_state);
+            push_container(node, inext_command);
         }
+    }
+    void push_container(variant* node, std::vector<vtpath_command>::iterator inext_command)
+    {
+        vtpath_parse_state new_state;
+        new_state.matching_finished = false;
+        new_state.current  = node;
+        new_state.icommand = inext_command;
+        new_state.index = 0;
+        
+        if( node->is_dict() ) {
+            TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: pushing dict: " << node);
+            new_state.idict = node->get_dict().begin();
+        } else if( node->is_array() ) {
+            TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: pushing array: " << node);
+            new_state.iarray = node->get_array().begin();
+        } else {
+            // do nothing when
+            // we've found leafs not at end of 
+            // command chain
+            return;
+        }
+        this->states.push(new_state);
     }
 };
 
@@ -244,7 +250,6 @@ bool vtpath_visitor::fetch_next(variant*& r)
             continue;
         }
         bool recursive = false;
-        TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: node: " << top.current << " " << *(top.icommand) << "recursive=" << (int)recursive);
         if( top.icommand->type == CHILD ) {
             // nothing
         } else if( top.icommand->type == RECURSIVE_CHILD ) {
@@ -254,75 +259,110 @@ bool vtpath_visitor::fetch_next(variant*& r)
             self->states.pop();
             continue;
         }
+        TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: node: " << (*top.current) << "(" <<top.current << ") " << *(top.icommand) << " index=" << top.index << " recursive=" << (int)recursive);
+        
         // we still need at least one command
         TINFRA_ASSERT(top.icommand != self->commands.end()-1);
         vtpath_command const& child_match = *(top.icommand+1);
-        TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: node: " << top.current << " " << *(top.icommand+1) << " recursive=" << (int)recursive);
-        switch( child_match.type ) {
-        case WILDCARD_ALL:
-            // CURRENT.*
-            if( top.current->is_dict()) {
-                // CURRENT.* on dict, same as CURRENT[*]
-                if( top.idict != top.current->get_dict().end() ) {
-                    variant& match = top.idict->second;
-                    std::vector<vtpath_command>::iterator match_icommand = (top.icommand+2);
+        TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: node: next_command= " << *(top.icommand+1));
+        
+        std::vector<vtpath_command>::iterator inext_command = (top.icommand+2);
+        
+        if( top.current->is_dict()) {
+            variant::dict_type& dict = top.current->get_dict();
+            if( child_match.type == WILDCARD_ALL || recursive) {
+                // CURRENT.*, or recursive
+                // in wildcard we MATCH all
+                // in recursive we recurse to all
+                if( top.idict != dict.end() ) {
+                    variant::dict_type::iterator idict = top.idict;
                     top.idict++;
+                    top.index++;
                     
-                    self->match_found(&match, match_icommand);
+                    variant& match = idict->second;
+                    TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: trying: " << top.index-1 << ": " << idict->first << " -> " << match);
+                    if(        child_match.type == WILDCARD_ALL ) {
+                        // CURRENT.*, matches everything
+                        self->match_found(&match, inext_command);
+                    } else if( child_match.type == TOKEN ) {
+                        // CURRENT.TOKEN
+                        if( child_match.expr.is_string() ) {
+                            // CURRENT.TOKEN(string)
+                            //  -> check if current matches TOKEN in dict
+                            TINFRA_ASSERT(child_match.expr.is_string());
+                            std::string const& token = child_match.expr.get_string();
+                            if( idict->first == token ) {
+                                self->match_found(&match, inext_command);
+                            }
+                        }
+                    } else {
+                        TINFRA_ASSERT(false);
+                    }
+                    if( recursive ) {
+                        // in recursive must reapply all rules from now on all containers
+                        self->push_container(&match, top.icommand);
+                    }
                 } else {
                     top.matching_finished = true;
                 }
-            } else if( top.current->is_array() ) {
-                // CURRENT.* on array, same as CURRENT[*]
-                if( top.iarray != top.current->get_array().end() ) {
-                    variant& match = *top.iarray;
-                    std::vector<vtpath_command>::iterator match_icommand = (top.icommand+2);
-                    top.iarray++;
-                    
-                    self->match_found(&match, match_icommand);
-                } else {
-                    top.matching_finished = true;
-                }
-            } else {
-                // CURRENT.* on leaf, leave
-                top.matching_finished = true;
-            }
-            break;
-        case TOKEN:
-            // .NAME
-            if( top.current->is_dict()) {
-                // CURRENT.NAME on dict
-                variant::dict_type& dict = top.current->get_dict();
+            } else if( child_match.type == TOKEN ) {
+                // CURRENT.TOKEN, non-recursive
+                //  -> search for TOKEN in dict
                 std::string const& token = child_match.expr.get_string();
-                
+
                 variant::dict_type::iterator i = dict.find(token);
+                top.matching_finished = true;
                 if( i != dict.end() ) {
                     variant& match = i->second;
-                    std::vector<vtpath_command>::iterator inext_command = (top.icommand+2);
-
                     self->match_found(&match, inext_command);
                 }
-                top.matching_finished = true;
-            } else if( top.current->is_array()) {
-                // CURRENT[TOKEN] on array
-                variant::array_type& array = top.current->get_array();
+            }
+        } else if( top.current->is_array() ) {
+            variant::array_type& array = top.current->get_array();
+            if( child_match.type == WILDCARD_ALL || recursive) {
+                // in wildcard we MATCH all
+                // in recursive we recurse to all
+                if( top.iarray != array.end() ) {
+                    variant::array_type::iterator iarray = top.iarray;
+                    top.iarray++;
+                    top.index++;
+                    
+                    variant& match = *iarray;
+                    TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: trying: " << top.index-1 << ": " << match);
+                    if(        child_match.type == WILDCARD_ALL ) {
+                        self->match_found(&match, inext_command);
+                    } else if( child_match.type == TOKEN ) {
+                        if( child_match.expr.is_integer()) {
+                            int current_index = (iarray - array.begin());
+                            int index = child_match.expr.get_integer();
+                            if( index == current_index ) {
+                                self->match_found(&match, inext_command);
+                            }
+                        }
+                    } else {
+                        TINFRA_ASSERT(false);
+                    }
+                    
+                    if( recursive ) {
+                        // in recursive must reapply all rules from now on all containers
+                        self->push_container(&match, top.icommand);
+                    }
+                } else {
+                    top.matching_finished = true;
+                }
+            } else if( child_match.type == TOKEN ) {
+                TINFRA_ASSERT(child_match.expr.is_integer());
                 int index = child_match.expr.get_integer();
+                top.matching_finished = true;
                 if( index >= 0 && index < array.size() ) {
                     variant& match = array[index];
                     std::vector<vtpath_command>::iterator inext_command = (top.icommand+2);
 
                     self->match_found(&match, inext_command);
                 }
-                top.matching_finished = true;
-            } else {
-                top.matching_finished = true;
+                
             }
-            break; // TOKEN 
-        } // switch (next command)
-        
-        //if( recursive && top.matching_finished ) {
-        //    if( top.
-        //}
+        } // is array
     } // while result_queue is empty
     r = self->result_queue.front();
     self->result_queue.pop_front();
