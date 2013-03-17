@@ -231,7 +231,7 @@ public:
         this->out.write("[",1);
     }
     void array_end() {
-        this->out.write("[",1);
+        this->out.write("]",1);
     }
     void comma() {
         this->out.write(",",1);
