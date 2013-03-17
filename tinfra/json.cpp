@@ -49,14 +49,15 @@ public:
         if( finished )
             return;
         this->finished = !this->lexer.fetch_next(this->current);
+        TINFRA_TRACE(json_parser_tracer, "readed token " << this->current.type << " finished=" << finished);
     }
     void expect(json_token::token_type tt) {
         if( finished ) {
-            throw std::runtime_error(tsprintf("epecting %s, but end of input reached",
+            throw std::runtime_error(tsprintf("expecting %s, but end of input reached",
                                               tt));
         }
         if( this->current.type != tt ) {
-            throw std::runtime_error(tsprintf("epecting %s, but found %s",
+            throw std::runtime_error(tsprintf("expecting %s, but found %s",
                                               tt, this->current.type));
         }
     }
@@ -70,9 +71,11 @@ public:
             return;
         switch( current.type ) {
         case json_token::OBJECT_BEGIN:
+            dest = variant::dict();
             parse_object(dest);
             break;
         case json_token::ARRAY_BEGIN:
+            dest = variant::array();
             parse_array(dest);
             break;
         case json_token::STRING:
@@ -112,7 +115,7 @@ public:
             next();
             // 'foo' :
             expect(json_token::COLON);
-            
+            next();
             {
                 // 'foo' : ANYTHING
                 variant tmp;
@@ -456,25 +459,24 @@ struct json_lexer::internal_data {
         last_token = "";
         TINFRA_ASSERT(current == '"');
         next(); // skip the "
-        while( true ) {
+        while( !finished ) {
             switch(this->current) {
             case '"': // just break
                 next();
-                TINFRA_TRACE(json_lexer_tracer, "readed STRING(" << last_token << ")");
                 return;
             case '\\':
                 if( !next() ) {
                     fail("'\\' at end of input");
                 }
                 switch(this->current) {
-                case '"':  last_token.append('"',1); break;
-                case '\\': last_token.append('\\',1); break;
-                case '/':  last_token.append('/',1); break;
-                case 'b':  last_token.append('\b',1); break;
-                case 'f':  last_token.append('\f',1); break;
-                case 'n':  last_token.append('\b',1); break;
-                case 'r':  last_token.append('\r',1); break;
-                case 't':  last_token.append('\t',1); break;
+                case '"':  last_token.append(1, '"'); break;
+                case '\\': last_token.append(1, '\\'); break;
+                case '/':  last_token.append(1, '/'); break;
+                case 'b':  last_token.append(1, '\b'); break;
+                case 'f':  last_token.append(1, '\f'); break;
+                case 'n':  last_token.append(1, '\n'); break;
+                case 'r':  last_token.append(1, '\r'); break;
+                case 't':  last_token.append(1, '\t'); break;
                 case 'u':
                     // TBD. parse unicode
                     {
@@ -490,7 +492,7 @@ struct json_lexer::internal_data {
                             result_char = (result_char << 8) | n;
                         }
                         if( result_char > 127) fail("we don't support anything plain old ASCII");
-                        last_token.append((char)result_char,1);
+                        last_token.append(1, (char)result_char);
                     }
                     break;
                 }
@@ -498,11 +500,12 @@ struct json_lexer::internal_data {
                 break;
             default:
                 if( this->current > 127) fail("we don't support anything plain old ASCII");
-                last_token.append((char)this->current,1);
+                last_token.append(1, (char)this->current);
                 next();
                 break;
             }
         } // end while
+        fail("unterminated string constant (expected \")");
     }
     
     json_token::token_type consume_number()
@@ -517,26 +520,21 @@ struct json_lexer::internal_data {
             case 'e': case 'E':
             case '.':
                 token_type = json_token::DOUBLE;
-                last_token.append((char)this->current, 1);
+                last_token.append(1, (char)this->current);
                 next();
                 break;
             case '-':
             case '+':
             case '0': case '1': case '2': case '3': case '4':
             case '5': case '6': case '7': case '8': case '9': // numbers: integer or double
-                last_token.append((char)this->current, 1);
+                last_token.append(1, (char)this->current);
                 next();
                 break;
             default: // any other character means end of token
-                TINFRA_TRACE(json_lexer_tracer, "readed " << 
-                                                (token_type == json_token::INTEGER ? "INTEGER": "DOUBLE") << 
-                                                "(" << last_token << ")");
                 break;
             }
         }
-        TINFRA_TRACE(json_lexer_tracer, "readed " << 
-                                        (token_type == json_token::INTEGER ? "INTEGER": "DOUBLE") << 
-                                        "(" << last_token << ")");
+        return token_type;
     }
     
     void consume_keyword(const char* keyword) {
@@ -587,42 +585,53 @@ bool json_lexer::fetch_next(json_token& tok)
         case '[':
             tok.type = json_token::ARRAY_BEGIN;
             self->next();
-            TINFRA_TRACE(json_lexer_tracer, "readed OBJECT_BEGIN");
+            TINFRA_TRACE(json_lexer_tracer, "readed ARRAY_BEGIN");
             return true;
         case ']':
             tok.type = json_token::ARRAY_END;
             self->next();
+            TINFRA_TRACE(json_lexer_tracer, "readed ARRAY_END");
             return true;
         case ':': // 
             tok.type = json_token::COLON;
             self->next();
+            TINFRA_TRACE(json_lexer_tracer, "readed COLON");
             return true;
         case ',': // COMMA
             tok.type = json_token::COMMA;
             self->next();
+            TINFRA_TRACE(json_lexer_tracer, "readed COMMA");
             return true;
         case '"':  // "string"
                    // NOTE, shall we support ' ??, RFC says that only " starts strings
             self->consume_string();
+            tok.type  = json_token::STRING;
             tok.value = self->last_token;
+            TINFRA_TRACE(json_lexer_tracer, "readed STRING (" << self->last_token <<")");
             return true;
         case '-':
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9': // numbers: integer or double
             tok.type  = self->consume_number();
             tok.value = self->last_token;
+            TINFRA_TRACE(json_lexer_tracer, "readed " <<
+                                            (tok.type == json_token::INTEGER ? "INTEGER": "DOUBLE") <<
+                                            " (" << self->last_token <<")");
             return true;
         case 't': // keywords true
             self->consume_keyword("true");
             tok.type = json_token::TRUE;
+            TINFRA_TRACE(json_lexer_tracer, "readed TRUE");
             return true;
         case 'f': // keywords: false
             self->consume_keyword("false");
             tok.type = json_token::FALSE;
+            TINFRA_TRACE(json_lexer_tracer, "readed FALSE");
             return true;
         case 'n': // keywords: null
             self->consume_keyword("null");
             tok.type = json_token::TOK_NULL;
+            TINFRA_TRACE(json_lexer_tracer, "readed NULL");
             return true;
         case ' ': case '\t': case '\r': case '\n': // whitespace
             self->next();
