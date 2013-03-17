@@ -104,8 +104,8 @@ std::ostream& operator <<(std::ostream& s, variant const& node)
 {
     if( node.is_string() ) {
         return s << node.get_string();
-    } else if( node.is_int() ) {
-        return s << node.get_int();
+    } else if( node.is_integer() ) {
+        return s << node.get_integer();
     } else if( node.is_double() ) {
         return s << node.get_double();
     } else if( node.is_dict() ) {
@@ -113,7 +113,7 @@ std::ostream& operator <<(std::ostream& s, variant const& node)
     } else if( node.is_array() ) {
         return s << "<array>";
     } else {
-        return s << "variant(??)";
+        return s << "variant(?)";
     }
 }
 
