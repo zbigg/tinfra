@@ -44,6 +44,7 @@ tinfra_HEADERS = \
 	tinfra/inifile.h \
 	tinfra/internal_pipe.h \
 	tinfra/interruptible.h \
+	tinfra/json.h \
 	tinfra/lazy_protocol.h \
 	tinfra/lex.h \
 	tinfra/logger.h \
@@ -122,6 +123,7 @@ tinfra_SOURCES = \
 	tinfra/stream.cpp \
 	tinfra/buffered_stream.cpp \
 	tinfra/inifile.cpp \
+	tinfra/json.cpp \
 	tinfra/socket.cpp \
 	tinfra/tcp_socket.cpp \
 	tinfra/internal_pipe.cpp \
@@ -202,6 +204,7 @@ tinfra_TEST_SOURCES = \
 	tests/fs_test.cpp \
 	tests/inifile_test.cpp \
 	tests/internal_pipe_test.cpp \
+	tests/json_test.cpp \
 	tests/lex_test.cpp \
 	tests/logger_test.cpp \
 	tests/memory_pool_test.cpp \
