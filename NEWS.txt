@@ -1,6 +1,6 @@
 [This is human changelog. For details, see mtn log.]
 
-version 0.0.3, releases 2012-xx-xx
+version 0.0.3, releases 2013-xx-xx
 
    compatibility: ABI: no , API: no
    tested: 
@@ -16,9 +16,12 @@ version 0.0.3, releases 2012-xx-xx
     * fs.h: symlink support: symlink, readlink and realpath added (wraps POSIX)
     * inifile.h: ini file writer added
     * stream.h: new create_memory_output_stream(), helpers: read_all(), write_all()
-    * test --srcdir option and srcdir_eval() added for finding test resources 
+    * test --srcdir option and srcdir_eval() added for finding test resources
       relative to $srcdir
     * mo_algo.h added with mo_equals, mo_less_than, mo_swap added
+    * variant: variant(string,int,double,bool,dict,array) added; same model as JSON
+    * vtpath: JSONPath implementation on variant tree
+    * json.h: json parser & writer based on variant
 
    fix:
     * socket: correctly handle interrupts (EINTR) on posix
