@@ -45,25 +45,42 @@ public:
         next();
     }
 
-    void next() {
+    bool next() {
         if( finished )
-            return;
+            return false;
         this->finished = !this->lexer.fetch_next(this->current);
         TINFRA_TRACE(json_parser_tracer, "readed token " << this->current.type << " finished=" << finished);
+        return !this->finished;
+    }
+    
+    void next_or_fail(const char* message) 
+    {
+        if( !next() ) {
+            fail(message);
+        }
+    }
+    
+    void fail(std::string const& message)
+    {
+        TINFRA_TRACE(json_parser_tracer, "failure: " << message);
+        throw std::runtime_error(tsprintf("json_parser: %s", message));
     }
     void expect(json_token::token_type tt) {
         if( finished ) {
-            throw std::runtime_error(tsprintf("expecting %s, but end of input reached",
+            fail(tsprintf("expecting %s, but end of input reached",
                                               tt));
         }
         if( this->current.type != tt ) {
-            throw std::runtime_error(tsprintf("expecting %s, but found %s",
-                                              tt, this->current.type));
+            fail(tsprintf("expecting %s, but found %s",
+                 tt, this->current.type));
         }
     }
     void parse()
     {
         parse_node(root);
+        if( ! finished ) {
+            fail("expected EOF after last object");
+        }
     }
     void parse_node(variant& dest)
     {
@@ -96,12 +113,16 @@ public:
             }
             next();
             break;
+        default:
+            fail(tsprintf("expected value but %s found", current.type));
         }
     }
+    
     void parse_object(variant& dict)
     {
         expect(json_token::OBJECT_BEGIN);
-        next();
+        next_or_fail("expected } or \"key\":value when parsing object but EOF found"); 
+        
         if( current.type == json_token::OBJECT_END ) {
             // short circuit for {}
             next();
@@ -115,7 +136,7 @@ public:
             next();
             // 'foo' :
             expect(json_token::COLON);
-            next();
+            next_or_fail("expected value after ':'");
             {
                 // 'foo' : ANYTHING
                 variant tmp;
@@ -136,13 +157,15 @@ public:
                 next();
                 break;
             }
+            fail("expected ',' or '}' after value when parsing dictionary");
         }
     }
     
     void parse_array(variant& array)
     {
         expect(json_token::ARRAY_BEGIN);
-        next();
+        next_or_fail("expected ] or value when parsing array but EOF found"); 
+        
         if( current.type == json_token::ARRAY_END ) {
             // short circuit for []
             next();
@@ -162,7 +185,7 @@ public:
             // now decide: next or end
             if( current.type == json_token::COMMA ) {
                 // , -> continue
-                next();
+                next_or_fail("expected value after ','");
                 continue;
             }
             if( current.type == json_token::ARRAY_END ) {
@@ -170,6 +193,7 @@ public:
                 next();
                 break;
             }
+            fail("expected ',' or ']' after value when parsing array");
         }
     }
 };
@@ -429,6 +453,7 @@ struct json_lexer::internal_data {
     }
     void fail(std::string const& message)
     {
+        TINFRA_TRACE(json_lexer_tracer, "failure: " << message);
         throw std::runtime_error(tsprintf("json_lexer: %s", message));
     }
     int parse_hexdigit(int c) {
@@ -495,6 +520,8 @@ struct json_lexer::internal_data {
                         last_token.append(1, (char)result_char);
                     }
                     break;
+                default:
+                    fail("unknown escape character");
                 }
                 next();
                 break;
@@ -531,7 +558,7 @@ struct json_lexer::internal_data {
                 next();
                 break;
             default: // any other character means end of token
-                break;
+                return token_type;
             }
         }
         return token_type;
@@ -636,6 +663,8 @@ bool json_lexer::fetch_next(json_token& tok)
         case ' ': case '\t': case '\r': case '\n': // whitespace
             self->next();
             continue;
+        default:
+            self->fail(tsprintf("unknown input %s", self->current)); 
         }
     }
     return false;
