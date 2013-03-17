@@ -72,7 +72,7 @@ static size_t calc_join_length(tstring const& s, size_t& result, bool& need_sep_
 static void join_append(std::string& result, tstring component, bool& separator_flag)
 {
     if( component.size() > 0 ) {
-	const bool start_last_is_separator = (result[result.size()-1] == '/');
+	const bool start_last_is_separator = result.size() > 0 && (result[result.size()-1] == '/');
 	const bool first_char_of_component_is_separator = (component[0] == '/');
 	if( start_last_is_separator && first_char_of_component_is_separator ) {
 	    // if we already have XXX/ and add /FOO then
