@@ -318,7 +318,7 @@ void check_container_contains(KeyType const& key,
 
 template <typename MapType>
 void check_map_entry_match(typename MapType::key_type const& key,
-                           typename MapType::value_type const& value,
+                           typename MapType::mapped_type const& value,
                            MapType const& map, std::string const& set_name, const char* filename, int line)
 {
 	typename MapType::const_iterator i = map.find(key);
@@ -328,11 +328,11 @@ void check_map_entry_match(typename MapType::key_type const& key,
 			% set_name;
 		report_test_failure(filename, line, msg.c_str());
 	}
-	else if( !( *i == value )) {
+	else if( !( i->second == value )) {
 	    std::string msg = tinfra::fmt("entry '%s': expected '%s' but found '%s' ") 
 			% key 
 			% value
-			% *i;
+			% i->second;
 	    report_test_failure(filename, line, msg.c_str());
 	}
 }
