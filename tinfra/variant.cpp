@@ -62,14 +62,58 @@ std::vector<variant::key_type> variant::dict_keys() const
     return result;
 }
 
+bool operator==(variant const& a, variant const& b)
+{
+    if( a.is_none() && b.is_none() )
+        return true;
+    else if ( a.is_string() ) {
+        return b.is_string() && a.get_string() == b.get_string();
+    } else if( a.is_integer() ) {
+        return b.is_integer() && a.get_integer() == b.get_integer();
+    } else if( a.is_double() ) {
+        return b.is_double() && a.get_double() == b.get_double();
+    } else if( a.is_dict() ) {
+        if( b.is_dict() ) {
+            variant::dict_type const& ad = a.get_dict();
+            variant::dict_type const& bd = b.get_dict();
+            if( ad.size() != bd.size() )
+                return false;
+            return std::equal(ad.begin(), ad.end(), bd.begin());
+        } else {
+            return false;
+        }
+    } else if( a.is_array())  {
+        if( b.is_array() ) {
+            variant::array_type const& aa = a.get_array();
+            variant::array_type const& ba = b.get_array();
+            if( aa.size() != ba.size() )
+                return false;
+            return std::equal(aa.begin(), aa.end(), ba.begin());
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+bool operator!=(variant const& a, variant const& b)
+{
+    return !(a == b);
+}
 std::ostream& operator <<(std::ostream& s, variant const& node)
 {
     if( node.is_string() ) {
         return s << node.get_string();
     } else if( node.is_int() ) {
         return s << node.get_int();
+    } else if( node.is_double() ) {
+        return s << node.get_double();
+    } else if( node.is_dict() ) {
+        return s << "<dictionary>";
+    } else if( node.is_array() ) {
+        return s << "<array>";
     } else {
-        return s << "variant(complex ..., TBD)";
+        return s << "variant(??)";
     }
 }
 

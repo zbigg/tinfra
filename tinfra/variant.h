@@ -243,6 +243,9 @@ inline void variant::set_bool(bool v) {
 
 // operator == 
 // TBD, bools ints etc
+bool operator==(variant const& a, variant const& b);
+bool operator!=(variant const& a, variant const& b);
+
 inline bool operator==(variant const& n, std::string const& s) {
     return n.is_string() && n.get_string() == s;
 }
