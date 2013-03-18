@@ -93,6 +93,9 @@ public:
     // array query
     variant& operator[](int index);
     variant const& operator[](int index) const;
+    
+    bool has_key(key_type const& k) const;
+    bool has_key(int index) const;
 };
 
 inline
@@ -239,6 +242,21 @@ inline void variant::set_double(double v) {
 }
 inline void variant::set_bool(bool v) {
     this->value = tinfra::any::from_copy(v);
+}
+
+inline bool variant::has_key(key_type const& k) const
+{
+    if( this->is_dict() ) {
+        dict_type const& dict = get_dict();
+        if( dict.find(k) != dict.end() )
+            return true;
+    }
+    return false;
+}
+
+inline bool variant::has_key(int idx) const
+{
+    return this->is_array() && idx >= 0 && idx < this->size();
 }
 
 // operator == 
