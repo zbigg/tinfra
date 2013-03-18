@@ -49,6 +49,7 @@ tinfra_HEADERS = \
 	tinfra/lex.h \
 	tinfra/logger.h \
 	tinfra/memory_pool.h \
+	tinfra/memory_stream.h\
 	tinfra/mo.h \
 	tinfra/mo_algo.h \
 	tinfra/multitype_map.h \
@@ -122,6 +123,7 @@ tinfra_SOURCES = \
 	tinfra/typeinfo.cpp \
 	tinfra/stream.cpp \
 	tinfra/buffered_stream.cpp \
+	tinfra/memory_stream.cpp \
 	tinfra/inifile.cpp \
 	tinfra/json.cpp \
 	tinfra/socket.cpp \

@@ -6,7 +6,7 @@
 #include "tinfra/fmt.h"
 
 #include "tinfra/test.h" // for test infra
-#include "tinfra/stream.h" // for create_memory_output_stream
+#include "tinfra/memory_stream.h" // for memory_output_stream
 #include <sstream>
 
 using tinfra::fmt;
@@ -120,9 +120,9 @@ SUITE(tinfra) {
     TEST(fmt_tprintf_output_stream)
     {
         std::string result;
-        std::auto_ptr<tinfra::output_stream> buf(tinfra::create_memory_output_stream(result));
+        tinfra::memory_output_stream out(result);
         
-        tinfra::tprintf(*buf, "a %s %s %i", "b", 'c', 33);
+        tinfra::tprintf(out, "a %s %s %i", "b", 'c', 33);
         CHECK_EQUAL("a b c 33", result );
     }
 } // end SUITE(fmt)

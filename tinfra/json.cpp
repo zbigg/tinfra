@@ -1,7 +1,7 @@
 #include "json.h" // we implement this
 
 #include "tinfra/variant.h"
-#include "tinfra/stream.h"
+#include "tinfra/memory_stream.h"
 #include "tinfra/lex.h"
 #include "tinfra/fmt.h"
 #include "tinfra/string.h"
@@ -199,9 +199,8 @@ public:
 };
 variant json_parse(tstring const& s)
 {
-    std::auto_ptr<input_stream> stream(create_memory_input_stream(s.data(), s.size(),USE_BUFFER));
-    
-    return json_parse(*stream);
+    memory_input_stream stream(s.data(), s.size(),USE_BUFFER);
+    return json_parse(stream);
 }
 
 variant json_parse(tinfra::input_stream& in)
@@ -314,9 +313,9 @@ void        json_write(variant const& v, tinfra::output_stream& out, json_encodi
 std::string json_write(variant const& v, json_encoding encoding)
 {
     std::string result;
-    std::auto_ptr<output_stream> stream(create_memory_output_stream(result));
+    tinfra::memory_output_stream stream(result);
     
-    json_write(v, *stream, encoding);
+    json_write(v, stream, encoding);
     //stream->flush();
     return result;
 }

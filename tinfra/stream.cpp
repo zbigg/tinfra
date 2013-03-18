@@ -11,6 +11,7 @@
 #include "tinfra/fail.h"      // for tinfra::fail
 #include "tinfra/fmt.h"       // for tinfra::tsprintf
 #include "buffered_stream.h"
+#include "memory_stream.h"
 
 #include <memory>             // for auto_ptr
 #include <algorithm>          // for std::min
@@ -100,51 +101,6 @@ auto_ptr<input_stream> create_file_input_stream(tstring const& name)
     return auto_ptr<input_stream>(new owning_buffered_input_stream(delegate2, DEFAULT_BUFFER_SIZE));
 }
 
-//
-// memory_input_stream
-//
-class memory_input_stream_impl: public input_stream {
-    const void* buffer_;
-    const void* current_;
-    
-    size_t      remaining_size_;
-    bool own_;
-public:
-    memory_input_stream_impl(const void* buffer, size_t size, bool own):
-        buffer_(buffer),
-        current_(buffer),
-        remaining_size_(size),
-        own_(own)
-    {
-    }
-    
-    ~memory_input_stream_impl() 
-    {
-        if( own_ ) {
-            delete [] (char*)buffer_;
-        }
-    }
-    //
-    // implement tinfra::input_stream
-    //
-    void close()
-    {
-    }
-
-    int read(char* dest, int size)
-    {
-        size_t read_size = size;
-        if( read_size > remaining_size_ )
-            read_size = remaining_size_;
-        
-        memcpy(dest, current_, read_size);
-        
-        remaining_size_ -= read_size;
-        current_ = (char*)current_ + read_size;
-        return read_size;
-    }
-};
-
 auto_ptr<input_stream>  create_memory_input_stream(const void* buffer, size_t size, memory_strategy buffer_strategy)
 {
     const void* buffer2 = buffer;
@@ -155,33 +111,12 @@ auto_ptr<input_stream>  create_memory_input_stream(const void* buffer, size_t si
     }
     const bool STREAM_OWNS_BUFFER = (buffer_strategy == COPY_BUFFER);
     
-    return auto_ptr<input_stream>( new memory_input_stream_impl(buffer2, size, STREAM_OWNS_BUFFER));
+    return auto_ptr<input_stream>( new memory_input_stream(buffer2, size, STREAM_OWNS_BUFFER));
 }
-
-//
-// memory_output_stream
-//
-class memory_output_stream_impl: public output_stream {
-    std::string& out;
-public:
-    memory_output_stream_impl(std::string& o): out(o) {}
-    
-    //
-    // implement tinfra::output_stream
-    //    
-    virtual void close() { }
-    
-    virtual int write(const char* data, int size) { 
-        out.append(data, size);
-        return size;
-    }
-    
-    virtual void sync() { }
-};
 
 std::auto_ptr<output_stream> create_memory_output_stream(std::string& out)
 {
-    return auto_ptr<output_stream> (new memory_output_stream_impl(out));
+    return auto_ptr<output_stream> (new memory_output_stream(out));
 }
 
 class old_output_stream_adapter: public output_stream {
