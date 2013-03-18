@@ -121,7 +121,7 @@ void vtpath_parse(tstring expr, std::vector<vtpath_command>& result)
         default:
             {
                 std::string name;
-                while( expr.size() > 0 && isalpha(expr[0]))  {
+                while( expr.size() > 0 && (isalnum(expr[0]) || expr[0] == '_'))  {
                         name += expr[0];
                         expr=expr.substr(1);
                 }
