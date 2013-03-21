@@ -1,4 +1,16 @@
 
+exception_info_test_DIR=exception_info
+exception_info_test=exception_info
+exception_info_test_SOURCES=\
+	exception_info_test.cpp \
+	exception_info_gcc.cpp \
+	exception_info_gcc_dynamic.cpp
+
+exception_info_test_EXT_LIBS=tinfra-test tinfra
+PROGRAMS += exception_info_test
+
+TEST_PROGRAMS += exception_info_test
+
 invoke_bridge_DIR=invoke_bridge
 invoke_bridge_SOURCES = invoke_bridge.h
 
@@ -7,7 +19,7 @@ COMPONENTS += invoke_bridge
 invoke_bridge_test_DIR=invoke_bridge
 invoke_bridge_test_CXXFLAGS = -I$(invoke_bridge_srcdir)
 invoke_bridge_test_SOURCES = invoke_bridge_test.cpp
-invoke_bridge_test_DEP_LIBS = tinfra-test tinfra
+invoke_bridge_test_EXT_LIBS = tinfra-test tinfra
 invoke_bridge_test_TESTED_COMPONENT = invoke_bridge
 
 TEST_PROGRAMS += invoke_bridge_test
