@@ -6,6 +6,12 @@ namespace tinfra {
 namespace reflect {
 
 //
+// type_info
+// 
+    
+type_info::~type_info() {}
+    
+//
 // default_method_info
 // 
 default_method_info::default_method_info(

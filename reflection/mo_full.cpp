@@ -1,4 +1,5 @@
 #include "mo_interface.h"
+#include "manual_rtti_system.h"
 
 #include <tinfra/mo.h>
 
@@ -24,9 +25,9 @@ class basic_scm {
 //
 // ok, we 
 TINFRA_BEAN_MANIFEST(basic_scm) {
-    TINFRA_BEAN_METHOD(basic_scm, get_manifest);
-    TINFRA_BEAN_METHOD(basic_scm, get_revision_info);
-    TINFRA_BEAN_METHOD(basic_scm, get_head_revision_info);
+    TINFRA_BEAN_METHOD(get_manifest);
+    TINFRA_BEAN_METHOD(get_revision_info);
+    TINFRA_BEAN_METHOD(get_head_revision_info);
 }
 
 struct lock_managet_status {
@@ -45,39 +46,59 @@ class lock_manager {
 };
 
 //
-// ok, we 
+// ok, we
 TINFRA_BEAN_MANIFEST(lock_manager) {
-    TINFRA_BEAN_METHOD(lock_manager, login);
-    TINFRA_BEAN_METHOD(lock_manager, get_status);
-    TINFRA_BEAN_METHOD(lock_manager, create_lock);
-    TINFRA_BEAN_METHOD(lock_manager, remove_lock);
+    TINFRA_BEAN_METHOD(login);
+    TINFRA_BEAN_METHOD(get_status);
+    TINFRA_BEAN_METHOD(create_lock);
+    TINFRA_BEAN_METHOD(remove_lock);
 }
 
 
 struct method_visitor {
+    tinfra::reflect::manual_rtti_system&    rtti;
+    std::vector<tinfra::reflect::method_info*> methods;
     
     template <typename CLS, typename R>
     void method(const char* name, R (CLS::*fun)()) {
         using tinfra::type_name;
         std::cout << type_name<R>() << " " << name << "()\n";
+        
+        tinfra::reflect::method_info* mi = tinfra::reflect::default_method_info::create<CLS>(name, fun);
+        methods.push_back(mi);
     }
     
     template <typename CLS, typename R, typename T>
     void method(const char* name, R (CLS::*fun)(T)) {
         using tinfra::type_name;
         std::cout << type_name<R>() << " " << name << "(" << type_name<T>() << ")\n";
+        
+        tinfra::reflect::method_info* mi = tinfra::reflect::default_method_info::create<CLS>(name, fun);
+        methods.push_back(mi);
     }
     
     template <typename CLS, typename R, typename T1, typename T2>
     void method(const char* name, R (CLS::*fun)(T1, T2)) {
         using tinfra::type_name;
         std::cout << type_name<R>() << " " << name << "(" << type_name<T1>() << ", " << type_name<T2>() << ")\n";
+        
+        //tinfra::reflect::method_info* mi = tinfra::reflect::default_method_info::create<CLS>(name, fun);
+        //methods.push_back(mi);
     }
 };
 
+template <typename BeanType>
+void rtti_register_interface(tinfra::reflect::manual_rtti_system& rtti, std::string const& name)
+{
+    method_visitor m { rtti, };
+    tinfra::visit_interface<BeanType>(m);
+    
+    tinfra::reflect::type_info* ti = rtti.ensure_registered<BeanType>(name, m.methods);
+}
+
 int main()
 {
-    method_visitor m;
-    tinfra::visit_interface<lock_manager>(m);
     
+    tinfra::reflect::manual_rtti_system rtti;
+    rtti_register_interface<lock_manager>(rtti, "lock_manager");
 }

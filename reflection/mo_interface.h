@@ -19,7 +19,7 @@ void visit_interface(Functor& f);
 ///    TINFRA_BEAN_METHOD(MyClass, myMethod)
 /// }
 #define TINFRA_BEAN_MANIFEST(cls) TINFRA_BEAN_MANIFEST_IMPL(cls)
-#define TINFRA_BEAN_METHOD(cls,name) TINFRA_BEAN_METHOD_IMPL(cls, name)
+#define TINFRA_BEAN_METHOD(name) TINFRA_BEAN_METHOD_IMPL(name)
 
 } // end namespace tinfra
 
@@ -36,15 +36,16 @@ struct tinfra_interface_visit_traits {
 
 #define TINFRA_BEAN_MANIFEST_IMPL(cls) \
     template <> \
-    struct tinfra_interface_visit_traits<cls> {           \
+    struct tinfra_interface_visit_traits<cls> {        \
+        typedef cls tinfra_bean_manifest_current_type; \
         template <typename Functor>                \
         static void visit_interface(Functor& f);   \
     };                                      \
     template <typename Functor>              \
     void tinfra_interface_visit_traits<cls>::visit_interface(Functor& f)
     
-#define TINFRA_BEAN_METHOD_IMPL(cls,name) \
-    f.method(#name, &cls::name)
+#define TINFRA_BEAN_METHOD_IMPL(name) \
+    f.method(#name, &tinfra_bean_manifest_current_type::name)
 
 namespace tinfra {
     
