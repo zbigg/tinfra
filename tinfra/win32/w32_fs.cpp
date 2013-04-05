@@ -82,6 +82,7 @@ bool lister::fetch_next(directory_entry& result)
         result.name = data_->name_holder;
         TINFRA_TRACE_VAR(win32_fs_tracer, result.name);
         result.info.is_dir = (ff_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) == FILE_ATTRIBUTE_DIRECTORY;
+        result.info.type = result.info.is_dir ? DIRECTORY : REGULAR_FILE;
         result.info.size = size_t(ff_data.nFileSizeLow);
         // TODO: add support for win64 build
         // result.info.size |= (size_t(ff_data.nFileSizeHigh) << 32);
