@@ -138,13 +138,13 @@ bool condition::timed_wait(mutex& external_lock, deadline const& input_timeout) 
     }
     external_lock.unlock();
 
-    const deadline deadline_freezed = deadline::freeze(input_timeout, TS_MONOTONIC);
+    // const time_stamp deadline_freezed = deadline::absolute(input_timeout, TS_MONOTONIC);
     bool timeout_occured = false;
     while( true ) {
         const DWORD wait_timeout = 
             input_timeout.is_infinite()
                 ? INFINITE
-                : DWORD(deadline_freezed.get_duration(TS_MONOTONIC).milliseconds());
+                : DWORD(input_timeout.time_left_to(TS_MONOTONIC).milliseconds());
         
         const DWORD wait_result = WaitForSingleObject(signal_sem, wait_timeout);
         if( wait_result == WAIT_TIMEOUT ) {
