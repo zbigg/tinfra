@@ -1,15 +1,13 @@
 
-exception_info_test_DIR=exception_info
-exception_info_test=exception_info
-exception_info_test_SOURCES=\
-	exception_info_test.cpp \
-	exception_info_gcc.cpp \
-	exception_info_gcc_dynamic.cpp
+srcdir=.
 
-exception_info_test_EXT_LIBS=tinfra-test tinfra
-PROGRAMS += exception_info_test
+default: build
 
-TEST_PROGRAMS += exception_info_test
+MAKEFOO_NAMED_OBJDIR=1
+
+exception_info_DIR = exception_info
+
+include exception_info/exception_info.mk
 
 invoke_bridge_DIR=invoke_bridge
 invoke_bridge_SOURCES = invoke_bridge.h
@@ -92,3 +90,6 @@ include $(MAKEFOO)
 # 
 # clean:
 	# rm -rf *.o ftt http/*.o tinfra/*.o tests/*.o
+	
+# jedit: :tabSize=8:mode=makefile:
+
