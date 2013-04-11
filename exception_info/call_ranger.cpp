@@ -55,12 +55,12 @@ call_ranger* call_ranger::get_thread_local()
 void call_ranger::register_instance()
 {
     this->previous = call_ranger::get_thread_local();
-    pthread_setspecific(&call_ranger_thread_data_key, this);
+    pthread_setspecific(call_ranger_thread_data_key, this);
 }
 
 void call_ranger::unregister_instance()
 {
-    pthread_setspecific(&call_ranger_thread_data_key, this->previous);
+    pthread_setspecific(call_ranger_thread_data_key, this->previous);
 }
 
 #endif
