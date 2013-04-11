@@ -6,7 +6,7 @@
 // the assumption is that we link with MODIFIED! version of libstdc++
 // this version shall have renamed '__cxa_throw' implementation to '__libstdcxx_cxa_throw'
 //
-// rename__cxa_throw.sh creates such version of libstdc++, named libstdc++-tinfra-throw.a
+// make_libstdc++-tinfra-throw.sh creates such version of libstdc++, named libstdc++-tinfra-throw.a
 
 extern "C"
 void __libstdcxx_cxa_throw(void*, void*, void (*) (void*));
@@ -20,3 +20,4 @@ void __cxa_throw(void *thrown_exception, void *pvtinfo, void (*dest) (void *) )
 
 	__libstdcxx_cxa_throw(thrown_exception, pvtinfo, dest);
 }
+

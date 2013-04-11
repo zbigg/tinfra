@@ -34,5 +34,25 @@ libstdc++-tinfra-throw.a: $(exception_info_DIR)/make_libstdc++-tinfra-throw.sh
 
 TEST_PROGRAMS += exception_info_gcc_static_test
 
+
+# we host call ranger for a while
+call_ranger_DIR ?= $(exception_info_DIR)
+call_ranger_test_DIR=$(exception_info_DIR)
+
+
+call_ranger_test_DIR=$(exception_info_DIR)
+call_ranger_test_SOURCES=\
+	call_ranger.cpp \
+	call_ranger_test.cpp \
+	exception_info_gcc.cpp \
+	exception_info_gcc_dynamic.cpp \
+	safe_debug_print.cpp
+
+call_ranger_test_EXT_LIBS=tinfra-test tinfra
+PROGRAMS += call_ranger_test
+
+TEST_PROGRAMS += call_ranger_test
+
+
 # jedit: :tabSize=8:mode=makefile:
 
