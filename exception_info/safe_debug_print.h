@@ -85,10 +85,34 @@ struct safe_debug_printer<const char*> {
 	}
 };
 
+template <int N>
+struct safe_debug_printer<char const[N]> {
+	static void print(tinfra::output_stream& out, const void* obj)
+	{
+	    const char* f = (const char*)obj;
+		::tinfra_safe_debug_print(out, &f);
+	}
+};
+
+template <int N>
+struct safe_debug_printer<char[N]> {
+	static void print(tinfra::output_stream& out, const void* obj)
+	{
+		const char* f = (const char*)obj;
+		::tinfra_safe_debug_print(out, &f);
+	}
+};
+
 template <typename T>
 safe_debug_print_func make_safe_debug_print_func(T const&)
 {
 	return &tinfra::safe_debug_printer<T>::print;
+}
+
+template <typename T>
+void safe_debug_print(tinfra::output_stream& out, T const& var)
+{
+    tinfra::safe_debug_printer<T>::print(out, &var);
 }
 
 } // end namespace tinfra

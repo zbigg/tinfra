@@ -46,7 +46,8 @@ call_ranger_test_SOURCES=\
 	call_ranger_test.cpp \
 	exception_info_gcc.cpp \
 	exception_info_gcc_dynamic.cpp \
-	safe_debug_print.cpp
+	safe_debug_print.cpp \
+	safe_debug_print_test.cpp
 
 call_ranger_test_EXT_LIBS=tinfra-test tinfra
 PROGRAMS += call_ranger_test
