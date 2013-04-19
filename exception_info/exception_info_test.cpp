@@ -44,6 +44,32 @@ TEST(exception_info_simple_throw)
     CHECK_EQUAL(false, exception_info::is_exception_active());
 }
 
+struct with_exception_check_in_destructor {
+    bool expects_exception;
+    
+    ~with_exception_check_in_destructor()
+    {
+        CHECK_EQUAL(this->expects_exception, tinfra::exception_info::is_exception_active());
+        CHECK_EQUAL(this->expects_exception, std::uncaught_exception());
+    }
+};
+TEST(exception_info_visible_in_desctructor)
+{
+    // check without exception
+    {
+        with_exception_check_in_destructor foo = { false };
+    }
+    
+    // check with exception
+    {
+        try {
+            with_exception_check_in_destructor foo = { true };
+            throw 666;
+        } catch( int ) {
+        } 
+    }
+}
+
 }
 
 int main(int argc, char** argv)
