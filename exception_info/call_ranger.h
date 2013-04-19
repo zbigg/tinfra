@@ -37,6 +37,23 @@ namespace tinfra {
 /// note, arguments must have overloaded call_guard_debug_dump class
 /// and provide "lock/memory/libc-call-LESS" debug dump of particular
 /// variable
+///
+/// use cases
+///   a well armored public function is full of several assertions
+///   that in traditional c++ look like this:
+///   
+///   if( something ) {
+///       throw_or_return_failure("foo: %s", some_value);
+///   }
+///   the problem is that the message content is usually very limited 
+///   and don't show all local influential variables (arguments, intermediates)
+///   mostly because it's too heavy to dump all arguments in every exception
+///   (which would be wrong for other reasons)
+///   
+///   call_ranger allows to use diagnostic facility (tracer/logger) to
+///   dump all 'influential variables' when exiting function with exception
+///   which in 'more-or-less stateless' function shall constitute enough
+///   input for developer to analyze exception/assertion reason.
 
 #define CALL_RANGER(tracer)  CALL_RANGER_IMPL(tracer)
 #define CALL_RANGER_GLOBAL() CALL_RANGER_IMPL(tinfra::global_tracer)
@@ -83,8 +100,18 @@ struct call_ranger {
     void inform_about_exceptional_leave(tinfra::output_stream& out);
     
     void push_variable(call_ranger_variable*);
-    call_ranger_variable* first_variable();
-    
+
+    call_ranger* get_previous() const;
+        /// get pointer to previous (i.e parent)
+        /// call_ranger for this thread 
+
+    tinfra::source_location get_source_location() const;
+        /// return source location info of this
+        /// instance
+
+    const call_ranger_variable* get_variables() const;
+        /// return single linked list of variables connected to
+        /// this instance
 private:
     const tinfra::source_location* source_location;
     call_ranger*          previous;

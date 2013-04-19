@@ -18,6 +18,8 @@ TEST(call_ranger_test_nesting)
             tinfra::call_ranger* nested = tinfra::call_ranger::get_thread_local();
             
             CHECK(parent != nested);
+            
+            CHECK_EQUAL(parent, nested->get_previous());
         }
     }
 }
@@ -28,14 +30,44 @@ TEST(call_ranger_test_variable_registration)
     
     CHECK(tinfra::call_ranger::get_thread_local() != 0 );
 
-    int z = 2;
+    CHECK(tinfra::call_ranger::get_thread_local()->get_variables() == 0);
+    
+    int z = 666;
     const char* arg = "abc";
     CALL_RANGER_ARG(z);
+    
+    const tinfra::call_ranger_variable* z_entry = tinfra::call_ranger::get_thread_local()->get_variables();
+    {
+        CHECK( z_entry != 0);
+        
+        CHECK_EQUAL(&z,   z_entry->object);
+        CHECK_EQUAL("z",  z_entry->name);
+        CHECK(z_entry->next == 0);
+    }
+    
     CALL_RANGER_ARG(arg);
     
-    tinfra::call_ranger::get_thread_local()->dump_info(tinfra::out, true);
+    const tinfra::call_ranger_variable* arg_entry = tinfra::call_ranger::get_thread_local()->get_variables();
+    {
+        CHECK( arg_entry != 0 );
+        
+        CHECK_EQUAL(&arg,     arg_entry->object);
+        CHECK_EQUAL("arg",    arg_entry->name);
+        CHECK_EQUAL(z_entry,  arg_entry->next);
+    }
+    
+    
+    {
+        CALL_RANGER_GLOBAL();
+        const char* foo = "foo";
+        CALL_RANGER_ARG(foo);
+        
+        tinfra::call_ranger::get_thread_local()->dump_info(tinfra::out, true);
+    }
 }
-}
+
+
+} // end SUITE(tinfra)
 
 int main(int argc, char** argv)
 {

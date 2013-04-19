@@ -65,6 +65,22 @@ void call_ranger::unregister_instance()
 
 #endif
 
+
+call_ranger* call_ranger::get_previous() const
+{
+    return this->previous;
+}
+
+tinfra::source_location call_ranger::get_source_location() const
+{
+    return *this->source_location;
+}
+
+const call_ranger_variable* call_ranger::get_variables() const
+{
+    return this->variables;
+}
+
 void call_ranger::push_variable(call_ranger_variable* var)
 {
     var->next = this->variables;
