@@ -5,82 +5,33 @@
 #include <vector>
 #include <string>
 
+#include "tinfra/json.h"
+#include "tinfra/stream.h"
+
+using tinfra::json_writer;
+
 struct A {
 	int id;
 	std::vector<std::string> names;
 };
 
-struct json_renderer {
-	std::ostream& out;
-	bool need_separator;
-
-	json_renderer(std::ostream& out):
-		out(out),
-		need_separator(false)
-	{
-	}
-	void begin_map() { maybe_separate(); out << "{"; }
-	void end_map()   { out << '}'; need_separator = true; }
-	void begin_seq() { maybe_separate(); out << "["; }
-	void end_seq()   { out << "]"; need_separator = true; }
-
-	template <typename T>
-	void value(T const& v) {
-		maybe_separate();
-		out << v;
-		need_separator = true;
-	}
-
-	void value(std::string const& v) {
-		maybe_separate();
-		out << "'" << v << "'";
-		need_separator = true;
-	}
-
-	void maybe_separate() {
-		if( need_separator )
-			comma();
-	}
-	void separate(char c) {
-		out << c << ' ';
-		need_separator = false;
-	}
-	void comma() {
-		separate(','); 
-	}
-
-	template <typename K, typename V>
-	void nvm_pair(K const& k, V const& v) {
-		value(k);
-		separate(':');
-		value(v);
-
-		need_separator = true;
-	}
-};
-void render_json(A const& a, json_renderer& json)
+void render_json(A const& a, json_writer& json)
 {
-	json.begin_map();
-	json.nvm_pair("id", a.id);
-	json.value("names");
-	json.separate(':');
-	json.begin_seq();
-	for( int i = 0; i < a.names.size(); ++i ) {
-	    json.value(a.names[i]);
-	}
-	json.end_seq();
-	json.end_map();
+	json.begin_object();
+	json.named_value("id", tinfra::variant::integer_type(a.id));
+	json.named_value("names", a.names);
+	json.end_object();
 }
 
 struct json_output {
 	template <typename T>
-	static void render(T const& v, std::ostream& out)
+	static void render(T const& v, tinfra::output_stream& out)
 	{
-		out << "Content-type: text/json\r\n";
-		out << "\r\n";
-		json_renderer foo(out);
-		render_json(v, foo);
-		out << "\n";
+		out.write("Content-type: text/json\r\n\r\n");
+		tinfra::json_renderer jr(out);
+		tinfra::json_writer   jw(jr);
+		render_json(v, jw);
+		out.write("\n");
 	}
 };
 
@@ -103,7 +54,7 @@ public:
 	{
 		R result = fun(req);
 		// TBD: resp
-		Renderer::render(result, std::cout);
+		Renderer::render(result, tinfra::out);
 	}
 };
 
@@ -178,13 +129,14 @@ A get_b(int id, int const& x)
 
 int main()
 {
-	json_renderer json(std::cout);
+    tinfra::json_renderer jsonr(tinfra::out);
+	tinfra::json_writer   json(jsonr);
 	A a;
 	a.id = 677;
 	a.names.push_back("dupa");
 	a.names.push_back("abc");
 	render_json(a, json);
-	std::cout << '\n';
+	tinfra::out.write("\n");
 
 	add_function<json_output>("/get_a/*/*.json", boost::function<A(int)>(&get_a));
 	add_function<json_output,A,int,int>("/get_b/*/*.json", & get_b);
