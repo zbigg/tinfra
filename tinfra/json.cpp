@@ -213,101 +213,163 @@ variant json_parse(tinfra::input_stream& in)
     return result;
 }
 
-tinfra::module_tracer json_writer_tracer(tinfra::tinfra_tracer, "json_writer");
+tinfra::module_tracer json_renderer_tracer(tinfra::tinfra_tracer, "json_renderer");
 
-class json_writer {
-    tinfra::output_stream& out;
-    json_encoding   enc;
-public:
-    json_writer(tinfra::output_stream& out, json_encoding enc): out(out),enc(enc) {}
-    void object_begin() {
-        this->out.write("{",1);
+json_renderer::json_renderer(tinfra::output_stream& out, json_encoding enc): 
+    out(out),
+    enc(enc) 
+{}
+
+void json_renderer::object_begin() {
+    this->out.write("{",1);
+}
+void json_renderer::object_end() {
+    this->out.write("}",1);
+}
+void json_renderer::array_begin() {
+    this->out.write("[",1);
+}
+void json_renderer::array_end() {
+    this->out.write("]",1);
+}
+void json_renderer::comma() {
+    this->out.write(",",1);
+}
+void json_renderer::colon() {
+    this->out.write(":",1);
+}
+void json_renderer::string(tstring const& str)
+{
+    std::string escaped = escape_c(str);
+    this->out.write("\"",1);
+    this->out.write(escaped);
+    this->out.write("\"",1);
+}
+void json_renderer::integer(variant::integer_type v)
+{
+    std::string formatted = tinfra::to_string(v);
+    this->out.write(formatted);
+}
+void json_renderer::double_(double v)
+{
+    std::string formatted = tinfra::to_string(v);
+    this->out.write(formatted);
+}
+void json_renderer::boolean(bool v)
+{
+    if( v ) {
+        this->out.write("true");
+    } else {
+        this->out.write("false");
     }
-    void object_end() {
-        this->out.write("}",1);
+}
+void json_renderer::none()
+{
+    this->out.write("nil");
+}
+
+//
+// json_writer
+//
+
+json_writer::json_writer(json_renderer& renderer):
+    renderer(renderer),
+    need_separator(false)
+{
+}
+
+json_writer::~json_writer()
+{
+    while(!this->stack.empty()) 
+        this->end();
+}
+
+void json_writer::begin_object()
+{
+    this->stack.push(OBJECT);
+    this->renderer.object_begin();
+    need_separator = false;
+}
+void json_writer::begin_array()
+{
+    this->stack.push(ARRAY);
+    this->renderer.array_begin();
+    need_separator = false;
+}
+
+void json_writer::end_object()
+{
+    TINFRA_ASSERT(!this->stack.empty());
+    TINFRA_ASSERT(this->current_type() == OBJECT);
+
+    this->renderer.object_end();
+    this->stack.pop();
+    this->need_separator = true;
+}
+void json_writer::end_array()
+{
+    TINFRA_ASSERT(!this->stack.empty());
+    TINFRA_ASSERT(this->current_type() == ARRAY);
+
+    this->renderer.array_end();
+    this->stack.pop();
+    this->need_separator = true;
+}
+void json_writer::end()
+{
+    TINFRA_ASSERT(!this->stack.empty());
+    if( this->current_type() == OBJECT ) {
+        this->end_object();
+    } else {
+        this->end_array();
     }
-    void array_begin() {
-        this->out.write("[",1);
+}
+
+//  a value, valid only in array context or after name
+void json_writer::value_impl(variant const& v)
+{
+    if( v.is_dict() ) {
+        variant::dict_type const& dict = v.get_dict();
+        this->value_impl(dict);
+    } else if( v.is_array() ) {
+        variant::array_type const& array = v.get_array();
+        this->value_impl(array);
+    } else if( v.is_string() ) {
+        this->value_impl(tstring(v.get_string()));
+    } else if( v.is_integer() ) {
+        this->value_impl(v.get_integer());
+    } else if ( v.is_double() ) {
+        this->value_impl(v.get_double());
+    } else if ( v.is_none() ) {
+        this->value_impl();
     }
-    void array_end() {
-        this->out.write("]",1);
-    }
-    void comma() {
-        this->out.write(",",1);
-    }
-    void colon() {
-        this->out.write(":",1);
-    }
-    void string(tstring const& str)
-    {
-        std::string escaped = escape_c(str);
-        this->out.write("\"",1);
-        this->out.write(escaped);
-        this->out.write("\"",1);
-    }
-    void integer(variant::integer_type v)
-    {
-        std::string formatted = tinfra::to_string(v);
-        this->out.write(formatted);
-    }
-    void double_(double v)
-    {
-        std::string formatted = tinfra::to_string(v);
-        this->out.write(formatted);
-    }
-    void boolean(bool v)
-    {
-        if( v ) {
-            this->out.write("true");
-        } else {
-            this->out.write("false");
-        }
-    }
-    void none()
-    {
-        this->out.write("nil");
-    }
-    void node(variant const& v)
-    {
-        if( v.is_dict() ) {
-            this->object_begin();
-            variant::dict_type const& dict = v.get_dict();
-            for( variant::dict_type::const_iterator i = dict.begin(); i != dict.end(); ++i ) 
-            {
-                if( i != dict.begin() )
-                    this->comma();
-                this->string(i->first);
-                this->colon();
-                this->node(i->second);
-            }
-            this->object_end();
-        } else if( v.is_array() ) {
-            this->array_begin();
-            variant::array_type const& array = v.get_array();
-            for( variant::array_type::const_iterator i = array.begin(); i != array.end(); ++i ) {
-                if( i != array.begin() )
-                    this->comma();
-                this->node(*i);
-            }
-            this->array_end();
-        } else if( v.is_string() ) {
-            this->string(v.get_string());
-        } else if( v.is_integer() ) {
-            this->integer(v.get_integer());
-        } else if ( v.is_double() ) {
-            this->double_(v.get_double());
-        } else if ( v.is_none() ) {
-            this->none();
-        }
-        //} else if ( v.is_boolean() ) {
-        //    this->boolean(v.get_boolean());
-        //}
-    }
-};
+}
+void json_writer::value_impl(tstring const& value)
+{
+    this->renderer.string(value);
+}
+void json_writer::value_impl(variant::integer_type const& value)
+{
+    this->renderer.integer(value);
+}
+void json_writer::value_impl(double value)
+{
+    this->renderer.double_(value);
+}
+void json_writer::value_impl(bool value)
+{
+    this->renderer.boolean(value);
+}
+void json_writer::value_impl() // none/nil
+{
+    this->renderer.none();
+}
+
 void        json_write(variant const& v, tinfra::output_stream& out, json_encoding encoding)
 {
-    json_writer writer(out, encoding);
-    writer.node(v);
+    json_renderer renderer(out, encoding);
+    json_writer writer(renderer);
+    writer.value(v);
 }
 
 std::string json_write(variant const& v, json_encoding encoding)
