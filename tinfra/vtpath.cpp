@@ -126,7 +126,7 @@ void vtpath_parse(tstring expr, std::vector<vtpath_command>& result)
                         expr=expr.substr(1);
                 }
                 TINFRA_TRACE(vtpath_parse_tracer, name << " -> TOKEN(" << name << ")");
-                result.push_back(vtpath_command(TOKEN, name));
+                result.push_back(vtpath_command(TOKEN, variant(name)));
                 continue;
             }
         }

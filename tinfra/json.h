@@ -76,7 +76,7 @@ class json_renderer {
     tinfra::output_stream& out;
     json_encoding   enc;
 public:
-    json_renderer(tinfra::output_stream& out, json_encoding enc);
+    json_renderer(tinfra::output_stream& out, json_encoding enc = UTF8);
     void object_begin();
     void object_end();
     void array_begin();
