@@ -26,7 +26,7 @@ AC_PROG_RANLIB
 
 AC_CANONICAL_SYSTEM
 
-PKG_CHECK_MODULES([DEPS], [tinfra >= 0.0.2 tinfra-test libpcre >= 8.0],
+PKG_CHECK_MODULES([DEPS], [tinfra >= 0.0.2 tinfra-test libpcre >= 7.8],
 	[
 	LIBS="$DEPS_LIBS $LIBS"
 	CXXFLAGS="$DEPS_CFLAGS $CXXFLAGS"
