@@ -89,6 +89,8 @@ bool lister::fetch_next(directory_entry& result)
         // TODO, recognize how to use FILETIME and how to convert it into timestamp
         result.info.modification_time = 0;
         result.info.access_time = 0;
+        result.info.type = (result.info.is_dir ? DIRECTORY 
+                                               : REGULAR_FILE);
         data_->is_first = false;
         return true;
     }
