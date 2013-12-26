@@ -35,6 +35,7 @@ tinfra_HEADERS = \
 	tinfra/db.h \
 	tinfra/exeinfo.h \
 	tinfra/fail.h \
+        tinfra/file.h \
 	tinfra/fmt.h \
 	tinfra/fs.h \
 	tinfra/fs_sandbox.h \
@@ -240,6 +241,8 @@ tinfra_TEST_SOURCES = \
 # install tinfra headers
 tinfra_headers_FILES=$(tinfra_HEADERS)
 tinfra_headers_INSTALL_DEST=$(prefix)/include
+tinfra_headers_GENERATED_FILES=tinfra/config.h
+
 PUBLIC_COMPONENTS += tinfra_headers
 
 # install tinfra.pc
@@ -253,7 +256,6 @@ tinfra_EXTRA_DIST=\
 	aclocal.m4 \
 	tinfra/config.h.in \
 	Makefile.in \
-	build-helper \
 	tinfra.pc.in \
 	tests/resources/sample.exe.map \
 	tests/resources/testtest_dir/a \
