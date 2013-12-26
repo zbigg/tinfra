@@ -51,8 +51,8 @@ struct json_token {
         STRING,
         INTEGER,
         DOUBLE,
-        TRUE,
-        FALSE,
+        TOK_TRUE,
+        TOK_FALSE,
         TOK_NULL
     };
     

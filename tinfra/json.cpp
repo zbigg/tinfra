@@ -23,8 +23,8 @@ std::ostream& operator <<(std::ostream& s, json_token::token_type tt)
     case json_token::STRING: s << "string"; break;
     case json_token::INTEGER: s << "integer"; break;
     case json_token::DOUBLE: s << "double"; break;
-    case json_token::TRUE: s << "true"; break;
-    case json_token::FALSE: s << "false"; break;
+    case json_token::TOK_TRUE: s << "true"; break;
+    case json_token::TOK_FALSE: s << "false"; break;
     }
     return s;
 }
@@ -708,13 +708,13 @@ bool json_lexer::fetch_next(json_token& tok)
             return true;
         case 't': // keywords true
             self->consume_keyword("true");
-            tok.type = json_token::TRUE;
-            TINFRA_TRACE(json_lexer_tracer, "readed TRUE");
+            tok.type = json_token::TOK_TRUE;
+            TINFRA_TRACE(json_lexer_tracer, "readed TOK_TRUE");
             return true;
         case 'f': // keywords: false
             self->consume_keyword("false");
-            tok.type = json_token::FALSE;
-            TINFRA_TRACE(json_lexer_tracer, "readed FALSE");
+            tok.type = json_token::TOK_FALSE;
+            TINFRA_TRACE(json_lexer_tracer, "readed TOK_FALSE");
             return true;
         case 'n': // keywords: null
             self->consume_keyword("null");
