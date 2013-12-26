@@ -127,7 +127,7 @@ void condition::wait(mutex& external_lock) {
     this->timed_wait(external_lock, deadline::infinity());
 }
 
-bool condition::timed_wait(mutex& external_lock, deadline const& input_timeout) {
+bool condition::timed_wait(mutex& external_lock, deadline const& wait_deadline) {
     TINFRA_TRACE(condition_tracer, "condition::timed_wait()");
 
     unsigned long waiter_generation;
@@ -138,13 +138,12 @@ bool condition::timed_wait(mutex& external_lock, deadline const& input_timeout) 
     }
     external_lock.unlock();
 
-    const deadline deadline_freezed = deadline::freeze(input_timeout, TS_MONOTONIC);
     bool timeout_occured = false;
     while( true ) {
         const DWORD wait_timeout = 
-            input_timeout.is_infinite()
+            wait_deadline.is_infinite()
                 ? INFINITE
-                : DWORD(deadline_freezed.get_duration(TS_MONOTONIC).milliseconds());
+                : DWORD(wait_deadline.time_left_to(TS_MONOTONIC).milliseconds());
         
         const DWORD wait_result = WaitForSingleObject(signal_sem, wait_timeout);
         if( wait_result == WAIT_TIMEOUT ) {
