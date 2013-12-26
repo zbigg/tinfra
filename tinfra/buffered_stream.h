@@ -7,7 +7,8 @@
 #define tinfra_buffered_stream_h_included
 
 #include "stream.h"
-#include <vector> 
+#include <vector>
+#include <memory>
 
 namespace tinfra {
 
@@ -38,6 +39,30 @@ private:
     size_t consume_buffer(char* dest, size_t size);
     
     bool  fill_buffer();
+};
+
+class owning_buffered_input_stream: public input_stream {
+    std::auto_ptr<tinfra::input_stream> delegate_;
+    buffered_input_stream          buffer;
+public:
+    owning_buffered_input_stream(input_stream* base, size_t buffer_size):
+        delegate_(base),
+        buffer(*base, buffer_size)
+    {
+    }
+    
+    //
+    // implement tinfra::input_stream
+    //
+    void close()
+    {
+        delegate_->close();
+    }
+
+    int read(char* dest, int size)
+    {
+        return buffer.read(dest, size);
+    }
 };
 
 } // end namespace tinfra

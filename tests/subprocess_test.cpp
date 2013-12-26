@@ -15,7 +15,6 @@
 #include <iostream>
 
 using tinfra::subprocess;
-using tinfra::io::stream;
 
 SUITE(tinfra) {
     

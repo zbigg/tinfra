@@ -78,10 +78,6 @@ enum memory_strategy {
 std::auto_ptr<input_stream>  create_memory_input_stream(const void* buffer, size_t size, memory_strategy buffer_copy);
 std::auto_ptr<output_stream> create_memory_output_stream(std::string& out);
 
-enum file_output_mode {
-    TRUNCATE = 1,
-    APPEND   = 2
-};
 
 std::auto_ptr<output_stream> create_file_output_stream(tstring const& name, int mode);
 
@@ -103,6 +99,8 @@ std::string read_all(input_stream& input);
 ///    will rethrow, any error occured in output.write()
 ///    std::runtime_error if output.write() returns 0
 void        write_all(output_stream& output, tstring const& data);
+
+void        stream_copy(input_stream& input, output_stream& out);
 
 } // end namespace tinfra
 

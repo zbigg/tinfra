@@ -9,7 +9,6 @@
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
 #include "tinfra/fmt.h"
-#include "tinfra/io/stream.h"
 #include "tinfra/os_common.h"
 #include "tinfra/vfs.h"
 #include "tinfra/trace.h"

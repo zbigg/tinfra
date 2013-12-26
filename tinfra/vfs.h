@@ -7,9 +7,11 @@
 #define tinfra_vfs_h_included
 
 #include "tinfra/fs.h"
-#include "tinfra/io/stream.h"
+#include "tinfra/file.h"
 
 namespace tinfra {
+
+typedef base_file vfs_file;
 
 class vfs {
 public:
@@ -21,7 +23,7 @@ public:
     
     virtual tinfra::fs::file_info stat(tstring const& path) = 0;
     
-    virtual tinfra::io::stream* open(tstring const& path, tinfra::io::openmode mode) = 0;
+    virtual tinfra::vfs_file* open(tstring const& path, int mode) = 0;
 
     virtual void rm(tstring const& name) = 0;
 

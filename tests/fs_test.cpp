@@ -5,10 +5,10 @@
 
 #include "tinfra/fs.h"
 #include "tinfra/test.h"
+#include "tinfra/file.h"        
 
 #include "tinfra/vfs.h"
 #include "tinfra/path.h"
-#include "tinfra/io/stream.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -167,10 +167,7 @@ SUITE(tinfra)
     void touch(tstring const& name)
     {
         
-        using tinfra::io::stream;
-        using tinfra::io::open_file;
-        std::auto_ptr<stream> f(open_file(name.str().c_str(), std::ios_base::out));
-        f->close();
+        tinfra::write_file(name,"");
     }
     TEST(fs_localized_name_create)
     {

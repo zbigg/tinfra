@@ -6,6 +6,7 @@
 #include "tinfra/vfs.h"
 #include "tinfra/fs.h"
 #include "tinfra/path.h"
+#include "tinfra/file.h"
 #include "tinfra/tstring.h"
 
 #include <stdexcept>
@@ -116,10 +117,9 @@ public:
         return tinfra::fs::stat(path);
     }
     
-    tinfra::io::stream* open(tstring const& path, tinfra::io::openmode mode)
+    tinfra::vfs_file* open(tstring const& path, int mode)
     {
-        string_pool temp_pool;
-        return tinfra::io::open_file(path.c_str(temp_pool), mode);
+        return new file(path, mode);
     }
 
     void mkdir(tstring const& name)
@@ -233,13 +233,13 @@ void default_copy(vfs& sfs, tstring const& src,
         return;
     }
 
-    typedef std::auto_ptr<tinfra::io::stream> stream_ptr;
+    typedef std::auto_ptr<tinfra::vfs_file> stream_ptr;
     
-    stream_ptr in(sfs.open(src, std::ios::in | std::ios::binary));
-    stream_ptr out(dfs.open(dest, std::ios::out | std::ios::trunc | std::ios::binary));
+    stream_ptr in(sfs.open(src, FOM_READ));
+    stream_ptr out(dfs.open(dest, FOM_WRITE | FOM_CREATE | FOM_TRUNC));
     
-    tinfra::io::copy(in.get(), out.get());
-    
+    //tinfra::io::copy(in.get(), out.get());
+    stream_copy(*in, *out);
     out->close();
     // TODO: does input close failure should provoke copy failure !???
     // in->close();

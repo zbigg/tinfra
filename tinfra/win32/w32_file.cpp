@@ -1,12 +1,13 @@
 //
-// Copyright (c) 2009, Zbigniew Zagorski
+// Copyright (c) 2009,2013, Zbigniew Zagorski
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "tinfra/file.h" // we implement this
 #include "../platform.h"
+
 #ifdef TINFRA_W32
 
-#include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
 #include "tinfra/win32.h"
 
@@ -14,85 +15,35 @@
 #include <windows.h>
 
 namespace tinfra {
-namespace win32 {
-
-using tinfra::io::stream;
-using tinfra::io::io_exception;
-    
-static const HANDLE invalid_handle = 0;
-
-class win32_stream: public stream {
-    HANDLE handle_;
-
-public:
-    win32_stream(HANDLE handle): handle_(handle) {}
-    virtual ~win32_stream();
-    void close();
-    
-    int seek(int pos, stream::seek_origin origin);
-    int read(char* data, int size);
-    int write(const char* data, int size);
-    void sync();
-
-    intptr_t native() const 
-    {
-        return reinterpret_cast<intptr_t>(handle_);
-    }
-    void release() 
-    {
-        handle_ = invalid_handle;
-    }
-
-    HANDLE get_native() const { return handle_; }
-private:
-    int close_nothrow();
-};
-
-static void throw_get_last_error(const char* message);
-
-win32_stream::~win32_stream()
-{
-    if( handle_ != invalid_handle ) {
-        if( close_nothrow() == -1 ) {
-            // TODO: add silent failures reporting
-            // int err = get_last_error();
-            // tinfra::silent_failure(fmt("file close failed: %i" % blabla )
-        }
-    }
-}
-
-void win32_stream::close()
-{
-    if( close_nothrow() == -1 ) 
-        throw_get_last_error("close failed");
-    
-}
 
 static void throw_get_last_error(const char* message)
 {
-    throw_system_error(message);
+    tinfra::win32::throw_system_error(message);
 }
 
-stream* open_native(void* handle)
+file::file(handle_type h):
+    handle_(h)
 {
-    return new win32_stream((HANDLE)handle);
 }
 
-stream* open_file(const char* name, std::ios::openmode mode)
+file::file(tstring const& name, int flags):
+    handle_(-1)
 {
-    const bool fread =  (mode & std::ios::in) == std::ios::in;
-    const bool fwrite = (mode & std::ios::out) == std::ios::out;
+    const bool fread  = (flags & FOM_READ) == FOM_READ;
+    const bool fwrite = (flags & FOM_WRITE) == FOM_WRITE;
+    
     DWORD dwDesiredAccess = 0;
+    
     if( fread )   dwDesiredAccess |= GENERIC_READ;
     if( fwrite  ) dwDesiredAccess |= GENERIC_WRITE;
         
     DWORD dwCreationDistribution;
     /* convert mode to win32 native, taken from zcompat */
     {
-        const bool fcreat = fwrite; // XXX: is it always true in ios ?
+        const bool fcreat = (flags & FOM_CREATE) == FOM_CREATE; // XXX: is it always true in ios ?
                                     // for now we create if we want write
         const bool fexcl = false;   // XXX: should we support it, ios supports it ?
-        const bool ftrunc = (mode & std::ios::trunc) == std::ios::trunc;
+        const bool ftrunc = (flags & FOM_TRUNC) == FOM_TRUNC;
         
         if( fcreat ) {
             if( fexcl )
@@ -116,42 +67,62 @@ stream* open_file(const char* name, std::ios::openmode mode)
             dwCreationDistribution = OPEN_EXISTING;
     }
     std::wstring w_name = tinfra::win32::make_wstring_from_utf8(name);
-    HANDLE handle = CreateFileW(w_name.c_str(),
+    this->handle_ = (intptr_t)CreateFileW(w_name.c_str(),
                 dwDesiredAccess,
                 0,
                 NULL,
                 dwCreationDistribution,
                 FILE_ATTRIBUTE_NORMAL,
                 NULL);
-    if( handle == INVALID_HANDLE_VALUE || handle == NULL ) {
+    if( (HANDLE)this->handle_ == INVALID_HANDLE_VALUE || this->handle_ == 0 ) {
         throw_get_last_error(fmt("unable to open %s") % name);
     }
-    return new win32_stream(handle);
 }
 
-int win32_stream::close_nothrow()
+static int close_nothrow(HANDLE h)
 {
-    int rc = ::CloseHandle(handle_);
-    handle_ = invalid_handle;
+    int rc = ::CloseHandle(h);
     return (rc == 0) ? -1 : 0;
 }
 
-int win32_stream::seek(int pos, stream::seek_origin origin)
+file::~file()
+{
+    if( (HANDLE)this->handle_ != INVALID_HANDLE_VALUE ) {
+        if( close_nothrow((HANDLE)this->handle_) == -1 ) {
+            // TODO: add silent failures reporting
+            // int err = get_last_error();
+            // tinfra::silent_failure(fmt("file close failed: %i" % blabla )
+        }
+        release();
+    }
+}
+
+void file::close()
+{
+    if( (HANDLE)this->handle_ != INVALID_HANDLE_VALUE ) {
+        if( close_nothrow((HANDLE)this->handle_) == -1 ) { 
+            throw_get_last_error("close failed");
+        }
+    }
+    release();
+}
+
+int file::seek(int pos, base_file::seek_origin origin)
 {
     DWORD native_origin = 0;
     
     switch( origin ) {
-    case stream::start:
+    case SO_START:
         native_origin = FILE_BEGIN;
         break;
-    case stream::current:
+    case SO_CURRENT:
         native_origin = FILE_CURRENT;
         break;
-    case stream::end:
+    case SO_END:
         native_origin = FILE_END;
         break;
     }
-    DWORD r = SetFilePointer(handle_, (LONG) pos, NULL, native_origin);
+    DWORD r = SetFilePointer((HANDLE)this->handle_, (LONG) pos, NULL, native_origin);
     if( r != 0xffffffff ) {
         return (int)r;
     } else {
@@ -161,10 +132,10 @@ int win32_stream::seek(int pos, stream::seek_origin origin)
     }
 }
 
-int win32_stream::read(char* data, int size)
+int file::read(char* data, int size)
 {
     DWORD readed;
-    if( ReadFile(handle_,
+    if( ReadFile((HANDLE)this->handle_,
                 (LPVOID)data,
                 (DWORD) size,
                 &readed,
@@ -179,10 +150,10 @@ int win32_stream::read(char* data, int size)
     return readed;
 }
 
-int win32_stream::write(char const* data, int size)
+int file::write(char const* data, int size)
 {
     DWORD written;
-    if( WriteFile(handle_,
+    if( WriteFile((HANDLE)this->handle_,
                   (LPCVOID)data,
                   (DWORD)  size,
                   &written,
@@ -194,29 +165,26 @@ int win32_stream::write(char const* data, int size)
     return written;
 }
 
-void win32_stream::sync()
+fs::file_info file::stat()
+{
+    throw std::logic_error("file::stat() not implemented");   
+}
+
+void file::sync()
 {
 }
 
-} } // end namespace tinfra::win32
-
-//
-// link win32 io as default IO
-//
-
-namespace tinfra { namespace io {
+// move to native handle ??
+intptr_t file::native() const
+{
+    return this->handle_;
+}
+void     file::release()
+{
+    this->handle_ = (intptr_t)INVALID_HANDLE_VALUE;
+}
    
-stream* open_file(const char* name, std::ios::openmode mode)
-{
-    return tinfra::win32::open_file(name, mode);
-}
-
-stream* open_native(intptr_t handle)
-{
-    return tinfra::win32::open_native(reinterpret_cast<HANDLE>(handle));
-}
-    
-} } // end namespace tinfra::io
+}// end namespace tinfra::io
 
 #endif // TINFRA_W32
 
