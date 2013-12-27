@@ -3,19 +3,30 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/platform.h"
+#ifdef __linux__
+#define _FILE_OFFSET_BITS 64
+#endif
+
+#include "../platform.h"
+
+#ifdef TINFRA_POSIX
 
 #include "tinfra/fs.h"
 
 #include "tinfra/fmt.h"
+#include "tinfra/fail.h"
 #include "tinfra/os_common.h"
 #include "tinfra/path.h"
+#include "tinfra/logger.h"
+#include "tinfra/trace.h"
+
 
 #include <cstring>
 #include <errno.h>
-
+#include <unistd.h> // for readlink, symlink 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdlib.h>
 
 #ifdef HAVE_IO_H
 #include <io.h>
@@ -31,36 +42,47 @@
 namespace tinfra {
 namespace fs { 
 
+tinfra::module_tracer fs_tracer(tinfra::tinfra_tracer, "fs");
+
 struct lister::internal_data {
+    std::string base_path;
     DIR* handle;
+    bool need_stat;
 };
 
-lister::lister(tstring const& path, bool)
+lister::lister(tstring const& path, bool need_stat)
     : data_(new internal_data())
-{   
+{
+    data_->base_path = path.str();
+    data_->need_stat = need_stat;
     tinfra::string_pool temporary_context;
-    TINFRA_TRACE_MSG("lister::lister");    
-    TINFRA_TRACE_VAR(path);
+    TINFRA_TRACE(fs_tracer, "lister::lister");    
+    TINFRA_TRACE_VAR(fs_tracer, path);
     data_->handle = ::opendir(path.c_str(temporary_context));
     if( !data_->handle ) {
-        throw_errno_error(errno, fmt("unable to read dir '%s'") % path);
+        tinfra::fail(fmt("unable to open directory '%s' for listing") % path, errno_to_string(errno));
     }
 }
 lister::~lister()
 {
-    TINFRA_TRACE_MSG("lister::~lister");
+    TINFRA_TRACE(fs_tracer, "lister::~lister");
     if( data_->handle  != 0 )
         ::closedir(data_->handle);
 }
 
 bool lister::fetch_next(directory_entry& result)
 {
-    TINFRA_TRACE_MSG("lister::fetch_next");
+    TINFRA_TRACE(fs_tracer, "lister::fetch_next");
     
     while( true ) {
+        errno = 0;
         dirent* entry = ::readdir(data_->handle);
-        if( entry == 0 )
+        if( entry == 0 ) {
+            if( errno != 0 ) {
+                tinfra::fail("failed read directory contents", errno_to_string(errno));
+            }
             return false;
+        }
         
         if( std::strcmp(entry->d_name,"..") == 0 || 
             std::strcmp(entry->d_name,".") == 0 ) 
@@ -69,13 +91,19 @@ bool lister::fetch_next(directory_entry& result)
         }
         
         result.name = entry->d_name;
-        TINFRA_TRACE_VAR(result.name);
-        result.info.is_dir = false;
-        result.info.size = 0;
+        TINFRA_TRACE_VAR(fs_tracer, result.name);
         
-        // TODO, recognize how to use FILETIME and how to convert it into timestamp
-        result.info.modification_time = 0;
-        result.info.access_time = 0;
+        if( data_->need_stat ) {
+            std::string path = path::join(data_->base_path, result.name);
+            result.info = stat(path);
+            result.info.is_dir = (result.info.type == DIRECTORY);
+        } else {
+            result.info.is_dir = false;
+            result.info.size = 0;
+            result.info.type = REGULAR_FILE; // as fallback
+            result.info.modification_time = 0;
+            result.info.access_time = 0;
+        }
         return true;
     }
 }
@@ -85,20 +113,23 @@ file_info stat(tstring const& name)
     string_pool temporary_context;
     struct stat st;
     if( ::lstat(name.c_str(temporary_context), &st) != 0 ) {
-        throw_errno_error(errno, fmt("unable stat file '%s'") % name);
+        tinfra::fail(fmt("unable stat file '%s'") % name, errno_to_string(errno));
     }
     
     file_info result;
     
-    if ( (st.st_mode & S_IFLNK) == S_IFLNK )
+    int file_type = st.st_mode & S_IFMT; 
+    if ( file_type == S_IFLNK )
     	result.type = SYMBOLIC_LINK;
-    else if( (st.st_mode & S_IFDIR) == S_IFDIR )
+    else if( file_type == S_IFDIR )
     	result.type = DIRECTORY;    
-    else if( ((st.st_mode & S_IFCHR) == S_IFCHR)  || 
-    	     ((st.st_mode & S_IFBLK) == S_IFBLK) )
+    else if( (file_type == S_IFCHR)  || 
+    	     (file_type == S_IFBLK) )
     	result.type = DEVICE;
-    else if ( (st.st_mode & S_IFIFO) == S_IFIFO )
+    else if ( file_type == S_IFIFO )
     	result.type = FIFO;
+    else if ( file_type == S_IFSOCK) 
+        result.type = SOCKET;
     else
     	result.type = REGULAR_FILE;
 
@@ -151,7 +182,9 @@ bool is_dir(tstring const& name)
     struct stat st;
     if( ::stat(name.c_str(temporary_context), &st) != 0 ) 
         return false;
-    return (st.st_mode & S_IFDIR) == S_IFDIR;
+    int file_type = st.st_mode & S_IFMT;
+    bool result = (file_type == S_IFDIR);
+    return result;
 }
 
 bool is_file(tstring const& name)
@@ -168,8 +201,8 @@ void mv(tstring const& src, tstring const& dest)
     string_pool tmp_pool;
     int result = ::rename(src.c_str(tmp_pool), dest.c_str(tmp_pool));
     if( result == -1 ) {
-        throw_errno_error(errno, fmt("unable to rename from '%s' to '%s' ") % src % dest);
-    }    
+        tinfra::fail(fmt("unable to rename from '%s' to '%s' ") % src % dest, errno_to_string(errno));
+    }
 }
 
 void rm(tstring const& name)
@@ -177,7 +210,7 @@ void rm(tstring const& name)
     string_pool temporary_context;
     int result = ::unlink(name.c_str(temporary_context));
     if( result == -1 ) {
-        throw_errno_error(errno, fmt("unable to remove file '%s'") % name);
+        tinfra::fail(fmt("unable to remove file '%s'") % name, errno_to_string(errno));
     }
 }
 
@@ -186,7 +219,7 @@ void rmdir(tstring const& name)
     string_pool temporary_context;
     int result = ::rmdir(name.c_str(temporary_context));
     if( result == -1 ) {
-        throw_errno_error(errno, fmt("unable to remove folder '%s'") % name);
+        tinfra::fail(fmt("unable to remove directory '%s'") % name, errno_to_string(errno));
     }
 }
 
@@ -194,15 +227,16 @@ void mkdir(tstring const& name, bool create_parents)
 {
     std::string parent = path::dirname(name);
     if( !is_dir(parent) ) {
-        if( create_parents )
+        if( create_parents ) {
             mkdir(parent);
-        else
-            throw std::logic_error(fmt("unable to create dir '%s': %s") % name % "parent folder doesn't exist");
+        } else {
+            tinfra::fail(fmt("unable to create dir '%s': %s") % name, "parent folder doesn't exist");
+        }
     }
     string_pool temporary_context;
     int result = ::mkdir(name.c_str(temporary_context), 0777);
     if( result == -1 ) {
-        throw_errno_error(errno, fmt("unable to create dir '%s'") % name);
+        tinfra::fail(fmt("unable to create dir '%s'") % name, errno_to_string(errno));
     }
 }
 
@@ -212,7 +246,7 @@ void cd(tstring const& dirname)
     string_pool temporary_context;
     int result = ::chdir(dirname.c_str(temporary_context));
     if( result == -1 ) {
-        throw_errno_error(errno, fmt("unable to open output '%s'") % dirname);
+        tinfra::fail(fmt("unable change directory to '%s'") % dirname, errno_to_string(errno));
     }
 }
 
@@ -220,9 +254,48 @@ std::string pwd()
 {
     char buf[1024];
     if( getcwd(buf, sizeof(buf)) == 0 ) {
-        throw_errno_error(errno, "fs::pwd() unable read pwd (implement it better!)");
+        tinfra::fail("fs::pwd() unable read pwd (implement it better!)", errno_to_string(errno));
     }
     return std::string(buf);
 }
+
+void         symlink(tstring const& target, tstring const& path)
+{
+    string_pool pool;
+    const int r = ::symlink(target.c_str(pool), path.c_str(pool));
+    if( r == -1 ) {
+        tinfra::fail(fmt("symlink('%s', '%s') failed") % target % path, errno_to_string(errno));
+    }
+}
+
+std::string readlink(tstring const& path)
+{
+    string_pool pool;
+    char buf[1024];
+    const int r = ::readlink(path.c_str(pool), buf, sizeof(buf));
+    if( r == -1 ) {
+        tinfra::fail(fmt("readlink('%s') failed") % path, errno_to_string(errno));
+    }
+    buf[r] = 0;
+    return buf;
+}
+
+std::string realpath(tstring const& path)
+{
+    string_pool pool;
+    std::string result;
     
+    char* x = ::realpath(path.c_str(pool), NULL);
+    if( !x ) {
+        tinfra::fail(fmt("realpath('%s') failed") % path, errno_to_string(errno));
+    }
+    result = x;
+    ::free(x);
+    return result;
+}
+
+
 } } // end namespace tinfra::fs
+
+#endif // TINFRA_POSIX
+

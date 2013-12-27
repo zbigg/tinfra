@@ -10,7 +10,7 @@
 
 namespace tinfra {
     
-void report_assertion_failure(tinfra::trace::location const& location, const char* message)
+void report_assertion_failure(tinfra::source_location const& location, const char* message)
 {
     const std::string file_name = location.filename ? location.filename : "<unknown>";
     const std::string function_name = location.name ? location.name : "<unknown>";
@@ -25,7 +25,7 @@ void report_assertion_failure(tinfra::trace::location const& location, const cha
     }
 }
 
-void assert_failed(tinfra::trace::location const& location, const char* expression)
+void assert_failed(tinfra::source_location const& location, const char* expression)
 {
 
     const std::string message = tinfra::fmt("assertion '%s' failed") % expression; 

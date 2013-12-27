@@ -6,6 +6,12 @@
 #ifndef tinfra_platform_h_included
 #define tinfra_platform_h_included
 
+#ifdef _WIN32
+#define TINFRA_W32
+#else
+#define TINFRA_POSIX
+#endif
+
 #if defined _MSC_VER
 //
 // excerpt from MSDN:
@@ -54,8 +60,18 @@
 #include "tinfra/config.h"
 #endif
 
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L)
+#define TINFRA_CXX11
+#define TINFRA_HAS_VARIADIC_TEMPLATES
+#endif
+
 #include <ios>
 #include <cstddef>
+#ifdef TINFRA_CXX11
+#include <cstdint>  // for intptr_t as defined in C++11
+#else
+#include <stdint.h> // for intptr_t as deined in C99 and available in most places
+#endif
 
 namespace tinfra {
 	using std::size_t;

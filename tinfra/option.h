@@ -8,6 +8,7 @@
 
 #include "tinfra/tstring.h"
 #include "tinfra/stream.h"
+#include "tinfra/lex.h"
 
 #include <vector>
 #include <sstream>
@@ -116,13 +117,7 @@ public:
     
     virtual void accept(tstring const& value)
     {
-        std::istringstream fmt(value.str());
-        T tmp_val;
-        fmt >> tmp_val;
-        // TODO: check for correctnes of input
-        //if( !fmt ) {
-        //    return;
-        //}
+        T tmp_val = tinfra::from_string<T>(value);
         accepted_ = true;
         using std::swap;
         swap(value_,tmp_val);
@@ -221,13 +216,7 @@ public:
 
     virtual void accept(tstring const& value)
     {
-        std::istringstream fmt(value.str());
-        T tmp_val;
-        fmt >> tmp_val;
-        // TODO: check for correctnes of input
-        //if( !fmt ) {
-        //    return;
-        //}
+        T tmp_val = tinfra::from_string<T>(value);
         accepted_ = true;
         value_.push_back(tmp_val);
     }

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #set -x
 
@@ -33,7 +33,7 @@ topsrc_dir=$1
 testresources_dir=${1}/tests/resources
 
 test_segv
-generic_test plain_unittests ${RUNNER} ./unittests -D ${testresources_dir}
+generic_test plain_unittests ${RUNNER} ./unittests --srcdir=${1} #-D ${testresources_dir}
 
 generic_test_summary
 

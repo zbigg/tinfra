@@ -9,7 +9,6 @@
 
 #include <string>
 #include "tinfra/mo.h"
-#include "tinfra/io/stream.h"
 #include "tinfra/fmt.h"
 #include "tinfra/string.h"
 

@@ -6,10 +6,15 @@
 #include "inifile.h"
 #include "trace.h"
 #include "string.h" // for strip
+#include "tinfra/fmt.h"    // for fmt
 
 namespace tinfra {
 namespace inifile {
 
+tinfra::module_tracer inifile_tracer(tinfra::tinfra_tracer, "inifile");
+
+using tinfra::fmt;
+    
 struct parser::internal_data {
     tinfra::input_stream& input;
     
@@ -97,15 +102,13 @@ bool parser::fetch_next(entry& out)
     // TODO: escape sequence support
     // TODO: unicode support
     // TODO: inline comment support
-    const size_t value_end = line.find_last_not_of(" \t");
+    const size_t value_end = line.find_last_not_of(" \r\n\t");
     if( value_end != std::string::npos ) 
         out.value = line.substr(value_begin, 1+value_end-value_begin);
     else
         out.value = line.substr(value_begin);
     return true;
 }
-
-TINFRA_PUBLIC_TRACER(tinfra_inifile_reader);
 
 reader::reader(tinfra::input_stream& in):
     p(in),
@@ -118,7 +121,6 @@ reader::~reader()
 
 bool reader::fetch_next(full_entry& result)
 {
-	TINFRA_USE_TRACER(tinfra_inifile_reader);
 	
 	while( true ) {
 		entry e;
@@ -130,7 +132,7 @@ bool reader::fetch_next(full_entry& result)
 		case COMMENT:
 			break;
 		case INVALID:
-			TINFRA_TRACE_STRM("invalid inifile entry, line=" << line << " content=" << e.value);
+			TINFRA_TRACE(inifile_tracer, "invalid inifile entry, line=" << line << " content=" << e.value);
 			break;
 		case SECTION:
 			this->section = e.name;
@@ -144,9 +146,39 @@ bool reader::fetch_next(full_entry& result)
 	}
 }
 
+//
+// tinfra::inifile::writer
+//
+
+writer::writer(tinfra::output_stream& o): out(o) {}
+writer::~writer() {}
+
+void writer::section(std::string const& name)
+{
+    std::string const formatted = (fmt("[%s]\n") % name).str();
+    this->out.write(formatted);
+}
+
+void writer::entry(std::string const& name, std::string const& value)
+{
+    std::string const formatted = (fmt("%s = %s\n") % name % value).str();
+    this->out.write(formatted);
+}
+
+void writer::comment(std::string const& content)
+{
+    std::string const formatted = (fmt("; %s\n") % content).str();
+    this->out.write(formatted);
+}
+
+void writer::entry(tinfra::inifile::entry const& e)
+{
+    switch( e.type ) {
+    case SECTION: section(e.name); break;
+    case ENTRY:   entry(e.name, e.value); break;
+    case COMMENT: comment(e.value); break;
+    }
+}
 
 } } // end namespace tinfra::inifile
-
-
-
 

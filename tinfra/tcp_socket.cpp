@@ -14,6 +14,8 @@
 
 #include "tinfra/win32.h"
 #include "tinfra/trace.h"
+#include "tinfra/logger.h"
+#include "tinfra/runtime.h" // for test_interrupt
 #include <stdexcept>
 
 #ifdef _WIN32
@@ -153,7 +155,8 @@ tcp_client_socket::tcp_client_socket(tstring const& address, int port):
     while( true ) {
         int rc = ::connect(handle(), (struct sockaddr*)&sock_addr,sizeof(sock_addr));
         if( rc != 0 && detail::last_socket_error_is_interruption() ) {
-            TINFRA_TRACE_MSG("connect() call interrupted (EINTR), retrying");
+            TINFRA_GLOBAL_TRACE("connect() call interrupted (EINTR), retrying");
+            tinfra::test_interrupt();
             continue;
         }
         if( rc != 0 ) {
@@ -216,7 +219,8 @@ tcp_server_socket::accept(std::string& address)
         accept_sock = ::accept(handle(), (struct sockaddr*)&client_address, &addr_size );
         
         if( accept_sock == -1 && detail::last_socket_error_is_interruption()) {
-            TINFRA_TRACE_MSG("accept() call interrupted (EINTR), retrying");
+            TINFRA_GLOBAL_TRACE("accept() call interrupted (EINTR), retrying");
+            tinfra::test_interrupt();
             continue;
         }
         

@@ -1,0 +1,50 @@
+[This is human changelog. For details, see mtn log.]
+
+version 0.0.3, releases 2013-xx-xx
+
+   compatibility: ABI: no , API: no
+   tested: 
+      linux: gcc 4.7, 4.5 on linux (i386,x86_54),
+      freebsd: gcc 4.2.1 (freebsd 9 x86_64)
+      macos x: gcc 4.2.1 (macos x 10.2.0)
+
+   changes:
+    * fmt: refactored, added tsprintf, tprintf functions (see fmt.h) (ABI)
+    * trace.h: refactored, new concept documented
+    * io/stream.h: finally removed
+
+   new:
+    * fs.h: symlink support: symlink, readlink and realpath added (wraps POSIX)
+    * inifile.h: ini file writer added
+    * stream.h: new create_memory_output_stream(), helpers: read_all(), write_all()
+    * test --srcdir option and srcdir_eval() added for finding test resources
+      relative to $srcdir
+    * mo_algo.h added with mo_equals, mo_less_than, mo_swap added
+    * variant: variant(string,int,double,bool,dict,array) added; same model as JSON
+    * vtpath: JSONPath implementation on variant tree
+    * json.h: json parser & writer based on variant
+
+   fix:
+    * socket: correctly handle interrupts (EINTR) on posix
+    * CHECK_EQUAL et al evaluate macro args once (tested)
+    * mo: fix, mutate_helper can forward sequence() calls
+
+version 0.0.2, released 2012-11-30
+
+   compatibility: w/ previous version: ABI:no, API:yes]
+   tested: gcc 4.3, 4.5 on linux (i386,x86_54), mingw32
+
+   changes:
+   * a new logger interface for applications, supporting 
+        FAIL,ERROR,INFO,WARNING,TRACE levels, and standard syslog like
+	formatter for stderr (most tinfra is using this logger, including trace)
+   * removed UnitTest++ dependency, and small home-made testing framework
+        implemented (which preserver UT++ compile time API)
+   * several corrections
+   	posix: is_dir() & stat: works correctly with special files
+	posix: fixed signal and EINTR&tinfra::test_interrupt support
+
+version 0.0.1, releases 2012-10-06
+    
+    initial, release ... too much to document ;)
+

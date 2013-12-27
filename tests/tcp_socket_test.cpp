@@ -41,6 +41,11 @@ SUITE(tinfra) {
         }
         t.join();
     }
+    
+    TEST(tcp_socket_connect_bad_name)
+    {
+        CHECK_THROW( tinfra::tcp_client_socket("this_host_doesnt_exist.edu.", 80), std::runtime_error);
+    }
 }
 
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++:

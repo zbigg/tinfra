@@ -1,0 +1,300 @@
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+top_builddir = .
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir = @libdir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+
+MAKEFOO=@MAKEFOO@
+CC=@CC@
+CXX=@CXX@
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
+CXXFLAGS=@CXXFLAGS@
+LIBS=@LIBS@
+
+default: build
+
+# components
+tinfra_DIR      = .
+tinfra_test_DIR = .
+
+# tinfra definitions (should be in libfoo/component_defs.mk)
+tinfra_HEADERS = \
+	tinfra/adaptable.h \
+	tinfra/any.h \
+	tinfra/assert.h \
+	tinfra/buffer.h \
+	tinfra/buffered_stream.h \
+	tinfra/cli.h \
+	tinfra/cmd.h \
+	tinfra/config.h \
+	tinfra/db.h \
+	tinfra/exeinfo.h \
+	tinfra/fail.h \
+        tinfra/file.h \
+	tinfra/fmt.h \
+	tinfra/fs.h \
+	tinfra/fs_sandbox.h \
+	tinfra/generator.h \
+	tinfra/guard.h \
+	tinfra/holder.h \
+	tinfra/inifile.h \
+	tinfra/internal_pipe.h \
+	tinfra/interruptible.h \
+	tinfra/json.h \
+	tinfra/lazy_protocol.h \
+	tinfra/lex.h \
+	tinfra/logger.h \
+	tinfra/memory_pool.h \
+	tinfra/memory_stream.h\
+	tinfra/mo.h \
+	tinfra/mo_algo.h \
+	tinfra/multitype_map.h \
+	tinfra/mutex.h \
+	tinfra/option.h \
+	tinfra/os_common.h \
+	tinfra/path.h \
+	tinfra/platform.h \
+	tinfra/primitive_wrapper.h \
+	tinfra/queue.h \
+	tinfra/runner.h \
+	tinfra/runtime.h \
+	tinfra/server.h \
+	tinfra/shared_ptr.h \
+	tinfra/socket.h \
+	tinfra/static_registry.h \
+	tinfra/stream.h \
+	tinfra/string.h \
+	tinfra/structure_printer.h \
+	tinfra/subprocess.h \
+	tinfra/symbol.h \
+	tinfra/tcp_socket.h \
+	tinfra/test.h \
+	tinfra/test_macros.h \
+	tinfra/text.h \
+	tinfra/time.h \
+	tinfra/thread.h \
+	tinfra/thread_runner.h \
+	tinfra/trace.h \
+	tinfra/tstring.h \
+	tinfra/typeinfo.h \
+	tinfra/unix_socket.h \
+	tinfra/value_guard.h \
+	tinfra/variant.h \
+	tinfra/vtpath.h \
+	tinfra/vfs.h \
+	tinfra/win32.h \
+	tinfra/posix/posix_mutex.h \
+	tinfra/posix/posix_stream.h \
+	tinfra/posix/thread.h \
+	tinfra/win32/thread.h \
+	tinfra/win32/w32_mutex.h \
+	tinfra/win32/w32_stream.h 
+
+
+tinfra_SOURCES = \
+	tinfra/symbol.cpp \
+	tinfra/runtime.cpp \
+	tinfra/exeinfo.cpp \
+	tinfra/cmd.cpp \
+	tinfra/cli.cpp \
+	tinfra/subprocess.cpp \
+	tinfra/server.cpp \
+	tinfra/fmt.cpp \
+	tinfra/string.cpp \
+	tinfra/tstring.cpp \
+	tinfra/path.cpp \
+	tinfra/file.cpp \
+	tinfra/fs.cpp \
+	tinfra/fs_sandbox.cpp \
+	tinfra/threadcmn.cpp \
+	tinfra/runner.cpp \
+	tinfra/os_common.cpp \
+	tinfra/trace.cpp \
+	tinfra/lazy_protocol.cpp \
+	tinfra/vfs.cpp \
+	tinfra/option.cpp \
+	tinfra/adaptable.cpp \
+	tinfra/any.cpp \
+	tinfra/typeinfo.cpp \
+	tinfra/stream.cpp \
+	tinfra/buffered_stream.cpp \
+	tinfra/memory_stream.cpp \
+	tinfra/inifile.cpp \
+	tinfra/json.cpp \
+	tinfra/socket.cpp \
+	tinfra/tcp_socket.cpp \
+	tinfra/internal_pipe.cpp \
+	tinfra/assert.cpp \
+	tinfra/text.cpp \
+	tinfra/fail.cpp \
+	tinfra/logger.cpp \
+	tinfra/time.cpp \
+	tinfra/variant.cpp \
+	tinfra/vtpath.cpp \
+	tinfra/posix/posix_file.cpp \
+	tinfra/posix/posix_subprocess.cpp \
+	tinfra/posix/posix_thread.cpp \
+	tinfra/posix/posix_runtime.cpp \
+	tinfra/posix/posix_fs.cpp \
+	tinfra/posix/posix_stream.cpp \
+	tinfra/win32/w32_stacktrace.cpp \
+	tinfra/win32/w32_file.cpp \
+	tinfra/win32/w32_subprocess.cpp \
+	tinfra/win32/w32_common.cpp \
+	tinfra/win32/w32_thread.cpp \
+	tinfra/win32/w32_runtime.cpp \
+	tinfra/win32/w32_fs.cpp \
+	tinfra/win32/w32_stream.cpp \
+	$(tinfra_HEADERS)
+
+tinfra_test_SOURCES  = \
+	tinfra/test.cpp \
+	tinfra/test.h \
+	tinfra/test_macros.h
+
+
+
+#SHARED_LIBRARIES += tinfra
+STATIC_LIBRARIES += tinfra
+
+#SHARED_LIBRARIES += tinfra_test
+STATIC_LIBRARIES += tinfra_test
+
+tinfra_test_NAME=tinfra-test
+
+CXXFLAGS += -I${top_builddir} -I$(top_srcdir)
+
+ifdef TARGET_POSIX
+tinfra_test_program_LDFLAGS = -lpthread
+endif
+ifdef TARGET_W32
+test_fatal_exception_LDFLAGS = -lws2_32
+endif
+
+tinfra_test_program_LINK_DEPS = tinfra_test tinfra
+tinfra_test_program_TEST_INVOKE_ARGS = --srcdir=$(realpath $(top_srcdir))
+
+test_fatal_exception_SOURCES = tests/fatal_exception_test.cpp
+ifdef TARGET_POSIX
+test_fatal_exception_LDFLAGS = -lpthread
+endif
+
+test_fatal_exception_LINK_DEPS = tinfra_test tinfra
+
+test_fatal_exception_int: test_fatal_exception
+	./test_fatal_exception int
+
+test_fatal_exception_segv: test_fatal_exception
+	./test_fatal_exception segv
+	
+PROGRAMS=test_fatal_exception
+#TBD, tests/fatal_exception_test.cpp
+
+tinfra_TEST_SOURCES = \
+	tests/adaptable_test.cpp \
+	tests/any_test.cpp \
+	tests/assert_test.cpp \
+	tests/buffer_test.cpp \
+	tests/buffered_stream_test.cpp \
+	tests/exeinfo_test.cpp \
+	tests/fmt_test.cpp \
+	tests/fs_test.cpp \
+	tests/inifile_test.cpp \
+	tests/internal_pipe_test.cpp \
+	tests/json_test.cpp \
+	tests/lex_test.cpp \
+	tests/logger_test.cpp \
+	tests/memory_pool_test.cpp \
+	tests/memory_stream_test.cpp \
+	tests/mo_algo_test.cpp \
+	tests/mo_test.cpp \
+	tests/multitype_map_test.cpp \
+	tests/option_test.cpp \
+	tests/path_test.cpp \
+	tests/queue_test.cpp \
+	tests/runner_test.cpp \
+	tests/runtime_test.cpp \
+	tests/server_test.cpp \
+	tests/shared_ptr_test.cpp \
+	tests/stream_test.cpp \
+	tests/string_test.cpp \
+	tests/structure_printer_test.cpp \
+	tests/subprocess_test.cpp \
+	tests/symbol_test.cpp \
+	tests/tcp_socket_test.cpp \
+	tests/test_macros_test.cpp \
+	tests/test_main.cpp \
+	tests/test_test.cpp \
+	tests/text_test.cpp \
+	tests/thread_test.cpp \
+	tests/time_test.cpp \
+	tests/trace_test.cpp \
+	tests/tstring_test.cpp \
+	tests/variant_test.cpp \
+	tests/vtpath_test.cpp
+
+# install tinfra headers
+tinfra_headers_FILES=$(tinfra_HEADERS)
+tinfra_headers_INSTALL_DEST=$(prefix)/include
+tinfra_headers_GENERATED_FILES=tinfra/config.h
+
+PUBLIC_COMPONENTS += tinfra_headers
+
+# install tinfra.pc
+tinfra_pkg_config_FILES = tinfra.pc tinfra-test.pc
+tinfra_pkg_config_INSTALL_DEST=$(libdir)/pkgconfig
+PUBLIC_COMPONENTS += tinfra_pkg_config
+
+tinfra_EXTRA_DIST=\
+	configure.ac \
+	configure \
+	aclocal.m4 \
+	tinfra/config.h.in \
+	Makefile.in \
+	tinfra.pc.in \
+	tests/resources/sample.exe.map \
+	tests/resources/testtest_dir/a \
+	tests/resources/testtest_dir/a/file2 \
+	tests/resources/testtest_dir/file1 \
+	tests/resources/testtest_file
+
+tinfra_test_EXTRA_DIST=\
+	tinfra-test.pc.in
+
+AUTOCONF_GENERATED_FILES += \
+	tinfra/config.h \
+	tinfra.pc \
+	tinfra-test.pc
+
+#TEST_PROGRAMS += tinfra
+
+# locate makefoo components
+# in production it should look like this
+#MAKEFOO=$(top_srcdir)/makefoo
+# but in tests we're testing current source tree
+#MAKEFOO=$(top_srcdir)/../../
+
+tinfra_COMPONENTS=tinfra tinfra_test
+PACKAGES=tinfra
+
+PRODUCT=tinfra
+VERSION=0.0.3
+
+AUTOCONF_AUX_DIR=build/autoconf
+MAKEFOO_USE += native
+MAKEFOO_USE += test-program
+MAKEFOO_USE += install-fhs
+MAKEFOO_USE += rpm
+MAKEFOO_USE += cppcheck
+MAKEFOO_USE += autoconf
+MAKEFOO_USE += src-dist
+ 
+include $(MAKEFOO)
+
+# jedit: :tabSize=8:mode=makefile:
+

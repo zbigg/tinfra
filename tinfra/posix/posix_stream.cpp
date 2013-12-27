@@ -3,10 +3,15 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "../platform.h"
+#ifdef TINFRA_POSIX
+
 #include "tinfra/posix/posix_stream.h" // we implement these
 
 #include "tinfra/os_common.h"
 #include "tinfra/trace.h"
+#include "tinfra/logger.h"
+
 #include <unistd.h>
 #include <errno.h>
 
@@ -176,8 +181,10 @@ int standard_handle_output::write(const char* data, int size)
         int w = ::write(fd_, data, size);
         if( w < 0 && errno == EINTR )
             continue;
-        if( w < 0 ) 
-            throw_errno_error(errno, "write failed");
+        if( w < 0 ) {
+            //std::string msg
+            //throw_errno_error(errno, "write failed");
+        }
         return w;
     }
 }
@@ -189,3 +196,4 @@ void standard_handle_output::sync()
 } // end namespace tinfra::posix
 } // end namespace tinfra
 
+#endif // TINFRA_POSIX

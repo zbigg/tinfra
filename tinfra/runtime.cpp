@@ -69,12 +69,16 @@ void set_fatal_exception_handler(void (*handler) (void))
 void initialize_platform_runtime(); 
 void terminate_handler();
 
+std::string saved_exe_name;
+
 void initialize_fatal_exception_handler()
 {
     static bool initialized = false;
     if( initialized ) 
         return;
 
+    saved_exe_name = get_exepath();
+    
     initialize_platform_runtime();
     
     std::set_terminate(terminate_handler);
@@ -92,7 +96,7 @@ void fatal_exit(const char* message, stacktrace_t& stacktrace)
     }
     
     std::ostringstream tmp;
-    tmp << get_exepath() << ": " << message << std::endl;
+    tmp << saved_exe_name << ": " << message << std::endl;
     if( stacktrace.size() > 0 ) 
         print_stacktrace(stacktrace, tmp);    
     tmp << "aborting" << std::endl;
@@ -139,7 +143,7 @@ static volatile sigatomic_t interrupted = 0;
 void interrupt()
 {
     if( current_interrupt_policy == IMMEDIATE_ABORT ) {
-        interrupt_exit("interrupted");
+        interrupt_exit("interrupted (immediate exit)");
     } else {
         interrupted = 1;
     }

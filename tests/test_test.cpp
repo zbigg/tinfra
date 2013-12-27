@@ -56,4 +56,12 @@ SUITE(tinfra) {
         }
         CHECK_EQUAL(cwd, fs::pwd());
     }
+    
+    TEST(test_srcdir_eval)
+    {
+        std::string result = tinfra::test::srcdir_eval("$srcdir/tests/test_test.cpp");
+        CHECK( result.find("$srcdir") == std::string::npos);
+        
+        CHECK( tinfra::fs::is_file(result));
+    }
 }

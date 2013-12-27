@@ -6,8 +6,9 @@
 #ifndef tinfra_w32_stream_h_included
 #define tinfra_w32_stream_h_included
 
-#include "tinfra/stream.h"
-#include "tinfra/win32.h"
+#ifndef tinfra_stream_h_included
+#error "this file shall not be directly included"
+#endif
 
 namespace tinfra {
 namespace win32 {

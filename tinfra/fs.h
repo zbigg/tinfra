@@ -21,12 +21,12 @@ enum file_type {
     DIRECTORY,
     DEVICE,
     FIFO,
-    SYMBOLIC_LINK
-    //SOCKET
+    SYMBOLIC_LINK,
+    SOCKET
 };
 
 struct file_info {
-    size_t    size;
+    long long size;
     bool      is_dir; // left for compatibility reasons
     file_type type;
     
@@ -52,6 +52,19 @@ public:
 private:
     struct internal_data;
     std::auto_ptr<internal_data> data_;
+};
+
+class recursive_lister: public generator_impl<recursive_lister, directory_entry> {
+public:
+    recursive_lister(tstring const& path, bool need_stat = false);
+    ~recursive_lister();
+
+    bool fetch_next(directory_entry&);
+
+    void recurse(bool recurse = true);
+private:
+    struct internal_data;
+    std::auto_ptr<internal_data> self;
 };
 
 struct file_list_visitor {
@@ -89,6 +102,11 @@ void rm(tstring const& name);
 void rmdir(tstring const& name);
 void recursive_rm(tstring const& src);
 
+// implemented only in POSIX
+void         symlink(tstring const& target, tstring const& path);
+std::string  readlink(tstring const& path);
+std::string  realpath(tstring const& path);
+
 struct walker 
 {
     /** Throw this from accept to stop walk. */
@@ -112,6 +130,7 @@ struct walker
 void walk(tstring const& start, walker& w);
 
 } } // end namespace tinfra::fs
+
 
 #endif // tinfra_fs_h_included
 

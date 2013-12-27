@@ -193,6 +193,15 @@ std::vector<std::string> split_lines(tstring const& in)
     return result;
 }
 
+std::string before_first(tstring const& delimiters, tstring const& input)
+{
+    tstring::size_type delim_pos = input.find_first_of(delimiters);
+    if( delim_pos == tstring::npos )
+        return input;
+    else
+        return input.substr(0,delim_pos);
+}
+
 static int local_strcasecmp(const char* a, const char* b, size_t len)
 {
 #if defined(HAVE_STRICMP) || defined(_MSC_VER)

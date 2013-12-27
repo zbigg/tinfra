@@ -6,6 +6,7 @@
 #ifndef tinfra_socket_h_included
 #define tinfra_socket_h_included
 
+#include "platform.h" // for intptr_t
 #include "stream.h"
 #include "tstring.h"
 

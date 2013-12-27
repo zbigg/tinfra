@@ -16,6 +16,8 @@
 
 #include <vector>
 
+#include "time.h" // for deadline
+
 #if   defined( _WIN32)
 // on win32 we must use pthread-win32 because we need condition variables
 // #       include <tinfra/win32/thread.h>
@@ -46,10 +48,14 @@ class monitor {
     mutex      m;
     condition  c;
 public:
-    void lock()      { m.lock(); }
+    // mutex access
+    void lock()      { m.lock(); }    
     void unlock()    { m.unlock(); }
     
+    // condition access
     void wait()      { c.wait(m); }
+    bool timed_wait(deadline const& t) { return c.timed_wait(m, t); }
+    
     void signal()    { c.signal(); }
     void broadcast() { c.broadcast(); }
 };
@@ -62,6 +68,7 @@ public:
     ~synchronizator() { m.unlock(); }
     
     void wait()      { m.wait(); }
+    bool timed_wait(deadline const& t)      { return m.timed_wait(t); }
     void signal()    { m.signal(); }
     void broadcast() { m.broadcast(); }
 };

@@ -14,7 +14,11 @@
 namespace tinfra {
 
 extern tinfra::option_switch opt_help;
-    
+
+// tinfra::cli main 
+int cli_main(int argc, char** argv, int (*program_main)(int, char**));
+
+// tinfra::cli, modern main
 int cli_main(int argc, char** argv, int (*program_main)(tstring const& program_name, std::vector<tinfra::tstring>& args));
 
 

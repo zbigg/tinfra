@@ -35,42 +35,88 @@
 namespace tinfra {
 namespace path {
 
-static tstring remove_initial_slashes(tstring const& other)
+static tstring remove_duplicate_initial_slashes(tstring s)
 {
-    size_t pos = other.find_first_not_of("\\/");
-    if( pos == tstring::npos )
-        return other;
-    else
-        return other.substr(pos);
+    while( s.size() > 1 && s[0] == '/' && s[1] == '/' ) {
+        s = s.substr(1);
+    }
+    return s;
 }
 
-static tstring remove_trailing_slashes(tstring const& other)
+static tstring remove_duplicate_trailing_slashes(tstring s)
 {
-    int idx = other.size()-1;
-    while( idx >= 0 && (other[idx] == '/' || other[idx] == '\\' )){
-            idx--;
+    size_t size = s.size();
+    while( size > 1 && s[size-1] == '/' && s[size-2] == '/' ) {
+        s = s.substr(0, size-1);
+	size -= 1;
     }
-    return other.substr(0, idx+1);
+    return s;
 }
 
-std::string join(tstring const& a, tstring const& b2) 
+static tstring remove_duplicate_slashes_at_ends(tstring const& other)
 {
-    tstring b = remove_initial_slashes(b2);
-    if( a.size() > 0 && b.size() > 0 ) {
-        std::string r;
-        tstring a2 = remove_trailing_slashes(a);
-        r.reserve(a2.size() + 1 + b.size());
-        r.append(a2.data(), a2.size());
-        r.append("/");
-        r.append(b.data(), b.size());
-        return r;
+    return remove_duplicate_initial_slashes(
+               remove_duplicate_trailing_slashes(other));
+}
+static void calc_join_length(tstring const& s, size_t& result, bool& need_sep_flag)
+{
+    if( s.size() > 0 ) {
+        if( need_sep_flag ) {
+            result += 1;
+	}
+        result += s.size();
+        need_sep_flag = true;
     }
-    else if( a.size() > 0 ) 
-        return a.str();
-    else if (b.size() > 0 )
-        return b.str();
-    else
-        return "";
+}
+
+static void join_append(std::string& result, tstring component, bool& separator_flag)
+{
+    if( component.size() > 0 ) {
+	const bool start_last_is_separator = result.size() > 0 && (result[result.size()-1] == '/');
+	const bool first_char_of_component_is_separator = (component[0] == '/');
+	if( start_last_is_separator && first_char_of_component_is_separator ) {
+	    // if we already have XXX/ and add /FOO then
+	    // just advance one char in added component
+	    component = component.substr(1);
+	} else if( separator_flag && !first_char_of_component_is_separator ) {
+	    // if we need separator and it's not already
+	    // in place, add it
+	    result.append("/");
+	}
+        result.append(component.data(), component.size());
+
+	const bool result_last_is_separator = (result[result.size()-1] == '/');
+	separator_flag = !result_last_is_separator;
+    }
+}
+
+std::string join(tstring const& p1, tstring const& p2, tstring const& p3, tstring const& p4)
+{
+    std::string result;
+
+    tstring s1 = remove_duplicate_slashes_at_ends(p1);
+    tstring s2 = remove_duplicate_slashes_at_ends(p2);
+    tstring s3 = remove_duplicate_slashes_at_ends(p3);
+    tstring s4 = remove_duplicate_slashes_at_ends(p4);
+
+    // calculate length
+    {
+        size_t result_size = 0;
+	bool    need_sep_flag = false;
+	calc_join_length(s1, result_size, need_sep_flag);
+	calc_join_length(s2, result_size, need_sep_flag);
+	calc_join_length(s3, result_size, need_sep_flag);
+	calc_join_length(s4, result_size, need_sep_flag);
+	result.reserve(result_size+1);
+    }
+    {
+        bool separator_flag = false;
+        join_append(result, s1, separator_flag);
+        join_append(result, s2, separator_flag);
+        join_append(result, s3, separator_flag);
+        join_append(result, s4, separator_flag);
+    }
+    return result;
 }
 
 std::string basename(tstring const& name)
@@ -95,6 +141,12 @@ std::string dirname(tstring const& name)
     } else {
         return std::string(name.data(), p);
     }
+}
+
+std::string sanitize(tstring const& path)
+{
+    
+    return path;
 }
 
 std::string tmppath(const char* prefix, const char* tmpdir)

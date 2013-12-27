@@ -29,7 +29,7 @@ SUITE(tinfra) {
     void the_swap(shared_ptr<X>& a, shared_ptr<X>& b)
     {
         using std::swap;
-        TINFRA_TRACE_MSG("hello");
+        TINFRA_GLOBAL_TRACE("hello");
         swap(a,b);
     }
     TEST(shared_ptr_swap)

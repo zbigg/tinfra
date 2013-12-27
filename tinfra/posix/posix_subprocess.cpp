@@ -3,6 +3,9 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "../platform.h"
+#ifdef TINFRA_POSIX
+
 #include <sys/types.h>
 #include <signal.h>
 #include <sys/param.h>
@@ -12,6 +15,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <sys/termios.h>
 #include <stdio.h>
 
 #include "tinfra/posix/posix_stream.h"
@@ -20,7 +24,8 @@
 #include "tinfra/subprocess.h"
 #include "tinfra/os_common.h"
 #include "tinfra/trace.h"
-
+#include "tinfra/logger.h"
+#include "tinfra/runtime.h" // for test_interrupt
 extern "C" char** environ;
 
 namespace tinfra {
@@ -136,8 +141,10 @@ struct posix_subprocess: public subprocess {
             int exit_code_raw;
             int tpid = ::waitpid(pid, &exit_code_raw, 0);
             
-            if( tpid < 0 &&  errno == EINTR )
+            if( tpid < 0 &&  errno == EINTR ) {
+                tinfra::test_interrupt();
                 continue;
+            }
             if( tpid < 0 )
                 throw_errno_error(errno, "waitpid failed");
             // now convert wait exit_code to process exit code as in wait(2)
@@ -251,7 +258,9 @@ struct posix_subprocess: public subprocess {
                 // now reasoing is following:
                 //   if we're redirecting stdin of subprocess then we wanw
                 //   it to read from us not TTY  ==> always detach if stdin == REDIRECT
-                
+		// on openindiana, ioctl(/dev/tty, TIOCNOTTY) fails, so ignore
+		// but i don't know why :/
+#ifndef sun		
                 int tty_fd = open("/dev/tty", O_RDWR);
                 if (tty_fd >= 0) {
                     int ret = ioctl(tty_fd, TIOCNOTTY, 0);
@@ -264,6 +273,7 @@ struct posix_subprocess: public subprocess {
                 else {
 		    TINFRA_LOG_ERROR(fmt("warning: detaching from tty failed: open(/dev/tty) returned errno: %s)") % errno_to_string(errno));
                 }
+#endif
             } else if( stdin_mode == NONE) { 
                 ::close(0);
                 ::open("/dev/null",O_RDONLY);
@@ -328,5 +338,8 @@ std::auto_ptr<subprocess> subprocess::create()
 
 } // end namespace tinfra
 
+#endif // TINFRA_POSIX
+
 // jedit: :tabSize=8:indentSize=4:noTabs=true:mode=c++
+
 

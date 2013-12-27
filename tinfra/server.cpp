@@ -53,7 +53,7 @@ void Server::run()
     while( !stopped_ ) {
         std::string peer_address;
         std::auto_ptr<tcp_client_socket> client_socket(server_socket_->accept(peer_address));
-        TINFRA_TRACE_MSG(fmt("server %s:%s: accepted new connection from %s (stopping=%s)") 
+        TINFRA_GLOBAL_TRACE(fmt("server %s:%s: accepted new connection from %s (stopping=%s)") 
             %  bound_address_ % bound_port_ % peer_address % stopping_);
         if( !stopping_ ) 
             onAccept(client_socket, peer_address);
@@ -74,7 +74,7 @@ void Server::stop()
         connect_address = "localhost";
     
     try {
-        TINFRA_TRACE_MSG(fmt("stopping server %s:%s") %  connect_address % bound_address_);
+        TINFRA_GLOBAL_TRACE(fmt("stopping server %s:%s") %  connect_address % bound_address_);
         stopping_ = true;
         {
             tcp_client_socket fake_client(connect_address, bound_port_);

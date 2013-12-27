@@ -5,11 +5,12 @@
 
 #include "tinfra/platform.h"
 
+#ifdef TINFRA_W32
+
 #include "tinfra/win32.h"
 
 #include "tinfra/fmt.h"
 #include "tinfra/string.h"
-#include "tinfra/io/stream.h"
 
 #include <stdexcept>
 #include <cassert>
@@ -63,9 +64,6 @@ void throw_system_error(unsigned int error, std::string const& message)
     case WSAEFAULT:
     case ERROR_INVALID_HANDLE:
         throw_system_error2<std::invalid_argument>(error, message);
-    
-    case WSAEWOULDBLOCK:
-        throw_system_error2<tinfra::io::would_block>(error, message);
         
     case ERROR_FILE_NOT_FOUND:
     case ERROR_PATH_NOT_FOUND:
@@ -169,3 +167,6 @@ std::string make_utf8(wchar_t const* str)
     
 
 } } // end namespace tinfra::win32
+
+#endif // TINFRA_W32
+

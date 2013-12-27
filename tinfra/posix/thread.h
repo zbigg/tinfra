@@ -14,9 +14,14 @@
 
 #include <tinfra/platform.h>
 #include <tinfra/runner.h>
+#include <tinfra/fmt.h>
+
+#include <pthread.h> // for many pthread_xxx functions
+#include <errno.h> // for ETIMEDOUT
 
 #include <vector>
-#include <pthread.h>
+#include <stdexcept>
+
 //#include <semaphore.h>
 
 namespace tinfra {
@@ -55,16 +60,37 @@ public:
     void wait(mutex& mutex) { 
         ::pthread_cond_wait(&cond_, mutex.get_native() );
     }
+    
+    bool timed_wait(mutex& mutex, deadline const& d) {
+        struct timespec tspec;
+        
+        const time_stamp ts = d.get_absolute();
+        
+        tspec.tv_sec = ts.to_seconds();
+        tspec.tv_sec = ( ts.to_milliseconds() % 1000 ) * 1000*1000;
+        
+        const int r = ::pthread_cond_timedwait(&cond_, mutex.get_native(), &tspec);
+        switch( r ) {
+        case 0:
+            return true;
+        case ETIMEDOUT:
+            return false;
+        default:
+            throw std::logic_error(tsprintf("pthread_cond_timedwait failed (r=%i)", r));
+                
+        }
+    }
 };
 
 class thread {
     pthread_t thread_;
 public:
+    explicit thread(): thread_() {}
     explicit thread(pthread_t thread): thread_(thread) {}
     static thread current() { return thread(::pthread_self()); }
     
     static void sleep(long milliseconds);
-    typedef void* (thread_entry)(void*);
+    typedef void* (*thread_entry)(void*);
 
     static thread start( runnable job );
     /// Start a detached thread

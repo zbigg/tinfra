@@ -11,7 +11,7 @@
 
 SUITE(tinfra) {
     
-    TINFRA_MODULE_TRACER(runner_test);
+    //tinfra::module_tracer runner_test_tracer("runner_test");
     
     using tinfra::runner;
     using tinfra::runnable_ptr;

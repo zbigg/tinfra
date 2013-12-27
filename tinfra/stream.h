@@ -53,6 +53,7 @@ class position_controller {
 #endif
 
 std::auto_ptr<input_stream>  create_file_input_stream(tstring const& name);
+std::auto_ptr<input_stream>  create_file_input_stream(tstring const& name, size_t buffer_size);
 
 /*
     to be rethinked!
@@ -75,15 +76,31 @@ enum memory_strategy {
 };
 
 std::auto_ptr<input_stream>  create_memory_input_stream(const void* buffer, size_t size, memory_strategy buffer_copy);
+std::auto_ptr<output_stream> create_memory_output_stream(std::string& out);
 
-enum file_output_mode {
-    TRUNCATE = 1,
-    APPEND   = 2
-};
 
 std::auto_ptr<output_stream> create_file_output_stream(tstring const& name, int mode);
 
+/// read whole content of stream
+///
+/// Read all data until EOF is occured and return
+/// as std::string.
+///
+/// throws/failures:
+///    will rethrow, any error occured in output.read(), 
+///    will retrrow bad_alloc, from std::string    
 std::string read_all(input_stream& input);
+
+/// write whole buffer to stream
+///
+/// Write all data (retrying as necessary) to target stream.
+/// 
+/// throws/failures:
+///    will rethrow, any error occured in output.write()
+///    std::runtime_error if output.write() returns 0
+void        write_all(output_stream& output, tstring const& data);
+
+void        stream_copy(input_stream& input, output_stream& out);
 
 } // end namespace tinfra
 
@@ -94,7 +111,6 @@ std::string read_all(input_stream& input);
 #include "win32/w32_stream.h"
 #else
 #include "posix/posix_stream.h"
-
 #endif // disabling of platform specific defs
 
 #endif // tinfra_stream_h_included

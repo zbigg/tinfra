@@ -3,11 +3,11 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include "tinfra/platform.h"
+#include "../platform.h"
+#ifdef TINFRA_W32
 
 #include "tinfra/subprocess.h"
-
-#include "tinfra/io/stream.h"
+#include "tinfra/file.h"
 #include "tinfra/fmt.h"
 #include "tinfra/win32.h"
 #include "tinfra/holder.h"
@@ -27,18 +27,12 @@ void holder<HANDLE>::release() {
 
 namespace win32 {
 
-using tinfra::io::stream;
-using tinfra::io::io_exception;
-using tinfra::io::open_native;
-
-static HANDLE open_null_for_subprocess(std::ios::openmode mode)
+static HANDLE open_null_for_subprocess(int mode)
 {
-    stream* stream = tinfra::io::open_file("NUL", mode);
-    HANDLE result = reinterpret_cast<HANDLE>(stream->native());
-    stream->release();
-    delete stream;
-    SetHandleInformation(result, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-    return result;
+    HANDLE h = reinterpret_cast<HANDLE>(file::open_native("NUL",mode));
+    
+    SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+    return h;
 }
 
 //
@@ -308,3 +302,6 @@ std::auto_ptr<subprocess> subprocess::create()
 }
 
 } // end namespace tinfra::win32
+
+#endif // TINFRA_W32
+

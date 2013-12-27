@@ -6,33 +6,24 @@ dnl
 dnl
 dnl Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-AC_INIT(
-    tinfra,
-    0.0.1 ,
-    [z.zagorski@gmail.com])
-AC_CONFIG_AUX_DIR([tinfra-support/autoconf])
-AC_CONFIG_SRCDIR([tinfra.bkl])
+AC_PREREQ([2.59])
+AC_INIT([tinfra],[0.0.2],[z.zagorski@gmail.com])
+AC_CONFIG_AUX_DIR([build/autoconf])
+AC_CONFIG_SRCDIR([tinfra/mo.h])
 AC_CONFIG_HEADER([tinfra/config.h])
+
+AC_MAKEFOO
 
 #CXXFLAGS="$CXXFLAGS -std=c++0x"
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
-AC_PROG_CPP
 AC_PROG_INSTALL
-AC_PROG_LN_S
+AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
-AC_CANONICAL_SYSTEM
-
-
-AC_BAKEFILE([m4_include(autoconf_inc.m4)])
-
-AC_CHECK_HEADERS([pthread.h time.h])
-
-AC_CHECK_FUNCS([opendir nanosleep usleep])
+AC_CANONICAL_TARGET
 
 case "$target" in
 *-mingw*|*-mingw32*)
@@ -48,12 +39,22 @@ esac
 
 AC_SUBST(CLIENT_CXXFLAGS)
 
-AC_CHECK_LIB(socket, socket)
-AC_CHECK_LIB(nsl,gethostbyname)
-AC_CHECK_FUNC(strncasecmp)
-AC_CHECK_FUNC(strnicmp)
-AC_CHECK_FUNC(hstrerror)
 
+AC_CHECK_HEADERS([pthread.h time.h execinfo.h ])
+AC_CHECK_FUNCS([opendir nanosleep usleep backtrace hstrerror strnicmp strncasecmp])
+
+AC_SEARCH_LIBS([socket], [socket], 
+    [AC_DEFINE([HAVE_SOCKET], [1], [socket function available])])
+    
+AC_SEARCH_LIBS([gethostbyname],[nsl],
+    [AC_DEFINE([HAVE_GETHOSTBYNAME], [1], [gethostbyname function available])])
+    
+AC_SEARCH_LIBS([clock_gettime],[rt],
+    [AC_DEFINE([HAVE_CLOCK_GETTIME], [1], [clock_gettime function available])])
+
+AC_SEARCH_LIBS([dladdr], [dl], 
+    [AC_DEFINE([HAVE_DLADDR], [1], [dladdr function available])])
+    
 AC_CONFIG_FILES([Makefile  tinfra.pc tinfra-test.pc])
 AC_OUTPUT
 
