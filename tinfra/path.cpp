@@ -58,7 +58,7 @@ static tstring remove_duplicate_slashes_at_ends(tstring const& other)
     return remove_duplicate_initial_slashes(
                remove_duplicate_trailing_slashes(other));
 }
-static size_t calc_join_length(tstring const& s, size_t& result, bool& need_sep_flag)
+static void calc_join_length(tstring const& s, size_t& result, bool& need_sep_flag)
 {
     if( s.size() > 0 ) {
         if( need_sep_flag ) {
