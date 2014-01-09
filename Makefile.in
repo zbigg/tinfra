@@ -192,7 +192,7 @@ test_fatal_exception_int: test_fatal_exception
 test_fatal_exception_segv: test_fatal_exception
 	./test_fatal_exception segv
 	
-PROGRAMS=test_fatal_exception
+noinst_PROGRAMS=test_fatal_exception
 #TBD, tests/fatal_exception_test.cpp
 
 tinfra_TEST_SOURCES = \
