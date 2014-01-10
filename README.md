@@ -1,7 +1,9 @@
-tinfra - this is a next experimental C++ providing general programmer support for "everything(tm)".
+tinfra - C++ helper library
 ===================
 
 [![Build Status](https://travis-ci.org/zbigg/tinfra.png)](https://travis-ci.org/zbigg/tinfra)
+
+This is a next experimental C++ providing general programmer support for "everything(tm)".
 
 Some highlights:
 
