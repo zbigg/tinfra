@@ -160,6 +160,29 @@ tinfra_test_SOURCES  = \
 	tinfra/test.h \
 	tinfra/test_macros.h
 
+#
+# tinfra-xml
+#
+TINFRA_XML_USE_EXPAT_PARSER=@TINFRA_XML_USE_EXPAT_PARSER@
+
+tinfra-xml_HEADERS = \
+	tinfra/xml_builder.h \
+	tinfra/xml_event_buffer.h \
+	tinfra/xml_parser.h \
+	tinfra/xml_stream.h \
+	tinfra/xml_writer.h
+
+tinfra-xml_SOURCES = \
+	tinfra/xml_builder.cpp \
+	tinfra/xml_writer.cpp \
+	$(tinfra-xml_HEADERS)
+
+ifeq ($(TINFRA_XML_USE_EXPAT_PARSER),1)
+tinfra-xml_SOURCES += tinfra/xml_parser_expat.cpp
+endif
+
+STATIC_LIBRARIES += tinfra-xml
+
 
 
 #SHARED_LIBRARIES += tinfra
@@ -241,15 +264,22 @@ tinfra_TEST_SOURCES = \
 	tests/variant_test.cpp \
 	tests/vtpath_test.cpp
 
+tinfra-xml_TEST_SOURCES = \
+	tests/test_main.cpp \
+	tests/xml_builder_test.cpp \
+	tests/xml_writer_test.cpp
+
+tinfra-xml_test_program_LINK_DEPS = tinfra-xml tinfra_test tinfra
+
 # install tinfra headers
-tinfra_headers_FILES=$(tinfra_HEADERS)
+tinfra_headers_FILES=$(tinfra_HEADERS) $(tinfra-xml_HEADERS)
 tinfra_headers_INSTALL_DEST=$(prefix)/include
-tinfra_headers_GENERATED_FILES=tinfra/config.h
+#tinfra_headers_GENERATED_FILES=tinfra/config-pub.h
 
 PUBLIC_COMPONENTS += tinfra_headers
 
 # install tinfra.pc
-tinfra_pkg_config_FILES = tinfra.pc tinfra-test.pc
+tinfra_pkg_config_FILES = tinfra.pc tinfra-test.pc tinfra-xml.pc
 tinfra_pkg_config_INSTALL_DEST=$(libdir)/pkgconfig
 PUBLIC_COMPONENTS += tinfra_pkg_config
 
@@ -276,7 +306,8 @@ AUTOCONF_GENERATED_FILES += \
 	tinfra/config-pub-autoconf.h \
 	tinfra/config-priv-autoconf.h \
 	tinfra.pc \
-	tinfra-test.pc
+	tinfra-test.pc \
+	tinfra-xml.pc
 
 #TEST_PROGRAMS += tinfra
 

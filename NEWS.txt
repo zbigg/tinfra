@@ -12,6 +12,7 @@ version 0.0.3, releases 2013-xx-xx
     * fmt: refactored, added tsprintf, tprintf functions (see fmt.h) (ABI)
     * trace.h: refactored, new concept documented
     * io/stream.h: finally removed
+    * tinfra-xml - xml writer & parser (based on expat) incorporated
 
    new:
     * fs.h: symlink support: symlink, readlink and realpath added (wraps POSIX)

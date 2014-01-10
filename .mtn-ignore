@@ -20,7 +20,8 @@
 ^tinfra/config-pub-autoconf.h$
 ^test_fatal_exception
 ^unittests
-^tinfra.pc
+^tinfra.pc$
+^tinfra-xml.pc$
 \.gcda$
 \.gcno$
-^tinfra-test.pc
+^tinfra-test.pc$

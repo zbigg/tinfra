@@ -20,6 +20,8 @@ tinfra _main_ modules
          - could be "devirtualized"
          - is missing upcast support
          - probably any::from_copy() should be also default constructor
+         - update MAY-2013
+            - it's has shitty, hidden "referential" not "value" semantics
     
     adaptable.h - DATA_STRUCTURES
         sandbox mode, not used by any project

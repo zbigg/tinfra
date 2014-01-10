@@ -12,6 +12,9 @@
 /* Define to 1 if you have the <execinfo.h> header file. */
 #undef HAVE_EXECINFO_H
 
+/* Define to 1 if you have the <expat.h> header file. */
+#undef HAVE_EXPAT_H
+
 /* gethostbyname function available */
 #undef HAVE_GETHOSTBYNAME
 
@@ -89,6 +92,9 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* Have expat.h with XML SAX parser */
+#undef TINFRA_EXPAT_H
 
 /* Have pthread.h with posix threads */
 #undef TINFRA_HAVE_PTHREAD_H

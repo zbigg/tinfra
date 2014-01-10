@@ -61,8 +61,20 @@ AC_SEARCH_LIBS([clock_gettime],[rt],
 
 AC_SEARCH_LIBS([dladdr], [dl], 
     [AC_DEFINE([HAVE_DLADDR], [1], [dladdr function available])])
-    
-AC_CONFIG_FILES([Makefile  tinfra.pc tinfra-test.pc])
+
+TINFRA_XML_USE_EXPAT_PARSER=0
+AC_CHECK_HEADERS([expat.h],[
+    AC_DEFINE(TINFRA_EXPAT_H,1,[Have expat.h with XML SAX parser])
+    AC_CHECK_LIB(expat, XML_ParseBuffer,
+        [
+            TINFRA_XML_USE_EXPAT_PARSER=1
+            TINFRA_XML_LIBS=-lexpat
+        ])
+    ])
+AC_SUBST(TINFRA_XML_USE_EXPAT_PARSER)
+AC_SUBST(TINFRA_XML_LIBS)
+
+AC_CONFIG_FILES([Makefile tinfra.pc tinfra-test.pc tinfra-xml.pc])
 AC_OUTPUT
 
 cat << EOF

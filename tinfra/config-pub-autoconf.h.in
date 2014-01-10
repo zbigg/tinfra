@@ -92,3 +92,7 @@
 
 /* Have pthread.h with posix threads */
 #undef TINFRA_HAVE_PTHREAD_H
+
+/* Have expat.h with XML SAX parser */
+#undef TINFRA_EXPAT_H
+
