@@ -16,8 +16,8 @@
 ^configure$
 ^aclocal.m4$
 ^test_result
-^tinfra/config.h$
-^tinfra/config.h.in$
+^tinfra/config-priv-autoconf.h$
+^tinfra/config-pub-autoconf.h$
 ^test_fatal_exception
 ^unittests
 ^tinfra.pc

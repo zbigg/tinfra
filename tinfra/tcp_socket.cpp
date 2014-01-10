@@ -4,6 +4,7 @@
 //
 
 #include "platform.h"
+#include "config-priv.h"
 
 #include "tcp_socket.h" // we implement this
 

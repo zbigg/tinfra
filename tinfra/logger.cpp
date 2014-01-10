@@ -1,5 +1,7 @@
 #include "logger.h" // we implement this
 
+#include "config-priv.h"
+
 #include "stream.h" // for tinfra::err
 #include "trace.h"  // for TINFRA_NULL_SOURCE_LOCATION()
 #include "path.h"   // for basename

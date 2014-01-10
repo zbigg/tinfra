@@ -32,40 +32,18 @@
 #define TINFRA_PRETTY_FUNCTION __func__
 #define TINFRA_SHORT_FUNCTION __func__
 #endif
-    
 
-
-#ifdef _MSC_VER
-#pragma warning( disable: 4512) // assignment operator could not be generated
-#pragma warning( disable: 4511) // copy constructor could not be generated
-#pragma warning( disable: 4312) // 
-#pragma warning( disable: 4127) // conditional expression is constant
-
-// some strange warning disablers for recent visuals
-// see http://msdn.microsoft.com/en-us/library/aa985965(VS.80).aspx
-
-#define _CRT_SECURE_NO_WARNINGS  1 // yeah, good idea. warn about correct C++ usages
-#define _CRT_NONSTDC_NO_WARNINGS 1 // because of someone paranoia
-#define _SCL_SECURE_NO_WARNINGS  1 // this one is extremly stupid 
-
-#undef HAVE_SYS_TIME_H
-#undef HAVE_OPENDIR
-
-#define HAVE_TIME_H 
-#define HAVE_IO_H
-#define HAVE_FINDFIRST
-
-
-#else
-#include "tinfra/config.h"
-#endif
-
+//
+// C++ 11
+//
 #if defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L)
 #define TINFRA_CXX11
 #define TINFRA_HAS_VARIADIC_TEMPLATES
 #endif
 
-#include <ios>
+//
+// standard sizes in tinfra
+//
 #include <cstddef>
 #ifdef TINFRA_CXX11
 #include <cstdint>  // for intptr_t as defined in C++11
@@ -75,10 +53,12 @@
 
 namespace tinfra {
 	using std::size_t;
-	using std::streamsize;
 	using ::intptr_t;
 }
 
+//
+// LIKELY & UNLIKELY
+//
 #ifdef __GNUC__
 
 #define TINFRA_LIKELY(x)       __builtin_expect((x),true)
@@ -92,3 +72,4 @@ namespace tinfra {
 #endif
 
 #endif // tinfra_platform_h_included
+

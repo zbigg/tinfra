@@ -5,6 +5,7 @@
 
 
 #include "tinfra/platform.h"
+#include "config-priv.h"
 
 #include "tinfra/fs.h"
 #include "tinfra/path.h"

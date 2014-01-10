@@ -3,6 +3,7 @@
 //
 
 #include "tinfra/platform.h"
+#include "config-priv.h"
 
 #include "tinfra/path.h"
 #include "tinfra/fs.h"

@@ -31,7 +31,10 @@ tinfra_HEADERS = \
 	tinfra/buffered_stream.h \
 	tinfra/cli.h \
 	tinfra/cmd.h \
-	tinfra/config.h \
+	tinfra/config-pub.h \
+	tinfra/config-pub-autoconf.h \
+	tinfra/config-priv.h \
+	tinfra/config-priv-autoconf.h \
 	tinfra/db.h \
 	tinfra/exeinfo.h \
 	tinfra/fail.h \
@@ -250,12 +253,15 @@ tinfra_pkg_config_FILES = tinfra.pc tinfra-test.pc
 tinfra_pkg_config_INSTALL_DEST=$(libdir)/pkgconfig
 PUBLIC_COMPONENTS += tinfra_pkg_config
 
-tinfra_EXTRA_DIST=\
+EXTRA_DIST += \
 	configure.ac \
 	configure \
-	aclocal.m4 \
-	tinfra/config.h.in \
-	Makefile.in \
+	tinfra/config-pub-autoconf.h.in \
+	tinfra/config-priv-autoconf.h.in \
+	build/m4/makefoo.m4 \
+	Makefile.in
+
+tinfra_EXTRA_DIST=\
 	tinfra.pc.in \
 	tests/resources/sample.exe.map \
 	tests/resources/testtest_dir/a \
@@ -267,7 +273,8 @@ tinfra_test_EXTRA_DIST=\
 	tinfra-test.pc.in
 
 AUTOCONF_GENERATED_FILES += \
-	tinfra/config.h \
+	tinfra/config-pub-autoconf.h \
+	tinfra/config-priv-autoconf.h \
 	tinfra.pc \
 	tinfra-test.pc
 

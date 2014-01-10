@@ -8,9 +8,13 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
 AC_INIT([tinfra],[0.0.2],[z.zagorski@gmail.com])
+
+m4_include([build/m4/makefoo.m4])
+
 AC_CONFIG_AUX_DIR([build/autoconf])
 AC_CONFIG_SRCDIR([tinfra/mo.h])
-AC_CONFIG_HEADER([tinfra/config.h])
+AC_CONFIG_HEADER([tinfra/config-priv-autoconf.h])
+AC_CONFIG_HEADER([tinfra/config-pub-autoconf.h])
 
 AC_MAKEFOO
 
@@ -40,7 +44,10 @@ esac
 AC_SUBST(CLIENT_CXXFLAGS)
 
 
-AC_CHECK_HEADERS([pthread.h time.h execinfo.h ])
+AC_CHECK_HEADERS([pthread.h],
+    AC_DEFINE(TINFRA_HAVE_PTHREAD_H,1,[Have pthread.h with posix threads])
+    )
+AC_CHECK_HEADERS([time.h execinfo.h])
 AC_CHECK_FUNCS([opendir nanosleep usleep backtrace hstrerror strnicmp strncasecmp])
 
 AC_SEARCH_LIBS([socket], [socket], 

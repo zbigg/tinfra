@@ -1,4 +1,7 @@
 #include "platform.h"
+#include "config-priv.h"
+
+
 #include "time.h"
 #include "assert.h"
 #include "os_common.h"

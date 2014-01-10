@@ -4,6 +4,9 @@
 //
 
 #include "tinfra/platform.h"
+
+#include "config-priv.h"
+
 #include "tinfra/string.h"
 #include "tinfra/tstring.h"
 

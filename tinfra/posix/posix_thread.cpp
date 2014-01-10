@@ -9,6 +9,9 @@
 //
 
 #include "../platform.h"
+#include "../config-priv.h"
+
+
 #ifdef TINFRA_POSIX
 
 #include "tinfra/thread.h"

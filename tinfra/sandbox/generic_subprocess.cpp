@@ -3,6 +3,8 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
+#include "../config-priv.h"
+
 #include <stdio.h>
 
 #include "tinfra/subprocess.h"

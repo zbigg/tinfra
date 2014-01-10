@@ -3,8 +3,9 @@
 // This software licensed under terms described in LICENSE.txt
 //
 
-#include <typeinfo>
+#include "config-priv.h"
 
+#include <typeinfo>
 #include "typeinfo.h"
 
 #ifdef __GNUC__
