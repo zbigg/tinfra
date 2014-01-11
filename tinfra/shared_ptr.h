@@ -226,7 +226,7 @@ shared_ptr<T>& shared_ptr<T>::operator=(shared_ptr<T> const& p)
 {
     //TINFRA_TRACE(shared_ptr_tracer, "tinfra::shared_ptr: operator=");
     //TINFRA_TRACE_VAR(shared_ptr_tracer, this->ptr_);
-    int rc = refcount_.ref_ ? (long)(*refcount_.ref_) : -1;
+    //int rc = refcount_.ref_ ? (long)(*refcount_.ref_) : -1;
     //TINFRA_TRACE_VAR(shared_ptr_tracer, rc);
     if( this == &p )
         return *this;
