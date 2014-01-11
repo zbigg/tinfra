@@ -314,7 +314,7 @@ tinfra_headers_INSTALL_DEST=$(prefix)/include
 PUBLIC_COMPONENTS += tinfra_headers
 
 # install tinfra.pc
-tinfra_pkg_config_FILES = tinfra.pc tinfra-test.pc tinfra-xml.pc
+tinfra_pkg_config_FILES = tinfra.pc tinfra-test.pc tinfra-xml.pc tinfra-regexp.pc
 tinfra_pkg_config_INSTALL_DEST=$(libdir)/pkgconfig
 PUBLIC_COMPONENTS += tinfra_pkg_config
 
@@ -342,7 +342,8 @@ AUTOCONF_GENERATED_FILES += \
 	tinfra/config-priv-autoconf.h \
 	tinfra.pc \
 	tinfra-test.pc \
-	tinfra-xml.pc
+	tinfra-xml.pc \
+	tinfra-regexp.pc
 
 #TEST_PROGRAMS += tinfra
 

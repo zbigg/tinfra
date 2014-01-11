@@ -91,7 +91,7 @@ AC_SUBST(TINFRA_REGEXP_LIBS)
 AC_SUBST(TINFRA_REGEXP_CXXFLAGS)
 AC_SUBST(TINFRA_HAVE_PCRE)
 
-AC_CONFIG_FILES([Makefile tinfra.pc tinfra-test.pc tinfra-xml.pc])
+AC_CONFIG_FILES([Makefile tinfra.pc tinfra-test.pc tinfra-xml.pc tinfra-regexp.pc])
 AC_OUTPUT
 
 cat << EOF
