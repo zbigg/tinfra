@@ -307,7 +307,7 @@ tinfra-regexp_test_program_LINK_DEPS = tinfra-regexp tinfra_test tinfra
 tinfra-regexp_test_program_LIBS = $(TINFRA_REGEXP_LIBS)
 
 # install tinfra headers
-tinfra_headers_FILES=$(tinfra_HEADERS) $(tinfra-xml_HEADERS)
+tinfra_headers_FILES=$(tinfra_HEADERS) $(tinfra-xml_HEADERS) $(tinfra-regexp_HEADERS)
 tinfra_headers_INSTALL_DEST=$(prefix)/include
 #tinfra_headers_GENERATED_FILES=tinfra/config-pub.h
 
