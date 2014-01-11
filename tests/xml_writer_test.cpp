@@ -17,6 +17,7 @@ public:
 	virtual int write(const char* data, int size)
 	{
 		buf_.write(data, size);
+		return size;
 	}
 	virtual void close() {}    
 	virtual void sync() {}
