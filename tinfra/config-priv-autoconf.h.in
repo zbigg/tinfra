@@ -36,6 +36,9 @@
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
 
+/* Define to 1 if you have the <regex.h> header file. */
+#undef HAVE_REGEX_H
+
 /* socket function available */
 #undef HAVE_SOCKET
 
@@ -98,3 +101,9 @@
 
 /* Have pthread.h with posix threads */
 #undef TINFRA_HAVE_PTHREAD_H
+
+/* Have regex.h with posix threads */
+#undef TINFRA_HAVE_REGCOMP
+
+/* Have PCRE - perl compatible regural expression library */
+#undef TINFRA_PCRE

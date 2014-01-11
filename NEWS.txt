@@ -13,6 +13,7 @@ version 0.0.3, releases 2013-xx-xx
     * trace.h: refactored, new concept documented
     * io/stream.h: finally removed
     * tinfra-xml - xml writer & parser (based on expat) incorporated
+    * tinfra-regexp - regexp parser (based on PCRE) incorporated
 
    new:
     * fs.h: symlink support: symlink, readlink and realpath added (wraps POSIX)

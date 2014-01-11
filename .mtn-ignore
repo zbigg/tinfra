@@ -22,6 +22,7 @@
 ^unittests
 ^tinfra.pc$
 ^tinfra-xml.pc$
+^tinfra-regexp.pc$
 \.gcda$
 \.gcno$
 ^tinfra-test.pc$

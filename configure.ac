@@ -74,6 +74,23 @@ AC_CHECK_HEADERS([expat.h],[
 AC_SUBST(TINFRA_XML_USE_EXPAT_PARSER)
 AC_SUBST(TINFRA_XML_LIBS)
 
+AC_CHECK_HEADERS([regex.h],
+    AC_DEFINE(TINFRA_HAVE_REGCOMP,1,[Have regex.h with posix threads])
+    )
+
+TINFRA_HAVE_PCRE=0
+PKG_CHECK_MODULES([PCRE], [libpcre >= 7.8],
+	[
+        AC_DEFINE(TINFRA_PCRE,1,[Have PCRE - perl compatible regural expression library])
+        TINFRA_REGEXP_LIBS="$PCRE_LIBS"
+        TINFRA_REGEXP_CXXFLAGS="$PCRE_CFLAGS"
+        TINFRA_HAVE_PCRE=1
+	])
+
+AC_SUBST(TINFRA_REGEXP_LIBS)
+AC_SUBST(TINFRA_REGEXP_CXXFLAGS)
+AC_SUBST(TINFRA_HAVE_PCRE)
+
 AC_CONFIG_FILES([Makefile tinfra.pc tinfra-test.pc tinfra-xml.pc])
 AC_OUTPUT
 

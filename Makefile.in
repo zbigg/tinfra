@@ -15,6 +15,7 @@ INSTALL=@INSTALL@
 INSTALL_DATA=@INSTALL_DATA@
 CXXFLAGS=@CXXFLAGS@
 LIBS=@LIBS@
+LDFLAGS=@LDFLAGS@
 
 default: build
 
@@ -164,6 +165,7 @@ tinfra_test_SOURCES  = \
 # tinfra-xml
 #
 TINFRA_XML_USE_EXPAT_PARSER=@TINFRA_XML_USE_EXPAT_PARSER@
+TINFRA_XML_LIBS=@TINFRA_XML_LIBS@
 
 tinfra-xml_HEADERS = \
 	tinfra/xml_builder.h \
@@ -181,9 +183,34 @@ ifeq ($(TINFRA_XML_USE_EXPAT_PARSER),1)
 tinfra-xml_SOURCES += tinfra/xml_parser_expat.cpp
 endif
 
+tinfra-xml_CXXFLAGS += -I.
+
 STATIC_LIBRARIES += tinfra-xml
 
+#
+# tinfra-regexp
+#
 
+TINFRA_HAVE_PCRE=@TINFRA_HAVE_PCRE@
+TINFRA_REGEXP_LIBS=@TINFRA_REGEXP_LIBS@
+TINFRA_REGEXP_CXXFLAGS=@TINFRA_REGEXP_CXXFLAGS@
+tinfra-regexp_HEADERS = \
+	tinfra/regexp.h \
+
+tinfra-regexp_SOURCES = \
+	tinfra/regexp.cpp \
+	$(tinfra_HEADERS)
+
+ifeq ($(TINFRA_HAVE_PCRE),1)
+tinfra-regexp_SOURCES += tinfra/regexp_pcre.cpp
+tinfra-regexp_CXXFLAGS += $(TINFRA_REGEXP_CXXFLAGS)
+
+else
+tinfra-regexp_SOURCES += tinfra/regexp_posix.cpp
+endif
+
+
+STATIC_LIBRARIES += tinfra-regexp
 
 #SHARED_LIBRARIES += tinfra
 STATIC_LIBRARIES += tinfra
@@ -270,6 +297,14 @@ tinfra-xml_TEST_SOURCES = \
 	tests/xml_writer_test.cpp
 
 tinfra-xml_test_program_LINK_DEPS = tinfra-xml tinfra_test tinfra
+tinfra-xml_test_program_LIBS = $(TINFRA_XML_LIBS)
+
+tinfra-regexp_TEST_SOURCES = \
+	tests/test_main.cpp \
+	tests/test_regexp.cpp
+
+tinfra-regexp_test_program_LINK_DEPS = tinfra-regexp tinfra_test tinfra
+tinfra-regexp_test_program_LIBS = $(TINFRA_REGEXP_LIBS)
 
 # install tinfra headers
 tinfra_headers_FILES=$(tinfra_HEADERS) $(tinfra-xml_HEADERS)
