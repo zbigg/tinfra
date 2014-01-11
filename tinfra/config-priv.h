@@ -22,7 +22,7 @@
 #define HAVE_FINDFIRST
 
 #else
-#include "config-priv-autoconf.h"
+#include "tinfra/config-priv-autoconf.h"
 #endif
 
 #endif // tinfra_int_config_h_included
