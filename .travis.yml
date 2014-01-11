@@ -11,6 +11,11 @@ compiler:
   - clang
   - gcc
 
+branches:
+  only:
+    - master
+    - pl.reddix.tinfra/sandbox
+
 before_script:
   - git clone https://github.com/zbigg/makefoo.git makefoo-master
   - aclocal -I ./makefoo-master
