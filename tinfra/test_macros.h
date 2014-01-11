@@ -1,4 +1,4 @@
-//
+        //
 // Copyright (c) 2010, Zbigniew Zagorski
 // This software licensed under terms described in LICENSE.txt
 //
@@ -133,6 +133,29 @@ struct equality_helper<unsigned, int> {
 		}
 	}
 };
+
+template <>
+struct equality_helper<unsigned long, int> {
+	bool operator()(unsigned long a, int b) {
+		if( b < 0 ) {
+			return false;
+		} else {
+			return (unsigned long)b == a;
+		}
+	}
+};
+
+template <>
+struct equality_helper<int, unsigned long> {
+	bool operator()(int a, unsigned long b) {
+		if( a < 0 ) {
+			return false;
+		} else {
+			return (unsigned long)a == b;
+		}
+	}
+};
+
 
 template <typename T1, typename T2>
 bool equals(T1 const& a, T2 const& b)

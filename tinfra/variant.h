@@ -256,7 +256,7 @@ inline bool variant::has_key(key_type const& k) const
 
 inline bool variant::has_key(int idx) const
 {
-    return this->is_array() && idx >= 0 && idx < this->size();
+    return this->is_array() && idx >= 0 && size_t(idx) < this->size();
 }
 
 // operator == 
