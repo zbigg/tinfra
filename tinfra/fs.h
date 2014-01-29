@@ -9,6 +9,7 @@
 #include "tinfra/tstring.h"
 #include "tinfra/generator.h"
 
+#include <time.h>
 #include <string>
 #include <vector>
 #include <memory>

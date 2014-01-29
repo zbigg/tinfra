@@ -97,13 +97,13 @@ void regexp::do_compile(const char* pattern, int options)
     if( re_ == 0 ) {
         if( err_ptr == 0 ) 
             err_ptr = "unknown error";
-        throw std::logic_error(fmt("bad regular expression '%s': %s") % pattern % err_ptr);
+        throw std::logic_error(tsprintf("bad regular expression '%s': %s", pattern, err_ptr));
     }
     extra_ = pcre_study(TT_PCRE(re_), 0,  &err_ptr);
     if( extra_ == 0 && err_ptr != 0 ) {
         // TODO: this should be abort because according to pcreapi manual
         //       it shouldn't fail with fresh and correct re_
-        throw std::runtime_error(fmt("pcre_study failed: %s") % err_ptr);
+        throw std::runtime_error(tsprintf("pcre_study failed: %s", err_ptr));
     }
     {
         int cc = 0;
@@ -111,7 +111,7 @@ void regexp::do_compile(const char* pattern, int options)
         if( rc != 0 ) {
             // TODO: this should be abort because according to pcreapi manual
             //       it shouldn't fail with fresh and correct re_
-            throw std::runtime_error(fmt("pcre_fullinfo(PCRE_INFO_CAPTURECOUNT) failed: %i") % rc);
+            throw std::runtime_error(tsprintf("pcre_fullinfo(PCRE_INFO_CAPTURECOUNT) failed: %i", rc));
         }
         patterns_count_ = cc;
     }
@@ -134,7 +134,7 @@ bool regexp::do_match(match_result_processor* result, const char* str, size_t le
     
     if( rc < 0 ) {
         const char* err_ptr = "unknown error";
-        throw std::logic_error(fmt("PCRE match failed: %s") % err_ptr);
+        throw std::logic_error(tsprintf("PCRE match failed: %s", err_ptr));
     }
     if( result != 0 ) {
         result->prepare(groups_count()+1);

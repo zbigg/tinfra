@@ -36,7 +36,7 @@ namespace thread {
 
 static void thread_error(const char* message, int rc)
 {
-    throw std::runtime_error(fmt("failed to %s: %i") % message % rc);
+    throw std::runtime_error(tsprintf("failed to %s: %i", message, rc));
 }
 
 struct thread_entry_param {
