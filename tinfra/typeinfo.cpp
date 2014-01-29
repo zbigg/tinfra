@@ -8,12 +8,10 @@
 #include <typeinfo>
 #include "typeinfo.h"
 
-#ifdef __GNUC__
-#define HAVE__CXA_DEMANGLE
-#endif
 
-#ifdef HAVE__CXA_DEMANGLE
+#ifdef HAVE_CXXABI_H
 #include <cxxabi.h>
+#define HAVE__CXA_DEMANGLE
 #endif
 
 #include <cstdlib>

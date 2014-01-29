@@ -47,7 +47,7 @@ AC_SUBST(CLIENT_CXXFLAGS)
 AC_CHECK_HEADERS([pthread.h],
     AC_DEFINE(TINFRA_HAVE_PTHREAD_H,1,[Have pthread.h with posix threads])
     )
-AC_CHECK_HEADERS([time.h execinfo.h])
+AC_CHECK_HEADERS([time.h execinfo.h cxxabi.h])
 AC_CHECK_FUNCS([opendir nanosleep usleep backtrace hstrerror strnicmp strncasecmp])
 
 AC_SEARCH_LIBS([socket], [socket], 

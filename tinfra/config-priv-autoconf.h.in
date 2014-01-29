@@ -6,6 +6,9 @@
 /* clock_gettime function available */
 #undef HAVE_CLOCK_GETTIME
 
+/* Define to 1 if you have the <cxxabi.h> header file. */
+#undef HAVE_CXXABI_H
+
 /* dladdr function available */
 #undef HAVE_DLADDR
 
