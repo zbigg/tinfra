@@ -36,7 +36,7 @@ TEST_PROGRAMS += exception_info_gcc_static_test
 
 
 # we host call ranger for a while
-call_ranger_DIR ?= $(exception_info_DIR)
+call_ranger_test_DIR ?= $(exception_info_DIR)
 call_ranger_test_DIR=$(exception_info_DIR)
 
 

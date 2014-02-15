@@ -59,6 +59,8 @@ void tinfra_safe_debug_print(tinfra::output_stream& out, long const*);
 void tinfra_safe_debug_print(tinfra::output_stream& out, unsigned long const*);
 void tinfra_safe_debug_print(tinfra::output_stream& out, long long const*);
 void tinfra_safe_debug_print(tinfra::output_stream& out, unsigned long long const*);
+void tinfra_safe_debug_print(tinfra::output_stream& out, void* const*);
+void tinfra_safe_debug_print(tinfra::output_stream& out, void const* const*);
 void tinfra_safe_debug_print(tinfra::output_stream& out, const char**);
 void tinfra_safe_debug_print(tinfra::output_stream& out, std::string const*);
 

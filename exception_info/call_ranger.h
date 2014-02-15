@@ -90,18 +90,38 @@ struct call_ranger_variable {
 	safe_debug_print_func printer; // object printer function
 };
 
+struct call_ranger_frame {
+    // where call ranger has been instantiated ?
+    const tinfra::source_location* source_location;
+
+    // previous stack
+    call_ranger_frame*              previous;
+
+    // registered local variables
+    call_ranger_variable*           variables;
+};
+
+void dump_call_info(call_ranger_frame const& frame, tinfra::output_stream& out, bool recursive);
+void log_exceptional_leave(call_ranger_frame const& frame, tinfra::output_stream& out, bool recursive);
+
+struct call_ranger_callback {
+    virtual ~call_ranger_callback() {}
+    virtual void exceptional_leave(call_ranger_frame& data) = 0;
+};
+
 struct call_ranger {
-    call_ranger(tinfra::source_location const* source_location);
-    ~call_ranger();
+    // thread local interface
+    static call_ranger_frame* get_thread_local();
 
-    static call_ranger* get_thread_local();
+    // global settings
+    static void                  init_default_callback();
+    static call_ranger_callback* get_default_callback();
+    static void                  set_default_callback(call_ranger_callback*);
 
-    void dump_info(tinfra::output_stream& out, bool recursive);
-    void inform_about_exceptional_leave(tinfra::output_stream& out);
-    
-    void push_variable(call_ranger_variable*);
+    // internal details
+    call_ranger_frame* get_frame();
 
-    call_ranger* get_previous() const;
+    call_ranger_frame* get_previous_frame() const;
         /// get pointer to previous (i.e parent)
         /// call_ranger for this thread 
 
@@ -112,12 +132,15 @@ struct call_ranger {
     const call_ranger_variable* get_variables() const;
         /// return single linked list of variables connected to
         /// this instance
-private:
-    const tinfra::source_location* source_location;
-    call_ranger*          previous;
 
-    call_ranger_variable* variables;
+    call_ranger(tinfra::source_location const* source_location, call_ranger_callback* callback = 0);
+    ~call_ranger();
     
+    void push_variable(call_ranger_variable*);
+private:
+    call_ranger_frame      frame;
+    call_ranger_callback*  callback;
+
     void register_instance();
     void unregister_instance();
 };
@@ -132,18 +155,18 @@ private:
 // inline implementation
 //
 
-inline call_ranger::call_ranger(tinfra::source_location const* sl):
-    source_location(sl),
-    previous(0),
-    variables(0)
+inline call_ranger::call_ranger(tinfra::source_location const* sl, call_ranger_callback* callback)
 {
+    this->frame.source_location = sl;
+    this->frame.variables = 0;
+    this->callback  = callback;
     this->register_instance();
 }
 
 inline call_ranger::~call_ranger()
 {
-    if( tinfra::exception_info::is_exception_active() ) {
-        this->inform_about_exceptional_leave(tinfra::err);
+    if( TINFRA_UNLIKELY(tinfra::exception_info::is_exception_active() && this->callback) ) {
+        this->callback->exceptional_leave(this->frame);
     }
     this->unregister_instance();
 }
