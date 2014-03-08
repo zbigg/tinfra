@@ -67,6 +67,7 @@ tinfra_HEADERS = \
 	tinfra/queue.h \
 	tinfra/runner.h \
 	tinfra/runtime.h \
+	tinfra/safe_debug_print.h \
 	tinfra/server.h \
 	tinfra/shared_ptr.h \
 	tinfra/socket.h \
@@ -134,6 +135,7 @@ tinfra_SOURCES = \
 	tinfra/tcp_socket.cpp \
 	tinfra/internal_pipe.cpp \
 	tinfra/assert.cpp \
+	tinfra/safe_debug_print.cpp \
 	tinfra/text.cpp \
 	tinfra/fail.cpp \
 	tinfra/logger.cpp \
@@ -289,7 +291,8 @@ tinfra_TEST_SOURCES = \
 	tests/trace_test.cpp \
 	tests/tstring_test.cpp \
 	tests/variant_test.cpp \
-	tests/vtpath_test.cpp
+	tests/vtpath_test.cpp \
+	tests/safe_debug_print_test.cpp
 
 tinfra-xml_TEST_SOURCES = \
 	tests/test_main.cpp \
