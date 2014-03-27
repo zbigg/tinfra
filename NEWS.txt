@@ -25,6 +25,7 @@ version 0.0.3, releases 2013-xx-xx
     * variant: variant(string,int,double,bool,dict,array) added; same model as JSON
     * vtpath: JSONPath implementation on variant tree
     * json.h: json parser & writer based on variant
+    * safe_debug_string.h: new module
 
    fix:
     * socket: correctly handle interrupts (EINTR) on posix
