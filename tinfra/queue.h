@@ -12,39 +12,39 @@
 namespace tinfra {
 
 template<typename T>
-class queue: public std::list<T>  {
+class queue {
     tinfra::thread::monitor monitor_;
+    std::list<T> container;
 public:
     void put(T const& v)
     {
         tinfra::thread::synchronizator s(monitor_);
-        this->push_back(v);
-        if( this->size() == 1 ) 
+        this->container.push_back(v);
+        if( this->container.size() == 1 ) 
             s.broadcast();
-        
     }
-    
+
     T get() 
     {
         tinfra::thread::synchronizator s(monitor_);
-        
-        while( this->size() == 0 ) {
+
+        while( this->container.size() == 0 ) {
             s.wait();
         }
-        T result = this->front();
-        this->pop_front();
+        T result = this->container.front();
+        this->container.pop_front();
         return result;
     }
-    
+
     T peek(T const& def = T())
     {
         tinfra::thread::synchronizator s(monitor_);
-        
-        if( this->size() == 0 ) {
+
+        if( this->container.size() == 0 ) {
             return def;
         } else {
-            T result = this->front();
-            this->pop_front();
+            T result = this->container.front();
+            this->container.pop_front();
             return result;
         }
     }
