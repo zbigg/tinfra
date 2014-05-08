@@ -21,7 +21,7 @@ public:
 
     internal_pipe(int buffer_size);
 	~internal_pipe();
-    
+
     /// Blocking read from pipe.
     ///
     /// This method may block if pipe internal buffer is empty i.e there is 
@@ -46,12 +46,12 @@ public:
     ///
     /// May throw bad_alloc if buffer allocation fails.
     int write(const char* data, int size);
-    
+
     /// Synchronize buffers with underlying storage.
     ///
     /// Noop.
     void sync();
-    
+
     /// Close pipe.
     ///
     /// Mark that no more data will be written to this pipe (This flag actually marks an EOF)
@@ -69,7 +69,7 @@ private:
 
     class implementation_detail;
     std::auto_ptr<implementation_detail> impl;
-};    
+};
 } // end namespace tinfra
 
 #endif // tinfra_internal_pipe_h
