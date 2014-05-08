@@ -169,7 +169,7 @@ SUITE(tinfra)
         
         tinfra::write_file(name,"");
     }
-#if defined(__APPLE__) &&  defined(__MACH__)
+#if !(defined(__APPLE__) &&  defined(__MACH__))
     TEST(fs_localized_name_create)
     {
         test_fs_sandbox tmp_location;
