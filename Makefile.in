@@ -356,12 +356,20 @@ AUTOCONF_GENERATED_FILES += \
 # but in tests we're testing current source tree
 #MAKEFOO=$(top_srcdir)/../../
 
-tinfra_COMPONENTS=tinfra tinfra_test
+tinfra_COMPONENTS=\
+	tinfra \
+	tinfra_test \
+	tinfra-regexp \
+	tinfra-xml \
+	tinfra_pkg_config \
+	tinfra_headers \
+
 PACKAGES=tinfra
 
 PRODUCT=tinfra
 VERSION=0.0.3
 
+#MAKEFOO_NAMED_BUILDDIR:=1
 AUTOCONF_AUX_DIR=build/autoconf
 MAKEFOO_USE += native
 MAKEFOO_USE += test-program
