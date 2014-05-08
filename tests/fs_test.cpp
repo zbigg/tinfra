@@ -169,6 +169,7 @@ SUITE(tinfra)
         
         tinfra::write_file(name,"");
     }
+#if defined(__APPLE__) &&  defined(__MACH__)
     TEST(fs_localized_name_create)
     {
         test_fs_sandbox tmp_location;
@@ -181,7 +182,8 @@ SUITE(tinfra)
         CHECK_EQUAL(1, int(files.size()));
         CHECK_EQUAL(POLISH_NAME, files[0]);
     }
-    
+#endif
+
     void test_vfs(tinfra::vfs& fs)
     {
         using tinfra::fs::file_name_list;
