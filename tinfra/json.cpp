@@ -716,7 +716,7 @@ bool json_lexer::fetch_next(json_token& tok)
             tok.type = json_token::TOK_FALSE;
             TINFRA_TRACE(json_lexer_tracer, "readed TOK_FALSE");
             return true;
-        case 'n': // keywords: null
+        case 'n': // keywords: TOK_NULL
             self->consume_keyword("null");
             tok.type = json_token::TOK_NULL;
             TINFRA_TRACE(json_lexer_tracer, "readed NULL");
