@@ -12,6 +12,11 @@
 #include <cstdio>
 #include <cstring>
 #include <cctype>
+#include <cstdlib>
+
+#if __APPLE__ && __MACH__
+#include <mach-o/dyld.h>
+#endif
 
 namespace tinfra {
 
@@ -25,8 +30,26 @@ std::string get_exepath()
         if( tinfra::fs::exists("/proc/self/exe") ) {
             return tinfra::fs::readlink("/proc/self/exe");
         } 
-#endif   
-		return "";
+#endif
+#if __APPLE__ && __MACH__
+        const uint32_t  start_size = 4;
+        uint32_t size = start_size;
+        {
+	    char path[start_size];
+            if (_NSGetExecutablePath(path, &size) == 0)
+                return std::string(path);
+        }
+        char* path = reinterpret_cast<char*>(std::malloc(size));
+        std::string result;
+        if (_NSGetExecutablePath(path, &size) == 0) {
+            // TODO: yeah, we std::string const can throw here
+            // but who cares what happens in case of catastrophe like OOM
+            result = path;
+        }
+        std::free(path);
+        return result;
+#endif
+        return "";
     } else {
         return exepath;
     }
