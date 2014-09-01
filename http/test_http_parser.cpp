@@ -3,12 +3,14 @@
 #include <tinfra/tstring.h>
 #include <tinfra/trace.h>
 
-#include <unittest++/UnitTest++.h>
+#include <tinfra/test.h>
 
 #include <vector>
 #include <utility>
 #include <string>
 
+
+tinfra::public_tracer test_http_tracer("test_http");
 
 SUITE(tinfra_http) {
     using std::make_pair;
@@ -43,8 +45,8 @@ SUITE(tinfra_http) {
             tstring const& name, 
             tstring const& value)
         {
-            TINFRA_TRACE_VAR(name);
-            TINFRA_TRACE_VAR(value);
+            TINFRA_TRACE_VAR(test_http_tracer, name);
+            TINFRA_TRACE_VAR(test_http_tracer, value);
             headers.push_back(make_pair(name.str(), value.str()));
         }
         

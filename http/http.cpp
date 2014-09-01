@@ -1,11 +1,14 @@
 #include "http.h"
 
 #include <tinfra/regexp.h>
+#include <tinfra/trace.h>
 
 #include <limits>
 #include <cstdlib>
 
 namespace tinfra { namespace http {
+
+tinfra::public_tracer http_tracer("http");
 
 namespace S {
     symbol content_length("content_length");
@@ -47,7 +50,7 @@ int protocol_parser::process_input(tinfra::tstring const& input)
 
 void protocol_parser::eof(tinfra::tstring const& unparsed_input)
 {
-    TINFRA_TRACE_VAR(unparsed_input);
+    TINFRA_TRACE_VAR(http_tracer, unparsed_input);
     switch( state ) {
     case EXPECTING_RESET:
         return;

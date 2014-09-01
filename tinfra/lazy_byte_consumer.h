@@ -31,7 +31,7 @@ public:
 
     void wait_for_anything(step_method method) {
         waiting_for_ = ANYTHING;
-        next(method);
+        this->next(method);
     }
     
     void wait_for_bytes(size_t count, step_method method);
@@ -58,7 +58,7 @@ int lazy_byte_consumer<IMPL>::call(step_method m, tstring const& input)
 {
     switch( waiting_for_ ) {
     case NOTHING:
-        TINFRA_TRACE_VAR(input);
+        //TINFRA_TRACE_VAR(input);
         throw std::logic_error("lazy_byte_consumer doesn't expect input now");
     case ANYTHING:
         break;
@@ -89,7 +89,7 @@ void lazy_byte_consumer<IMPL>::wait_for_bytes(size_t count, step_method method)
 {
     waiting_for_ = COUNT;
     waiter_count_ = count;    
-    next(method);
+    this->next(method);
 }
 
 template<typename IMPL>
@@ -97,7 +97,7 @@ void lazy_byte_consumer<IMPL>::wait_for_delimiter(tstring const& delim, step_met
 {
     waiting_for_ = DELIMITER;
     waiter_delim_.assign(delim.data(), delim.size());
-    next(method);
+    this->next(method);
 }
 
 } // end namespace tinfra
