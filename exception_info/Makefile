@@ -1,6 +1,6 @@
 
 
-exception_info_DIR=.
+#exception_info_DIR=.
 include makefoo_configured_defs.mk
 
 include exception_info.mk

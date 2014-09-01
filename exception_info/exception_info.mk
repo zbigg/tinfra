@@ -60,8 +60,6 @@ call_ranger_test_DIR=$(exception_info_DIR)
 call_ranger_test_SOURCES=\
 	call_ranger.cpp \
 	call_ranger_test.cpp \
-	safe_debug_print.cpp \
-	safe_debug_print_test.cpp \
 	exception_hijack_cxa_dynamic.cpp
 
 ifdef TARGET_LINUX

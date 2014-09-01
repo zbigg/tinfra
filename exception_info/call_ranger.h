@@ -3,9 +3,9 @@
 
 #include "tinfra/trace.h"  // for tinfra::stacktrace_t
 #include "tinfra/stream.h" // for tinfra::output_stream, tinfra::err
+#include "tinfra/safe_debug_print.h" // for safe_debug_print_func & make_safe_debug_print_func
 
 #include "exception_info.h" // for 
-#include "safe_debug_print.h" // for safe_debug_print_func & make_safe_debug_print_func
 
 
 namespace tinfra {
