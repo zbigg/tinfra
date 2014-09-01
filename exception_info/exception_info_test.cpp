@@ -51,6 +51,16 @@ struct with_exception_check_in_destructor {
     {
         CHECK_EQUAL(this->expects_exception, tinfra::exception_info::is_exception_active());
         CHECK_EQUAL(this->expects_exception, std::uncaught_exception());
+        if( this->expects_exception ) {
+            using tinfra::exception_info;
+            exception_info r;
+
+            CHECK_EQUAL(true, exception_info::get_current_exception(r));
+
+            CHECK(r.exception_object != 0);
+            CHECK(r.exception_type = &typeid(int));
+            CHECK_EQUAL(666, *(reinterpret_cast<int*>(r.exception_object)));
+        }
     }
 };
 TEST(exception_info_visible_in_desctructor)

@@ -120,7 +120,8 @@ void log_exceptional_leave(call_ranger_frame const& frame, tinfra::output_stream
         // TBD, exception_what = ...
     }
     tinfra::tprintf(out,
-        "warning: exceptional leave of function: %s: %s\n",
+        "warning: exceptional leave of function: %s: %s (%s)\n",
+        frame.source_location->name,
         exception_name,
         exception_what
         );
