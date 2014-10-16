@@ -41,6 +41,15 @@
 #define TINFRA_HAS_VARIADIC_TEMPLATES
 #endif
 
+#ifdef TINFRA_CXX11
+#define TINFRA_CONSTEXPR constexpr
+#define TINFRA_NOEXCEPT  noexcept
+#else
+#define TINFRA_CONSTEXPR
+#define TINFRA_NOEXCEPT
+#endif
+
+
 //
 // standard sizes in tinfra
 //

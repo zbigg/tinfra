@@ -258,4 +258,38 @@ SUITE(tinfra)
         using tinfra::fmt;
         foo( fmt("abc%s") % a );
     }
+
+    TEST(tstring_starts_with) {
+        CHECK( tstring("abc123").starts_with('a') );
+        CHECK( tstring("abc123").starts_with("a") );
+        CHECK( tstring("abc123").starts_with("abc") );
+        CHECK( tstring("abc123").starts_with("abc123") );
+
+        CHECK( tstring("abc123").starts_with(tstring("ab")) );
+
+        CHECK( !tstring("abc123").starts_with("abc12X") );
+        CHECK( !tstring("abc123").starts_with(tstring("abckukuku")) );
+    }
+
+    TEST(tstring_ends_with) {
+        CHECK( tstring("abc123").ends_with('3') );
+        CHECK( tstring("abc123").ends_with("3") );
+        CHECK( tstring("abc123").ends_with("123") );
+        CHECK( tstring("abc123").ends_with("abc123") );
+
+        CHECK( tstring("abc123").ends_with(tstring("23")) );
+
+        CHECK( !tstring("abc123").ends_with("abc12X") );
+        CHECK( !tstring("abc123").ends_with(tstring("abckukuku")) );
+    }
+
+    TEST(tstring_string_view_compatibility)
+    {
+        tstring ts("abc");
+        tstring::iterator c = ts.begin();
+        tstring::iterator e = ts.end();
+
+        CHECK(c != e);
+        CHECK(c + 3 == e);
+    }
 }

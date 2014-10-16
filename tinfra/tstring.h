@@ -6,11 +6,16 @@
 #ifndef tinfra_tstring_h_included
 #define tinfra_tstring_h_included
 
+#include "platform.h" // fot TINFRA_CONSTEXPR && TINFRA_NOEXCEPT
+
 #include <string>  // for std::string
 #include <vector>  // for std::vector used in string_pool
 
 #include <cassert> // for assert
 #include <cstring> // for std::strlen
+
+#include <limits>  // for std::numeric_limits
+
 
 namespace tinfra {
 
@@ -25,6 +30,13 @@ namespace tinfra {
     in well defined scope: eg. sub-function call.
     Usually use of it doesn't require an initialization and it reuses C++ literals memory when 
     initialized with it.
+
+    Note:
+        It is considered subset of std::string_view (http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3609.html)
+        as proposed to C++1y. Subset because current `tstring` is ITSELF IMMUTABLE and points at IMMUTABLE string
+        as opposed to std::string_view which is MUTABLE (still pointing to IMMUTABLE buffer).
+    
+        Now i consider upgrading tstring to fully compatible replacement of string_view i.e making it MUTABLE.
  */
 
 class string_pool;
@@ -34,100 +46,95 @@ class tstring  {
     size_t         length_;
     int         flags_;
 public:
-    tstring():
-        str_(0),
-        length_(0),
-        flags_(0)
-    {}
+    // types
+    typedef char   char_type;
+    typedef char_type value_type;
 
+    typedef size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+
+    typedef char_type const*  iterator;
+    typedef char_type const*  const_iterator;
+
+    typedef char_type const&  reference;
+    typedef char_type const&  const_reference;
+
+    // [string.view.cons], construct/copy
+    TINFRA_CONSTEXPR tstring() TINFRA_NOEXCEPT;
     template <int N>
-    tstring(const char (&arr)[N]):
-        str_((const char*)arr),
-        length_(std::strlen(arr)),
-        flags_(1)
-    {
-    }
-    
-    tstring(const char* str): 
-        str_(str),
-        length_(std::strlen(str)),
-        flags_(1)
-    {
-    }
-    
-    
-    tstring(const char* str, size_t length, bool has_null_terminate = false): 
-        str_(str),
-        length_(length),
-        flags_(has_null_terminate ? 1 : 0)
-    {
-    }
-    
-    tstring(std::string const& str): 
-        str_(str.c_str()),
-        length_(str.size()),
-        flags_(1)
-    {
-    }
-    
-    tstring(tstring const& other) : 
-        str_(other.str_),
-        length_(other.length_),
-        flags_(other.flags_)
-    { 
-    }
-    
+        TINFRA_CONSTEXPR tstring(const char (&arr)[N])  TINFRA_NOEXCEPT;
+    TINFRA_CONSTEXPR tstring(const char* str);
+    TINFRA_CONSTEXPR tstring(const char* str, size_t length, bool has_null_terminate = false);
+    TINFRA_CONSTEXPR tstring(std::string const& str) TINFRA_NOEXCEPT;
+    TINFRA_CONSTEXPR tstring(tstring const& other) TINFRA_NOEXCEPT /* = default */;
+
+    //TINFRA_CONSTEXPR tstring& operator=(tstring const& other) TINFRA_NOEXCEPT /* = default */;
+
+    // custom tstring interface
     bool is_null_terminated() const { return flags_ == 1; }
-    
-    char const*  data() const  { return str_; }
-    
     char const*  c_str(string_pool& pool) const
     {
         if( is_null_terminated() ) 
             return str_;
         return temporary_alloc(pool, *this);
     }
-    
-    std::string  str()   const  { return std::string(tstring::data(), tstring::size()); }
+
+    std::string  str()     const  { return std::string(tstring::data(), tstring::size()); }
     operator std::string() const { return str(); }
-    
-    char        operator[](size_t n) const { return tstring::data()[n]; }
-    
-    size_t size()       const { return length_; }
-    bool   empty()      const { return length_ == 0; }
 
-    typedef char   char_type;
-    typedef size_t size_type;
+    // [string.view.iterators], iterators
+    TINFRA_CONSTEXPR iterator  begin()       const TINFRA_NOEXCEPT { return data(); }
+    TINFRA_CONSTEXPR iterator end()          const TINFRA_NOEXCEPT { return data() + tstring::size(); }
+    TINFRA_CONSTEXPR const_iterator cbegin() const TINFRA_NOEXCEPT { return data(); }
+    TINFRA_CONSTEXPR const_iterator cend()   const TINFRA_NOEXCEPT { return data() + tstring::size(); }
     
-    typedef char_type const*  iterator;
-    typedef char_type const*  const_iterator;
+    // TBD, not sure what is exact meaning of reverse_iterator
+    iterator       rbegin() const TINFRA_NOEXCEPT { return data() + size() - 1; }
+    iterator       rend()   const TINFRA_NOEXCEPT { return data() - 1; }
 
-    tstring substr(size_type pos) const
-    {
-        assert(pos <= size());
-        return tstring(data() + pos, size()-pos, is_null_terminated());
-    }
+    // [string.view.capacity], capacity
+    TINFRA_CONSTEXPR size_t size()     const TINFRA_NOEXCEPT { return length_; }
+    TINFRA_CONSTEXPR bool   empty()    const TINFRA_NOEXCEPT { return length_ == 0; }
+    TINFRA_CONSTEXPR size_t length()   const TINFRA_NOEXCEPT { return length_; };
+    TINFRA_CONSTEXPR size_t max_size() const TINFRA_NOEXCEPT { return std::numeric_limits<size_t>::max(); }
+
+    // [string.view.access], element access
+    TINFRA_CONSTEXPR const char&        operator[](size_t n) const { return tstring::data()[n]; }
+    TINFRA_CONSTEXPR const char&        at(size_t n) const { return tstring::data()[n]; }
+    TINFRA_CONSTEXPR const char&  front() const { return *str_; };
+    TINFRA_CONSTEXPR const char&  back() const  { return *( str_ + length_ - 1); };
+    TINFRA_CONSTEXPR char const*  data() const  { return str_; } TINFRA_NOEXCEPT
+
+    // [string.view.modifiers], modifiers:
+    //void clear() TINFRA_NOEXCEPT;
+    //void remove_prefix(size_type n);
+    //void remove_suffix(size_type n);
+
+    // [string.view.ops], string operations:
+
+    tstring substr(size_type pos) const;
     tstring substr(size_type pos, size_type n) const;
     
-    int      cmp(tstring const& other) const;
+    int      compare(tstring const& other) const;
+    int      cmp(tstring const& other) const; // deprecated
+    
+    TINFRA_CONSTEXPR bool starts_with(tstring s) const TINFRA_NOEXCEPT;
+    TINFRA_CONSTEXPR bool starts_with(char_type c) const TINFRA_NOEXCEPT;
+    TINFRA_CONSTEXPR bool starts_with(const char_type* s) const TINFRA_NOEXCEPT;
+    TINFRA_CONSTEXPR bool ends_with(tstring s) const TINFRA_NOEXCEPT;
+    TINFRA_CONSTEXPR bool ends_with(char_type c) const TINFRA_NOEXCEPT;
+    TINFRA_CONSTEXPR bool ends_with(const char_type* s) const TINFRA_NOEXCEPT;
     
     bool operator == (const tstring& other) const { return cmp(other) == 0; }
     bool operator != (const tstring& other) const { return cmp(other) != 0; }
     
-    bool operator >  (const tstring& other) const { return cmp(other) > 0; }    
+    bool operator >  (const tstring& other) const { return cmp(other) > 0; }
     bool operator <  (const tstring& other) const { return cmp(other) < 0; }
     
-    bool operator >= (const tstring& other) const { return cmp(other) >= 0; }    
+    bool operator >= (const tstring& other) const { return cmp(other) >= 0; }
     bool operator <= (const tstring& other) const { return cmp(other) <= 0; }
     
-    iterator begin() { return data(); }
-    iterator end() { return data()+tstring::size(); }
     
-    const_iterator begin() const { return data(); }
-    const_iterator end()   const { return data() + size(); }
-    
-    const_iterator rbegin() const { return data() + size() - 1; }
-    const_iterator rend()   const { return data() - 1; }
     
     size_type find(tstring const& s, size_type pos = 0) const 
     {
@@ -173,6 +180,64 @@ public:
 private:
     static const char* temporary_alloc(string_pool& pool, tstring const& s);
 };
+
+//
+// tstring (inline) implementation
+//
+
+inline
+tstring::tstring():
+    str_(0),
+    length_(0),
+    flags_(0)
+{}
+
+template <int N>
+tstring::tstring(const char (&arr)[N]):
+    str_((const char*)arr),
+    length_(std::strlen(arr)),
+    flags_(1)
+{
+}
+
+inline
+tstring::tstring(const char* str):
+    str_(str),
+    length_(std::strlen(str)),
+    flags_(1)
+{
+}
+
+inline
+tstring::tstring(const char* str, size_t length, bool has_null_terminate):
+    str_(str),
+    length_(length),
+    flags_(has_null_terminate ? 1 : 0)
+{
+}
+
+inline
+tstring::tstring(std::string const& str):
+    str_(str.c_str()),
+    length_(str.size()),
+    flags_(1)
+{
+}
+
+inline
+tstring::tstring(tstring const& other) :
+    str_(other.str_),
+    length_(other.length_),
+    flags_(other.flags_)
+{
+}
+
+inline
+tstring tstring::substr(tstring::size_type pos) const
+{
+    assert(pos <= size());
+    return tstring(data() + pos, size()-pos, is_null_terminated());
+}
 
 std::ostream& operator<<(std::ostream& out, tstring const& s);
 
