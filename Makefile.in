@@ -17,6 +17,11 @@ CXXFLAGS=@CXXFLAGS@
 LIBS=@LIBS@
 LDFLAGS=@LDFLAGS@
 
+ifdef CXX11
+LDFLAGS += -std=c++11
+CXXFLAGS += -std=c++11
+endif
+
 default: build
 
 # components
