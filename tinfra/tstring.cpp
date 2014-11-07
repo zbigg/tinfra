@@ -46,54 +46,6 @@ tstring tstring::substr(size_type pos, size_type n) const
     return tstring(data() + pos, len, sub_is_null_terminated);
 }
 
-TINFRA_CONSTEXPR bool tstring::starts_with(tstring s) const TINFRA_NOEXCEPT
-{
-    if( this->size() < s.size() ) {
-        return false;
-    }
-    return std::memcmp(data(), s.data(), s.size()) == 0;
-}
-TINFRA_CONSTEXPR bool tstring::starts_with(char_type c) const TINFRA_NOEXCEPT
-{
-    if( this->size() == 0 ) {
-        return false;
-    }
-    return this->front() == c;
-}
-TINFRA_CONSTEXPR bool tstring::starts_with(const char_type* s) const TINFRA_NOEXCEPT
-{
-          iterator i = this->begin();
-    const iterator e = this->end();
-    while( i < e && *s ) {
-        if( *s != *i ) {
-            return false;
-        }
-        i++;
-        s++;
-    }
-    return true;
-}
-
-TINFRA_CONSTEXPR bool tstring::ends_with(tstring s) const TINFRA_NOEXCEPT
-{
-    if( this->size() < s.size() ) {
-        return false;
-    }
-    const size_t compare_offset = this->size() - s.size();
-    return std::memcmp(data() + compare_offset, s.data(), s.size()) == 0;
-}
-TINFRA_CONSTEXPR bool tstring::ends_with(char_type c) const TINFRA_NOEXCEPT
-{
-    if( this->size() == 0 ) {
-        return false;
-    }
-    return this->back() == c;
-}
-TINFRA_CONSTEXPR bool tstring::ends_with(const char_type* s) const TINFRA_NOEXCEPT
-{
-    return this->ends_with(tstring(s));
-}
-
 tstring::size_type
 tstring::find(char_type const* s, size_type pos, size_type n) const
 {    

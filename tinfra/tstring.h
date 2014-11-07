@@ -63,9 +63,10 @@ public:
     TINFRA_CONSTEXPR tstring() TINFRA_NOEXCEPT;
     template <int N>
         TINFRA_CONSTEXPR tstring(const char (&arr)[N])  TINFRA_NOEXCEPT;
-    TINFRA_CONSTEXPR tstring(const char* str);
+    /*TINFRA_CONSTEXPR*/ tstring(const char* str);
+        // note, this should be constexpr, but clang still can't do it with strlen()
     TINFRA_CONSTEXPR tstring(const char* str, size_t length, bool has_null_terminate = false);
-    TINFRA_CONSTEXPR tstring(std::string const& str) TINFRA_NOEXCEPT;
+    /*TINFRA_CONSTEXPR*/ tstring(std::string const& str) TINFRA_NOEXCEPT;
     TINFRA_CONSTEXPR tstring(tstring const& other) TINFRA_NOEXCEPT /* = default */;
 
     //TINFRA_CONSTEXPR tstring& operator=(tstring const& other) TINFRA_NOEXCEPT /* = default */;
@@ -103,7 +104,7 @@ public:
     TINFRA_CONSTEXPR const char&        at(size_t n) const { return tstring::data()[n]; }
     TINFRA_CONSTEXPR const char&  front() const { return *str_; };
     TINFRA_CONSTEXPR const char&  back() const  { return *( str_ + length_ - 1); };
-    TINFRA_CONSTEXPR char const*  data() const  { return str_; } TINFRA_NOEXCEPT
+    TINFRA_CONSTEXPR char const*  data() const TINFRA_NOEXCEPT { return str_; }
 
     // [string.view.modifiers], modifiers:
     //void clear() TINFRA_NOEXCEPT;
@@ -185,15 +186,17 @@ private:
 // tstring (inline) implementation
 //
 
+TINFRA_CONSTEXPR
 inline
-tstring::tstring():
+tstring::tstring() TINFRA_NOEXCEPT:
     str_(0),
     length_(0),
     flags_(0)
 {}
 
 template <int N>
-tstring::tstring(const char (&arr)[N]):
+TINFRA_CONSTEXPR
+tstring::tstring(const char (&arr)[N]) TINFRA_NOEXCEPT:
     str_((const char*)arr),
     length_(std::strlen(arr)),
     flags_(1)
@@ -201,7 +204,8 @@ tstring::tstring(const char (&arr)[N]):
 }
 
 inline
-tstring::tstring(const char* str):
+//TINFRA_CONSTEXPR
+tstring::tstring(const char* str) :
     str_(str),
     length_(std::strlen(str)),
     flags_(1)
@@ -209,6 +213,7 @@ tstring::tstring(const char* str):
 }
 
 inline
+TINFRA_CONSTEXPR
 tstring::tstring(const char* str, size_t length, bool has_null_terminate):
     str_(str),
     length_(length),
@@ -217,19 +222,84 @@ tstring::tstring(const char* str, size_t length, bool has_null_terminate):
 }
 
 inline
-tstring::tstring(std::string const& str):
-    str_(str.c_str()),
+//TINFRA_CONSTEXPR
+tstring::tstring(std::string const& str) TINFRA_NOEXCEPT:
+    str_(str.data()),
     length_(str.size()),
     flags_(1)
 {
 }
 
 inline
-tstring::tstring(tstring const& other) :
+TINFRA_CONSTEXPR
+tstring::tstring(tstring const& other) TINFRA_NOEXCEPT:
     str_(other.str_),
     length_(other.length_),
     flags_(other.flags_)
 {
+}
+
+inline
+TINFRA_CONSTEXPR bool tstring::starts_with(tstring s) const TINFRA_NOEXCEPT
+{
+    return (this->size() < s.size() )
+            ? false
+            : std::memcmp(data(), s.data(), s.size()) == 0;
+}
+
+inline
+TINFRA_CONSTEXPR bool tstring::starts_with(char_type c) const TINFRA_NOEXCEPT
+{
+    return ( this->size() == 0 ) 
+            ? false
+            : this->front() == c;
+}
+
+inline
+TINFRA_CONSTEXPR bool tstring::starts_with(const char_type* s) const TINFRA_NOEXCEPT
+{
+#ifdef TINFRA_CXX11
+    // in C++ we're constexpr so we need to
+    // be single statement
+    return    (*s == 0 )            ? true
+            : (this->size() == 0 )  ? false
+            : (this->front() == *s) ? this->substr(1).starts_with(s+1)
+                                    : false;
+#else
+    // pre C++11, can be iterative
+          iterator i = this->begin();
+    const iterator e = this->end();
+    while( i < e && *s ) {
+        if( *s != *i ) {
+            return false;
+        }
+        i++;
+        s++;
+    }
+    return true;
+#endif
+}
+
+inline
+TINFRA_CONSTEXPR bool tstring::ends_with(tstring s) const TINFRA_NOEXCEPT
+{
+    return ( this->size() < s.size() )
+        ? false
+        : ( std::memcmp(data() + this->size() - s.size(), s.data(), s.size()) == 0 );
+}
+
+inline
+TINFRA_CONSTEXPR bool tstring::ends_with(char_type c) const TINFRA_NOEXCEPT
+{
+    return ( this->size() == 0 ) 
+        ? false
+        : this->back() == c;
+}
+
+inline
+TINFRA_CONSTEXPR bool tstring::ends_with(const char_type* s) const TINFRA_NOEXCEPT
+{
+    return this->ends_with(tstring(s,strlen(s)));
 }
 
 inline
