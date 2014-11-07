@@ -182,6 +182,14 @@ void tprintf(std::ostream& out, tinfra::tstring const& fmt, Args... args)
     F.flush();
 }
 
+template <typename... Args>
+void tprintf(tinfra::output_stream& out, tinfra::tstring const& fmt, Args... args)
+{
+    stringbuf_fmt F(fmt);
+    F.push(args...);
+    out.write(F);
+}
+
 template <typename ... Args>
 std::string tsprintf(tstring const& fmt, Args ... args) {
     stringbuf_fmt F(fmt);
