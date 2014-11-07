@@ -89,8 +89,8 @@ extern void assert_failed(tinfra::source_location const& location, const char* e
 //template<int  x> struct static_assert_p        {};
 
 #if defined(HAVE_STATIC_ASSERT) || defined(TINFRA_CXX11)
-#define TINFRA_STATIC_ASSERT_IMPL(EXPR) \
 // c++11 static_assert
+#define TINFRA_STATIC_ASSERT_IMPL(EXPR) \
         static_assert(EXPR, #EXPR)
 #else
 
