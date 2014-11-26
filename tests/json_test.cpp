@@ -19,6 +19,12 @@ TEST(json_sample1)
     CHECK(r[0].is_dict());
     CHECK(r[1].is_dict());
 
+    CHECK_EQUAL("Moby Dick", r[0]["name"]);
+    CHECK_EQUAL("Verne", r[0]["author"]);
+
+    CHECK_EQUAL("Solaris", r[1]["name"]);
+    CHECK_EQUAL("Lem", r[1]["author"]);
+
     std::string  written = tinfra::json_write(r);
     tinfra::variant reparsed = tinfra::json_parse(written);
 
