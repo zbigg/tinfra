@@ -25,6 +25,7 @@ std::ostream& operator <<(std::ostream& s, json_token::token_type tt)
     case json_token::DOUBLE: s << "double"; break;
     case json_token::TOK_TRUE: s << "true"; break;
     case json_token::TOK_FALSE: s << "false"; break;
+    case json_token::TOK_NULL: s << "null"; break;
     }
     return s;
 }

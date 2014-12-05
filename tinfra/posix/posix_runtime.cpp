@@ -193,7 +193,7 @@ static void my_signal(int signo, const char* name, void (*handler)(int, siginfo_
 	} 
 	sig_names[signo] = name;
 	// ensure that those pages are really loaded !
-	strlen(name);
+	(void)strlen(name);
 }
 void initialize_platform_runtime()
 {

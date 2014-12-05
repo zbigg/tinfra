@@ -17,9 +17,13 @@
 namespace tinfra {
 
 class lazy_protocol: public interruptible<int, tstring> {
-protected:    
+public:
+    lazy_protocol():
+        waiter_count_(0)
+    {
+    }
+protected:
     void wait_for_bytes(size_t count, step_method method);
-    
     void wait_for_delimiter(tstring const& delim, step_method method);
 private:
     step_method waiter_method_;

@@ -123,8 +123,8 @@ public:
     template <typename Y> explicit shared_ptr(shared_ptr<Y> const& p);
     template <typename Y> explicit shared_ptr(std::auto_ptr<Y>& p);
     
-    shared_ptr<T>& operator=(shared_ptr const& p);
-    template <typename Y> shared_ptr<T>& operator=(shared_ptr<Y> const& p);
+    shared_ptr& operator=(shared_ptr const& p);
+    template <typename Y> shared_ptr& operator=(shared_ptr<Y> const& p);
     
     T & operator*() const  { return *ptr_; } // never throws
     T * operator->() const { return ptr_; } // never throws

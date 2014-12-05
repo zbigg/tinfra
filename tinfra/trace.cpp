@@ -197,19 +197,13 @@ void public_tracer::enable_by_mask(tstring const& mask)
 //static 
 void public_tracer::enable_by_level(int level)
 {
-    std::vector<public_tracer*> const r = get_global_tracers();
-    bool anything = false;
-    for(std::vector<public_tracer*>::const_iterator i = r.begin(); i != r.end(); ++i )
-    {
-        tracer* t = *i;
-    }
+    // not implemented
 }
 
 //static 
 void public_tracer::enable_all(bool enable)
 {
     std::vector<public_tracer*> const r = get_global_tracers();
-    bool anything = false;
     for(std::vector<public_tracer*>::const_iterator i = r.begin(); i != r.end(); ++i )
     {
         tracer* t = *i;

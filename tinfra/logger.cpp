@@ -178,9 +178,8 @@ static void print_log_header(std::ostream& formatter, log_record const& record)
     // YYYY-MM-DD HH:MM:SS name[pid] level(component::func:source:line): message
     
     // date
-    const char* LOG_TIME_FORMAT = "%Y-%m-%d %H:%M:%S";
     {
-        
+        const char* LOG_TIME_FORMAT = "%Y-%m-%d %H:%M:%S";
         struct tm exploded_time;
 #ifdef HAVE_LOCALTIME_R
         localtime_r(&record.timestamp, &exploded_time);

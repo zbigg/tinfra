@@ -381,6 +381,9 @@ MAKEFOO_USE += test-program
 MAKEFOO_USE += install-fhs
 MAKEFOO_USE += rpm
 MAKEFOO_USE += cppcheck
+CPPCHECK_FLAGS = 
+CPPCHECK_FLAGS = --xml --suppress=unusedFunction
+
 MAKEFOO_USE += autoconf
 MAKEFOO_USE += src-dist
  

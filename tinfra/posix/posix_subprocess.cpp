@@ -91,6 +91,7 @@ int execute_process(std::vector<std::string> const& args, environment_t const* e
         char** env = make_system_environment(*e);
         std::string executable = tinfra::path::search_executable(raw_args[0]);
         if( executable.size() == 0 ) {
+            delete[] env;
             //std::cerr << "tinfra::unable to find executable for " << raw_args[0] << "\n";
             TINFRA_LOG_ERROR(fmt("subprocess start failed: unable to find executable for '%s'") % raw_args[0]);
             return 127;
@@ -115,7 +116,10 @@ struct posix_subprocess: public subprocess {
     environment_t env;
     bool          env_set;
     
-    posix_subprocess() : 
+    posix_subprocess() :
+        soutput(0),
+        sinput(0),
+        serror(0),
         pid(-1),
         exit_code(-1),
         env_set(false)

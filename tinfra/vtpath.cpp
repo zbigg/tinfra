@@ -276,8 +276,8 @@ bool vtpath_visitor::fetch_next(variant*& r)
                 // in recursive we recurse to all
                 if( top.idict != dict.end() ) {
                     variant::dict_type::iterator idict = top.idict;
-                    top.idict++;
-                    top.index++;
+                    ++top.idict;
+                    ++top.index;
                     
                     variant& match = idict->second;
                     TINFRA_TRACE(vtpath_exec_tracer, "vpath_visit: trying: " << top.index-1 << ": " << idict->first << " -> " << match);

@@ -85,9 +85,9 @@ public:
 
     // [string.view.iterators], iterators
     TINFRA_CONSTEXPR iterator  begin()       const TINFRA_NOEXCEPT { return data(); }
-    TINFRA_CONSTEXPR iterator end()          const TINFRA_NOEXCEPT { return data() + tstring::size(); }
+    TINFRA_CONSTEXPR iterator end()          const TINFRA_NOEXCEPT { return data() + size(); }
     TINFRA_CONSTEXPR const_iterator cbegin() const TINFRA_NOEXCEPT { return data(); }
-    TINFRA_CONSTEXPR const_iterator cend()   const TINFRA_NOEXCEPT { return data() + tstring::size(); }
+    TINFRA_CONSTEXPR const_iterator cend()   const TINFRA_NOEXCEPT { return data() + size(); }
     
     // TBD, not sure what is exact meaning of reverse_iterator
     iterator       rbegin() const TINFRA_NOEXCEPT { return data() + size() - 1; }
@@ -100,8 +100,8 @@ public:
     TINFRA_CONSTEXPR size_t max_size() const TINFRA_NOEXCEPT { return std::numeric_limits<size_t>::max(); }
 
     // [string.view.access], element access
-    TINFRA_CONSTEXPR const char&        operator[](size_t n) const { return tstring::data()[n]; }
-    TINFRA_CONSTEXPR const char&        at(size_t n) const { return tstring::data()[n]; }
+    TINFRA_CONSTEXPR const char&        operator[](size_t n) const { return data()[n]; }
+    TINFRA_CONSTEXPR const char&        at(size_t n) const { return data()[n]; }
     TINFRA_CONSTEXPR const char&  front() const { return *str_; };
     TINFRA_CONSTEXPR const char&  back() const  { return *( str_ + length_ - 1); };
     TINFRA_CONSTEXPR char const*  data() const TINFRA_NOEXCEPT { return str_; }

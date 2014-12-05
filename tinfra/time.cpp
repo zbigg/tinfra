@@ -107,12 +107,12 @@ time_stamp::value_type ttt_get_monotonic()
 
 time_stamp time_stamp::now(time_source ts)
 {
-    value_type val = 0;
     switch( ts ) {
     case TS_SYSTEM:    return time_stamp::from_raw(ttt_get_system());
     case TS_MONOTONIC: return time_stamp::from_raw(ttt_get_monotonic());
     default: TINFRA_ASSERT(ts == TS_SYSTEM || ts == TS_MONOTONIC);
     }
+    return 0;
 }
 
 } // end namespace tinfra

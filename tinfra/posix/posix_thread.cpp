@@ -47,7 +47,7 @@ struct thread_entry_param {
 static void* thread_master_fun(void* param)
 {
     try {
-        std::auto_ptr<thread_entry_param> p2((thread_entry_param*)param);
+        std::auto_ptr<thread_entry_param> p2(reinterpret_cast<thread_entry_param*>(param));
         return p2->entry(p2->param);
     } catch(std::exception& e) {
         TINFRA_LOG_ERROR( fmt("thread %i failed with uncaught exception: %s\n") % thread::current().to_number() % e.what() );

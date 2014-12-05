@@ -79,8 +79,9 @@ class generator_impl {
 public:
     typedef T value_type;
     
-    generator_impl()
-        : last_result_valid_(false) 
+    generator_impl():
+        last_result_valid_(false),
+        last_result_(false)
     {}
     
     // java-ish iterator contract
