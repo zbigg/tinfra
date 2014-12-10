@@ -97,7 +97,7 @@ AC_OUTPUT
 cat << EOF
 Configured tinfra with options:
 
-    CFLAGS                  $CFLAGS
+    CXX                     $CXX
     CXXFLAGS                $CXXFLAGS
     CPPFLAGS                $CPPFLAGS
     LDFLAGS                 $LDFLAGS
