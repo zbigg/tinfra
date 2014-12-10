@@ -111,8 +111,8 @@ test_result_sink::~test_result_sink()
 //
 
 test_base::test_base(const char* _suite_name, const char* test_name, tinfra::source_location const& sl):
-	suite(_suite_name),
 	name(test_name),
+	suite(_suite_name),
 	source_location(sl)
 {
 	static_registry<test_base>::register_element(this);
@@ -209,7 +209,7 @@ void local_test_result_sink::report_test_start(test_info  const&)
     this->current_test_failed = false;
 }
 
-void local_test_result_sink::report_failure(test_info const& info, tinfra::source_location const& location, tstring const& message)
+void local_test_result_sink::report_failure(test_info const&, tinfra::source_location const&, tstring const&)
 {
     this->result.failure_count += 1;
     this->current_test_failed = true;

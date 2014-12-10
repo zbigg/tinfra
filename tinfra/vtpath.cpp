@@ -354,8 +354,8 @@ bool vtpath_visitor::fetch_next(variant*& r)
                 TINFRA_ASSERT(child_match.expr.is_integer());
                 int index = child_match.expr.get_integer();
                 top.matching_finished = true;
-                if( index >= 0 && index < array.size() ) {
-                    variant& match = array[index];
+                if( index >= 0 && size_t(index) < array.size() ) {
+                    variant& match = array[size_t(index)];
                     std::vector<vtpath_command>::iterator inext_command = (top.icommand+2);
 
                     self->match_found(&match, inext_command);

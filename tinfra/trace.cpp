@@ -195,7 +195,7 @@ void public_tracer::enable_by_mask(tstring const& mask)
 }
 
 //static 
-void public_tracer::enable_by_level(int level)
+void public_tracer::enable_by_level(int)
 {
     // not implemented
 }

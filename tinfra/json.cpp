@@ -404,7 +404,7 @@ struct json_lexer::internal_data {
     
     std::string last_token;
     
-    int    bytes_in_buffer() {
+    size_t    bytes_in_buffer() {
         return buffer_end - buffer_start;
     }
     

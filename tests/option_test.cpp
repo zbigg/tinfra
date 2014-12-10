@@ -177,6 +177,7 @@ SUITE(tinfra) {
         case LOW: return s << "low";
         case UNSPECIFIED: return s << "unspecified";
         }
+        return s;
     }
     std::istream& operator>>(std::istream& s, TestEnum& v)
     {

@@ -107,7 +107,6 @@ TEST(safe_debug_print_strings)
 {
     CHECK_EQUAL("literal", unsafe_wrap_debug_print("literal"));
 
-    char foo[] = "foo";
     CHECK_EQUAL("foo", unsafe_wrap_debug_print("foo"));
 
     CHECK_EQUAL("std::string", unsafe_wrap_debug_print(std::string("std::string")));

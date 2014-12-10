@@ -29,7 +29,10 @@ public:
     
 public:
     variant(): value(tinfra::any::from_copy(none_type())) {} // TBD, fix it!
+    explicit variant(int v): value(tinfra::any::from_copy<integer_type>(v)) {}
+    explicit variant(long v): value(tinfra::any::from_copy<integer_type>(v)) {}
     explicit variant(integer_type v): value(tinfra::any::from_copy(v)) {}
+    explicit variant(double v): value(tinfra::any::from_copy(v)) {}
     explicit variant(string_type const& v): value(tinfra::any::from_copy(v)) {}
     
     explicit variant(tinfra::any const& v): value(v) {}

@@ -112,7 +112,7 @@ void xml_builder::flush_opened_tag()
 		// convert into xml_event_arg_list and
 		xml_event_arg_list args;
 		args.reserve( this->current_attrs.size() );
-		for( int i = 0; i < this->current_attrs.size(); ++i ) {
+		for( unsigned i = 0; i < this->current_attrs.size(); ++i ) {
 			xml_event_arg arg;
 			arg.name = this->current_attrs[i].first;
 			arg.value = this->current_attrs[i].second;

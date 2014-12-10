@@ -106,7 +106,7 @@ public:
 #endif
         return result;
     }
-    
+    using vfs::list_files;
     void list_files(tstring const& path, tinfra::fs::file_list_visitor& visitor)
     {
         tinfra::fs::list_files(path, visitor);

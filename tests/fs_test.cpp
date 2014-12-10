@@ -108,7 +108,7 @@ SUITE(tinfra)
     {
         test_fs_sandbox tmp_location("testtest_dir");
         struct foo_walker: public fs::walker {
-            virtual bool accept(tstring const& name, tstring const& parent, bool is_dir)
+            virtual bool accept(tstring const& , tstring const& , bool )
             {
                 return true;
             }            

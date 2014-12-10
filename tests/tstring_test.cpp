@@ -11,8 +11,6 @@
 using tinfra::fmt;
 using tinfra::tstring;
 
-static const size_t N = tstring::npos;
-
 SUITE(tinfra)
 {
     TEST(tstring_find_first_of_char)

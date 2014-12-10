@@ -188,7 +188,7 @@ static void my_signal(int signo, const char* name, void (*handler)(int, siginfo_
 	    TINFRA_LOG_ERROR(fmt("unable to install signal(%i) handler: %s") % signo % tinfra::errno_to_string(errno));
 	}
 	
-	if( sig_names.size() <= signo ) {
+	if( int(sig_names.size()) <= signo ) {
 	    sig_names.resize(signo+1);
 	} 
 	sig_names[signo] = name;
@@ -217,13 +217,13 @@ extern "C" void tinfra_fatal_sighandler(int signo, siginfo_t *, void *)
 {
     char buf[64];
     const char* signame = "unknown signal";
-    if( signo < tinfra::sig_names.size() )
+    if( signo < int(tinfra::sig_names.size()) )
         signame = tinfra::sig_names[signo];
     snprintf(buf, sizeof(buf), "fatal signal received: %s (signo=%i)", signame, signo);
     tinfra::fatal_exit(buf);
 }
 
-extern "C" void tinfra_interrupt_sighandler(int signo, siginfo_t *, void *)
+extern "C" void tinfra_interrupt_sighandler(int, siginfo_t *, void *)
 {
     tinfra::interrupt();
 }

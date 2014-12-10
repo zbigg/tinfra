@@ -29,7 +29,6 @@ SUITE(tinfra) {
         std::string result;
         tinfra::memory_output_stream out(result);
         
-        char buf[128];
         CHECK_EQUAL( 5, out.write(std::string("01234",5)));
         CHECK_EQUAL( "01234", result);
         

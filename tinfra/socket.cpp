@@ -46,7 +46,7 @@ void throw_socket_error(int error_code, const char* message)
 #ifdef TS_WINSOCK
     tinfra::win32::throw_system_error(error_code, message);
 #else
-    throw_errno_error(errno, message);
+    throw_errno_error(error_code, message);
 #endif
 }
 
@@ -55,7 +55,7 @@ void throw_socket_error(const char* message)
 #ifdef TS_WINSOCK
     int e = WSAGetLastError();
 #else
-    int e errno;
+    int e = errno;
 #endif
     throw_socket_error(e, message);
 }

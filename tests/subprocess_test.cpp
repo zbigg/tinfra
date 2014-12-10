@@ -115,6 +115,7 @@ SUITE(tinfra) {
 #ifdef _WIN32
             return tinfra::fmt("%%%s%%") % name;
 #else
+            (void)name;
             return "";
 #endif
     }

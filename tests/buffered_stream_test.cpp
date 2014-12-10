@@ -22,7 +22,7 @@ struct mock_input_stream: public tinfra::input_stream {
             return 0;
         } else {
             const size_t len = strlen(res);
-            CHECK(size >= len);
+            CHECK((size_t)size >= len);
             memcpy(ptr, res, len);
             return len;
         }

@@ -56,7 +56,7 @@ class Client {
 public:
     Client(std::auto_ptr<tcp_client_socket> _client, tinfra::net::Server& _server)
         : client(_client), server(_server) {}
-        
+    virtual ~Client() {}
     virtual void run()
     {
         
@@ -117,7 +117,7 @@ SUITE(tinfra)
         TestServer server;
         server.bind("localhost", 10900);
         tinfra::thread::thread_set ts;
-        tinfra::thread::thread server_thread = ts.start(tinfra::runnable_ref(server));
+        ts.start(tinfra::runnable_ref(server));
         {        
             tcp_client_socket client("localhost",10900);
 		

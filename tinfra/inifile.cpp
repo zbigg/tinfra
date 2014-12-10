@@ -177,6 +177,8 @@ void writer::entry(tinfra::inifile::entry const& e)
     case SECTION: section(e.name); break;
     case ENTRY:   entry(e.name, e.value); break;
     case COMMENT: comment(e.value); break;
+    case EMPTY:   break;
+    case INVALID: break; // shouldn't we just output it ???
     }
 }
 

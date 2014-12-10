@@ -71,7 +71,7 @@ public:
     {}
 
     template <typename S, typename T>
-    void leaf(S const& sym, T const& va)
+    void leaf(S const&, T const& va)
     {
         if( this->result_known )
             return;
@@ -113,7 +113,7 @@ public:
     }
     
     template <typename S, typename T>
-    void record(S const& sym, T& va)
+    void record(S const&, T& va)
     {
         T& vb = ref_in_other(this->a, &va, this->b);
         swapper f(&va, &vb);

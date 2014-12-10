@@ -257,8 +257,8 @@ template <typename MapType>
 void check_map_equal(MapType const& A, 
                      MapType const& B, std::string const& b_name, const char* filename, int line)
 {
-    typedef typename MapType::value_type value_type;
-    typedef typename MapType::key_type   key_type;
+    //typedef typename MapType::value_type value_type;
+    //typedef typename MapType::key_type   key_type;
     
     typedef typename MapType::const_iterator iter;
     

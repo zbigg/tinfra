@@ -1,6 +1,7 @@
 #include "xml_writer.h" // we implement this
 
 #include <algorithm>
+#include <limits>
 
 namespace tinfra {
 
@@ -11,7 +12,7 @@ xml_event xml_event::make_copy(tinfra::string_pool& pool) const
 	result.type = this->type;
 	result.content = pool.alloc(this->content);
 	result.attributes.reserve(this->attributes.size());
-	for( int i = 0; i < this->attributes.size(); ++i ) {
+	for( unsigned i = 0; i < this->attributes.size(); ++i ) {
 		xml_event_arg arg;
 		arg.name = pool.alloc( this->attributes[i].name );
 		arg.value = pool.alloc( this->attributes[i].value );
@@ -41,10 +42,11 @@ public:
 		replacement(_replacement),
 		position(0)
 	{
+	    assert(_data.size() < size_t(std::numeric_limits<int>::max()));
 	}
 	
 	bool has_next() const {
-		return this->position < this->data.size();
+		return this->position < int(this->data.size());
 	}
 	
 	tstring next() {
@@ -60,7 +62,7 @@ public:
 			const char* which = std::find(this->pattern.begin(), this->pattern.end(), current[0]);
 			assert(which != this->pattern.end());
 			int index = (which - this->pattern.data());
-			assert(index < this->pattern.size());
+			assert(index < int(this->pattern.size()));
 			const tstring found_replacement = this->replacement[index];
 			return found_replacement;
 		} else {
@@ -126,7 +128,7 @@ private:
 		write_character('<');
 		write_bytes(tag_name);
 		this->in_start_tag_ = true;
-		for( int i = 0; i < args.size(); ++i ) {
+		for( unsigned i = 0; i < args.size(); ++i ) {
 			arg(args[i].name, args[i].value);
 		}
 	}
