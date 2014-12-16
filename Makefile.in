@@ -33,6 +33,7 @@ tinfra_HEADERS = \
 	tinfra/adaptable.h \
 	tinfra/any.h \
 	tinfra/assert.h \
+	tinfra/basic_int_to_string.h \
 	tinfra/buffer.h \
 	tinfra/buffered_stream.h \
 	tinfra/cli.h \
