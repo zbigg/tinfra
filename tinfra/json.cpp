@@ -291,11 +291,36 @@ void json_writer::begin_object()
     this->renderer.object_begin();
     need_separator = false;
 }
+
+void json_writer::named_begin_object(tstring const& name)
+{
+    TINFRA_ASSERT(this->current_type() == OBJECT);
+    if( this->need_separator ) {
+        this->renderer.comma();
+    }
+    this->renderer.string(name);
+    this->renderer.colon();
+
+    this->begin_object();
+}
+
 void json_writer::begin_array()
 {
     this->stack.push(ARRAY);
     this->renderer.array_begin();
     need_separator = false;
+}
+
+void json_writer::named_begin_array(tstring const& name)
+{
+    TINFRA_ASSERT(this->current_type() == OBJECT);
+    if( this->need_separator ) {
+        this->renderer.comma();
+    }
+    this->renderer.string(name);
+    this->renderer.colon();
+
+    this->begin_array();
 }
 
 void json_writer::end_object()
@@ -353,6 +378,12 @@ void json_writer::value_impl(variant::integer_type const& value)
 {
     this->renderer.integer(value);
 }
+
+void json_writer::value_impl(int const& value)
+{
+    this->renderer.integer(value);
+}
+
 void json_writer::value_impl(double value)
 {
     this->renderer.double_(value);

@@ -96,12 +96,20 @@ public:
     ~json_writer();
 
     void begin_object();
+    void named_begin_object(tstring const& name);
+
     void begin_array();
+    void named_begin_array(tstring const& name);
 
     void end_object();
     void end_array();
     void end(); // ends current object/array
 
+    enum current_value_type {
+        NAMED,
+        UNNAMED
+    };
+    current_value_type expected_value_kind() const;
     //  a value, valid only in array context
     template <typename T>
     void value(T const& v);
@@ -114,6 +122,7 @@ private:
     void value_impl(variant const& v);
     void value_impl(tstring const& value);
     void value_impl(variant::integer_type const& value);
+    void value_impl(int const& value);
     void value_impl(double value);
     void value_impl(bool value);
     void value_impl(); // none/nil
@@ -180,6 +189,15 @@ void json_writer::value_impl(std::map<K,T> const& v)
     this->end_object();
 }
 
+inline
+json_writer::current_value_type json_writer::expected_value_kind() const
+{
+    return this->stack.empty()
+        ? UNNAMED
+        : this->stack.top() == OBJECT
+                ? NAMED
+                : UNNAMED;
+}
 
 } // end namespace tinfra
 
