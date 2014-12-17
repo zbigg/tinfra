@@ -7,6 +7,7 @@
 #define tinfra_memory_stream_h_included
 
 #include "tinfra/stream.h"
+#include "tinfra/tstring.h"
 #include <string>
 
 namespace tinfra {
@@ -18,7 +19,12 @@ class memory_input_stream: public input_stream {
     size_t      remaining_size_;
     bool own_;
 public:
+
     memory_input_stream(const void* buffer, size_t size, bool own);
+
+    explicit memory_input_stream(tstring str);
+    explicit memory_input_stream(std::string const& str);
+
     ~memory_input_stream();
 
     //
@@ -46,6 +52,26 @@ public:
 
     virtual void sync();
 };
+
+
+//
+// implementation
+//
+
+inline memory_input_stream::memory_input_stream(tstring str):
+   buffer_(str.data()),
+   current_(str.data()),
+   remaining_size_(str.size()),
+   own_(false)
+{
+}
+inline memory_input_stream::memory_input_stream(std::string const& str):
+   buffer_(str.data()),
+   current_(str.data()),
+   remaining_size_(str.size()),
+   own_(false)
+{
+}
 
 } // end namespace tinfra
 
