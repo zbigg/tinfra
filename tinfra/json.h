@@ -60,6 +60,8 @@ struct json_token {
     tstring    value;
 };
 
+std::ostream& operator <<(std::ostream& s, json_token::token_type tt);
+
 class json_lexer: public generator_impl<json_lexer, json_token> {
 public:
     json_lexer(tinfra::input_stream& s);
