@@ -28,7 +28,6 @@
 
 #include <imagehlp.h>
 
-#define gle (GetLastError())
 #define lenof(a) (sizeof(a) / sizeof((a)[0]))
 #define MAXNAMELEN 1024 // max name length for found symbols
 #define IMGSYMLEN ( sizeof(IMAGEHLP_SYMBOL) )
@@ -45,50 +44,54 @@
 #endif
 
 // SymCleanup()
-typedef BOOL (__stdcall *tSymCleanup)( IN HANDLE hProcess );
+typedef BOOL (WINAPI *tSymCleanup)( IN HANDLE hProcess );
 tSymCleanup pSymCleanup = NULL;
 
 // SymFunctionTableAccess()
-typedef PVOID (__stdcall *tSymFunctionTableAccess)( HANDLE hProcess, DWORD AddrBase );
+typedef PVOID (WINAPI *tSymFunctionTableAccess)( HANDLE hProcess, DWORD AddrBase );
 tSymFunctionTableAccess pSymFunctionTableAccess = NULL;
 
 // SymGetLineFromAddr()
-typedef BOOL (__stdcall *tSymGetLineFromAddr)( IN HANDLE hProcess, IN DWORD dwAddr,
+typedef BOOL (WINAPI *tSymGetLineFromAddr)( IN HANDLE hProcess, IN DWORD dwAddr,
 	OUT PDWORD pdwDisplacement, OUT PIMAGEHLP_LINE Line );
 tSymGetLineFromAddr pSymGetLineFromAddr = NULL;
 
 // SymGetModuleBase()
-typedef DWORD (__stdcall *tSymGetModuleBase)( IN HANDLE hProcess, IN DWORD dwAddr );
+typedef DWORD (WINAPI *tSymGetModuleBase)( IN HANDLE hProcess, IN DWORD dwAddr );
 tSymGetModuleBase pSymGetModuleBase = NULL;
 
 // SymGetModuleInfo()
-typedef BOOL (__stdcall *tSymGetModuleInfo)( IN HANDLE hProcess, IN DWORD dwAddr, OUT PIMAGEHLP_MODULE ModuleInfo );
+typedef BOOL (WINAPI *tSymGetModuleInfo)( IN HANDLE hProcess, IN DWORD dwAddr, OUT PIMAGEHLP_MODULE ModuleInfo );
 tSymGetModuleInfo pSymGetModuleInfo = NULL;
 
 // SymGetOptions()
-typedef DWORD (__stdcall *tSymGetOptions)( VOID );
+typedef DWORD (WINAPI *tSymGetOptions)( VOID );
 tSymGetOptions pSymGetOptions = NULL;
 
 // SymGetSymFromAddr()
-typedef BOOL (__stdcall *tSymGetSymFromAddr)( IN HANDLE hProcess, IN DWORD dwAddr,
+typedef BOOL (WINAPI *tSymGetSymFromAddr)( IN HANDLE hProcess, IN DWORD dwAddr,
 	OUT PDWORD pdwDisplacement, OUT PIMAGEHLP_SYMBOL Symbol );
 tSymGetSymFromAddr pSymGetSymFromAddr = NULL;
 
+typedef BOOL (WINAPI* tSymFromAddr)(_In_ HANDLE hProcess,_In_ DWORD64 Address,
+    _Out_opt_  PDWORD64 Displacement, _Inout_    PSYMBOL_INFO Symbol); 
+tSymFromAddr pSymFromAddr = NULL;
+
 // SymInitialize()
-typedef BOOL (__stdcall *tSymInitialize)( IN HANDLE hProcess, IN PSTR UserSearchPath, IN BOOL fInvadeProcess );
+typedef BOOL (WINAPI *tSymInitialize)( IN HANDLE hProcess, IN PSTR UserSearchPath, IN BOOL fInvadeProcess );
 tSymInitialize pSymInitialize = NULL;
 
 // SymLoadModule()
-typedef DWORD (__stdcall *tSymLoadModule)( IN HANDLE hProcess, IN HANDLE hFile,
+typedef DWORD (WINAPI *tSymLoadModule)( IN HANDLE hProcess, IN HANDLE hFile,
 	IN PSTR ImageName, IN PSTR ModuleName, IN DWORD BaseOfDll, IN DWORD SizeOfDll );
 tSymLoadModule pSymLoadModule = NULL;
 
 // SymSetOptions()
-typedef DWORD (__stdcall *tSymSetOptions)( IN DWORD SymOptions );
+typedef DWORD (WINAPI *tSymSetOptions)( IN DWORD SymOptions );
 tSymSetOptions pSymSetOptions = NULL;
 
 // StackWalk()
-typedef BOOL (__stdcall *tStackWalk)( DWORD MachineType, HANDLE hProcess,
+typedef BOOL (WINAPI *tStackWalk)( DWORD MachineType, HANDLE hProcess,
 	HANDLE hThread, LPSTACKFRAME StackFrame, PVOID ContextRecord,
 	PREAD_PROCESS_MEMORY_ROUTINE ReadMemoryRoutine,
 	PFUNCTION_TABLE_ACCESS_ROUTINE FunctionTableAccessRoutine,
@@ -97,7 +100,7 @@ typedef BOOL (__stdcall *tStackWalk)( DWORD MachineType, HANDLE hProcess,
 tStackWalk pStackWalk = NULL;
 
 // UnDecorateSymbolName()
-typedef DWORD (__stdcall WINAPI *tUnDecorateSymbolName)( PCSTR DecoratedName, PSTR UnDecoratedName,
+typedef DWORD (WINAPI WINAPI *tUnDecorateSymbolName)( PCSTR DecoratedName, PSTR UnDecoratedName,
 	DWORD UndecoratedLength, DWORD Flags );
 tUnDecorateSymbolName pUnDecorateSymbolName = NULL;
 
@@ -202,37 +205,41 @@ bool get_debug_info(void* address, debug_info& result)
 	return false;
     }
 
-    HANDLE hProcess = tinfra_hOurProcess; // hProcess normally comes from outside
-    int frameNum; // counts walked frames
-    DWORD offsetFromSymbol; // tells us how far from the symbol we were
+    HANDLE  hProcess = tinfra_hOurProcess;
+    DWORD64 offsetFromSymbol = 0;
     
-    IMAGEHLP_SYMBOL *pSym = (IMAGEHLP_SYMBOL *) malloc( IMGSYMLEN + MAXNAMELEN );
+    char  symBuffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
+    PSYMBOL_INFO pSym = (PSYMBOL_INFO)symBuffer;
+    pSym->SizeOfStruct = sizeof(SYMBOL_INFO);
+    pSym->MaxNameLen = MAX_SYM_NAME;
+
     char undFullName[MAXNAMELEN]; // undecorated name with all shenanigans
     IMAGEHLP_LINE Line;
     
     result.source_line = -1;
-    if ( ! pSymGetSymFromAddr( hProcess, (DWORD)address, &offsetFromSymbol, pSym ) ) {
-        if ( gle != 487 )
-            TINFRA_LOG_ERROR(fmt("get_debug_info: SymGetSymFromAddr failed, gle=%i") % gle);
-	    free(pSym);
-	    return false;
-    } else {
-
-        pUnDecorateSymbolName( pSym->Name, undFullName, MAXNAMELEN, UNDNAME_COMPLETE );
-        result.function = undFullName;
-    }	    
-    
-    if ( ! pSymGetLineFromAddr( hProcess, (DWORD)address, &offsetFromSymbol, &Line ) ) {
-	if ( gle != 487 ) {
-	    TINFRA_LOG_ERROR(fmt("get_debug_info: pSymGetLineFromAddr failed, gle=%i") % gle);
-	}
-	free(pSym);
-	return false;
+    SetLastError(0);
+    if ( ! pSymFromAddr( hProcess, (DWORD64)address, NULL, pSym ) ) {
+        const DWORD gle = GetLastError();
+        if (gle != 487) {
+            TINFRA_LOG_ERROR(tsprintf("get_debug_info: SymFromAddr failed, gle=%i", gle));
+        }
+        return false;
     }
-
-    result.source_line = Line.LineNumber;
-    result.source_file = Line.FileName;
-    free(pSym);
+    pUnDecorateSymbolName( pSym->Name, undFullName, MAXNAMELEN, UNDNAME_COMPLETE );
+    result.function = undFullName;
+    
+    DWORD offsetFromSymbolOld = 0;
+    
+    if ( ! pSymGetLineFromAddr( hProcess, (DWORD)address, &offsetFromSymbolOld, &Line ) ) {
+        const DWORD gle = GetLastError();
+	if ( gle != 487 ) {
+            TINFRA_LOG_ERROR(tsprintf("get_debug_info: SymGetLineFromAddr failed, gle=%i", gle));
+	}
+    }
+    else {
+        result.source_line = Line.LineNumber;
+        result.source_file = Line.FileName;
+    }
     return true;
 }
 
@@ -258,7 +265,7 @@ struct  thread_callstack_dumper_args {
     tinfra::stacktrace_t* trace_result;
 };
 
-static DWORD __stdcall thread_callstack_dumper( void * arg )
+static DWORD WINAPI thread_callstack_dumper( void * arg )
 {
     thread_callstack_dumper_args* args = (thread_callstack_dumper_args*)arg;    
     
@@ -405,7 +412,7 @@ static bool get_thread_stacktace(HANDLE hThread, CONTEXT& c, tinfra::stacktrace_
 cleanup:
     ResumeThread( hThread );
     // de-init symbol handler etc. (SymCleanup())
-    pSymCleanup( hProcess );
+    //pSymCleanup( hProcess );
     free( pSym );
     
     return true;
@@ -413,7 +420,7 @@ cleanup:
 
 static bool initialize_imaghelp()
 {
-    HINSTANCE hImagehlpDll = LoadLibrary( "dbghelp.dll" );
+    HINSTANCE hImagehlpDll = LoadLibraryA( "dbghelp.dll" );
     if ( hImagehlpDll == NULL ) {
 	TINFRA_LOG_ERROR( "unable to load dbghelp.dll" );
 	return false;
@@ -429,6 +436,7 @@ static bool initialize_imaghelp()
     pSymGetModuleInfo = (tSymGetModuleInfo) GetProcAddress( hImagehlpDll, "SymGetModuleInfo" );
     pSymGetOptions = (tSymGetOptions) GetProcAddress( hImagehlpDll, "SymGetOptions" );
     pSymGetSymFromAddr = (tSymGetSymFromAddr) GetProcAddress( hImagehlpDll, "SymGetSymFromAddr" );
+    pSymFromAddr = (tSymFromAddr)GetProcAddress(hImagehlpDll, "SymFromAddr");
     pSymInitialize = (tSymInitialize) GetProcAddress( hImagehlpDll, "SymInitialize" );
     pSymSetOptions = (tSymSetOptions) GetProcAddress( hImagehlpDll, "SymSetOptions" );
     pStackWalk = (tStackWalk) GetProcAddress( hImagehlpDll, "StackWalk" );
@@ -454,10 +462,10 @@ static bool initialize_sym(HANDLE hProcess)
     // build symbol search path from:
     std::string symSearchPath = "";
     // current directory
-    if ( GetCurrentDirectory( TTBUFLEN, tt ) )
+    if ( GetCurrentDirectoryA( TTBUFLEN, tt ) )
 	    symSearchPath += tt + std::string( ";" );
     // dir with executable
-    if ( GetModuleFileName( 0, tt, TTBUFLEN ) )
+    if ( GetModuleFileNameA( 0, tt, TTBUFLEN ) )
     {
 	    for ( p = tt + strlen( tt ) - 1; p >= tt; -- p )
 	    {
@@ -476,13 +484,13 @@ static bool initialize_sym(HANDLE hProcess)
 	    }
     }
     // environment variable _NT_SYMBOL_PATH
-    if ( GetEnvironmentVariable( "_NT_SYMBOL_PATH", tt, TTBUFLEN ) )
+    if ( GetEnvironmentVariableA( "_NT_SYMBOL_PATH", tt, TTBUFLEN ) )
 	    symSearchPath += tt + std::string( ";" );
     // environment variable _NT_ALTERNATE_SYMBOL_PATH
-    if ( GetEnvironmentVariable( "_NT_ALTERNATE_SYMBOL_PATH", tt, TTBUFLEN ) )
+    if ( GetEnvironmentVariableA( "_NT_ALTERNATE_SYMBOL_PATH", tt, TTBUFLEN ) )
 	    symSearchPath += tt + std::string( ";" );
     // environment variable SYSTEMROOT
-    if ( GetEnvironmentVariable( "SYSTEMROOT", tt, TTBUFLEN ) )
+    if ( GetEnvironmentVariableA( "SYSTEMROOT", tt, TTBUFLEN ) )
 	    symSearchPath += tt + std::string( ";" );
 
     if ( symSearchPath.size() > 0 ) // if we added anything, we have a trailing semicolon
@@ -496,8 +504,10 @@ static bool initialize_sym(HANDLE hProcess)
     bool result = true;
     
     // init symbol handler stuff (SymInitialize())
-    if ( ! pSymInitialize( hProcess, tmpSymSearchPath, false ) )
+    if( !pSymInitialize(hProcess, NULL, TRUE) )
+    //if ( ! pSymInitialize( hProcess, tmpSymSearchPath, false ) )
     {
+        const DWORD gle = GetLastError();
 	printf( "SymInitialize(): gle = %lu\n", gle );
 	result = false;
 	goto cleanup;
@@ -533,9 +543,12 @@ static void enumAndLoadModuleSymbols( HANDLE hProcess, DWORD pid )
 	mod = new char[(*it).moduleName.size() + 1];
 	strcpy( mod, (*it).moduleName.c_str() );
 
-	if ( pSymLoadModule( hProcess, 0, img, mod, (*it).baseAddress, (*it).size ) == 0 )
-		printf( "Error %lu loading symbols for \"%s\"\n",
-			gle, (*it).moduleName.c_str() );
+        if (pSymLoadModule(hProcess, 0, img, mod, (*it).baseAddress, (*it).size) == 0) {
+            const DWORD gle = GetLastError();
+            printf("Error %lu loading symbols for \"%s\"\n",
+                gle, (*it).moduleName.c_str());
+        }
+		
 	//else
 	//	printf( "Symbols loaded: \"%s\"\n", (*it).moduleName.c_str() );
 
@@ -584,11 +597,11 @@ typedef MODULEENTRY32 *  LPMODULEENTRY32;
 static bool fillModuleListTH32( ModuleList& modules, DWORD pid )
 {
     // CreateToolhelp32Snapshot()
-    typedef HANDLE (__stdcall *tCT32S)( DWORD dwFlags, DWORD th32ProcessID );
+    typedef HANDLE (WINAPI *tCT32S)( DWORD dwFlags, DWORD th32ProcessID );
     // Module32First()
-    typedef BOOL (__stdcall *tM32F)( HANDLE hSnapshot, LPMODULEENTRY32 lpme );
+    typedef BOOL (WINAPI *tM32F)( HANDLE hSnapshot, LPMODULEENTRY32 lpme );
     // Module32Next()
-    typedef BOOL (__stdcall *tM32N)( HANDLE hSnapshot, LPMODULEENTRY32 lpme );
+    typedef BOOL (WINAPI *tM32N)( HANDLE hSnapshot, LPMODULEENTRY32 lpme );
 
     // I think the DLL is called tlhelp32.dll on Win9X, so we try both
     const char *dllname[] = { "kernel32.dll", "tlhelp32.dll" };
@@ -604,7 +617,7 @@ static bool fillModuleListTH32( ModuleList& modules, DWORD pid )
 
     for ( unsigned i = 0; i < lenof( dllname ); ++ i )
     {
-	hToolhelp = LoadLibrary( dllname[i] );
+	hToolhelp = LoadLibraryA( dllname[i] );
 	if ( hToolhelp == 0 )
 	    continue;
 	pCT32S = (tCT32S) GetProcAddress( hToolhelp, "CreateToolhelp32Snapshot" );
@@ -658,13 +671,13 @@ typedef struct _MODULEINFO {
 static bool fillModuleListPSAPI( ModuleList& modules, DWORD, HANDLE hProcess )
 {
     // EnumProcessModules()
-    typedef BOOL (__stdcall *tEPM)( HANDLE hProcess, HMODULE *lphModule, DWORD cb, LPDWORD lpcbNeeded );
+    typedef BOOL (WINAPI *tEPM)( HANDLE hProcess, HMODULE *lphModule, DWORD cb, LPDWORD lpcbNeeded );
     // GetModuleFileNameEx()
-    typedef DWORD (__stdcall *tGMFNE)( HANDLE hProcess, HMODULE hModule, LPSTR lpFilename, DWORD nSize );
+    typedef DWORD (WINAPI *tGMFNE)( HANDLE hProcess, HMODULE hModule, LPSTR lpFilename, DWORD nSize );
     // GetModuleBaseName() -- redundant, as GMFNE() has the same prototype, but who cares?
-    typedef DWORD (__stdcall *tGMBN)( HANDLE hProcess, HMODULE hModule, LPSTR lpFilename, DWORD nSize );
+    typedef DWORD (WINAPI *tGMBN)( HANDLE hProcess, HMODULE hModule, LPSTR lpFilename, DWORD nSize );
     // GetModuleInformation()
-    typedef BOOL (__stdcall *tGMI)( HANDLE hProcess, HMODULE hModule, LPMODULEINFO pmi, DWORD nSize );
+    typedef BOOL (WINAPI *tGMI)( HANDLE hProcess, HMODULE hModule, LPMODULEINFO pmi, DWORD nSize );
 
     HINSTANCE hPsapi;
     tEPM pEPM;
@@ -680,7 +693,7 @@ static bool fillModuleListPSAPI( ModuleList& modules, DWORD, HANDLE hProcess )
 
     unsigned i;
     
-    hPsapi = LoadLibrary( "psapi.dll" );
+    hPsapi = LoadLibraryA( "psapi.dll" );
     if ( hPsapi == 0 )
 	return false;
 
@@ -704,6 +717,7 @@ static bool fillModuleListPSAPI( ModuleList& modules, DWORD, HANDLE hProcess )
 
     if ( ! pEPM( hProcess, hMods, TTBUFLEN, &cbNeeded ) )
     {
+        const DWORD gle = GetLastError();
 	printf( "EPM failed, gle = %lu\n", gle );
 	goto cleanup;
     }

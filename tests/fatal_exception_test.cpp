@@ -38,6 +38,37 @@ void test_segv(tinfra::cmd::app& app)
     segv();
 }
 
+//
+// test_backtrace
+//
+
+int g(long a)
+{
+    if (a > 0) {
+        return f(a - 1);
+    }
+    else {
+        char* p = 0;
+        *p = 0;
+        return 0;
+    }
+}
+
+void test_stacktrace()
+{
+    tinfra::stacktrace_t stack;
+    if (!tinfra::get_stacktrace(stack)) {
+        std::cout << "failed to get current stacktrace :/\n";
+    } else {
+        std::cout << "got stacktrace, size=" << stack.size() << " \n";
+        tinfra::print_stacktrace(stack, std::cout);
+    }
+}
+
+//
+// test_thread_segv
+//
+
 void* thread_func(void*)
 {
     segv();
@@ -103,8 +134,10 @@ int test_fatal_exception_main(int argc, char** argv)
         test_interrupt(app);
     else if( test_name == "thread_segv" )
         test_thread_segv(app);
-    else if( test_name == "terminate" )
+    else if (test_name == "terminate")
         test_terminate(app);
+    else if (test_name == "stacktrace")
+        test_stacktrace();
     else
         app.fail("unknown test type");
     return 0;
