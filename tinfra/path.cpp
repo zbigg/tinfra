@@ -181,7 +181,7 @@ std::string tmppath(const char* prefix, const char* tmpdir)
     } else {
         sprefix = prefix;
     }
-    const std::string result = fmt("%s/%s_%s_%s") % tmpdir % sprefix % t % stamp;
+    const std::string result = tsprintf("%s/%s_%s_%s", tmpdir, sprefix, t, stamp);
     return result; 
 }
 

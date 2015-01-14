@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cctype>
+#include <algorithm>
 
 #if defined(HAVE_STRICMP) || defined(_MSC_VER) || defined(HAVE_STRCASECMP)
 #include <string.h>

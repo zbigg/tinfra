@@ -23,7 +23,7 @@ template <typename E>
 static void throw_errno(int error, const std::string& message)
 {
     const std::string error_str = errno_to_string(error);
-    const std::string full_message = tinfra::fmt("%s: %s") % message % error_str;
+    const std::string full_message = tinfra::tsprintf("%s: %s", message, error_str);
     throw E(full_message);
 }
 

@@ -1,5 +1,7 @@
 #include "buffered_stream.h"
 
+#include <algorithm>
+
 namespace tinfra {
 
 buffered_input_stream::buffered_input_stream(tinfra::input_stream& target, size_t size):

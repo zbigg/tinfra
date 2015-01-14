@@ -41,7 +41,7 @@ std::string get_error_string(unsigned int error_code)
 	NULL
 	) < 0 || lpMsgBuf == NULL) {
 
-	return fmt("unknown error: %i") % error_code;
+	return tsprintf("unknown error: %i", error_code);
     }
     std::wstring w_result((WCHAR*)lpMsgBuf);
     ::LocalFree(lpMsgBuf);
@@ -54,7 +54,7 @@ template <typename E>
 static void throw_system_error2(unsigned int error, const std::string& message)
 {
     std::string error_str = get_error_string(error);
-    std::string full_message = tinfra::fmt("%s: %s") % message % error_str;
+    std::string full_message = tinfra::tsprintf("%s: %s", message, error_str);
     throw E(full_message);
 }
 

@@ -21,9 +21,9 @@ int cli_main(int argc, char** argv, int (*program_main)(tstring const& program_n
     if( opt_help.enabled() ) {
         using tinfra::path::basename;
         using tinfra::get_exepath;
-        std::string usage_header = fmt(
+        std::string usage_header = tsprintf(
             "Usage: %s [options] [ test_case ... ]\n"
-            "Available options:\n") % basename(get_exepath());
+            "Available options:\n", basename(get_exepath()));
         
         tinfra::out.write(tstring(usage_header));
         tinfra::option_registry::get().print_help(tinfra::out);
