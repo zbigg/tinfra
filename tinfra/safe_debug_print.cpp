@@ -6,6 +6,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cctype>
 #include <algorithm>
 
 using tinfra::signed_integer_to_string_dec;

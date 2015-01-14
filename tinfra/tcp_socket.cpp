@@ -124,7 +124,7 @@ static std::string get_peer_address_string(sockaddr_in const& address)
 #elif defined TS_WINSOCK
     strncpy( buf, inet_ntoa(address.sin_addr), sizeof(buf));    
 #endif
-    return tinfra::fmt("%s:%i") % buf % ntohs(address.sin_port);
+    return tinfra::tsprintf("%s:%i", buf, ntohs(address.sin_port));
 }
 
 

@@ -314,7 +314,7 @@ public:
     bool operator()(test_base const& test) const
     {
         std::string test_name      = test.name;
-        std::string full_test_name = fmt("%s::%s") % test.suite % test_name;
+        std::string full_test_name = tinfra::tsprintf("%s::%s", test.suite, test_name);
         
         for( test_name_list::const_iterator i = names_.begin(); i != names_.end(); ++i )
         {
@@ -336,9 +336,7 @@ static void list_available_tests()
     out << "Available test cases:\n";
 	for( std::vector<test_base*>::const_iterator i = tests.begin(); i != tests.end() ; ++i ) {
 		test_base const& test = **i;
-		std::string full_test_name = fmt("%s::%s") 
-                                       % test.name 
-                                       % test.suite;
+                std::string full_test_name = tsprintf("%s::%s", test.name, test.suite);
         out << "    " << full_test_name << "\n";
 	};
 
@@ -472,10 +470,10 @@ void check_string_contains(tstring const& expected_substring,
     if( actual_result.find(expected_substring) != tstring::npos )
         return;
     
-    const std::string msg = tinfra::fmt("expected substring '%s' not found in actual value '%s': '%s'") 
-        % expected_substring
-        % result_descr
-        % actual_result;
+    const std::string msg = tinfra::tsprintf("expected substring '%s' not found in actual value '%s': '%s'",
+        expected_substring,
+        result_descr,
+        actual_result);
     report_test_failure(filename, line, msg.c_str()); 
 }
 
