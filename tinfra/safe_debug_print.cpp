@@ -9,6 +9,8 @@
 #include <cctype>
 #include <algorithm>
 
+#include "stdint.h"
+
 using tinfra::signed_integer_to_string_dec;
 using tinfra::unsigned_integer_to_string_dec;
 using tinfra::unsigned_integer_to_string_hex;
@@ -93,14 +95,16 @@ void tinfra_safe_debug_print(tinfra::output_stream& out, unsigned long long cons
 
 void tinfra_safe_debug_print(tinfra::output_stream& out, void const* const* v) {
     char buf[48] = {"0x"};
-    const int len = unsigned_integer_to_string_hex((long long)*v, buf+2, sizeof(buf)-2);
+    uintptr_t vi = (uintptr_t)*v;
+    const int len = unsigned_integer_to_string_hex(vi, buf+2, sizeof(buf)-2);
     TINFRA_ASSERT(len > 0);
     out.write(buf, len+2);
 }
 
 void tinfra_safe_debug_print(tinfra::output_stream& out, void* const* v) {
     char buf[48] = {"0x"};
-    const int len = unsigned_integer_to_string_hex((long long)*v, buf+2, sizeof(buf)-2);
+    uintptr_t vi = (uintptr_t)*v;
+    const int len = unsigned_integer_to_string_hex(vi, buf+2, sizeof(buf)-2);
     TINFRA_ASSERT(len > 0);
     out.write(buf, len+2);
 }
