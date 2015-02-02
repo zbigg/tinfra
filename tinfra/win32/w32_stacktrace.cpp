@@ -43,6 +43,28 @@
 #error "fatal_exception not implemented for win64" 
 #endif
 
+//
+// HAVE_SYMBOL_INFO
+//  as of writing this, MSVC does have SYMBOL_INFO
+//  and mingw32 doesn't
+//
+//  SYMBOL_INFO enables to use SymFromAddr
+//  else we use deprecated SymGetSymFromAddr
+//
+#ifdef _MSC_VER
+#define HAVE_SYMBOL_INFO
+#else
+#undef HAVE_SYMBOL_INFO
+#endif
+
+#if !defined(HAVE_SYMBOL_INFO)
+#if _WIN64 // not tested ...
+#define USE_OLDIMAGHELP32
+#else
+#define USE_OLDIMAGHELP64
+#endif
+#endif
+
 // SymCleanup()
 typedef BOOL (WINAPI *tSymCleanup)( IN HANDLE hProcess );
 tSymCleanup pSymCleanup = NULL;
@@ -73,9 +95,11 @@ typedef BOOL (WINAPI *tSymGetSymFromAddr)( IN HANDLE hProcess, IN DWORD dwAddr,
 	OUT PDWORD pdwDisplacement, OUT PIMAGEHLP_SYMBOL Symbol );
 tSymGetSymFromAddr pSymGetSymFromAddr = NULL;
 
-typedef BOOL (WINAPI* tSymFromAddr)(_In_ HANDLE hProcess,_In_ DWORD64 Address,
-    _Out_opt_  PDWORD64 Displacement, _Inout_    PSYMBOL_INFO Symbol); 
+#if defined HAVE_SYMBOL_INFO
+typedef BOOL (WINAPI* tSymFromAddr)( HANDLE hProcess,DWORD64 Address,
+    PDWORD64 Displacement, PSYMBOL_INFO Symbol);
 tSymFromAddr pSymFromAddr = NULL;
+#endif
 
 // SymInitialize()
 typedef BOOL (WINAPI *tSymInitialize)( IN HANDLE hProcess, IN PSTR UserSearchPath, IN BOOL fInvadeProcess );
@@ -206,17 +230,43 @@ bool get_debug_info(void* address, debug_info& result)
     }
 
     HANDLE  hProcess = tinfra_hOurProcess;
+    result.source_file = "";
+    result.source_line = -1;
+    char undFullName[MAXNAMELEN]; // undecorated name with all shenanigans
+
+#ifdef USE_OLDIMAGHELP32
+    if (pSymGetSymFromAddr == NULL ) {
+        return false;
+    }
+    DWORD offsetFromSymbol = 0;
+    // old, deprecated IMAGHELP API
+    // available on mingw
+    char  symBuffer[sizeof(IMAGEHLP_SYMBOL) + MAXNAMELEN * sizeof(TCHAR)];
+    IMAGEHLP_SYMBOL* pSym = (IMAGEHLP_SYMBOL*)symBuffer;
+    if ( ! pSymGetSymFromAddr( hProcess, (DWORD)address, &offsetFromSymbol, pSym ) ) {
+        const DWORD gle = GetLastError();
+        if ( gle != 487 ) {
+            TINFRA_LOG_ERROR(fmt("get_debug_info: SymGetSymFromAddr failed, gle=%i") % gle);
+            return false;
+        }
+    }
+    pUnDecorateSymbolName( pSym->Name, undFullName, MAXNAMELEN, UNDNAME_COMPLETE );
+    result.function = undFullName;
+
+#elif USE_OLDIMAGHELP64
+#error "not implemented"
+#else
+    if (pSymFromAddr == NULL ) {
+        return false;
+    }
     DWORD64 offsetFromSymbol = 0;
-    
+    // old, deprecated IMAGHELP API
+    // available on mingw
     char  symBuffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
     PSYMBOL_INFO pSym = (PSYMBOL_INFO)symBuffer;
     pSym->SizeOfStruct = sizeof(SYMBOL_INFO);
     pSym->MaxNameLen = MAX_SYM_NAME;
 
-    char undFullName[MAXNAMELEN]; // undecorated name with all shenanigans
-    IMAGEHLP_LINE Line;
-    
-    result.source_line = -1;
     SetLastError(0);
     if ( ! pSymFromAddr( hProcess, (DWORD64)address, NULL, pSym ) ) {
         const DWORD gle = GetLastError();
@@ -227,8 +277,10 @@ bool get_debug_info(void* address, debug_info& result)
     }
     pUnDecorateSymbolName( pSym->Name, undFullName, MAXNAMELEN, UNDNAME_COMPLETE );
     result.function = undFullName;
-    
+#endif
     DWORD offsetFromSymbolOld = 0;
+    IMAGEHLP_LINE Line;
+    
     
     if ( ! pSymGetLineFromAddr( hProcess, (DWORD)address, &offsetFromSymbolOld, &Line ) ) {
         const DWORD gle = GetLastError();
@@ -436,7 +488,9 @@ static bool initialize_imaghelp()
     pSymGetModuleInfo = (tSymGetModuleInfo) GetProcAddress( hImagehlpDll, "SymGetModuleInfo" );
     pSymGetOptions = (tSymGetOptions) GetProcAddress( hImagehlpDll, "SymGetOptions" );
     pSymGetSymFromAddr = (tSymGetSymFromAddr) GetProcAddress( hImagehlpDll, "SymGetSymFromAddr" );
+#ifdef HAVE_SYMBOL_INFO
     pSymFromAddr = (tSymFromAddr)GetProcAddress(hImagehlpDll, "SymFromAddr");
+#endif
     pSymInitialize = (tSymInitialize) GetProcAddress( hImagehlpDll, "SymInitialize" );
     pSymSetOptions = (tSymSetOptions) GetProcAddress( hImagehlpDll, "SymSetOptions" );
     pStackWalk = (tStackWalk) GetProcAddress( hImagehlpDll, "StackWalk" );
