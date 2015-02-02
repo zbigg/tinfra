@@ -58,7 +58,7 @@
 #endif
 
 #if !defined(HAVE_SYMBOL_INFO)
-#if _WIN64 // not tested ...
+#if !defined _WIN64 // not tested ...
 #define USE_OLDIMAGHELP32
 #else
 #define USE_OLDIMAGHELP64
@@ -253,7 +253,7 @@ bool get_debug_info(void* address, debug_info& result)
     pUnDecorateSymbolName( pSym->Name, undFullName, MAXNAMELEN, UNDNAME_COMPLETE );
     result.function = undFullName;
 
-#elif USE_OLDIMAGHELP64
+#elif defined USE_OLDIMAGHELP64
 #error "not implemented"
 #else
     if (pSymFromAddr == NULL ) {
