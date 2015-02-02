@@ -95,11 +95,11 @@ TEST(safe_debug_print_char_numbers)
 
 TEST(safe_debug_print_pointer)
 {
-    void* p = reinterpret_cast<void*>(0x9abcdef0);
+    void* p = (void*)(0x9abcdef0UL);
     CHECK_EQUAL("0x9abcdef0", unsafe_wrap_debug_print(p));
     const void* p2 = 0;
     CHECK_EQUAL("0x0", unsafe_wrap_debug_print(p2));
-    const void* p3 = reinterpret_cast<void*>(0x12345678);
+    const void* p3 = reinterpret_cast<void*>(0x12345678UL);
     CHECK_EQUAL("0x12345678", unsafe_wrap_debug_print(p3));
 }
 

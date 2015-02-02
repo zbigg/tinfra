@@ -2,6 +2,7 @@
 #include "tinfra/json.h" // we test this
 #include "tinfra/test.h"
 
+#include <limits.h>
 SUITE(tinfra) {
 
 using tinfra::variant;
@@ -38,13 +39,13 @@ TEST(json_integer_basic)
     CHECK_EQUAL(variant(0), json_parse("0"));
     CHECK_EQUAL(variant(-1), json_parse("-1"));
     CHECK_EQUAL(variant(256), json_parse("256"));
-    CHECK_EQUAL(variant(-2147483648), json_parse("-2147483648"));
+    CHECK_EQUAL(variant(INT_MIN), json_parse("-2147483648")); // INT_MIN shall be -2147483648
     CHECK_EQUAL(variant(2147483647), json_parse("2147483647"));
     
-    CHECK_EQUAL(variant(-2147483648), json_parse("-2147483648"));
+    CHECK_EQUAL(variant(INT_MIN), json_parse("-2147483648"));
     CHECK_EQUAL(variant(2147483647), json_parse("2147483647"));
-    //CHECK_EQUAL(variant(-9223372036854775807), json_parse("-9223372036854775807"));
-    //CHECK_EQUAL(variant(9223372036854775807), json_parse("9223372036854775807"));
+    CHECK_EQUAL(variant(-9223372036854775807), json_parse("-9223372036854775807")); // this is signed long long min
+    CHECK_EQUAL(variant(9223372036854775807), json_parse("9223372036854775807"));   // this is signed long long max
 }
 
 TEST(json_string_basic)

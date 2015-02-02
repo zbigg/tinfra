@@ -177,9 +177,9 @@ bool equals(const char* a, const char* b)
 /// Check basic equality
 #define CHECK(predicate) \
 	do {  if( !(predicate) ) { \
-			std::string msg = tinfra::fmt("predicate %s failed") % #predicate; \
+            std::string msg = tinfra::tsprintf("predicate %s failed", #predicate); \
             ::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
-		} \
+	    } \
 	} while ( 0 );
 
 /// Check basic equality
@@ -209,7 +209,7 @@ bool equals(const char* a, const char* b)
 			  throw; \
 		  } \
 		  if( !expected_exception_caught ) { \
-			  std::string msg = tinfra::fmt("expected exception %s not caught") % #exception_type; \
+			  std::string msg = tinfra::tsprintf("expected exception %s not caught", #exception_type); \
               ::tinfra::test::report_test_failure(__FILE__, __LINE__, msg.c_str()); \
 		  } \
 	} while ( 0 )
@@ -221,7 +221,7 @@ template <typename T1, typename T2>
 void check_equal(T1 const& expected, T2 const& actual, tinfra::source_location const& loc) 
 {
     if( !tinfra::test::equals(expected,actual) ) {
-	std::string msg = tinfra::fmt("expected '%s', but found '%s'") % (expected) % (actual);
+	std::string msg = tinfra::tsprintf("expected '%s', but found '%s'", expected, actual);
         ::tinfra::test::report_test_failure(loc.filename, loc.line, msg.c_str());
     }
 } 
@@ -233,7 +233,7 @@ void check_close(T1 const& expected, T2 const& actual, T3 const& tollerancy, tin
                 ? (expected - actual ) > tollerancy
                 : (actual - expected ) > tollerancy;
     if( result ) {
-	std::string msg = tinfra::fmt("expected %s (+/i %s) but found %s") % (expected) % (tollerancy) % (actual);
+        std::string msg = tinfra::tsprintf("expected %s (+/i %s) but found %s", expected, tollerancy, actual);
 	::tinfra::test::report_test_failure(loc.filename, loc.line, msg.c_str());
     }
 }
@@ -265,13 +265,13 @@ void check_map_equal(MapType const& A,
     for( iter ia = A.begin(); ia != A.end(); ++ia ) {
         iter ib = B.find(ia->first);
         if( ib == B.end() ) {
-            std::string msg = tinfra::fmt("expected item (%s->%s) not found in %s") % ia->first % ia->second % b_name;
+            std::string msg = tinfra::tsprintf("expected item (%s->%s) not found in %s", ia->first, ia->second, b_name);
             report_test_failure(filename, line, msg.c_str()); 
         } else if ( !( ia->second == ib->second) ) {
-            std::string msg = tinfra::fmt("expected (%s->%s) but found (%s->%s) found in %s") 
-                % ia->first %ia->second 
-                % ib->first %ib->second 
-                % b_name;
+            std::string msg = tinfra::tsprintf("expected (%s->%s) but found (%s->%s) found in %s",
+                ia->first %ia->second,
+                ib->first %ib->second,
+                b_name);
             report_test_failure(filename, line, msg.c_str()); 
         }
     }
@@ -279,7 +279,7 @@ void check_map_equal(MapType const& A,
     for( iter ib = B.begin(); ib != B.end(); ++ib ) {
         iter ia = A.find(ib->first);
         if( ia == A.end() ) {
-            std::string msg = tinfra::fmt("extra (%s->%s) found in %s") % ib->first %ib->second % b_name;
+            std::string msg = tinfra::tsprintf("extra (%s->%s) found in %s", ib->first, ib->second, b_name);
             report_test_failure(filename, line, msg.c_str()); 
         } 
     }
@@ -332,9 +332,7 @@ void check_container_contains(KeyType const& key,
 {
 	typename SetType::const_iterator i = set.find(key);
 	if( i == set.end() ) {
-		std::string msg = tinfra::fmt("expected key (%s) not found in %s") 
-			% key 
-			% set_name;
+		std::string msg = tinfra::tsprintf("expected key (%s) not found in %s", key, set_name);
 		report_test_failure(filename, line, msg.c_str());
 	}
 }
@@ -346,9 +344,7 @@ void check_map_entry_match(typename MapType::key_type const& key,
 {
 	typename MapType::const_iterator i = map.find(key);
 	if( i == map.end() ) {
-		std::string msg = tinfra::fmt("expected key (%s) not found in %s") 
-			% key 
-			% set_name;
+            std::string msg = tinfra::tsprintf("expected key (%s) not found in %s", key, set_name);
 		report_test_failure(filename, line, msg.c_str());
 	}
 	else if( !( i->second == value )) {

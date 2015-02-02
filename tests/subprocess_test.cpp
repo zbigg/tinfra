@@ -102,9 +102,9 @@ SUITE(tinfra) {
     static std::string get_echo_var_command(tstring const& varname)
     {
 #ifdef _WIN32
-        return tinfra::fmt("cmd /c \"echo %%%s%%\"") % varname;
+        return tinfra::tsprintf("cmd /c \"echo %%%s%%\"", varname);
 #else
-        return tinfra::fmt("echo $%s") % varname;
+        return tinfra::tsprintf("echo $%s", varname);
 #endif
     }
     
@@ -113,7 +113,7 @@ SUITE(tinfra) {
     static std::string unknown_variable_output(tstring const& name)
     {
 #ifdef _WIN32
-            return tinfra::fmt("%%%s%%") % name;
+        return tinfra::tsprintf("%%%s%%", name);
 #else
             (void)name;
             return "";

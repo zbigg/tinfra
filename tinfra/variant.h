@@ -31,6 +31,8 @@ public:
     variant(): value(tinfra::any::from_copy(none_type())) {} // TBD, fix it!
     explicit variant(int v): value(tinfra::any::from_copy<integer_type>(v)) {}
     explicit variant(long v): value(tinfra::any::from_copy<integer_type>(v)) {}
+    explicit variant(unsigned int v);
+    explicit variant(unsigned long v);
     explicit variant(integer_type v): value(tinfra::any::from_copy(v)) {}
     explicit variant(double v): value(tinfra::any::from_copy(v)) {}
     explicit variant(string_type const& v): value(tinfra::any::from_copy(v)) {}
@@ -101,6 +103,21 @@ public:
     bool has_key(int index) const;
 };
 
+
+inline
+variant::variant(unsigned int v):
+    value(tinfra::any::from_copy(variant::none_type()))
+{
+    TINFRA_ASSERT(v < std::numeric_limits<integer_type>::max());
+    value = tinfra::any::from_copy<integer_type>(v);
+}
+inline
+variant::variant(unsigned long v):
+    value(tinfra::any::from_copy(variant::none_type()))
+{
+    TINFRA_ASSERT(v < std::numeric_limits<integer_type>::max());
+    value = tinfra::any::from_copy<integer_type>(v);
+}
 inline
 variant variant::none()
 {

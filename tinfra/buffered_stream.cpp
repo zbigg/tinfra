@@ -88,8 +88,9 @@ bool  buffered_input_stream::fill_buffer()
         return ! this->buf_empty(); 
     
     if( this->buf_begin != this->buffer.begin() ) {
-        
-        std::memmove(ptr(0), ptr(this->buf_begin), initial_size);
+        if (initial_size != 0) {
+            std::memmove(ptr(0), ptr(this->buf_begin), initial_size);
+        }
         this->buf_begin = this->buffer.begin();
         this->buf_end   = this->buffer.begin() + initial_size;
     }

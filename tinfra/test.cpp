@@ -333,11 +333,11 @@ static void list_available_tests()
 	std::vector<test_base*> const& tests  = static_registry<test_base>::elements();
 
 	std::ostringstream out;
-    out << "Available test cases:\n";
+	out << "Available test cases:\n";
 	for( std::vector<test_base*>::const_iterator i = tests.begin(); i != tests.end() ; ++i ) {
 		test_base const& test = **i;
-                std::string full_test_name = tsprintf("%s::%s", test.name, test.suite);
-        out << "    " << full_test_name << "\n";
+        	std::string full_test_name = tsprintf("%s::%s", test.name, test.suite);
+        	out << "    " << full_test_name << "\n";
 	};
 
     tinfra::out.write(out.str());
