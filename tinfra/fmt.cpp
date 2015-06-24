@@ -14,6 +14,7 @@ namespace tinfra {
 struct fmt_command {
     char  command;
     int   width;
+    int   precision;
     char  fill;
 };
     
@@ -27,19 +28,22 @@ size_t process_fmt(std::string fmt, size_t start, fmt_command& result, T& output
     
     result.command = '?';
     result.width = 0;
+    result.precision = 0;
     result.fill = ' ';
     //std::cout << "pf: " << fmt << " at " << start << std::endl;
     enum {
         FREE_TEXT,
         BEGIN_MATCH,
-        PADDING_GIVEN
+        PADDING_GIVEN,
     } state = FREE_TEXT;
+    bool in_precision = false;
     while( c != end )  switch( state ) {
     case FREE_TEXT:
         if( *c == '%' ) {
             if( c+1 == end ) 
                 throw format_exception("bad format: '%' at the end");
             state = BEGIN_MATCH;
+            in_precision = false;
             output.append(istart, c);
             ++c;
         } else {
@@ -61,8 +65,17 @@ size_t process_fmt(std::string fmt, size_t start, fmt_command& result, T& output
             continue;
         }
     case PADDING_GIVEN:
+        if( *c == '.' )  {
+            in_precision = true;
+            ++c;
+            continue;
+        }
         if( std::isdigit(*c) ) {
-            result.width = result.width*10 + (*c - '0');
+            if( in_precision ) {
+                result.precision = result.precision*10 + (*c - '0');
+            } else {
+                result.width = result.width*10 + (*c - '0');
+            }
             ++c;
             continue;
         }
@@ -120,6 +133,8 @@ size_t basic_fmt::check_command(std::ostream& formatter)
         formatter.fill(cmd.fill);
     if( cmd.width )
         formatter.width(cmd.width);
+    if( cmd.precision )
+        formatter.precision(cmd.precision);
     
     switch( cmd.command ) {
     case 's':
