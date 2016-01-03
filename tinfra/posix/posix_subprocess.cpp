@@ -248,7 +248,14 @@ struct posix_subprocess: public subprocess {
             throw_errno_error(errno, "fork failed");
             
         if( pid == 0 ) {
-            // children part            
+            // child part
+            {
+                sigset_t mask;
+                sigemptyset(&mask);
+                if( sigprocmask(SIG_SETMASK, &mask, NULL) < 0 ) {
+                    TINFRA_LOG_ERROR(fmt("warning: unable to reset signal mask in child process") % errno_to_string(errno));
+                }
+            }
             if( fwrite ) {
                 int a = ::dup(out_remote);
                 ::dup2(a,0);
