@@ -98,43 +98,43 @@ namespace tinfra {
 
 template <typename T>
 struct safe_debug_printer {
-	static void print(tinfra::output_stream& out, const void* obj)
-	{
-		T const* obj2 = reinterpret_cast<T const*>(obj);
-		::tinfra_safe_debug_print(out, obj2);
-	}
+    static void print(tinfra::output_stream& out, const void* obj)
+    {
+        T const* obj2 = reinterpret_cast<T const*>(obj);
+        ::tinfra_safe_debug_print(out, obj2);
+    }
 };
 
 template <>
 struct safe_debug_printer<const char*> {
-	static void print(tinfra::output_stream& out, const void* obj)
-	{
-		::tinfra_safe_debug_print(out, (const char**)obj);
-	}
+    static void print(tinfra::output_stream& out, const void* obj)
+    {
+        ::tinfra_safe_debug_print(out, (const char**)obj);
+    }
 };
 
 template <int N>
 struct safe_debug_printer<char const[N]> {
-	static void print(tinfra::output_stream& out, const void* obj)
-	{
-	    const char* f = (const char*)obj;
-		::tinfra_safe_debug_print(out, &f);
-	}
+    static void print(tinfra::output_stream& out, const void* obj)
+    {
+        const char* f = (const char*)obj;
+        ::tinfra_safe_debug_print(out, &f);
+    }
 };
 
 template <int N>
 struct safe_debug_printer<char[N]> {
-	static void print(tinfra::output_stream& out, const void* obj)
-	{
-		const char* f = (const char*)obj;
-		::tinfra_safe_debug_print(out, &f);
-	}
+    static void print(tinfra::output_stream& out, const void* obj)
+    {
+        const char* f = (const char*)obj;
+        ::tinfra_safe_debug_print(out, &f);
+    }
 };
 
 template <typename T>
 safe_debug_print_func make_safe_debug_print_func(T const&)
 {
-	return &tinfra::safe_debug_printer<T>::print;
+    return &tinfra::safe_debug_printer<T>::print;
 }
 
 template <typename T>

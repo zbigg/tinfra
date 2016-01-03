@@ -31,20 +31,20 @@ public:
     /// create any value holding copy of object
     template <typename T>
     static any from_copy(T const& v);
-    
+
     /// create any value holding reference to object
     template <typename T>
     static any by_ref(T& v);
-    
+
     /// create any value owning instance of object
     template <typename T>
     static any from_new(T* v);
-    
-    void* get_raw();    
+
+    void* get_raw();
     const void* get_raw() const;
-    
+
     std::type_info const& type() const;
-    
+
     /// typesafe get
     /// precondition:
     ///         will check in runtime of any
@@ -52,7 +52,7 @@ public:
     /// uses TINFRA_ASSERT to check precondition
     template <typename T>
     T& get();
-    
+
     /// typesafe const get
     /// precondition:
     ///         will check in runtime of any
@@ -61,7 +61,7 @@ public:
     template <typename T>
     T const& get() const;
 private:
-    
+
     any(any_container_base* ptr);
     shared_ptr<any_container_base> ref_;
 };
@@ -85,10 +85,10 @@ class storing_any_container: public any_container_base {
     T value;
 public:
     storing_any_container(T const& v): value(v) {}
-    
+
     virtual void* get()                        { return &value; }
     virtual std::type_info const& type() const { return typeid(T); }
-    
+
     T&            typed_get() { return value; }
 };
 
@@ -98,10 +98,10 @@ class ref_any_container: public any_container_base {
     T& value_ref;
 public:
     ref_any_container(T& v): value_ref(v) {}
-    
+
     virtual void* get()                        { return &value_ref; }
     virtual std::type_info const& type() const { return typeid(T); }
-    
+
     T&            typed_get() { return value_ref; }
 };
 
@@ -110,10 +110,10 @@ class auto_ptr_any_container: public any_container_base {
     std::auto_ptr<T> value_holder;
 public:
     auto_ptr_any_container(T* v): value_holder(v) {}
-    
+
     virtual void* get()                        { return value_holder.get(); }
     virtual std::type_info const& type() const { return typeid(T); }
-    
+
     T&            typed_get() { return value_holder.get(); }
 };
 

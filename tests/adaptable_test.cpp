@@ -16,14 +16,14 @@ SUITE(tinfra) {
     struct ILabeled {
         virtual std::string label() const = 0;
     };
-    
+
     struct IParent {
         typedef std::vector< tinfra::shared_ptr<tinfra::adaptable> > children_list_t;
-        
+
         virtual int             children_count() const = 0;
         virtual children_list_t get_children() const = 0;
     };
-    
+
     class Item: public tinfra::generic_adaptable,
                 public ILabeled
     {
@@ -33,16 +33,16 @@ SUITE(tinfra) {
         {
             tinfra_adapter.add<ILabeled>(*this);
         }
-        
+
         std::string label() const
         {
             return name_;
         }
-        
+
     private:
         std::string name_;
     };
-    
+
     class Folder: public Item,
                   public IParent
     {
@@ -52,7 +52,7 @@ SUITE(tinfra) {
         {
             tinfra_adapter.add<IParent>(*this);
         }
-        
+
         int             children_count() const
         {
             return 0;
@@ -63,21 +63,21 @@ SUITE(tinfra) {
             return result;
         }
     };
-    
+
     template <typename T>
     bool has_adapter(tinfra::adaptable& a) {
         T* r;
         return a.get_adapter<T>(r);
     }
-    
+
     TEST(adaptable_api)
     {
         Item   item("foo");
         Folder folder("bar");
-        
+
         CHECK( has_adapter<ILabeled>(item) );
         CHECK( !has_adapter<IParent>(item) );
-        
+
         CHECK( has_adapter<ILabeled>(folder) );
         CHECK( has_adapter<IParent>(folder) );
     }

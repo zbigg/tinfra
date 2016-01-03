@@ -19,35 +19,35 @@ SUITE(tinfra)
     using tinfra::thread::mutex;
     using tinfra::thread::condition;
     using tinfra::thread::thread;
-    
+
     TEST(thread_mutex_basic)
     {
         mutex m;
         m.lock();
         m.unlock();
     }
-    
+
     TEST(thread_condition_basic)
     {
         condition cond;
         cond.signal();
         cond.broadcast();
     }
-    
+
     static int nothing_run_indicator = 0;
     static void* nothing(void*)
     {
         nothing_run_indicator = 1;
         return 0;
     }
-        
+
     TEST(thread_simple)
     {
         thread t = thread::start(nothing, 0);
         CHECK_EQUAL(0, (intptr_t) t.join() );
         CHECK_EQUAL(1, nothing_run_indicator);
     }
-    
+
     struct test_monitor {
 	condition ca;
         condition cb;
@@ -55,11 +55,11 @@ SUITE(tinfra)
         bool started;
         bool finished;
     };
-    
+
     static void* cond_signaler(void* p)
     {
         test_monitor* M = static_cast<test_monitor*>(p);
-        
+
         // wait for start signal
         {
             guard g(M->m);
@@ -71,14 +71,14 @@ SUITE(tinfra)
             a << i*2;
             std::string x = a.str();
         }
-        
+
         // signal finish!
         {
             guard g(M->m);
             M->finished = true;
             M->cb.signal(); // signal job finished
         }
-        
+
         return 0;
     }
     static void* cond_waiter(void* p)
@@ -89,7 +89,7 @@ SUITE(tinfra)
             M->started = true;
             M->ca.signal(); // set up green light
         }
-        
+
         {
             guard g(M->m);
             while( !M->finished )
@@ -97,7 +97,7 @@ SUITE(tinfra)
         }
         return 0;
     }
-    
+
     TEST(thread_condition)
     {
         test_monitor M;
@@ -108,16 +108,16 @@ SUITE(tinfra)
         CHECK_EQUAL(0, (intptr_t) c.join() );
         CHECK_EQUAL(0, (intptr_t) p.join() );
     }
-    
+
     struct TestRunnable {
         int i;
-        
+
         void operator()()
         {
             i = 1;
         }
     };
-    
+
     TEST(thread_runnable)
     {
         TestRunnable runnable;

@@ -8,19 +8,20 @@
 #include <memory>
 
 namespace tinfra {
-    
+
 struct xml_writer_options {
-	bool start_document;
-	
-	bool human_readable;
-	bool short_string_inline;
-	
-	int  indentation_size;
-	char indentation_character;
-	
-	/// initialize defaults;
-	xml_writer_options();
+    bool start_document;
+
+    bool human_readable;
+    bool short_string_inline;
+
+    int  indentation_size;
+    char indentation_character;
+
+    /// initialize defaults;
+    xml_writer_options();
 };
+
 std::auto_ptr<xml_output_stream> xml_stream_writer(tinfra::output_stream* in, xml_writer_options const& options);
 
 } // end namespace tinfra
