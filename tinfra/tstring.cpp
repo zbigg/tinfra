@@ -56,7 +56,9 @@ tstring::find(char_type const* s, size_type pos, size_type n) const
 			return npos;
 	}
 
-	TINFRA_ASSERT(pos == npos || pos <= this->size() );
+    if( pos > this->size() ) {
+        return npos;
+    }
 
     tstring const other = tstring(s, n, false);
     const_iterator result = std::search(
@@ -74,9 +76,10 @@ tstring::find(char_type const* s, size_type pos, size_type n) const
 tstring::size_type 
 tstring::find_first_of(char_type const* s, size_type pos, size_type n) const
 {
+    if( pos > this->size() ) {
+        return npos;
+    }
     if( tstring::size() > 0 ) {
-		TINFRA_ASSERT(pos == npos || pos <= this->size() );
-
         for( const_iterator i = begin()+pos; i != end(); ++i ) {
             if( std::memchr(s, *i, n) != 0 ) // 'not in S' so return
                 return i - begin();
@@ -87,9 +90,10 @@ tstring::find_first_of(char_type const* s, size_type pos, size_type n) const
 tstring::size_type 
 tstring::find_first_of(char_type c, size_type pos) const
 {
+    if( pos > this->size() ) {
+        return npos;
+    }
     if( tstring::size() > 0 ) {
-		TINFRA_ASSERT(pos == npos || pos <= this->size() );
-
         for( const_iterator i = begin()+pos; i != end(); ++i ) {
             if( *i == c ) // '== C' so return
                 return i - begin();
@@ -103,9 +107,10 @@ tstring::find_first_of(char_type c, size_type pos) const
 tstring::size_type
 tstring::find_first_not_of(char_type const* s, size_type pos, size_type n) const
 {
+    if( pos > this->size() ) {
+        return npos;
+    }
     if( tstring::size() > 0 ) {
-		TINFRA_ASSERT(pos == npos || pos <= this->size() );
-
         for( const_iterator i = begin()+pos; i != end(); ++i ) {
             if( std::memchr(s, *i, n) == 0 ) // 'not in S' so return
                 return i - begin();
@@ -117,9 +122,10 @@ tstring::find_first_not_of(char_type const* s, size_type pos, size_type n) const
 tstring::size_type
 tstring::find_first_not_of(char_type c, size_type pos) const
 {
+    if( pos > this->size() ) {
+        return npos;
+    }
     if( tstring::size() > 0 ) {
-		TINFRA_ASSERT(pos == npos || pos <= this->size() );
-
         for( const_iterator i = begin()+pos; i != end(); ++i ) {
             if( *i != c )
                 return i - begin();
